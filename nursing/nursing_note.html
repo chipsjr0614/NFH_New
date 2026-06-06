@@ -782,7 +782,7 @@ function loadCombined(keys, symLabel){
         btn.classList.add('on');
         const uid='NRS:'+symLabel+':score';
         S.items=S.items.filter(c=>c.uid!==uid);
-        S.items.push({uid, text:'통증강도 '+btn.dataset.ns+'점', section:'A&E', symLabel});
+        S.items.push({uid, text:'통증강도 '+btn.dataset.ns+'점', section:'비고', symLabel});
       });
     });
     // 부위 (단일선택)
@@ -792,7 +792,7 @@ function loadCombined(keys, symLabel){
         btn.classList.add('on');
         const uid='NRS:'+symLabel+':loc';
         S.items=S.items.filter(c=>c.uid!==uid);
-        S.items.push({uid, text:'통증부위 '+btn.dataset.nl, section:'A&E', symLabel});
+        S.items.push({uid, text:'통증부위 '+btn.dataset.nl, section:'비고', symLabel});
       });
     });
     // 양상 (단일선택)
@@ -802,7 +802,7 @@ function loadCombined(keys, symLabel){
         btn.classList.add('on');
         const uid='NRS:'+symLabel+':qual';
         S.items=S.items.filter(c=>c.uid!==uid);
-        S.items.push({uid, text:'통증양상 '+btn.dataset.nq, section:'A&E', symLabel});
+        S.items.push({uid, text:'통증양상 '+btn.dataset.nq, section:'비고', symLabel});
       });
     });
     // 발생시기 (단일선택)
@@ -812,7 +812,7 @@ function loadCombined(keys, symLabel){
         btn.classList.add('on');
         const uid='NRS:'+symLabel+':dur';
         S.items=S.items.filter(c=>c.uid!==uid);
-        S.items.push({uid, text:'통증기간 '+btn.dataset.nd+'부터', section:'A&E', symLabel});
+        S.items.push({uid, text:'통증기간 '+btn.dataset.nd+'부터', section:'비고', symLabel});
       });
     });
     // 지속여부 (단일선택)
@@ -822,7 +822,7 @@ function loadCombined(keys, symLabel){
         btn.classList.add('on');
         const uid='NRS:'+symLabel+':cont';
         S.items=S.items.filter(c=>c.uid!==uid);
-        S.items.push({uid, text:'통증지속 '+btn.dataset.nc, section:'A&E', symLabel});
+        S.items.push({uid, text:'통증지속 '+btn.dataset.nc, section:'비고', symLabel});
       });
     });
   }
@@ -987,6 +987,11 @@ function renderFall(){
 // 팝업
 // ============================================================
 function showPopup(){
+  // 낙상위험 항상 포함 (미완료 시에도 기본 추가)
+  if(!S.items.find(c=>c.text==='낙상위험'&&c.section==='진단')){
+    S.items.push({text:'낙상위험', section:'진단', symLabel:'의식/낙상'});
+  }
+
   const labelOrder=[];
   S.items.forEach(item=>{ if(item.symLabel&&!labelOrder.includes(item.symLabel)) labelOrder.push(item.symLabel); });
 
@@ -1005,14 +1010,19 @@ function showPopup(){
   const symLabels=labelOrder.filter(l=>l!=='침습적 도관');
   symLabels.forEach(label=>{
     const ae=S.items.filter(c=>c.symLabel===label&&c.section==='A&E');
+    const nrs=S.items.filter(c=>c.symLabel===label&&c.section==='비고');
     const dx=S.items.filter(c=>c.symLabel===label&&c.section==='진단');
     const pe=S.items.filter(c=>c.symLabel===label&&c.section==='계획');
-    if(!ae.length&&!dx.length&&!pe.length) return;
+    if(!ae.length&&!nrs.length&&!dx.length&&!pe.length) return;
 
     html+=`<div class="p-sym-hdr">${label} — 간호진술문</div>`;
     if(ae.length){
       html+=`<div class="p-sec-lbl blue">사정 【A&E】 간호진술문</div>`;
       ae.forEach(item=>{ html+=`<div class="p-item"><div class="p-dot d-ae"></div><div>${item.text}</div></div>`; });
+    }
+    if(nrs.length){
+      html+=`<div class="p-sec-lbl" style="color:#94a3b8;border-color:#334155;">📝 통증 평가 (비고)</div>`;
+      html+=`<div class="p-item" style="color:#64748b;font-size:13px;"><div class="p-dot" style="background:#334155;flex-shrink:0;"></div><div>${nrs.map(i=>i.text).join(' / ')}</div></div>`;
     }
     if(dx.length){
       html+=`<div class="p-sec-lbl red">진단 【D】</div>`;
