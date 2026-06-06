@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>KTAS Triage — UI Mockup</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#111827;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;color:#fff;padding:24px 16px;}
+
+h1.page-title{text-align:center;font-size:13px;color:#6b7280;margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;}
+p.page-sub{text-align:center;font-size:12px;color:#374151;margin-bottom:32px;}
+
+.screens{display:flex;gap:24px;overflow-x:auto;padding-bottom:20px;align-items:flex-start;}
+.screen-wrap{flex-shrink:0;}
+.screen-num{text-align:center;font-size:10px;color:#4b5563;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+
+/* Phone frame */
+.phone{width:360px;background:#0d0d1a;border-radius:36px;border:2px solid #1f2937;padding:16px 0 24px;box-shadow:0 24px 60px rgba(0,0,0,0.6);}
+.notch{width:100px;height:6px;background:#1f2937;border-radius:3px;margin:0 auto 14px;}
+.pscreen{padding:0 14px;max-height:720px;overflow-y:auto;scrollbar-width:none;}
+.pscreen::-webkit-scrollbar{display:none;}
+
+/* App top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:4px 0 14px;}
+.appname{font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.5px;}
+.appname em{color:#ef4444;font-style:normal;}
+.step-pill{background:#ef4444;color:#fff;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;}
+
+/* Progress */
+.prog-wrap{margin-bottom:18px;}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;color:#4b5563;margin-bottom:5px;}
+.prog-bar{height:3px;background:#1f2937;border-radius:2px;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#ef4444,#f97316);}
+
+/* Section header */
+.sec-h{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;}
+.sec-sub{font-size:11px;color:#6b7280;margin-bottom:14px;}
+
+/* Card */
+.card{background:#161625;border:1px solid #1f2937;border-radius:12px;padding:13px;margin-bottom:10px;}
+.card-lbl{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+
+/* Input field mock */
+.ifield{background:#0a0a14;border:1px solid #1f2937;border-radius:8px;padding:9px 12px;color:#9ca3af;font-size:13px;width:100%;}
+.ifield.filled{color:#e5e7eb;border-color:#374151;}
+.irow{display:flex;gap:7px;margin-bottom:7px;}
+.igrp{flex:1;}
+.ilbl{font-size:10px;color:#6b7280;margin-bottom:3px;}
+
+/* Route buttons */
+.route-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+.rbtn{padding:8px 13px;border-radius:8px;border:1px solid #1f2937;background:#0a0a14;color:#6b7280;font-size:12px;}
+.rbtn.on{background:#1e3a5f;border-color:#3b82f6;color:#93c5fd;font-weight:600;}
+
+/* KTAS buttons */
+.ktas-row{display:flex;gap:5px;}
+.kbtn{flex:1;padding:10px 0;border-radius:8px;font-size:15px;font-weight:800;text-align:center;border:1px solid transparent;}
+.k1{background:#3b0d0d;color:#fca5a5;border-color:#7f1d1d;}
+.k2{background:#3d1800;color:#fdba74;border-color:#7c2d12;}
+.k3{background:#3d2f00;color:#fde047;border-color:#713f12;}
+.k4{background:#062410;color:#86efac;border-color:#14532d;}
+.k5{background:#0a1e3d;color:#93c5fd;border-color:#1e3a5f;}
+.kbtn.active{outline:2px solid #fff;outline-offset:1px;}
+
+/* VS grid */
+.vs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+
+/* Tags */
+.tag-area{display:flex;flex-wrap:wrap;gap:6px;min-height:32px;align-items:center;}
+.tag{background:#0e2744;border:1px solid #1e40af;color:#93c5fd;padding:4px 9px;border-radius:20px;font-size:11px;display:flex;align-items:center;gap:3px;}
+.tag-x{color:#60a5fa;font-size:9px;}
+.addbtn{background:transparent;border:1px dashed #374151;color:#4b5563;padding:4px 9px;border-radius:20px;font-size:11px;}
+
+/* Special / dollar */
+.special-row{display:flex;gap:7px;align-items:flex-start;}
+.dollar-btn{background:#3b0a4a;border:1px solid #7e22ce;color:#c084fc;padding:8px 11px;border-radius:8px;font-size:13px;font-weight:800;flex-shrink:0;}
+.txta{background:#0a0a14;border:1px solid #1f2937;border-radius:8px;padding:9px 12px;color:#6b7280;font-size:12px;width:100%;min-height:48px;line-height:1.5;}
+
+/* Output box */
+.out-box{background:#050d0a;border:1px solid #14532d;border-radius:10px;padding:13px;font-family:'Courier New',monospace;font-size:10.5px;color:#4ade80;line-height:1.75;margin-bottom:10px;white-space:pre;}
+.out-box .dim{color:#1f4b35;}
+.out-box .hi{color:#86efac;}
+.out-box .val{color:#d1fae5;}
+
+/* Buttons */
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;text-align:center;margin-bottom:7px;display:block;}
+.btn-blue{width:100%;padding:13px;background:linear-gradient(135deg,#1d4ed8,#1e40af);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;text-align:center;margin-bottom:7px;display:block;}
+.btn-ghost{width:100%;padding:11px;background:#161625;border:1px solid #1f2937;color:#6b7280;border-radius:12px;font-size:13px;text-align:center;display:block;}
+
+/* General impression */
+.gi-q{font-size:16px;font-weight:700;color:#fff;text-align:center;margin:12px 0 16px;line-height:1.5;}
+.gi-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #1a1a2d;}
+.gi-item:last-child{border:none;}
+.gi-label{font-size:13px;color:#d1d5db;}
+.gi-label small{display:block;font-size:10px;color:#6b7280;margin-top:2px;}
+.pills{display:flex;gap:5px;}
+.pill{padding:5px 11px;border-radius:20px;font-size:11px;border:1px solid #1f2937;background:#0a0a14;color:#9ca3af;}
+.pill.ok{background:#062410;border-color:#14532d;color:#4ade80;}
+.pill.bad{background:#3b0d0d;border-color:#7f1d1d;color:#f87171;}
+.pill.warn{background:#3d2f00;border-color:#713f12;color:#fbbf24;}
+
+/* ABCD */
+.abcd-card{background:#161625;border:1px solid #1f2937;border-radius:12px;padding:14px;margin-bottom:9px;}
+.abcd-letter{font-size:22px;font-weight:800;color:#60a5fa;margin-bottom:3px;}
+.abcd-full{font-size:10px;color:#6b7280;margin-bottom:6px;}
+.abcd-q{font-size:13px;color:#d1d5db;margin-bottom:10px;}
+.yn-row{display:flex;gap:7px;}
+.yn{flex:1;padding:9px;border-radius:8px;text-align:center;font-size:13px;font-weight:600;border:1px solid #1f2937;}
+.yn.yes{background:#062410;border-color:#14532d;color:#4ade80;}
+.yn.no{background:#161625;border-color:#1f2937;color:#4b5563;}
+
+/* CC grid */
+.cc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.cc-btn{padding:14px 6px;border-radius:12px;text-align:center;border:1px solid #1f2937;background:#161625;}
+.cc-icon{font-size:22px;display:block;margin-bottom:5px;}
+.cc-text{font-size:10px;color:#9ca3af;line-height:1.3;}
+.cc-btn.cr{border-color:#7f1d1d;background:#1a0808;}
+.cc-btn.co{border-color:#7c2d12;background:#1a0e05;}
+.cc-btn.cy{border-color:#713f12;background:#181408;}
+.cc-btn.cg{border-color:#14532d;background:#08130d;}
+.cc-btn.cb{border-color:#1e3a5f;background:#08101a;}
+
+/* Red flag */
+.alert-band{background:#3b0d0d;border:1px solid #7f1d1d;border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:#fca5a5;display:flex;align-items:center;gap:7px;}
+.flag-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #1a1a2d;}
+.flag-item:last-child{border:none;}
+.fchk{width:18px;height:18px;border-radius:4px;border:1px solid #374151;background:#0a0a14;flex-shrink:0;}
+.fchk.on{background:#ef4444;border-color:#ef4444;}
+.ftext{font-size:12px;color:#d1d5db;}
+
+/* Questions */
+.q-card{background:#161625;border:1px solid #1f2937;border-radius:12px;padding:13px;margin-bottom:9px;}
+.q-text{font-size:13px;color:#d1d5db;margin-bottom:10px;font-weight:500;}
+.q-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.q-opt{padding:8px 10px;border-radius:8px;border:1px solid #1f2937;background:#0a0a14;color:#9ca3af;font-size:11px;text-align:center;}
+.q-opt.sel{border-color:#3b82f6;background:#0e2744;color:#93c5fd;}
+.nrs-wrap{margin-top:6px;}
+.nrs-track{height:5px;background:linear-gradient(90deg,#22c55e 0%,#eab308 50%,#ef4444 100%);border-radius:3px;position:relative;}
+.nrs-thumb{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:-7px;left:72%;margin-left:-9px;box-shadow:0 2px 8px rgba(0,0,0,0.5);}
+.nrs-num{position:absolute;top:-26px;left:72%;transform:translateX(-50%);font-size:12px;font-weight:700;color:#fbbf24;}
+.nrs-labs{display:flex;justify-content:space-between;font-size:9px;color:#4b5563;margin-top:5px;}
+
+/* Modifier */
+.mod-item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #1a1a2d;}
+.mod-item:last-child{border:none;}
+.mod-arrow{color:#f97316;font-size:14px;font-weight:700;}
+.mod-text{font-size:12px;color:#d1d5db;flex:1;}
+.mod-badge{padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;}
+.mb-r{background:#3b0d0d;color:#fca5a5;}
+.mb-o{background:#3d1800;color:#fdba74;}
+.mb-y{background:#3d2f00;color:#fde047;}
+.ktas-result-box{background:#3d1800;border:1px solid #c2410c;border-radius:10px;padding:14px;text-align:center;margin-top:12px;}
+.kr-label{font-size:10px;color:#9ca3af;margin-bottom:6px;}
+.kr-value{font-size:32px;font-weight:800;color:#fdba74;line-height:1;}
+.kr-sub{font-size:10px;color:#9ca3af;margin-top:5px;}
+.kr-note{font-size:9px;color:#78350f;margin-top:4px;}
+
+.divider{height:1px;background:#1f2937;margin:10px 0;}
+
+/* Full output */
+.full-out{background:#050d0a;border:1px solid #14532d;border-radius:10px;padding:13px;font-family:'Courier New',monospace;font-size:9.5px;color:#4ade80;line-height:1.8;margin-bottom:10px;white-space:pre;}
+
+</style>
+</head>
+<body>
+
+<h1 class="page-title">🏥 KTAS Quick Triage — UI Mockup</h1>
+<p class="page-sub">← 좌우로 스크롤 해서 모든 화면 확인</p>
+
+<div class="screens">
+
+<!-- ===================== SCREEN 0: PATIENT HEADER ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 0 · Patient Header</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">0 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>환자 기본정보</span><span>입력 후 바로 복사 가능</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:5%"></div></div>
+    </div>
+
+    <!-- 날짜/시간 -->
+    <div class="card">
+      <div class="card-lbl">내원 일시</div>
+      <div class="irow">
+        <div class="igrp" style="flex:1.4">
+          <div class="ilbl">내원 날짜</div>
+          <div class="ifield filled">2026-06-06</div>
+        </div>
+        <div class="igrp">
+          <div class="ilbl">내원 시간</div>
+          <div class="ifield filled">14 : 30</div>
+        </div>
+        <div class="igrp">
+          <div class="ilbl">접수 시간</div>
+          <div class="ifield">__ : __</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 환자정보 -->
+    <div class="card">
+      <div class="card-lbl">환자 정보</div>
+      <div class="irow">
+        <div class="igrp">
+          <div class="ilbl">환자번호</div>
+          <div class="ifield filled">100-234567</div>
+        </div>
+        <div class="igrp">
+          <div class="ilbl">이름</div>
+          <div class="ifield">홍 ○ ○</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 내원경로 -->
+    <div class="card">
+      <div class="card-lbl">내원 경로</div>
+      <div class="route-wrap">
+        <div class="rbtn">🚶 도보</div>
+        <div class="rbtn on">🚑 119</div>
+        <div class="rbtn">🚐 사설구급차</div>
+        <div class="rbtn">🏥 전원</div>
+        <div class="rbtn">🏢 외래</div>
+      </div>
+    </div>
+
+    <!-- KTAS -->
+    <div class="card">
+      <div class="card-lbl">KTAS</div>
+      <div class="ilbl" style="margin-bottom:5px;">내원시</div>
+      <div class="ktas-row" style="margin-bottom:8px;">
+        <div class="kbtn k1">1</div>
+        <div class="kbtn k2">2</div>
+        <div class="kbtn k3 active">3</div>
+        <div class="kbtn k4">4</div>
+        <div class="kbtn k5">5</div>
+      </div>
+      <div class="ilbl" style="margin-bottom:5px;">변경시 (없으면 패스)</div>
+      <div class="ktas-row">
+        <div class="kbtn k1">1</div>
+        <div class="kbtn k2 active">2</div>
+        <div class="kbtn k3">3</div>
+        <div class="kbtn k4">4</div>
+        <div class="kbtn k5">5</div>
+      </div>
+    </div>
+
+    <!-- V/S -->
+    <div class="card">
+      <div class="card-lbl">V/S</div>
+      <div class="vs-grid">
+        <div class="igrp"><div class="ilbl">BT (°C)</div><div class="ifield filled">37.8</div></div>
+        <div class="igrp"><div class="ilbl">HR (/min)</div><div class="ifield filled">98</div></div>
+        <div class="igrp"><div class="ilbl">RR (/min)</div><div class="ifield">—</div></div>
+        <div class="igrp"><div class="ilbl">BP (수축기)</div><div class="ifield filled">118</div></div>
+        <div class="igrp"><div class="ilbl">BP (이완기)</div><div class="ifield filled">76</div></div>
+        <div class="igrp"><div class="ilbl">SpO2 (%)</div><div class="ifield filled">96</div></div>
+      </div>
+      <div style="margin-top:8px;">
+        <div class="ilbl" style="margin-bottom:4px;">산소</div>
+        <div class="route-wrap">
+          <div class="rbtn on">RA</div>
+          <div class="rbtn">O2 (L/min)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 과거력 -->
+    <div class="card">
+      <div class="card-lbl">과거력 (# 태그)</div>
+      <div class="tag-area" style="margin-bottom:7px;">
+        <div class="tag">#고혈압 <span class="tag-x">✕</span></div>
+        <div class="tag">#당뇨 <span class="tag-x">✕</span></div>
+        <div class="addbtn">+ 진단명 추가</div>
+      </div>
+      <div class="divider"></div>
+      <div class="ilbl" style="margin-top:7px;margin-bottom:4px;">수술력 (s/p)</div>
+      <div class="tag-area">
+        <div class="tag" style="background:#1a2e0e;border-color:#365314;color:#84cc16;">s/p 충수절제술 <span class="tag-x">✕</span></div>
+        <div class="addbtn">+ 수술 추가</div>
+      </div>
+    </div>
+
+    <!-- 내원동기 -->
+    <div class="card">
+      <div class="card-lbl">내원동기</div>
+      <div class="ilbl" style="margin-bottom:4px;">내원사유</div>
+      <div class="ifield filled" style="margin-bottom:8px;">복통</div>
+      <div class="ilbl" style="margin-bottom:4px;">현재 호소</div>
+      <div class="txta">6시간 전부터 RLQ 통증 NRS 8/10. 발열 및 구토 동반.</div>
+      <div style="margin-top:6px;display:flex;gap:6px;">
+        <div class="rbtn" style="font-size:11px;">KTAS 질문으로 자동 입력 →</div>
+      </div>
+    </div>
+
+    <!-- 특이사항 -->
+    <div class="card">
+      <div class="card-lbl">특이사항</div>
+      <div class="special-row">
+        <div class="dollar-btn">$</div>
+        <div class="txta" style="color:#9ca3af;">특이사항 없으면 빈칸</div>
+      </div>
+    </div>
+
+    <!-- OUTPUT PREVIEW -->
+    <div class="card-lbl" style="margin-bottom:6px;">📋 생성된 기록 미리보기</div>
+    <div class="out-box"><span class="dim">──────────────────────────
+</span><span class="hi">내원</span><span class="val">: 2026-06-06  </span><span class="hi">시간</span><span class="val">: 14:30  </span><span class="hi">접수</span><span class="val">: 14:38
+</span><span class="hi">환자</span><span class="val">: 100-234567  홍○○
+</span><span class="hi">경로</span><span class="val">: 119
+</span><span class="hi">KTAS</span><span class="val">: 내원시 3 → 변경 2
+</span><span class="hi">V/S</span><span class="val">: BT 37.8 / HR 98 / RR __
+     BP 118/76 / SpO2 96% (RA)
+
+</span><span class="hi">[내원동기]
+</span><span class="val">과거력: #고혈압 #당뇨
+        s/p 충수절제술
+내원사유: 복통
+현재호소: 6시간 전부터 RLQ 통증
+          NRS 8/10. 발열·구토 동반.
+
+특이사항: 없음</span>
+<span class="dim">──────────────────────────</span></div>
+
+    <div class="btn-primary">📋 전체 복사</div>
+    <div class="btn-blue">➡ KTAS 질문으로 이동</div>
+    <div class="btn-ghost">🔄 초기화</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 1: GENERAL IMPRESSION ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 1 · General Impression (때깔)</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">1 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>General Impression</span><span>눈으로 먼저 훑기</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:14%"></div></div>
+    </div>
+
+    <div class="gi-q">이 환자,<br>어떻게 보이나요?</div>
+    <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:16px;">말 걸기 전, 0.5초 인상으로 체크</div>
+
+    <div class="card">
+      <div class="gi-item">
+        <div class="gi-label">입원 방식<small>어떻게 들어왔나</small></div>
+        <div class="pills">
+          <div class="pill ok">🚶 스스로</div>
+          <div class="pill">♿ 휠체어</div>
+          <div class="pill bad">🛏 들것</div>
+        </div>
+      </div>
+      <div class="gi-item">
+        <div class="gi-label">얼굴색<small>피부 색조</small></div>
+        <div class="pills">
+          <div class="pill ok">정상</div>
+          <div class="pill warn">창백</div>
+          <div class="pill bad">청색증</div>
+          <div class="pill warn">홍조</div>
+        </div>
+      </div>
+      <div class="gi-item">
+        <div class="gi-label">땀<small>발한 여부</small></div>
+        <div class="pills">
+          <div class="pill ok">없음</div>
+          <div class="pill bad">식은땀</div>
+        </div>
+      </div>
+      <div class="gi-item">
+        <div class="gi-label">호흡<small>외관상</small></div>
+        <div class="pills">
+          <div class="pill ok">편안</div>
+          <div class="pill warn">빠름</div>
+          <div class="pill bad">힘들어 보임</div>
+        </div>
+      </div>
+      <div class="gi-item">
+        <div class="gi-label">의식/반응<small>눈 마주침</small></div>
+        <div class="pills">
+          <div class="pill ok">명료</div>
+          <div class="pill warn">멍함</div>
+          <div class="pill bad">반응 저하</div>
+        </div>
+      </div>
+      <div class="gi-item">
+        <div class="gi-label">자세<small>자발적 움직임</small></div>
+        <div class="pills">
+          <div class="pill ok">편안</div>
+          <div class="pill warn">웅크림</div>
+          <div class="pill bad">움직임 없음</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sick or not sick 결과 -->
+    <div style="background:#062410;border:1px solid #14532d;border-radius:10px;padding:14px;text-align:center;margin-bottom:10px;">
+      <div style="font-size:11px;color:#6b7280;margin-bottom:6px;">첫 인상 판단</div>
+      <div style="font-size:22px;font-weight:800;color:#4ade80;">✅ NOT Sick</div>
+      <div style="font-size:10px;color:#166534;margin-top:4px;">ABCD 확인 후 주호소로 진행</div>
+    </div>
+
+    <!-- Sick 예시 (주석처럼) -->
+    <div style="background:#1a0808;border:1px dashed #7f1d1d;border-radius:10px;padding:11px;text-align:center;margin-bottom:12px;opacity:0.6;">
+      <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">위험 항목 선택 시</div>
+      <div style="font-size:18px;font-weight:800;color:#ef4444;">⚠️ SICK — 즉시 알림</div>
+      <div style="font-size:10px;color:#991b1b;margin-top:3px;">담당 의사/Charge RN 호출 필요</div>
+    </div>
+
+    <div class="btn-blue">→ ABCD 확인으로</div>
+    <div class="btn-ghost">← 환자 정보로</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 2: ABCD ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 2 · ABCD Check</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">2 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>ABCD 확인</span><span>생명 위협 즉각 판별</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:28%"></div></div>
+    </div>
+
+    <div class="sec-h">ABCD 확인</div>
+    <div class="sec-sub">하나라도 이상 → 즉각 Resuscitation</div>
+
+    <div class="abcd-card">
+      <div class="abcd-letter">A</div>
+      <div class="abcd-full">Airway — 기도</div>
+      <div class="abcd-q">말을 할 수 있나요?<br><span style="font-size:10px;color:#6b7280;">대화가 가능한지 확인</span></div>
+      <div class="yn-row">
+        <div class="yn yes">✓ 가능</div>
+        <div class="yn no">✗ 불가</div>
+      </div>
+    </div>
+
+    <div class="abcd-card">
+      <div class="abcd-letter">B</div>
+      <div class="abcd-full">Breathing — 호흡</div>
+      <div class="abcd-q">스스로 숨을 쉬고 있나요?<br><span style="font-size:10px;color:#6b7280;">흉곽 움직임, SpO2 확인</span></div>
+      <div class="yn-row">
+        <div class="yn yes">✓ 정상</div>
+        <div class="yn no">✗ 이상</div>
+      </div>
+    </div>
+
+    <div class="abcd-card">
+      <div class="abcd-letter">C</div>
+      <div class="abcd-full">Circulation — 순환</div>
+      <div class="abcd-q">맥박 있나요? 쇼크 징후?<br><span style="font-size:10px;color:#6b7280;">BP, HR, 피부 관류 확인</span></div>
+      <div class="yn-row">
+        <div class="yn yes">✓ 정상</div>
+        <div class="yn no">✗ 이상</div>
+      </div>
+    </div>
+
+    <div class="abcd-card">
+      <div class="abcd-letter">D</div>
+      <div class="abcd-full">Disability — 의식</div>
+      <div class="abcd-q">의식이 있나요? (GCS 반응)<br><span style="font-size:10px;color:#6b7280;">눈 뜨기, 말, 움직임</span></div>
+      <div class="yn-row">
+        <div class="yn yes">✓ Alert</div>
+        <div class="yn no">✗ 저하</div>
+      </div>
+    </div>
+
+    <!-- 정상 -->
+    <div style="background:#062410;border:1px solid #14532d;border-radius:10px;padding:12px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:700;color:#4ade80;">✅ 전항목 정상 — 주호소로 이동</div>
+    </div>
+
+    <div class="btn-blue">→ 주호소 선택으로</div>
+    <div class="btn-ghost">← 다시 확인</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 3: CHIEF COMPLAINT ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 3 · 주호소 선택</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">3 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>주호소 선택</span><span>Chief Complaint</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:42%"></div></div>
+    </div>
+
+    <div class="sec-h">주호소가 무엇인가요?</div>
+    <div class="sec-sub">해당하는 항목을 탭하세요</div>
+
+    <div class="cc-grid">
+      <div class="cc-btn cr"><span class="cc-icon">💔</span><span class="cc-text">흉통<br>Chest Pain</span></div>
+      <div class="cc-btn cr"><span class="cc-icon">😮‍💨</span><span class="cc-text">호흡곤란<br>Dyspnea</span></div>
+      <div class="cc-btn co"><span class="cc-icon">🤢</span><span class="cc-text">복통<br>Abd. Pain</span></div>
+      <div class="cc-btn co"><span class="cc-icon">🤕</span><span class="cc-text">두통<br>Headache</span></div>
+      <div class="cc-btn co"><span class="cc-icon">😵</span><span class="cc-text">실신/의식변화<br>Syncope</span></div>
+      <div class="cc-btn cy"><span class="cc-icon">🌡️</span><span class="cc-text">발열<br>Fever</span></div>
+      <div class="cc-btn cy"><span class="cc-icon">💫</span><span class="cc-text">어지럼증<br>Dizziness</span></div>
+      <div class="cc-btn cy"><span class="cc-icon">🤮</span><span class="cc-text">구토/오심<br>N/V</span></div>
+      <div class="cc-btn cy"><span class="cc-icon">🚽</span><span class="cc-text">설사<br>Diarrhea</span></div>
+      <div class="cc-btn cg"><span class="cc-icon">🩹</span><span class="cc-text">외상<br>Trauma</span></div>
+      <div class="cc-btn cb"><span class="cc-icon">🤧</span><span class="cc-text">알레르기<br>Allergy</span></div>
+      <div class="cc-btn cg"><span class="cc-icon">🍼</span><span class="cc-text">소아발열<br>Pedi Fever</span></div>
+    </div>
+
+    <div style="background:#161625;border:1px dashed #374151;border-radius:10px;padding:12px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:11px;color:#6b7280;">직접 입력</div>
+      <div class="ifield" style="margin-top:6px;text-align:left;color:#6b7280;">기타 주호소 직접 입력...</div>
+    </div>
+
+    <div class="btn-ghost">← 뒤로</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 4: RED FLAG ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 4 · Red Flag (복통 예시)</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">4 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>Red Flag 확인</span><span>복통 — Abdominal Pain</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:56%"></div></div>
+    </div>
+
+    <div class="alert-band">⚠️ 위험 징후 1개 선택됨 — 즉시 확인 요망</div>
+
+    <div class="sec-h">🟠 복통 Red Flag</div>
+    <div class="sec-sub">해당하는 항목 모두 체크</div>
+
+    <div class="card">
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">혈압 저하 (SBP &lt; 90)</div></div>
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">창백함 / 식은땀</div></div>
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">의식 저하</div></div>
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">토혈 (Hematemesis)</div></div>
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">혈변 (Hematochezia / Melena)</div></div>
+      <div class="flag-item"><div class="fchk on"></div><div class="ftext" style="color:#fca5a5;">복부 강직 (Board-like rigidity)</div></div>
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">임신 가능성 (가임기 여성)</div></div>
+      <div class="flag-item"><div class="fchk"></div><div class="ftext">박동성 복부 종괴</div></div>
+    </div>
+
+    <!-- 강직 선택 시 -->
+    <div style="background:#3b0d0d;border:1px solid #7f1d1d;border-radius:10px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:12px;color:#fca5a5;font-weight:700;margin-bottom:5px;">⚠️ 복부 강직 선택됨</div>
+      <div style="font-size:11px;color:#991b1b;">복막염 가능성 — 즉시 의사 보고 고려<br>IV access, Lab draw 준비</div>
+    </div>
+
+    <div class="btn-blue">→ 세부 질문으로 (Red Flag 있어도 계속)</div>
+    <div class="btn-ghost">← 주호소 다시 선택</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 5: QUESTIONS ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 5 · 세부 질문 (복통 예시)</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">5 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>세부 질문</span><span>복통 — OPQRST</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:70%"></div></div>
+    </div>
+
+    <div class="sec-h">🟠 복통 질문</div>
+    <div class="sec-sub">해당 항목을 탭하세요</div>
+
+    <div class="q-card">
+      <div class="q-text">언제부터 아팠나요? (Onset)</div>
+      <div class="q-opts">
+        <div class="q-opt">1시간 이내</div>
+        <div class="q-opt sel">오늘 (6시간 전)</div>
+        <div class="q-opt">2~3일 전</div>
+        <div class="q-opt">1주일 이상</div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">어디가 아픈가요? (Location)</div>
+      <div class="q-opts">
+        <div class="q-opt">RUQ</div>
+        <div class="q-opt">LUQ</div>
+        <div class="q-opt sel">RLQ</div>
+        <div class="q-opt">LLQ</div>
+        <div class="q-opt">Epigastric</div>
+        <div class="q-opt">Periumbilical</div>
+        <div class="q-opt" style="grid-column:span 2;">Diffuse (전체)</div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">통증 양상은? (Quality)</div>
+      <div class="q-opts">
+        <div class="q-opt">쥐어짜는</div>
+        <div class="q-opt sel">찌르는</div>
+        <div class="q-opt">묵직한</div>
+        <div class="q-opt">욱신거리는</div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">통증 점수 (NRS 0~10)</div>
+      <div class="nrs-wrap">
+        <div class="nrs-track">
+          <div class="nrs-num">8</div>
+          <div class="nrs-thumb"></div>
+        </div>
+        <div class="nrs-labs"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">발열이 있나요?</div>
+      <div class="q-opts">
+        <div class="q-opt">없음</div>
+        <div class="q-opt sel">있음</div>
+      </div>
+      <!-- 있음 선택 시 -->
+      <div style="margin-top:8px;">
+        <div class="ilbl">체온 입력</div>
+        <div class="ifield filled">38.5 °C</div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">구토가 있나요?</div>
+      <div class="q-opts">
+        <div class="q-opt">없음</div>
+        <div class="q-opt sel">있음</div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">설사가 있나요?</div>
+      <div class="q-opts">
+        <div class="q-opt sel">없음</div>
+        <div class="q-opt">있음</div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-text">여성 — 마지막 생리일 / 임신 가능성</div>
+      <div class="q-opts">
+        <div class="q-opt sel">남성 / 해당없음</div>
+        <div class="q-opt">LMP 입력</div>
+        <div class="q-opt">임신 가능성 있음</div>
+        <div class="q-opt">폐경</div>
+      </div>
+    </div>
+
+    <div class="btn-blue">→ Modifier 확인으로</div>
+    <div class="btn-ghost">← 이전으로</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 6: MODIFIER ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 6 · KTAS Modifier 추천</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">6 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>KTAS Modifier</span><span>자동 추천 — 최종 판단은 RN</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:85%"></div></div>
+    </div>
+
+    <div class="sec-h">입력 요약</div>
+    <div class="sec-sub">🟠 복통 / RLQ / NRS 8 / 발열 38.5 / 구토 (+)</div>
+
+    <div class="card">
+      <div class="card-lbl">⚠️ 추천 Modifier 후보</div>
+      <div class="mod-item">
+        <div class="mod-arrow">→</div>
+        <div class="mod-text">Severe Pain</div>
+        <div class="mod-badge mb-r">NRS 8 ≥ 7</div>
+      </div>
+      <div class="mod-item">
+        <div class="mod-arrow">→</div>
+        <div class="mod-text">Fever</div>
+        <div class="mod-badge mb-o">38.5°C ≥ 38</div>
+      </div>
+      <div class="mod-item">
+        <div class="mod-arrow">→</div>
+        <div class="mod-text">High Risk Abd. Pain</div>
+        <div class="mod-badge mb-r">RLQ+발열+구토</div>
+      </div>
+      <div class="mod-item">
+        <div class="mod-arrow">→</div>
+        <div class="mod-text">Board-like Rigidity</div>
+        <div class="mod-badge mb-r">Red Flag</div>
+      </div>
+    </div>
+
+    <div class="ktas-result-box">
+      <div class="kr-label">이 Modifier 조합 → 예상 KTAS</div>
+      <div class="kr-value">2</div>
+      <div class="kr-sub">Emergent — 긴급</div>
+      <div class="kr-note">※ 최종 레벨은 RN이 직접 결정</div>
+    </div>
+
+    <div style="height:10px;"></div>
+
+    <div class="card">
+      <div class="card-lbl">내원시 KTAS 비교</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">입력한 내원시</div>
+          <div class="kbtn k3" style="width:50px;display:inline-block;">3</div>
+        </div>
+        <div style="color:#6b7280;font-size:18px;">→</div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">Modifier 추천</div>
+          <div class="kbtn k2" style="width:50px;display:inline-block;">2</div>
+        </div>
+        <div style="color:#6b7280;font-size:18px;">→</div>
+        <div style="text-align:center;">
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px;">최종 (RN 결정)</div>
+          <div class="kbtn k2 active" style="width:50px;display:inline-block;">2</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-primary">→ 간호기록 생성</div>
+    <div class="btn-ghost">← 질문 수정하기</div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== SCREEN 7: FINAL OUTPUT ===================== -->
+<div class="screen-wrap">
+<div class="screen-num">Step 7 · 기록 생성 + 복사</div>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pscreen">
+    <div class="topbar">
+      <div class="appname"><em>ER</em> Quick Triage</div>
+      <div class="step-pill">7 / 7</div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-label"><span>기록 완성</span><span>복사하여 EMR에 붙여넣기</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div>
+    </div>
+
+    <div class="sec-h">📋 생성된 간호기록</div>
+    <div class="sec-sub">아래 텍스트를 복사하여 EMR에 붙여넣기</div>
+
+    <div class="full-out"><span class="dim">══════════════════════════
+</span><span class="hi">내원</span><span class="val">: 2026-06-06 14:30  </span><span class="hi">접수</span><span class="val">: 14:38
+</span><span class="hi">환자</span><span class="val">: 100-234567  홍○○
+</span><span class="hi">경로</span><span class="val">: 119
+</span><span class="hi">KTAS</span><span class="val">: 내원시 3 → 변경 2
+</span><span class="hi">V/S</span><span class="val">: BT 37.8 / HR 98 / RR 20
+     BP 118/76 / SpO2 96% (RA)
+</span><span class="dim">──────────────────────────
+</span><span class="hi">[내원동기]
+</span><span class="val">과거력: #고혈압 #당뇨
+        s/p 충수절제술
+내원사유: 복통 (Abdominal Pain)
+현재호소:
+  Onset: 6 hours ago (today)
+  Location: RLQ
+  Quality: Sharp
+  Severity: NRS 8/10
+  Fever: Yes (BT 38.5°C)
+  Vomiting: Yes / Diarrhea: No
+  Pregnancy: N/A (male)
+</span><span class="dim">──────────────────────────
+</span><span class="hi">[Red Flag]
+</span><span class="val">  → Board-like rigidity (+)
+  → Hemodynamic instability: Denied
+</span><span class="dim">──────────────────────────
+</span><span class="hi">[Modifier]
+</span><span class="val">  → Severe Pain (NRS ≥ 7)
+  → Fever (BT ≥ 38°C)
+  → High Risk Abdominal Pain
+     (RLQ + Fever + Vomiting)
+</span><span class="dim">──────────────────────────
+</span><span class="hi">[RN Assessment]
+</span><span class="val">  Mental status: Alert
+  Final KTAS: 2 (Emergent)
+</span><span class="dim">══════════════════════════</span></div>
+
+    <div class="btn-primary">📋 전체 복사</div>
+
+    <div style="display:flex;gap:7px;margin-bottom:10px;">
+      <div class="btn-ghost" style="flex:1;margin:0;">📝 수정하기</div>
+      <div class="btn-ghost" style="flex:1;margin:0;">🔄 새 환자</div>
+    </div>
+
+    <!-- 복사 완료 상태 (예시) -->
+    <div style="background:#062410;border:1px solid #14532d;border-radius:10px;padding:10px;text-align:center;margin-bottom:12px;opacity:0.85;">
+      <div style="font-size:13px;font-weight:700;color:#4ade80;">✅ 복사 완료!</div>
+      <div style="font-size:10px;color:#166534;margin-top:2px;">EMR 창에서 Ctrl+V / 붙여넣기</div>
+    </div>
+
+    <div style="height:16px;"></div>
+  </div>
+</div>
+</div>
+
+</div><!-- end .screens -->
+
+<!-- 범례 -->
+<div style="max-width:700px;margin:32px auto 0;background:#161625;border:1px solid #1f2937;border-radius:12px;padding:18px;">
+  <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">KTAS 컬러 범례</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#ef4444;border-radius:3px;"></div><span style="font-size:12px;color:#9ca3af;">KTAS 1 — 즉시 (Red)</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#f97316;border-radius:3px;"></div><span style="font-size:12px;color:#9ca3af;">KTAS 2 — 긴급 (Orange)</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#eab308;border-radius:3px;"></div><span style="font-size:12px;color:#9ca3af;">KTAS 3 — 응급 (Yellow)</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#22c55e;border-radius:3px;"></div><span style="font-size:12px;color:#9ca3af;">KTAS 4 — 준응급 (Green)</span></div>
+    <div style="display:flex;align-items:center;gap:6px;"><div style="width:12px;height:12px;background:#3b82f6;border-radius:3px;"></div><span style="font-size:12px;color:#9ca3af;">KTAS 5 — 비응급 (Blue)</span></div>
+  </div>
+</div>
+
+</body>
+</html>
