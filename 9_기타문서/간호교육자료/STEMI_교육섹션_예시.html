@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEMI 교육섹션 예시 — 응급실 의료인 교육자료</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --text: #e8eaf0;
+    --text-muted: #8892a4;
+    --accent: #e63946;
+    --accent-soft: rgba(230,57,70,0.12);
+    --blue: #4a90d9;
+    --blue-soft: rgba(74,144,217,0.12);
+    --yellow: #f5c842;
+    --yellow-soft: rgba(245,200,66,0.12);
+    --green: #2ecc71;
+    --green-soft: rgba(46,204,113,0.12);
+    --orange: #f08c00;
+    --orange-soft: rgba(240,140,0,0.12);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  .page-header {
+    background: linear-gradient(135deg, #1a0a0e 0%, #2d0d12 50%, #1a1d27 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 28px 24px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .page-header .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .page-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* ── 섹션 구분 탭 ── */
+  .section-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .section-tab {
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+
+  .section-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── 카드 ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .icon {
+    font-size: 20px;
+  }
+
+  /* ── 이미지 ── */
+  .img-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 12px 0;
+  }
+
+  .img-block img {
+    width: 100%;
+    display: block;
+    background: #fff;
+  }
+
+  .img-caption {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    border-top: 1px solid var(--border);
+  }
+
+  .img-caption a {
+    color: var(--blue);
+    text-decoration: none;
+  }
+
+  /* ── 정의 블록 ── */
+  .definition-box {
+    background: var(--blue-soft);
+    border-left: 4px solid var(--blue);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+
+  .definition-box strong {
+    color: var(--blue);
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  /* ── 위험인자 태그 ── */
+  .tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .tag {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .tag-red { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(230,57,70,0.3); }
+  .tag-blue { background: var(--blue-soft); color: var(--blue); border: 1px solid rgba(74,144,217,0.3); }
+  .tag-yellow { background: var(--yellow-soft); color: var(--yellow); border: 1px solid rgba(245,200,66,0.3); }
+  .tag-green { background: var(--green-soft); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+  .tag-orange { background: var(--orange-soft); color: var(--orange); border: 1px solid rgba(240,140,0,0.3); }
+
+  /* ── 병태생리 단계 ── */
+  .patho-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 14px 0;
+  }
+
+  .patho-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .patho-step:last-child { border-bottom: none; }
+
+  .patho-num {
+    min-width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 2px;
+  }
+
+  .patho-content {
+    flex: 1;
+  }
+
+  .patho-title {
+    font-weight: 700;
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  .patho-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .patho-arrow {
+    text-align: center;
+    color: var(--accent);
+    font-size: 18px;
+    padding: 2px 0;
+  }
+
+  /* ── 관상동맥 영역 테이블 ── */
+  .territory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .territory-table th {
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .territory-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .territory-table tr:last-child td { border-bottom: none; }
+
+  .artery-lad { color: #e63946; font-weight: 700; }
+  .artery-rca { color: #f5c842; font-weight: 700; }
+  .artery-lcx { color: #4a90d9; font-weight: 700; }
+
+  /* ── 증상 & 이유 테이블 ── */
+  .symptom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  .symptom-table th {
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .symptom-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  .symptom-table tr:last-child td { border-bottom: none; }
+
+  .symptom-name { color: #fff; font-weight: 600; }
+  .symptom-why { color: var(--text-muted); font-size: 12px; }
+
+  /* ── ECG 변화 ── */
+  .ecg-changes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .ecg-changes { grid-template-columns: 1fr; }
+  }
+
+  .ecg-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .ecg-item .phase {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .ecg-item .change {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .ecg-item .why {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── 치료 원칙 ── */
+  .treatment-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .treatment-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .treatment-badge {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .treat-drug { background: rgba(74,144,217,0.2); color: var(--blue); }
+  .treat-procedure { background: rgba(46,204,113,0.2); color: var(--green); }
+  .treat-monitor { background: rgba(245,200,66,0.2); color: var(--yellow); }
+
+  .treatment-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .treatment-why {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    padding-left: 4px;
+    border-left: 3px solid var(--border);
+  }
+
+  .treatment-why strong {
+    color: var(--text);
+  }
+
+  /* ── 주의사항 박스 ── */
+  .warn-box {
+    background: var(--accent-soft);
+    border: 1px solid rgba(230,57,70,0.3);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+
+  .warn-box .warn-title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .warn-box ul {
+    padding-left: 16px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  /* ── 핵심 암기 ── */
+  .memory-box {
+    background: linear-gradient(135deg, rgba(230,57,70,0.1), rgba(74,144,217,0.1));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-top: 14px;
+  }
+
+  .memory-box h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .memory-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .memory-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .memory-list li:last-child { border-bottom: none; }
+
+  .memory-list li::before {
+    content: '▸';
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── 섹션 라벨 ── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+    padding-left: 2px;
+  }
+
+  /* ── 새 교육 섹션 배너 ── */
+  .new-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(90deg, var(--blue), #7c5cbf);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin: 28px 0;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <span class="badge">❤️ 심장/순환기 — Case 01</span>
+  <h1>급성 심근경색 (STEMI)</h1>
+  <p>ST 분절 상승형 심근경색 · 교육 섹션 예시</p>
+</div>
+
+<div class="content">
+
+  <!-- ==============================
+       새 교육 섹션 안내
+  ============================== -->
+  <div class="new-badge">
+    📚 NEW · 지식 교육 섹션 (추가 예정)
+  </div>
+
+  <!-- ==============================
+       1. 정의
+  ============================== -->
+  <div class="section-label">01 · 정의</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">📖</span> 이 병이 뭔가요?
+    </div>
+
+    <div class="definition-box">
+      <strong>STEMI 정의</strong>
+      관상동맥이 <strong>완전히 막혀</strong> 심근에 혈류가 완전 차단되고, 심전도에서 <strong>ST분절 상승</strong>이 나타나는 급성 심근경색.
+      골든타임(90분) 내에 재관류하지 않으면 심근세포가 영구적으로 괴사한다.
+    </div>
+
+    <p style="font-size:13px; color:var(--text-muted); margin-top:10px;">
+      <strong style="color:var(--text)">NSTEMI와 차이:</strong> NSTEMI는 <em>부분 폐색</em>으로 ST 상승 없이 Troponin만 상승. STEMI는 <em>완전 폐색</em>으로 훨씬 더 위험하고 즉각적인 PCI가 필요하다.
+    </p>
+
+    <div class="tag-group">
+      <span class="tag tag-red">완전 폐색</span>
+      <span class="tag tag-red">ST 상승</span>
+      <span class="tag tag-red">Troponin 상승</span>
+      <span class="tag tag-blue">골든타임 90분</span>
+      <span class="tag tag-orange">즉각 PCI 필요</span>
+    </div>
+  </div>
+
+  <!-- ==============================
+       2. 위험인자
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">02 · 위험인자</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">⚠️</span> 누가 잘 걸리나요?
+    </div>
+
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">
+      죽상경화증이 수년~수십 년에 걸쳐 쌓이다가 어느 순간 플라크가 파열하면서 STEMI가 발생한다.
+    </p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div>
+        <div style="font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px;">조절 가능한 위험인자</div>
+        <div class="tag-group">
+          <span class="tag tag-red">고혈압</span>
+          <span class="tag tag-red">당뇨병</span>
+          <span class="tag tag-red">고지혈증</span>
+          <span class="tag tag-red">흡연</span>
+          <span class="tag tag-red">비만</span>
+          <span class="tag tag-red">운동 부족</span>
+          <span class="tag tag-red">스트레스</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:6px;">조절 불가능한 위험인자</div>
+        <div class="tag-group">
+          <span class="tag tag-blue">고령 (남 ≥45세, 여 ≥55세)</span>
+          <span class="tag tag-blue">남성</span>
+          <span class="tag tag-blue">가족력</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       3. 병태생리
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">03 · 병태생리 — 왜 생기나요?</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🔬</span> 발생 메커니즘
+    </div>
+
+    <div class="patho-flow">
+      <div class="patho-step">
+        <div class="patho-num">1</div>
+        <div class="patho-content">
+          <div class="patho-title">죽상경화증 (Atherosclerosis) 형성</div>
+          <div class="patho-desc">LDL 콜레스테롤이 혈관 내피세포 손상 부위에 침착 → 대식세포가 LDL을 먹어 거품세포(foam cell) 형성 → 지질 코어(lipid core)를 가진 플라크가 혈관벽에 쌓임</div>
+        </div>
+      </div>
+      <div class="patho-step">
+        <div class="patho-num">2</div>
+        <div class="patho-content">
+          <div class="patho-title">플라크 파열 (Plaque Rupture)</div>
+          <div class="patho-desc">불안정한 플라크의 얇은 섬유성 막(fibrous cap)이 파열 → 지질 코어 내부의 조직인자(tissue factor)가 혈액에 노출</div>
+        </div>
+      </div>
+      <div class="patho-step">
+        <div class="patho-num">3</div>
+        <div class="patho-content">
+          <div class="patho-title">혈소판 응집 & 혈전 형성 (Thrombosis)</div>
+          <div class="patho-desc">노출된 조직인자 → 혈소판 활성화 → 응고 연쇄반응 → 혈전(clot) 형성 → 관상동맥 <strong>완전 폐색</strong></div>
+        </div>
+      </div>
+      <div class="patho-step">
+        <div class="patho-num">4</div>
+        <div class="patho-content">
+          <div class="patho-title">심근 허혈 → 괴사</div>
+          <div class="patho-desc">폐색 후 <strong>20분</strong>부터 심근세포 괴사 시작 → <strong>6시간</strong> 내 관류 회복 없으면 전층(transmural) 심근경색 완성</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이미지: 플라크 단면 -->
+    <div class="img-block" style="margin-top:16px;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/d/d1/Blausen_0257_CoronaryArtery_Plaque.png"
+           alt="관상동맥 내 플라크 단면"
+           loading="lazy">
+      <div class="img-caption">
+        관상동맥 내 죽상동맥경화 플라크 단면도 — 지질 코어와 섬유성 막 구조
+        <br><a href="https://commons.wikimedia.org/wiki/File:Blausen_0257_CoronaryArtery_Plaque.png" target="_blank">© BruceBlaus / Wikimedia Commons (CC BY 3.0)</a>
+      </div>
+    </div>
+
+    <!-- 이미지: 관상동맥 폐색 입체 -->
+    <div class="img-block">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Blausen_0259_CoronaryArteryDisease_02.png"
+           alt="관상동맥 폐색 3D 모식도"
+           loading="lazy">
+      <div class="img-caption">
+        혈전에 의한 관상동맥 완전 폐색 — 원위부 심근으로 혈류 차단
+        <br><a href="https://commons.wikimedia.org/wiki/File:Blausen_0259_CoronaryArteryDisease_02.png" target="_blank">© BruceBlaus / Wikimedia Commons (CC BY 3.0)</a>
+      </div>
+    </div>
+
+    <div class="warn-box">
+      <div class="warn-title">🧠 왜 흉통이 생기는가?</div>
+      <p style="font-size:13px; line-height:1.7;">
+        심근에 산소 공급이 차단되면 <strong>무산소 대사</strong>로 젖산(lactic acid)이 축적되고,
+        심근 손상으로 <strong>칼륨·브래디키닌·프로스타글란딘</strong> 같은 통증 매개물질이 방출된다.
+        이것이 교감신경 → 척수 → 시상 경로를 거쳐 흉통으로 인식된다.
+        <br><br>
+        <strong>방사통의 이유:</strong> 심장의 통증 신호가 C7~T4 척수 분절로 올라가는데,
+        같은 분절을 쓰는 팔(특히 좌측), 턱, 어깨가 아프게 느껴진다 (referred pain).
+      </p>
+    </div>
+  </div>
+
+  <!-- ==============================
+       4. 관상동맥 해부학
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">04 · 관상동맥 해부학 — 어디가 막히면 어디가 죽나요?</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🫀</span> 관상동맥 영역 & ECG 변화
+    </div>
+
+    <div class="img-block">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Coronary_arteries.svg"
+           alt="관상동맥 해부학"
+           loading="lazy"
+           style="background:#fff; padding:8px;">
+      <div class="img-caption">
+        관상동맥 해부학 — LAD(적색), RCA(황색), LCx(청색) 주요 분지
+        <br><a href="https://commons.wikimedia.org/wiki/File:Coronary_arteries.svg" target="_blank">© Patrick J. Lynch / Wikimedia Commons (CC BY-SA 3.0)</a>
+      </div>
+    </div>
+
+    <table class="territory-table">
+      <thead>
+        <tr>
+          <th>관상동맥</th>
+          <th>공급 영역</th>
+          <th>막히면 ECG</th>
+          <th>위험도</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="artery-lad">LAD<br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">좌전하행지</span></td>
+          <td style="font-size:13px;">전벽, 심실 중격, 심첨부</td>
+          <td style="font-size:13px;">V1–V4 ST 상승</td>
+          <td><span class="tag tag-red" style="font-size:11px;">매우 위험</span></td>
+        </tr>
+        <tr>
+          <td class="artery-rca">RCA<br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">우관상동맥</span></td>
+          <td style="font-size:13px;">하벽, 우심실, SA·AV 결절</td>
+          <td style="font-size:13px;">II, III, aVF ST 상승</td>
+          <td><span class="tag tag-yellow" style="font-size:11px;">부정맥 주의</span></td>
+        </tr>
+        <tr>
+          <td class="artery-lcx">LCx<br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">좌회선지</span></td>
+          <td style="font-size:13px;">측벽, 후벽 (일부)</td>
+          <td style="font-size:13px;">I, aVL, V5–V6 ST 상승</td>
+          <td><span class="tag tag-blue" style="font-size:11px;">진단 어려움</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="img-block" style="margin-top:14px;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/8f/Localisation_of_the_occlusion_in_STEMI.svg"
+           alt="STEMI 폐색 위치와 ECG 변화"
+           loading="lazy"
+           style="background:#fff; padding:8px;">
+      <div class="img-caption">
+        STEMI 폐색 위치와 ECG 유도 변화 대응 도표
+        <br><a href="https://commons.wikimedia.org/wiki/File:Localisation_of_the_occlusion_in_STEMI.svg" target="_blank">© WikiVolunteer / Wikimedia Commons (CC BY-SA 4.0)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       5. 임상 증상 & 이유
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">05 · 임상 증상 — 왜 이 증상이 나타나나요?</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">🩺</span> 증상과 기전
+    </div>
+
+    <table class="symptom-table">
+      <thead>
+        <tr>
+          <th>증상</th>
+          <th>기전 (왜 생기나요?)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="symptom-name">흉통/압박감</div>
+            <div class="symptom-why">심한 압박, 쥐어짜는 느낌<br>30분 이상 지속</div>
+          </td>
+          <td style="font-size:13px;">무산소 대사 → 젖산·브래디키닌 축적 → 심근 통증 수용체 자극</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symptom-name">좌측 팔/턱 방사통</div>
+            <div class="symptom-why">어깨, 목, 명치 방사 가능</div>
+          </td>
+          <td style="font-size:13px;">심장 통증 신호 C7~T4 → 같은 분절 팔/턱으로 오인 (referred pain)</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symptom-name">식은땀 / 창백</div>
+          </td>
+          <td style="font-size:13px;">심박출량 감소 → 교감신경 활성화 → 말초혈관 수축, 땀샘 자극</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symptom-name">오심 / 구토</div>
+          </td>
+          <td style="font-size:13px;">하벽 MI (RCA 폐색) → 미주신경 자극 → 서맥 + 오심/구토</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symptom-name">호흡곤란</div>
+          </td>
+          <td style="font-size:13px;">좌심실 기능 저하 → 폐울혈 → 가스교환 저하</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="symptom-name">실신 / 의식 변화</div>
+            <div class="symptom-why">심한 경우</div>
+          </td>
+          <td style="font-size:13px;">심박출량 급감 or 심한 부정맥 → 뇌관류 저하</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn-box" style="margin-top:12px;">
+      <div class="warn-title">⚠️ 비전형 증상 — 놓치기 쉬운 경우</div>
+      <ul>
+        <li>당뇨 환자: 무통성 심근경색 (신경병증으로 통증 못 느낌)</li>
+        <li>노인/여성: 오심·구토·피로감만 호소하는 경우 많음</li>
+        <li>명치 통증: 소화불량으로 오인 주의 → 의심되면 ECG 먼저</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==============================
+       6. ECG 진단
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">06 · 진단 — ECG가 왜 그렇게 변하나요?</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">📈</span> STEMI ECG 변화의 이유
+    </div>
+
+    <div class="ecg-changes">
+      <div class="ecg-item">
+        <div class="phase">초기 (수분~1시간)</div>
+        <div class="change">과첨예 T파 (Hyperacute T)</div>
+        <div class="why">세포 내 칼륨 이동 → 재분극 변화. 발견하기 어렵지만 가장 초기 징후</div>
+      </div>
+      <div class="ecg-item">
+        <div class="phase">급성기 (수분~수시간)</div>
+        <div class="change" style="color:var(--accent);">ST 분절 상승 ▲</div>
+        <div class="why">허혈 심근의 손상 전류(current of injury) → 손상된 영역 상방에서 ST 상승</div>
+      </div>
+      <div class="ecg-item">
+        <div class="phase">수시간~수일</div>
+        <div class="change">T파 역전</div>
+        <div class="why">심근 재분극 이상 → 양성 T파가 음성으로 반전 (경색 확인 증거)</div>
+      </div>
+      <div class="ecg-item">
+        <div class="phase">수일~수주 후 (영구)</div>
+        <div class="change">병적 Q파</div>
+        <div class="why">괴사 심근은 전기 신호 없음 → 반대 방향 탈분극만 기록 → Q파 형성</div>
+      </div>
+    </div>
+
+    <div class="img-block" style="margin-top:14px;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/ST_elevation_myocardial_infarction_ECG.jpg"
+           alt="STEMI ECG 실제 사례"
+           loading="lazy">
+      <div class="img-caption">
+        전벽 STEMI 실제 12유도 ECG — V1–V4 ST 상승, 상호 변화 확인
+        <br><a href="https://commons.wikimedia.org/wiki/File:ST_elevation_myocardial_infarction_ECG.jpg" target="_blank">© Cureus Journal / Wikimedia Commons (CC BY 4.0)</a>
+      </div>
+    </div>
+
+    <div style="background:var(--surface2); border-radius:8px; padding:14px; margin-top:12px; font-size:13px;">
+      <strong style="color:var(--yellow);">📋 STEMI 진단 기준 (ST 상승 기준값)</strong>
+      <ul style="margin-top:8px; padding-left:16px; line-height:2; color:var(--text-muted);">
+        <li><strong style="color:var(--text);">V2–V3:</strong> 남성 &lt;40세 ≥2.5mm, 남성 ≥40세 ≥2mm, 여성 ≥1.5mm</li>
+        <li><strong style="color:var(--text);">다른 유도:</strong> 인접 2개 이상 유도에서 ≥1mm</li>
+        <li><strong style="color:var(--text);">후벽 MI 의심:</strong> V7–V9 유도 확인 (LCx 폐색)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==============================
+       7. 치료 원칙 & 이유
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">07 · 치료 — 왜 이 치료를 하나요?</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">💊</span> 치료 원칙과 기전
+    </div>
+
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+      STEMI 치료의 핵심 = <strong style="color:#fff;">최대한 빨리 막힌 혈관을 다시 열기 (재관류)</strong><br>
+      모든 초기 처치는 재관류 전까지 심근 손상을 최소화하기 위함이다.
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-procedure">1순위</span>
+        <span class="treatment-name">Primary PCI (경피적 관상동맥 중재술)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜?</strong> 막힌 관상동맥에 직접 스텐트를 삽입해 재관류. 혈전용해제보다 성공률 높고 출혈 합병증 적음.
+        D2B(Door-to-Balloon) 시간 <strong>90분 이내</strong> 목표.
+      </div>
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-drug">약물</span>
+        <span class="treatment-name">Aspirin 300mg (씹어서)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜?</strong> COX-1 비가역적 억제 → TXA2 생성 차단 → 혈소판 응집 억제.
+        씹어야 하는 이유: 분쇄 시 흡수 속도가 2–3배 빠름.
+      </div>
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-drug">약물</span>
+        <span class="treatment-name">P2Y12 억제제 (Ticagrelor or Clopidogrel)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜?</strong> ADP 수용체 차단 → 혈소판 활성화 추가 억제 (Aspirin과 다른 경로).
+        이중 항혈소판요법(DAPT)으로 혈전 재형성 방지.
+      </div>
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-drug">약물</span>
+        <span class="treatment-name">Heparin (항응고제)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜?</strong> 응고인자 Xa·IIa 억제 → 혈전 확장 방지 + PCI 시 카테터 혈전 방지.
+        PCI 전까지 IV 투여.
+      </div>
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-monitor">산소</span>
+        <span class="treatment-name">산소 투여 (SpO2 &lt;90%인 경우만)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜 조건부인가?</strong> 과거 모든 환자에게 줬지만, 최근 연구에서 SpO2 정상인 경우 과산소혈증이 오히려 심근 손상을 증가시킬 수 있음 확인.
+        현재 가이드라인: <strong>SpO2 &lt;90%</strong> 또는 호흡곤란 있을 때만 투여.
+      </div>
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-drug">약물</span>
+        <span class="treatment-name">Nitroglycerin (NTG)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜?</strong> NO 방출 → 관상동맥·정맥 확장 → 전부하 감소 + 허혈 경감.
+        <br><strong style="color:var(--accent);">금기:</strong> 수축기혈압 &lt;90mmHg, 우심실 경색(RCA 폐색), 24시간 내 PDE5 억제제(Sildenafil 등) 복용 시 → 심한 저혈압 유발.
+      </div>
+    </div>
+
+    <div class="treatment-item">
+      <div class="treatment-header">
+        <span class="treatment-badge treat-drug">약물</span>
+        <span class="treatment-name">Morphine (필요 시)</span>
+      </div>
+      <div class="treatment-why">
+        <strong>왜?</strong> 통증·불안 경감 → 교감신경 활성 감소 → 심박수·혈압·산소 소모 감소.
+        <br><strong style="color:var(--yellow);">주의:</strong> 항혈소판제 흡수 저해 가능성 → 꼭 필요한 경우에만.
+      </div>
+    </div>
+
+    <div class="warn-box" style="margin-top:4px;">
+      <div class="warn-title">🚨 RCA 폐색(하벽 STEMI) 특별 주의사항</div>
+      <ul>
+        <li>RV infarction 동반 가능 → 전부하(preload) 의존성 증가</li>
+        <li>NTG, Diuretics → <strong>절대 금기</strong> (급성 저혈압 위험)</li>
+        <li>치료: 수액 충분히 → 전부하 유지</li>
+        <li>서맥·저혈압·경정맥 확장 → Bezold-Jarisch 반사 의심</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==============================
+       8. 합병증
+  ============================== -->
+  <div class="section-label" style="margin-top:20px;">08 · 합병증 — 뭘 조심해야 하나요?</div>
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">⚡</span> 주요 합병증과 시간대
+    </div>
+
+    <table class="symptom-table">
+      <thead>
+        <tr>
+          <th>시간대</th>
+          <th>합병증</th>
+          <th>기전 / 징후</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-size:12px;color:var(--accent);font-weight:700;">즉시~수시간</td>
+          <td class="symptom-name">심실세동 (VF)</td>
+          <td style="font-size:13px;">허혈 심근의 전기적 불안정 → 가장 흔한 사망 원인, 제세동 준비</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:var(--yellow);font-weight:700;">24~72시간</td>
+          <td class="symptom-name">심인성 쇼크</td>
+          <td style="font-size:13px;">대면적 경색 → 좌심실 기능 급감 → 저혈압·조직관류 저하</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:var(--yellow);font-weight:700;">2~7일</td>
+          <td class="symptom-name">심실 파열</td>
+          <td style="font-size:13px;">괴사 심근 연화 → 파열 → 즉각 심장눌림증, 드물지만 치명적</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:var(--blue);font-weight:700;">수일~수주</td>
+          <td class="symptom-name">심낭염 (Dressler 증후군)</td>
+          <td style="font-size:13px;">괴사 심근 항원 → 자가면역 반응 → 발열·흉통·심낭 마찰음</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:var(--text-muted);font-weight:700;">수주 이후</td>
+          <td class="symptom-name">심부전 / 심실류</td>
+          <td style="font-size:13px;">경색 부위 섬유화 → 심실 리모델링 → 만성 심부전</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==============================
+       핵심 암기
+  ============================== -->
+  <div class="memory-box">
+    <h4>⚡ 핵심 암기 — STEMI 교육 섹션</h4>
+    <ul class="memory-list">
+      <li>STEMI = 관상동맥 <strong>완전 폐색</strong> → ST 상승 → 골든타임 90분</li>
+      <li>플라크 파열 → 혈전 → 완전 폐색 → 허혈 → 20분부터 괴사 시작</li>
+      <li>LAD 막히면 전벽 (V1–V4), RCA 막히면 하벽 (II·III·aVF), LCx 막히면 측벽 (I·aVL·V5–V6)</li>
+      <li>하벽 STEMI → RV infarction 가능 → NTG 금기, 수액 줘야 함</li>
+      <li>산소는 SpO2 &lt;90%일 때만 (정상이면 오히려 해로울 수 있음)</li>
+      <li>Aspirin은 씹어서 (흡수 2–3배 빠름)</li>
+      <li>D2B 90분 목표 — 병원 도착 즉시 카드팀 Call</li>
+    </ul>
+  </div>
+
+</div>
+
+</body>
+</html>

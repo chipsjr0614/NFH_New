@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏥 응급실 내과 교육 프로그램</title>
+<style>
+/* ══════ 변수 ══════ */
+:root {
+  --bg:#f0f2f5; --surface:#fff; --surface2:#f8f9fa; --border:#e0e0e0;
+  --text:#1a1a1a; --text2:#555; --text3:#999;
+  --red:#d32f2f; --red2:#ffebee; --orange:#e65100; --orange2:#fff3e0;
+  --blue:#1565c0; --blue2:#e3f2fd; --green:#2e7d32; --green2:#e8f5e9;
+  --purple:#6a1b9a; --purple2:#f3e5f5; --teal:#00695c; --teal2:#e0f2f1;
+  --shadow:0 2px 10px rgba(0,0,0,.08); --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+  --radius:12px;
+}
+[data-theme="dark"] {
+  --bg:#0d1117; --surface:#161b22; --surface2:#1c2128; --border:#30363d;
+  --text:#e6edf3; --text2:#8b949e; --text3:#6e7681;
+  --red2:#3d1515; --orange2:#3d1f00; --blue2:#0d2144;
+  --green2:#0d2d0d; --purple2:#2d0d3d; --teal2:#0a2a27;
+  --shadow:0 2px 10px rgba(0,0,0,.4);
+}
+
+/* ══════ 기본 ══════ */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;line-height:1.6}
+button{cursor:pointer;border:none;font-family:inherit}
+a{text-decoration:none}
+
+/* ══════ 진행바 ══════ */
+#prog{position:fixed;top:0;left:0;z-index:9999;height:3px;width:0;background:linear-gradient(90deg,#d32f2f,#ff6f00,#ffd600);transition:width .1s}
+
+/* ══════ 탑바 ══════ */
+.topbar{
+  position:sticky;top:0;z-index:100;height:58px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow);display:flex;align-items:center;padding:0 20px;gap:14px;
+}
+.logo{font-size:17px;font-weight:900;color:var(--red);letter-spacing:-0.5px}
+.logo span{color:var(--text);font-weight:400}
+.topbar-nav{display:flex;gap:4px;margin-left:16px}
+.tnav{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:transparent;color:var(--text2);transition:all .2s}
+.tnav.on{background:var(--red);color:#fff}
+.tnav:hover:not(.on){background:var(--bg)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.search-box{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px;font-size:13px;
+}
+.search-box input{background:none;border:none;outline:none;color:var(--text);width:160px;font-size:13px}
+.dark-btn{
+  width:42px;height:22px;border-radius:11px;background:var(--border);
+  position:relative;transition:background .3s;
+}
+.dark-btn::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .3s;
+}
+[data-theme="dark"] .dark-btn{background:var(--blue)}
+[data-theme="dark"] .dark-btn::after{transform:translateX(20px)}
+
+/* ══════ 섹션 전환 ══════ */
+.sec{display:none}.sec.on{display:block}
+
+/* ══════════════════════════
+   ① 대시보드
+══════════════════════════ */
+.dash{max-width:1140px;margin:0 auto;padding:28px 16px 80px}
+
+/* 히어로 */
+.hero{
+  background:linear-gradient(135deg,#0d1b6e 0%,#b71c1c 120%);
+  border-radius:16px;padding:36px 32px;color:#fff;margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.hero::before{content:'🏥';font-size:160px;position:absolute;right:-10px;top:-20px;opacity:.07;pointer-events:none}
+.hero h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.hero p{font-size:14px;opacity:.85;max-width:500px}
+.hero-stats{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,.15);border-radius:10px;padding:10px 18px;text-align:center}
+.hstat .n{font-size:26px;font-weight:900;line-height:1}
+.hstat .l{font-size:11px;opacity:.8;margin-top:2px}
+
+/* 필터 */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.fchip{
+  padding:6px 16px;border-radius:20px;border:2px solid var(--border);
+  font-size:12px;font-weight:700;background:var(--surface);color:var(--text2);transition:all .2s;
+}
+.fchip.on{border-color:var(--red);background:var(--red);color:#fff}
+.fchip:hover:not(.on){background:var(--bg)}
+
+/* 카테고리 레이블 */
+.catlabel{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:800;color:var(--text2);
+  margin:24px 0 12px;letter-spacing:.5px;
+}
+.catlabel::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* 케이스 카드 그리드 */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+
+.ccard{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:15px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+}
+.ccard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.ccard.done{opacity:.7}
+.ccard .accent{position:absolute;top:0;left:0;right:0;height:4px}
+.ccard .cnum{font-size:11px;color:var(--text3);font-weight:700}
+.ccard .cname{font-size:14px;font-weight:800;margin:3px 0 5px}
+.ccard .ctitle{font-size:11px;color:var(--text2);line-height:1.5}
+.ccard .cmeta{display:flex;align-items:center;gap:6px;margin-top:10px}
+.ccard .stars{color:#ffd600;font-size:11px}
+.ctag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:auto}
+.ctag.r{background:var(--red2);color:var(--red)}
+.ctag.o{background:var(--orange2);color:var(--orange)}
+.ctag.b{background:var(--blue2);color:var(--blue)}
+.ctag.g{background:var(--green2);color:var(--green)}
+.prog-mini{height:3px;background:var(--border);border-radius:2px;margin-top:8px}
+.prog-fill{height:100%;border-radius:2px;transition:width .3s}
+.complete-badge{
+  position:absolute;top:10px;right:10px;
+  background:var(--green);color:#fff;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:8px;
+}
+
+/* ══════════════════════════
+   ② 케이스 상세
+══════════════════════════ */
+.cdetail{max-width:800px;margin:0 auto;padding:28px 16px 80px}
+
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 16px;border-radius:20px;background:var(--surface);
+  border:1px solid var(--border);font-size:13px;font-weight:600;
+  color:var(--text2);margin-bottom:22px;transition:all .2s;
+}
+.back-btn:hover{background:var(--bg)}
+
+/* 케이스 헤더 */
+.case-hdr{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow)}
+.case-accent{height:6px}
+.case-hdr-body{padding:26px}
+.case-meta-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.case-badge{background:var(--red);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px}
+.case-hdr-body h1{font-size:22px;font-weight:900;margin-bottom:6px}
+.case-hdr-body .sub{font-size:14px;color:var(--text2);margin-bottom:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:4px 12px;border-radius:10px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+
+/* 섹션 타이틀 */
+.stitle{font-size:15px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+
+/* 오프닝 박스 */
+.opening{
+  background:#0d1117;border-radius:12px;padding:22px;margin-bottom:22px;
+  border-left:4px solid var(--red);
+}
+.radio-txt{color:#58a6ff;font-size:11px;font-weight:700;letter-spacing:1.5px;margin-bottom:10px}
+.scene-time{color:#ffd60a;font-size:13px;font-weight:700;margin-bottom:8px}
+.scene-txt{color:#e6edf3;font-size:14px;line-height:1.8;font-family:'Courier New',monospace}
+.vitals{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.vbox{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;text-align:center}
+.vbox .vl{color:#8b949e;font-size:9px;letter-spacing:.5px}
+.vbox .vv{color:#f0f6fc;font-size:16px;font-weight:800}
+.vbox.danger .vv{color:#ff7b72}
+.vbox.warn .vv{color:#ffd60a}
+.vbox.ok .vv{color:#3fb950}
+
+/* 질문 배너 */
+.qbanner{
+  background:linear-gradient(135deg,#1a237e,#283593);
+  border-radius:10px;padding:14px 18px;margin-bottom:6px;color:#fff;
+  font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;
+}
+.qbanner::after{content:'▼';margin-left:auto;font-size:11px;transition:transform .3s}
+.qbanner.open::after{transform:rotate(180deg)}
+
+/* 프리셉터 말풍선 */
+.bubble{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:0 14px 14px 14px;padding:18px 22px;margin-bottom:22px;
+  position:relative;
+}
+.bubble::before{
+  content:'선배';position:absolute;top:-12px;left:0;
+  background:var(--red);color:#fff;font-size:11px;font-weight:700;
+  padding:2px 10px;border-radius:8px 8px 0 0;
+}
+.bubble p{font-size:14px;line-height:1.9}
+.bubble .hl{background:rgba(255,214,0,.25);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--red)}
+
+/* 처치 테이블 */
+.atbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:22px}
+.atbl th{background:var(--text);color:var(--surface);padding:9px 13px;font-size:12px;font-weight:700;text-align:left}
+.atbl th:first-child{border-radius:8px 0 0 0}
+.atbl th:last-child{border-radius:0 8px 0 0}
+.atbl td{padding:11px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;background:var(--surface)}
+.atbl tr:last-child td{border-bottom:none}
+.atbl tr:last-child td:first-child{border-radius:0 0 0 8px}
+.atbl tr:last-child td:last-child{border-radius:0 0 8px 0}
+.atbl .n{font-weight:900;color:var(--red);text-align:center;font-size:17px;width:36px}
+.atbl .act{font-weight:700}
+.atbl .why{color:var(--text2);font-size:12px}
+.why-tag{background:var(--blue2);color:var(--blue);font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;margin-right:4px}
+
+/* 정보 박스 */
+.ibox{border-left:4px solid;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:14px;font-size:14px}
+.ibox.blue{border-color:var(--blue);background:var(--blue2)}
+.ibox.green{border-color:var(--green);background:var(--green2)}
+.ibox.red{border-color:var(--red);background:var(--red2)}
+.ibox.orange{border-color:var(--orange);background:var(--orange2)}
+.ibox.purple{border-color:var(--purple);background:var(--purple2)}
+.ibox strong{display:block;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.65;margin-bottom:4px}
+
+/* 팁 박스 */
+.tip{background:var(--orange2);border:1px solid var(--orange);border-radius:10px;padding:16px 18px;margin-bottom:12px}
+.tip-lbl{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:1px;margin-bottom:6px}
+.tip p{font-size:14px;line-height:1.8}
+
+/* Red Flag */
+.rf{background:var(--red2);border:2px solid var(--red);border-radius:12px;padding:18px 22px;margin-bottom:22px}
+.rf-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--red);margin-bottom:12px}
+.rf ul{list-style:none}
+.rf ul li{padding:7px 0;border-bottom:1px solid rgba(211,47,47,.2);font-size:14px;display:flex;gap:8px}
+.rf ul li:last-child{border-bottom:none}
+
+/* 암기 박스 */
+.memo{background:linear-gradient(135deg,#1a237e,#0d47a1);border-radius:12px;padding:22px;margin-bottom:22px;color:#fff}
+.memo .ml{font-size:11px;font-weight:700;opacity:.65;letter-spacing:2px;margin-bottom:10px}
+.memo .mc{font-size:20px;font-weight:900;line-height:1.6}
+.memo .ms{font-size:13px;opacity:.8;margin-top:8px}
+
+/* 퀴즈 */
+.quiz{margin-bottom:22px}
+.qitem{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.qq{padding:13px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .2s}
+.qq:hover{background:var(--bg)}
+.qq .qn{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qq .qa{margin-left:auto;color:var(--text3);font-size:11px;transition:transform .3s}
+.qq.open .qa{transform:rotate(180deg)}
+.qans{display:none;padding:13px 16px;background:var(--green2);border-top:1px solid var(--border);font-size:14px;line-height:1.7}
+.qans.show{display:block}
+
+/* SVG 그림 */
+.svg-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:22px;text-align:center}
+.svg-wrap .svg-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px}
+
+/* 병태생리 흐름도 */
+.patho{display:flex;flex-direction:column;gap:0;margin-bottom:22px}
+.patho-step{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:12px 16px;font-size:13px;position:relative;
+}
+.patho-arrow{text-align:center;color:var(--text3);font-size:20px;line-height:1.2;padding:2px 0}
+.patho-step.danger{background:var(--red2);border-color:var(--red)}
+.patho-step.warn{background:var(--orange2);border-color:var(--orange)}
+.patho-step .ps-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1px;margin-bottom:2px}
+.patho-step .ps-content{font-weight:700}
+.patho-step .ps-sub{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* 투약 테이블 */
+.drug-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+.drug-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.drug-card .dname{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.drug-card .dname .dico{font-size:18px}
+.drug-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px}
+.drug-row:last-child{border-bottom:none}
+.drug-row .dk{color:var(--text2);font-size:12px}
+.drug-row .dv{font-weight:700}
+
+/* 비교 테이블 */
+.comp-tbl{width:100%;border-collapse:collapse;margin-bottom:22px;font-size:13px}
+.comp-tbl th{background:var(--surface2);padding:9px 12px;font-weight:700;border:1px solid var(--border);text-align:center}
+.comp-tbl td{padding:9px 12px;border:1px solid var(--border);vertical-align:top}
+.comp-tbl tr:nth-child(even) td{background:var(--surface2)}
+
+/* ══════════════════════════
+   ③ 가이드 섹션
+══════════════════════════ */
+.guide{max-width:860px;margin:0 auto;padding:28px 16px 80px}
+
+/* ══════ 반응형 ══════ */
+@media(max-width:640px){
+  .topbar-nav{display:none}
+  .grid{grid-template-columns:1fr 1fr}
+  .drug-grid{grid-template-columns:1fr}
+  .search-box input{width:100px}
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<!-- ═══════════════════════ 탑바 ═══════════════════════ -->
+<div class="topbar">
+  <div class="logo">ER<span>EDU</span> 🏥</div>
+  <div class="topbar-nav">
+    <button class="tnav on" onclick="showSec('dash',this)">📋 전체 목록</button>
+    <button class="tnav" onclick="showSec('case',this)" id="case-tab">📖 케이스</button>
+    <button class="tnav" onclick="showSec('guide',this)">📐 학습 안내</button>
+  </div>
+  <div class="topbar-right">
+    <div class="search-box">🔍 <input type="text" id="search" placeholder="질환 검색..." oninput="filterCards()"></div>
+    <button class="dark-btn" onclick="toggleDark()" title="다크모드"></button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ① 대시보드 ═══════════════════════ -->
+<div id="sec-dash" class="sec on">
+<div class="dash">
+
+  <div class="hero">
+    <h1>응급실 내과 교육 프로그램</h1>
+    <p>응급실에서 자주 만나는 내과 질환을 케이스 기반으로 공부하는<br>신규 응급실 의료인 자기주도 학습 플랫폼</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">64</div><div class="l">총 케이스</div></div>
+      <div class="hstat"><div class="n" id="done-count">0</div><div class="l">완료</div></div>
+      <div class="hstat"><div class="n">8</div><div class="l">카테고리</div></div>
+      <div class="hstat"><div class="n">Phase 1</div><div class="l">진행 단계</div></div>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="fchip on" data-cat="all">전체 64</button>
+    <button class="fchip" data-cat="heart">❤️ 심장 11</button>
+    <button class="fchip" data-cat="lung">🫁 호흡기 8</button>
+    <button class="fchip" data-cat="neuro">🧠 신경계 9</button>
+    <button class="fchip" data-cat="gi">🫀 소화기 10</button>
+    <button class="fchip" data-cat="renal">🩺 신장 5</button>
+    <button class="fchip" data-cat="endo">🍬 내분비 6</button>
+    <button class="fchip" data-cat="infect">🦠 감염 5</button>
+    <button class="fchip" data-cat="etc">😰 기타 6</button>
+  </div>
+
+  <div id="case-list"></div>
+</div>
+</div>
+
+<!-- ═══════════════════════ ② 케이스 상세 ═══════════════════════ -->
+<div id="sec-case" class="sec">
+<div class="cdetail" id="case-content">
+  <div style="text-align:center;padding:60px;color:var(--text2)">
+    케이스를 선택해주세요
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════ ③ 학습 안내 ═══════════════════════ -->
+<div id="sec-guide" class="sec">
+<div class="guide">
+  <h2 style="font-size:20px;font-weight:900;margin-bottom:20px">📐 학습 안내</h2>
+
+  <div class="ibox blue">
+    <strong>학습 순서 추천</strong>
+    심정지(#06) → 패혈증(#50) → STEMI(#01) → 뇌졸중(#20) → 저혈당(#46) → DKA(#44) → 아나필락시스(#59)<br>
+    <span style="font-size:12px;opacity:.7">빈도 높고 시간이 생명인 케이스부터 먼저</span>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div class="stitle">🔄 케이스 1개 학습 흐름</div>
+    <div style="display:flex;gap:0;flex-wrap:wrap;margin-top:8px">
+      <div style="flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);padding:12px;text-align:center;font-size:12px">🚨<br><b>케이스 오프닝</b></div>
+      <div style="flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);padding:12px;text-align:center;font-size:12px">💭<br><b>스스로 생각</b></div>
+      <div style="flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);padding:12px;text-align:center;font-size:12px">🧠<br><b>선배 해설</b></div>
+      <div style="flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);padding:12px;text-align:center;font-size:12px">✅<br><b>처치 순서</b></div>
+      <div style="flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);padding:12px;text-align:center;font-size:12px">💊<br><b>투약</b></div>
+      <div style="flex:1;min-width:90px;background:var(--bg);border:1px solid var(--border);padding:12px;text-align:center;font-size:12px">❓<br><b>퀴즈 풀기</b></div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div class="stitle">📚 활용 방법</div>
+    <ul style="padding-left:18px;font-size:14px;line-height:2">
+      <li><b>자기주도 학습</b> — 케이스 선택 → 혼자 읽기 → 퀴즈 풀기 → 모르는 것 체크</li>
+      <li><b>스터디 발표</b> — 케이스 오프닝부터 발표 → 청중이 퀴즈 풀기</li>
+      <li><b>케이스 스터디</b> — 실제 환자와 교육자료 비교 → 토론</li>
+      <li><b>완료 체크</b> — 64개 케이스 읽으면 카드에 ✅ 표시 (자동 저장)</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<script>
+// ══════ 케이스 데이터 ══════
+const CASES = [
+  // 심장
+  {id:1,cat:'heart',name:'급성 심근경색 (STEMI)',title:'"가슴이 쥐어짜인다" — 응급실이 뒤집어지는 그 순간',stars:4,tag:'r',tagtxt:'긴급',color:'#c62828',full:true},
+  {id:2,cat:'heart',name:'급성 심근경색 (NSTEMI)',title:'"ECG가 정상인데 왜 입원해요?" — 조용한 심근경색의 함정',stars:3,tag:'o',tagtxt:'주의',color:'#b71c1c'},
+  {id:3,cat:'heart',name:'불안정 협심증',title:'"왔다갔다 가슴통증" — 이건 지나쳐선 안 돼',stars:3,tag:'o',tagtxt:'주의',color:'#c62828'},
+  {id:4,cat:'heart',name:'급성 심부전',title:'"숨을 못 쉬어요" — 폐에 물이 찰 때 대응법',stars:4,tag:'r',tagtxt:'긴급',color:'#ad1457'},
+  {id:5,cat:'heart',name:'고혈압성 위기',title:'BP 200/120 — 숫자가 말해주는 응급상황',stars:3,tag:'o',tagtxt:'주의',color:'#880e4f'},
+  {id:6,cat:'heart',name:'심실세동 / 심정지',title:'"Code Blue" — 1초가 뇌세포 수천 개를 결정한다',stars:5,tag:'r',tagtxt:'최우선',color:'#b71c1c',full:true},
+  {id:7,cat:'heart',name:'심실빈맥 (VT)',title:'"빠르고 위험한 리듬" — VT를 놓치면 안 되는 이유',stars:4,tag:'r',tagtxt:'긴급',color:'#c62828'},
+  {id:8,cat:'heart',name:'심방세동 (AF)',title:'"불규칙하게 뛰는 심장" — 뇌졸중의 시한폭탄',stars:3,tag:'o',tagtxt:'주의',color:'#6a1b9a'},
+  {id:9,cat:'heart',name:'완전방실차단 (3rd AVB)',title:'"맥박이 30이요" — 페이스메이커가 필요한 순간',stars:4,tag:'r',tagtxt:'긴급',color:'#4a148c'},
+  {id:10,cat:'heart',name:'심낭염 / 심낭압전',title:'"심장이 막혔어요" — Beck\'s triad 기억하기',stars:4,tag:'r',tagtxt:'긴급',color:'#880e4f'},
+  {id:11,cat:'heart',name:'대동맥 박리',title:'"등이 찢어지는 것 같아요" — AMI와 헷갈리면 죽는다',stars:5,tag:'r',tagtxt:'최우선',color:'#b71c1c'},
+  // 호흡기
+  {id:12,cat:'lung',name:'급성 폐부종',title:'"앉아야 숨을 쉴 수 있어요" — 좌심부전의 응급 대응',stars:4,tag:'r',tagtxt:'긴급',color:'#1565c0'},
+  {id:13,cat:'lung',name:'폐렴',title:'"기침 3일인데 왜 입원이에요?" — 폐렴을 과소평가하지 마',stars:2,tag:'b',tagtxt:'기본',color:'#0d47a1'},
+  {id:14,cat:'lung',name:'급성 폐색전증 (PE)',title:'"갑자기 숨이 막혀요" — 보이지 않는 혈전의 습격',stars:4,tag:'r',tagtxt:'긴급',color:'#1565c0'},
+  {id:15,cat:'lung',name:'기흉 (Pneumothorax)',title:'"한쪽 폐가 쪼그라들었어요" — 청진기가 알려주는 신호',stars:4,tag:'r',tagtxt:'긴급',color:'#0288d1'},
+  {id:16,cat:'lung',name:'천식 발작',title:'"약 뿌려도 안 나아요" — 중증도 판단하는 법',stars:3,tag:'o',tagtxt:'주의',color:'#01579b'},
+  {id:17,cat:'lung',name:'COPD 급성 악화',title:'"매일 기침하던 환자가 오늘은 달라" — AECOPD 대응법',stars:3,tag:'o',tagtxt:'주의',color:'#1565c0'},
+  {id:18,cat:'lung',name:'폐결핵',title:'"격리 먼저, 치료 나중" — 응급실 결핵 대응 매뉴얼',stars:2,tag:'b',tagtxt:'기본',color:'#0d47a1'},
+  {id:19,cat:'lung',name:'과호흡 증후군',title:'"숨을 너무 쉬어도 문제야" — 공황과 구별하는 법',stars:2,tag:'b',tagtxt:'기본',color:'#0288d1'},
+  // 신경계
+  {id:20,cat:'neuro',name:'허혈성 뇌졸중',title:'FAST — 골든타임 4.5시간, 1분이 뇌세포 190만 개',stars:5,tag:'r',tagtxt:'최우선',color:'#4527a0',full:true},
+  {id:21,cat:'neuro',name:'출혈성 뇌졸중 (ICH)',title:'"혈압 180인데 뇌출혈" — t-PA 절대 금지!',stars:5,tag:'r',tagtxt:'최우선',color:'#311b92'},
+  {id:22,cat:'neuro',name:'TIA (일과성 허혈)',title:'"증상이 사라졌는데 왜 입원이에요?" — TIA는 예고편이다',stars:3,tag:'o',tagtxt:'주의',color:'#4527a0'},
+  {id:23,cat:'neuro',name:'지주막하 출혈 (SAH)',title:'"생애 최악의 두통" — 이 한마디가 CT를 찍게 한다',stars:5,tag:'r',tagtxt:'최우선',color:'#311b92'},
+  {id:24,cat:'neuro',name:'뇌수막염',title:'"두통 + 발열 + 목 뻣뻣함" — 이 세 개가 동시에 오면',stars:4,tag:'r',tagtxt:'긴급',color:'#4527a0'},
+  {id:25,cat:'neuro',name:'경련 / 간질 발작',title:'"쓰러져서 몸을 떨어요" — 발작 중 해야 할 일',stars:3,tag:'o',tagtxt:'주의',color:'#5e35b1'},
+  {id:26,cat:'neuro',name:'뇌전증 지속상태',title:'"5분이 넘었어요" — 멈추지 않는 발작의 응급 대응',stars:4,tag:'r',tagtxt:'긴급',color:'#4527a0'},
+  {id:27,cat:'neuro',name:'현훈 / 어지럼증',title:'"빙글빙글 vs 어질어질" — 중추성이냐 말초성이냐',stars:2,tag:'b',tagtxt:'기본',color:'#5e35b1'},
+  {id:28,cat:'neuro',name:'길랑-바레 증후군',title:'"다리부터 마비가 올라와요" — 호흡 마비 전에 잡아라',stars:4,tag:'r',tagtxt:'긴급',color:'#311b92'},
+  // 소화기
+  {id:29,cat:'gi',name:'상부 위장관 출혈',title:'"토혈 + 흑색변" — 내시경 전 해야 할 것들',stars:4,tag:'r',tagtxt:'긴급',color:'#2e7d32'},
+  {id:30,cat:'gi',name:'하부 위장관 출혈',title:'"선홍색 피가 나와요" — 항문부터 대장까지 원인 찾기',stars:3,tag:'o',tagtxt:'주의',color:'#1b5e20'},
+  {id:31,cat:'gi',name:'급성 복통',title:'"배가 너무 아파요" — 수술이 필요한 배 vs 아닌 배',stars:3,tag:'o',tagtxt:'주의',color:'#2e7d32'},
+  {id:32,cat:'gi',name:'급성 췌장염',title:'"음주 후 명치 통증" — 췌장이 스스로를 소화한다',stars:3,tag:'o',tagtxt:'주의',color:'#388e3c'},
+  {id:33,cat:'gi',name:'급성 담낭염 / 담석증',title:'"기름진 거 먹고 오른쪽 옆구리가" — Murphy\'s sign',stars:2,tag:'b',tagtxt:'기본',color:'#2e7d32'},
+  {id:34,cat:'gi',name:'간경변 / 간부전',title:'"복수 + 황달 + 의식변화" — 간이 포기할 때 오는 신호',stars:4,tag:'r',tagtxt:'긴급',color:'#1b5e20'},
+  {id:35,cat:'gi',name:'식도 정맥류 출혈',title:'"피를 쏟아내는 응급" — 간경변 환자의 가장 위험한 밤',stars:5,tag:'r',tagtxt:'최우선',color:'#1b5e20'},
+  {id:36,cat:'gi',name:'장폐색 (Ileus)',title:'"배가 빵빵하고 가스가 안 나와요" — X-ray가 말해주는 것',stars:3,tag:'o',tagtxt:'주의',color:'#388e3c'},
+  {id:37,cat:'gi',name:'위장관염 / 식중독',title:'"다 같이 먹고 다 같이 토한다" — 집단 발생 대응',stars:1,tag:'g',tagtxt:'관찰',color:'#2e7d32'},
+  {id:38,cat:'gi',name:'복막염',title:'"배를 건드리지 마세요" — 반발통이 나오면 달려야 한다',stars:4,tag:'r',tagtxt:'긴급',color:'#1b5e20'},
+  // 신장
+  {id:39,cat:'renal',name:'급성 신부전 (AKI)',title:'"소변이 안 나와요" — Cr 수치가 올라갈 때 무슨 일이',stars:3,tag:'o',tagtxt:'주의',color:'#00695c'},
+  {id:40,cat:'renal',name:'고칼륨혈증',title:'K⁺ 6.5 — 심장이 멈추기 전에 잡아야 해',stars:5,tag:'r',tagtxt:'최우선',color:'#004d40'},
+  {id:41,cat:'renal',name:'신장결석',title:'"옆구리에서 등까지 찌르는 통증" — 진통제 먼저?',stars:2,tag:'b',tagtxt:'기본',color:'#00695c'},
+  {id:42,cat:'renal',name:'요로감염 / 신우신염',title:'"소변이 뿌옇고 허리가 아파요" — 패혈증으로 가기 전에',stars:2,tag:'b',tagtxt:'기본',color:'#00796b'},
+  {id:43,cat:'renal',name:'투석 환자 응급',title:'"투석 못 받고 왔어요" — 만성 신부전 응급 대응',stars:3,tag:'o',tagtxt:'주의',color:'#004d40'},
+  // 내분비
+  {id:44,cat:'endo',name:'당뇨성 케톤산증 (DKA)',title:'"숨에서 과일 냄새가 나요" — 당뇨 환자의 가장 위험한 합병증',stars:4,tag:'r',tagtxt:'긴급',color:'#e65100',full:true},
+  {id:45,cat:'endo',name:'고혈당 고삼투압 (HHS)',title:'"의식이 없는 당뇨 환자" — DKA vs HHS 구별법',stars:4,tag:'r',tagtxt:'긴급',color:'#bf360c'},
+  {id:46,cat:'endo',name:'저혈당',title:'"포도당 먼저" — 의식 없는 환자에서 BS 먼저 찍는 이유',stars:5,tag:'r',tagtxt:'최우선',color:'#e65100'},
+  {id:47,cat:'endo',name:'갑상선 중독증 / 위기',title:'"심박수 150, 땀범벅, 고열" — 갑상선이 폭주할 때',stars:4,tag:'r',tagtxt:'긴급',color:'#bf360c'},
+  {id:48,cat:'endo',name:'부신 위기',title:'"스테로이드 끊고 쓰러졌어요" — 절대 놓치면 안 되는 응급',stars:4,tag:'r',tagtxt:'긴급',color:'#e65100'},
+  {id:49,cat:'endo',name:'저나트륨혈증',title:'Na⁺ 120 — 경련 전에 잡아라',stars:3,tag:'o',tagtxt:'주의',color:'#bf360c'},
+  // 감염
+  {id:50,cat:'infect',name:'패혈증 (Sepsis)',title:'"Sepsis 1시간 Bundle" — 골든아워를 잡아라',stars:5,tag:'r',tagtxt:'최우선',color:'#880e4f',full:true},
+  {id:51,cat:'infect',name:'패혈성 쇼크',title:'"혈압이 안 잡혀요" — 승압제 시작 전 체크리스트',stars:5,tag:'r',tagtxt:'최우선',color:'#6a1b9a'},
+  {id:52,cat:'infect',name:'봉소염 / 연조직감염',title:'"발이 빨갛게 부어올랐어요" — 항생제, 언제 어떻게',stars:2,tag:'b',tagtxt:'기본',color:'#880e4f'},
+  {id:53,cat:'infect',name:'요로패혈증',title:'"소변 감염인데 왜 이렇게 아파요?" — 신우신염→패혈증 루트',stars:3,tag:'o',tagtxt:'주의',color:'#6a1b9a'},
+  {id:54,cat:'infect',name:'호흡기 감염 / 격리',title:'"격리 먼저, 검사 나중" — 응급실 감염관리 프로토콜',stars:2,tag:'b',tagtxt:'기본',color:'#880e4f'},
+  // 기타
+  {id:55,cat:'etc',name:'급성 출혈성 빈혈',title:'Hb 6.0 — 수혈 전 확인해야 할 모든 것',stars:3,tag:'o',tagtxt:'주의',color:'#37474f'},
+  {id:56,cat:'etc',name:'파종성 혈관내 응고 (DIC)',title:'"온몸에서 피가 나요" — 혈액이 스스로 굳어버릴 때',stars:5,tag:'r',tagtxt:'최우선',color:'#263238'},
+  {id:57,cat:'etc',name:'발열성 호중구감소증',title:'"항암 환자 38도" — 즉시 혈액배양 2세트',stars:4,tag:'r',tagtxt:'긴급',color:'#37474f'},
+  {id:58,cat:'etc',name:'악성종양 고칼슘혈증',title:'"암 환자가 의식이 흐려요" — 칼슘이 뇌를 흐리게 한다',stars:3,tag:'o',tagtxt:'주의',color:'#455a64'},
+  {id:59,cat:'etc',name:'아나필락시스',title:'"에피네프린 먼저" — 알레르기 쇼크에서 1분이 생사를 가른다',stars:5,tag:'r',tagtxt:'최우선',color:'#bf360c',full:true},
+  {id:60,cat:'etc',name:'약물 과용량 / 중독',title:'"뭘 먹었어요?" — 활성탄, 해독제, 위세척 언제 쓰나',stars:3,tag:'o',tagtxt:'주의',color:'#37474f'},
+];
+
+const CAT_LABELS = {
+  heart:'❤️ 심장 / 순환기', lung:'🫁 호흡기', neuro:'🧠 신경계',
+  gi:'🫀 소화기', renal:'🩺 신장/비뇨기', endo:'🍬 내분비/대사',
+  infect:'🦠 감염/패혈증', etc:'😰 기타 내과 응급'
+};
+
+// ══════ 렌더 카드 ══════
+function renderCards(filter='all', query='') {
+  const list = document.getElementById('case-list');
+  const done = JSON.parse(localStorage.getItem('done')||'{}');
+  document.getElementById('done-count').textContent = Object.keys(done).length;
+
+  const cats = filter==='all'
+    ? ['heart','lung','neuro','gi','renal','endo','infect','etc']
+    : [filter];
+
+  let html = '';
+  cats.forEach(cat => {
+    const items = CASES.filter(c => c.cat===cat && (!query || c.name.includes(query) || c.title.includes(query)));
+    if(!items.length) return;
+    html += `<div class="catlabel">${CAT_LABELS[cat]}</div><div class="grid">`;
+    items.forEach(c => {
+      const isDone = done[c.id];
+      const starsHtml = '★'.repeat(c.stars)+'☆'.repeat(5-c.stars);
+      html += `
+      <div class="ccard${isDone?' done':''}" onclick="openCase(${c.id})" data-cat="${c.cat}">
+        <div class="accent" style="background:${c.color}"></div>
+        ${isDone?'<div class="complete-badge">✅ 완료</div>':''}
+        <div class="cnum">CASE #${String(c.id).padStart(2,'0')} · ${CAT_LABELS[c.cat].split(' ')[0]} ${CAT_LABELS[c.cat].split(' ').slice(1).join(' ')}</div>
+        <div class="cname">${c.name}</div>
+        <div class="ctitle">${c.title}</div>
+        <div class="cmeta">
+          <span class="stars">${starsHtml}</span>
+          <span class="ctag ${c.tag}">${c.tagtxt}</span>
+        </div>
+        ${isDone?`<div class="prog-mini"><div class="prog-fill" style="width:100%;background:${c.color}"></div></div>`:'<div class="prog-mini"><div class="prog-fill" style="width:0%"></div></div>'}
+      </div>`;
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html || '<div style="text-align:center;padding:40px;color:var(--text3)">검색 결과가 없어요</div>';
+}
+
+// ══════ 필터 ══════
+document.getElementById('filters').addEventListener('click', e => {
+  const chip = e.target.closest('.fchip');
+  if(!chip) return;
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));
+  chip.classList.add('on');
+  renderCards(chip.dataset.cat, document.getElementById('search').value);
+});
+
+function filterCards() {
+  const q = document.getElementById('search').value;
+  const cat = document.querySelector('.fchip.on')?.dataset.cat || 'all';
+  renderCards(cat, q);
+}
+
+// ══════ 섹션 전환 ══════
+function showSec(name, btn) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById('sec-'+name).classList.add('on');
+  if(btn){
+    document.querySelectorAll('.tnav').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════ 다크모드 ══════
+function toggleDark() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark');
+}
+
+// ══════ 진행바 ══════
+window.addEventListener('scroll', () => {
+  const el = document.documentElement;
+  document.getElementById('prog').style.width = (el.scrollTop/(el.scrollHeight-el.clientHeight)*100)+'%';
+});
+
+// ══════ 퀴즈 토글 ══════
+function toggleQ(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('show');
+}
+
+// ══════ 케이스 열기 ══════
+function openCase(id) {
+  const c = CASES.find(x=>x.id===id);
+  if(!c) return;
+
+  // 완료 처리
+  const done = JSON.parse(localStorage.getItem('done')||'{}');
+  done[id] = true;
+  localStorage.setItem('done', JSON.stringify(done));
+
+  const content = document.getElementById('case-content');
+  content.innerHTML = c.full ? FULL_CASES[id] || comingSoon(c) : comingSoon(c);
+  document.getElementById('case-tab').textContent = `📖 ${c.name}`;
+  showSec('case', document.getElementById('case-tab'));
+  renderCards();
+}
+
+function comingSoon(c) {
+  return `
+  <button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+  <div class="case-hdr">
+    <div class="case-accent" style="background:linear-gradient(90deg,${c.color},${c.color}99)"></div>
+    <div class="case-hdr-body">
+      <div class="case-meta-row">
+        <span class="case-badge">CASE #${String(c.id).padStart(2,'0')}</span>
+        <span style="font-size:12px;color:var(--text3)">${CAT_LABELS[c.cat]}</span>
+        <span style="color:#ffd600;font-size:13px">${'★'.repeat(c.stars)+'☆'.repeat(5-c.stars)}</span>
+      </div>
+      <h1>${c.name}</h1>
+      <p class="sub">${c.title}</p>
+    </div>
+  </div>
+  <div style="text-align:center;padding:60px 20px;background:var(--surface);border-radius:12px;border:1px solid var(--border)">
+    <div style="font-size:60px;margin-bottom:16px">🚧</div>
+    <h3 style="font-size:18px;font-weight:800;margin-bottom:8px">준비 중입니다</h3>
+    <p style="color:var(--text2);font-size:14px">이 케이스는 곧 추가될 예정이에요.<br>완성된 케이스: #01 STEMI · #06 심정지 · #20 뇌졸중 · #44 DKA · #50 패혈증 · #59 아나필락시스</p>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  FULL_CASES — 풀 케이스 HTML 데이터
+// ══════════════════════════════════════
+const FULL_CASES = {};
+
+// ─────────────────────────────────────
+// CASE #01 — STEMI
+// ─────────────────────────────────────
+FULL_CASES[1] = `
+<button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#c62828,#ff7043)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #01</span>
+      <span style="font-size:12px;color:var(--text3)">❤️ 심장/순환기</span>
+      <span style="color:#ffd600;font-size:13px">★★★★☆</span>
+    </div>
+    <h1>급성 심근경색 (STEMI)</h1>
+    <p class="sub">"가슴이 쥐어짜인다" — 응급실이 뒤집어지는 그 순간</p>
+    <div class="chips">
+      <span class="chip">Door-to-Balloon 90분</span>
+      <span class="chip">12-lead ECG</span>
+      <span class="chip">DAPT</span>
+      <span class="chip">PCI</span>
+      <span class="chip">ST 상승</span>
+    </div>
+  </div>
+</div>
+
+<!-- SVG 심장 해부학 -->
+<div class="svg-wrap">
+  <div class="svg-title">❤️ 관상동맥 지도 — 어디가 막히면 어디가 죽어?</div>
+  <svg viewBox="0 0 420 300" style="max-width:420px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <!-- 심장 외형 -->
+    <path d="M210 260 C150 230 60 180 60 120 C60 80 90 55 120 55 C150 55 175 70 210 100 C245 70 270 55 300 55 C330 55 360 80 360 120 C360 180 270 230 210 260Z" fill="#ffcdd2" stroke="#c62828" stroke-width="2.5"/>
+    <!-- 대동맥 -->
+    <path d="M210 100 C210 80 205 60 200 45 C196 35 202 20 215 18 C228 16 234 28 230 40 C225 52 218 68 215 80" fill="none" stroke="#1565c0" stroke-width="4" stroke-linecap="round"/>
+    <text x="235" y="30" fill="#1565c0" font-size="10" font-weight="bold">대동맥</text>
+    <!-- LAD -->
+    <path d="M205 115 C200 130 195 155 190 175 C185 195 183 215 185 230" fill="none" stroke="#c62828" stroke-width="3" stroke-linecap="round"/>
+    <text x="155" y="200" fill="#c62828" font-size="10" font-weight="bold">LAD</text>
+    <text x="148" y="212" fill="#c62828" font-size="9">(전하행동맥)</text>
+    <!-- LCX -->
+    <path d="M200 110 C180 115 155 120 135 130 C118 140 110 155 115 170" fill="none" stroke="#e65100" stroke-width="3" stroke-linecap="round"/>
+    <text x="90" y="155" fill="#e65100" font-size="10" font-weight="bold">LCX</text>
+    <text x="88" y="167" fill="#e65100" font-size="9">(좌선회동맥)</text>
+    <!-- RCA -->
+    <path d="M220 110 C240 118 265 128 280 145 C295 162 295 182 285 198" fill="none" stroke="#1b5e20" stroke-width="3" stroke-linecap="round"/>
+    <text x="295" y="162" fill="#1b5e20" font-size="10" font-weight="bold">RCA</text>
+    <text x="290" y="174" fill="#1b5e20" font-size="9">(우관상동맥)</text>
+    <!-- 경색 영역 표시 -->
+    <ellipse cx="188" cy="210" rx="20" ry="14" fill="rgba(198,40,40,.3)" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="162" y="242" fill="#c62828" font-size="9">LAD 막히면</text>
+    <text x="160" y="253" fill="#c62828" font-size="9">좌심실 전벽 경색</text>
+    <!-- 심장 챔버 -->
+    <text x="175" y="140" fill="#555" font-size="10" font-weight="bold">LV</text>
+    <text x="230" y="145" fill="#555" font-size="10" font-weight="bold">RV</text>
+    <!-- 라벨 -->
+    <text x="210" y="290" fill="var(--text3)" font-size="9" text-anchor="middle">빨강=LAD 주황=LCX 초록=RCA</text>
+  </svg>
+</div>
+
+<!-- 병태생리 -->
+<div class="stitle"><span>🔬</span> 병태생리 — 심장에서 무슨 일이?</div>
+<div class="patho">
+  <div class="patho-step">
+    <div class="ps-label">1단계 (수년)</div>
+    <div class="ps-content">🧱 관상동맥에 죽상경화반(Plaque) 축적</div>
+    <div class="ps-sub">콜레스테롤 + 염증세포 → 혈관 내벽에 점점 쌓임</div>
+  </div>
+  <div class="patho-arrow">↓</div>
+  <div class="patho-step warn">
+    <div class="ps-label">2단계 (갑자기!)</div>
+    <div class="ps-content">💥 플라크 파열 (Plaque Rupture)</div>
+    <div class="ps-sub">혈압 급상승, 스트레스, 흡연 → 방아쇠 역할</div>
+  </div>
+  <div class="patho-arrow">↓</div>
+  <div class="patho-step warn">
+    <div class="ps-label">3단계 (분~수십분)</div>
+    <div class="ps-content">🩸 혈소판 모여서 혈전(Thrombus) 형성</div>
+    <div class="ps-sub">ADP · TXA2 경로 활성화 → DAPT로 여기를 막는다!</div>
+  </div>
+  <div class="patho-arrow">↓</div>
+  <div class="patho-step danger">
+    <div class="ps-label">4단계 — STEMI</div>
+    <div class="ps-content">🚫 혈관 완전 폐색 → 심근 허혈 시작</div>
+    <div class="ps-sub">20분→손상 / 6시간→광범위 괴사 / Time is Muscle!</div>
+  </div>
+</div>
+
+<!-- 오프닝 -->
+<div class="stitle" style="margin-top:22px"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">📡 119 무전 수신 중...</div>
+  <div class="scene-time">▶ 오전 2:17 — 응급실 입구</div>
+  <div class="scene-txt">119 대원이 65세 남성을 들것에 싣고 들어옵니다.<br><br>
+  <span style="color:#ffd60a">"30분 전부터 가슴 쥐어짜는 통증, 식은땀, 구역감 있고요.<br>혈압 90/60, 맥박 110, SpO₂ 94%입니다."</span><br><br>
+  환자는 창백하고 불안한 표정. 손을 가슴에 얹고 있습니다.</div>
+  <div class="vitals">
+    <div class="vbox danger"><div class="vl">BP</div><div class="vv">90/60</div></div>
+    <div class="vbox warn"><div class="vl">HR</div><div class="vv">110</div></div>
+    <div class="vbox warn"><div class="vl">SpO₂</div><div class="vv">94%</div></div>
+    <div class="vbox ok"><div class="vl">RR</div><div class="vv">22</div></div>
+    <div class="vbox ok"><div class="vl">BT</div><div class="vv">36.4°</div></div>
+  </div>
+</div>
+
+<div class="qbanner" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('show')">
+  💭 지금 이 환자 앞에 네가 서 있어. 가장 먼저 뭘 해야 할까?
+</div>
+<div class="qans" style="border-radius:10px;margin-bottom:22px;margin-top:-4px">
+  <strong style="color:var(--green)">정답 접근법:</strong> 가슴통증 + 식은땀 + 혈압 저하 = 즉시 AMI 의심 → <strong>10분 내 ECG!</strong> 확진 전에 움직여야 합니다.
+</div>
+
+<!-- 선배 해설 -->
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p>자, 이 환자 보는 순간 뭐가 떠올라야 해?<br><br>
+  <span class="hl">가슴통증 + 식은땀 + 혈압 저하</span> — 이 세 개 동시에 오면<br>
+  일단 AMI 의심하고 움직여야 해. 확진 나오기 전에.<br><br>
+  그리고 진짜 중요한 거 — <span class="hl">Door-to-Balloon 90분</span>.<br>
+  환자가 문 들어오는 순간부터 카운트 시작이야.<br>
+  ECG도 10분 안에 끝내야 해. 시간 싸움이거든.</p>
+</div>
+
+<!-- 처치 순서 -->
+<div class="stitle"><span>✅</span> 지금 당장 해야 할 것</div>
+<table class="atbl">
+  <thead><tr><th style="width:36px">#</th><th>행동</th><th>왜?</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">12-lead ECG 시행 (10분 내)</td><td class="why"><span class="why-tag">WHY</span>STEMI 확인 → D2B 카운트 시작</td></tr>
+    <tr><td class="n">2</td><td class="act">산소 투여 (SpO₂ &lt;94%)</td><td class="why"><span class="why-tag">WHY</span>허혈 심근 산소 공급 확보</td></tr>
+    <tr><td class="n">3</td><td class="act">IV 라인 2개 확보 (큰 혈관)</td><td class="why"><span class="why-tag">WHY</span>약물 + 수액 동시 투여 대비</td></tr>
+    <tr><td class="n">4</td><td class="act">모니터 연결 (ECG·SpO₂·BP 지속)</td><td class="why"><span class="why-tag">WHY</span>VF/VT 즉시 감지</td></tr>
+    <tr><td class="n">5</td><td class="act">혈액검사 (Troponin·CK-MB·BMP·CBC)</td><td class="why"><span class="why-tag">WHY</span>심근 손상 정도 + 동반 질환 확인</td></tr>
+    <tr><td class="n">6</td><td class="act">Aspirin 300mg — <strong>씹어서</strong> 복용</td><td class="why"><span class="why-tag">WHY</span>씹으면 흡수 5배 빠름, 혈소판 즉시 억제</td></tr>
+    <tr><td class="n">7</td><td class="act">Clopidogrel 600mg 복용</td><td class="why"><span class="why-tag">WHY</span>PCI 예정 시 600mg → 2시간 내 효과</td></tr>
+    <tr><td class="n">8</td><td class="act">의사 즉시 보고 → PCI팀 활성화</td><td class="why"><span class="why-tag">WHY</span>Cath Lab 준비시간 단축이 예후 결정</td></tr>
+  </tbody>
+</table>
+
+<!-- 투약 -->
+<div class="stitle"><span>💊</span> DAPT — 이중 항혈소판 요법</div>
+<div class="ibox blue">
+  <strong>왜 두 가지를 같이 먹어?</strong>
+  혈소판 활성화 경로가 2개 (COX-1 경로 / ADP경로) → 아스피린은 경로1, 클로피도그렐은 경로2 차단 → 같이 써야 혈전 억제 극대화
+</div>
+<div class="drug-grid">
+  <div class="drug-card">
+    <div class="dname"><span class="dico">💊</span> Aspirin (아스피린)</div>
+    <div class="drug-row"><span class="dk">Loading</span><span class="dv">300mg 씹어서 복용</span></div>
+    <div class="drug-row"><span class="dk">Maintenance</span><span class="dv">100mg 1일 1회 (평생)</span></div>
+    <div class="drug-row"><span class="dk">작용</span><span class="dv">COX-1 억제 → TXA2 차단</span></div>
+    <div class="drug-row"><span class="dk">왜 씹어서?</span><span class="dv">흡수 3분 vs 삼키면 15분</span></div>
+    <div class="drug-row"><span class="dk">금기</span><span class="dv">아스피린 알레르기, 활성 출혈</span></div>
+  </div>
+  <div class="drug-card">
+    <div class="dname"><span class="dico">💊</span> Clopidogrel (플라빅스)</div>
+    <div class="drug-row"><span class="dk">Loading (PCI 예정)</span><span class="dv" style="color:var(--red)">600mg 한 번에</span></div>
+    <div class="drug-row"><span class="dk">Loading (보존적)</span><span class="dv">300mg 한 번에</span></div>
+    <div class="drug-row"><span class="dk">Maintenance</span><span class="dv">75mg 1일 1회 (12개월)</span></div>
+    <div class="drug-row"><span class="dk">작용</span><span class="dv">P2Y12 차단 → ADP 억제</span></div>
+    <div class="drug-row"><span class="dk">600mg 이유</span><span class="dv">300mg보다 2배 빠른 효과</span></div>
+  </div>
+</div>
+
+<div class="tip"><div class="tip-lbl">💡 현장 팁</div><p>IV 라인 왜 <strong>2개</strong>냐고? 한 개로 약 넣는 동안 다른 라인으로 수액 줄 수 있어야 해. 위기 상황에서 라인 하나면 진짜 패닉이야.</p></div>
+<div class="tip"><div class="tip-lbl">⚠️ 주의!</div><p>BP 90 이하 → <strong>Nitroglycerin 절대 금기!</strong> 혈압이 더 떨어져 쇼크 악화. 등이 찢어지는 통증이면 <strong>대동맥 박리 감별</strong> 먼저 (Heparin 금기 달라짐).</p></div>
+
+<!-- Red Flag -->
+<div class="rf">
+  <div class="rf-title">🚨 절대 놓치면 안 되는 신호</div>
+  <ul>
+    <li>🔴 <span>ECG에서 <strong>ST 상승 2mm 이상</strong> → 즉시 의사 호출, PCI 준비</span></li>
+    <li>🔴 <span>새로운 <strong>LBBB</strong> 출현 → STEMI와 동등하게 처치</span></li>
+    <li>🔴 <span>혈압 <strong>90 이하</strong> → Cardiogenic shock, 승압제 준비</span></li>
+    <li>🔴 <span>갑자기 <strong>의식 저하</strong> → CPR 준비, 제세동기 켜두기</span></li>
+  </ul>
+</div>
+
+<!-- 비교 -->
+<div class="stitle"><span>📊</span> STEMI vs NSTEMI</div>
+<table class="comp-tbl">
+  <thead><tr><th>구분</th><th>STEMI</th><th>NSTEMI</th></tr></thead>
+  <tbody>
+    <tr><td>ECG</td><td>ST 상승 ↑</td><td>정상 or ST 하강</td></tr>
+    <tr><td>혈관</td><td>완전 폐색</td><td>부분 폐색</td></tr>
+    <tr><td>Troponin</td><td>빠르게 ↑↑</td><td>느리게 ↑ (재검 필요)</td></tr>
+    <tr><td>긴급도</td><td>즉시 PCI (90분)</td><td>24~72시간 내</td></tr>
+    <tr><td>Clopidogrel</td><td><strong>600mg</strong></td><td>300mg</td></tr>
+  </tbody>
+</table>
+
+<!-- 암기 -->
+<div class="memo">
+  <div class="ml">⚡ 이것만 기억해</div>
+  <div class="mc">Door → ECG (10분) → 보고 → Balloon (90분)</div>
+  <div class="ms">가슴통증 + 식은땀 + 저혈압 = 즉시 AMI 의심<br>확진 전에 움직여라. 시간이 심근이다.</div>
+</div>
+
+<!-- 퀴즈 -->
+<div class="stitle"><span>❓</span> 케이스 스터디 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">1</span>STEMI 확인됐어. BP 88/55야. Nitroglycerin 줘야 할까?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--red)">절대 금지.</strong> BP 90 이하에서 NTG 투여 시 혈압 추가 하락 → 쇼크 악화. 수액 소량 투여 + 승압제(Dopamine/Norepinephrine) 고려 후 즉시 의사 보고.</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">2</span>환자가 "아스피린 매일 먹는데요(100mg)"라고 하면 Loading 투여해야 해?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--green)">그래도 Loading 한다.</strong> 유지용량 100mg 복용 중이라도 급성기엔 300mg Loading 필요. 빠른 혈소판 억제가 목적. 단, 최근 300mg 이미 복용 시 의사 확인.</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">3</span>모니터에서 갑자기 VF 발생! 순서는?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--red)">즉시 Code Blue + CPR + 제세동.</strong> 1. "도와주세요!" + Code 콜 2. CPR 시작 (100-120회/분, 5cm↑) 3. 제세동기 → 리듬 확인 4. VF/무맥 VT → 200J 제세동 5. 제세동 직후 CPR 재시작 2분 6. 2주기 후 Epinephrine 1mg IV</div>
+  </div>
+</div>`;
+
+// ─────────────────────────────────────
+// CASE #06 — 심정지 / Code Blue
+// ─────────────────────────────────────
+FULL_CASES[6] = `
+<button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#b71c1c,#880e4f)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #06</span>
+      <span style="font-size:12px;color:var(--text3)">❤️ 심장/순환기</span>
+      <span style="color:#ffd600;font-size:13px">★★★★★</span>
+    </div>
+    <h1>심실세동 / 심정지</h1>
+    <p class="sub">"Code Blue" — 1초가 뇌세포 수천 개를 결정한다</p>
+    <div class="chips">
+      <span class="chip">CPR</span><span class="chip">제세동</span><span class="chip">Epinephrine</span>
+      <span class="chip">BLS/ACLS</span><span class="chip">소생술 후 처치</span>
+    </div>
+  </div>
+</div>
+
+<!-- SVG CPR/제세동 다이어그램 -->
+<div class="svg-wrap">
+  <div class="svg-title">💓 심정지 처치 알고리즘 흐름도</div>
+  <svg viewBox="0 0 380 320" style="max-width:380px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <!-- 박스들 -->
+    <rect x="110" y="10" width="160" height="36" rx="8" fill="#c62828" opacity=".9"/>
+    <text x="190" y="33" text-anchor="middle" fill="white" font-size="12" font-weight="bold">반응 없음 확인</text>
+    <!-- 화살표 -->
+    <line x1="190" y1="46" x2="190" y2="62" stroke="#555" stroke-width="2" marker-end="url(#arr)"/>
+    <rect x="100" y="62" width="180" height="36" rx="8" fill="#1565c0" opacity=".9"/>
+    <text x="190" y="80" text-anchor="middle" fill="white" font-size="11" font-weight="bold">119 신고 + AED 요청</text>
+    <text x="190" y="92" text-anchor="middle" fill="white" font-size="10">동시에 → 맥박·호흡 확인 (10초)</text>
+    <line x1="190" y1="98" x2="190" y2="114" stroke="#555" stroke-width="2"/>
+    <rect x="100" y="114" width="180" height="36" rx="8" fill="#b71c1c" opacity=".9"/>
+    <text x="190" y="133" text-anchor="middle" fill="white" font-size="12" font-weight="bold">CPR 즉시 시작</text>
+    <text x="190" y="145" text-anchor="middle" fill="white" font-size="10">100-120회/분 · 5-6cm · 완전 이완</text>
+    <line x1="190" y1="150" x2="190" y2="166" stroke="#555" stroke-width="2"/>
+    <rect x="100" y="166" width="180" height="36" rx="8" fill="#4a148c" opacity=".9"/>
+    <text x="190" y="185" text-anchor="middle" fill="white" font-size="12" font-weight="bold">제세동기 연결</text>
+    <text x="190" y="197" text-anchor="middle" fill="white" font-size="10">CPR 중단 최소화! 패드 위치 확인</text>
+    <line x1="190" y1="202" x2="190" y2="218" stroke="#555" stroke-width="2"/>
+    <!-- 분기 -->
+    <rect x="85" y="218" width="210" height="36" rx="8" fill="#37474f" opacity=".9"/>
+    <text x="190" y="237" text-anchor="middle" fill="white" font-size="11" font-weight="bold">리듬 분석</text>
+    <text x="190" y="249" text-anchor="middle" fill="white" font-size="10">VF/무맥VT vs PEA/Asystole</text>
+    <!-- 왼쪽 분기 -->
+    <line x1="130" y1="254" x2="80" y2="275" stroke="#c62828" stroke-width="2"/>
+    <rect x="20" y="275" width="120" height="36" rx="8" fill="#c62828" opacity=".9"/>
+    <text x="80" y="293" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Shockable</text>
+    <text x="80" y="305" text-anchor="middle" fill="white" font-size="10">→ 즉시 제세동 200J</text>
+    <!-- 오른쪽 분기 -->
+    <line x1="250" y1="254" x2="300" y2="275" stroke="#1565c0" stroke-width="2"/>
+    <rect x="240" y="275" width="130" height="36" rx="8" fill="#1565c0" opacity=".9"/>
+    <text x="305" y="293" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Non-Shockable</text>
+    <text x="305" y="305" text-anchor="middle" fill="white" font-size="10">→ CPR + Epi 계속</text>
+    <!-- 화살표 마커 -->
+    <defs>
+      <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+        <path d="M0,0 L0,8 L8,4 Z" fill="#555"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<div class="stitle"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">⚡ CODE BLUE 선언</div>
+  <div class="scene-time">▶ 오후 11:42 — 내과 병동 302호</div>
+  <div class="scene-txt">병동 의료인이 달려와 소리칩니다.<br><br>
+  <span style="color:#ff7b72">"302호 환자가 반응이 없어요! 숨을 안 쉬어요!!"</span><br><br>
+  모니터 화면에 불규칙하고 혼돈스러운 파형이 가득합니다.<br>
+  환자는 70세 남성, 심근경색 입원 3일차.</div>
+  <div class="vitals">
+    <div class="vbox danger"><div class="vl">맥박</div><div class="vv">없음</div></div>
+    <div class="vbox danger"><div class="vl">호흡</div><div class="vv">없음</div></div>
+    <div class="vbox danger"><div class="vl">리듬</div><div class="vv">VF</div></div>
+    <div class="vbox danger"><div class="vl">의식</div><div class="vv">무반응</div></div>
+  </div>
+</div>
+
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p><span class="hl">보는 순간 생각 말고 움직여.</span><br><br>
+  ① 도움 요청 + 제세동기 + 시간 체크<br>
+  ② CPR 시작 (30:2, 100-120회/분, 5-6cm)<br>
+  ③ 제세동기 오면 패드 붙이면서 CPR 계속<br><br>
+  CPR 중단 최소화가 제일 중요해. 패드 붙이는 동안도 CPR 멈추지 마.<br>
+  <span class="hl">4분이 뇌 손상의 마지노선이야.</span></p>
+</div>
+
+<div class="stitle"><span>✅</span> 처치 순서</div>
+<table class="atbl">
+  <thead><tr><th>#</th><th>행동</th><th>핵심</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">"도와주세요!" + Code Blue 콜 + 시간 체크</td><td class="why">혼자 하지 마. 팀이 필요해</td></tr>
+    <tr><td class="n">2</td><td class="act">CPR 즉시 시작 (가슴압박 먼저)</td><td class="why">100-120회/분 · 5-6cm · 완전 이완</td></tr>
+    <tr><td class="n">3</td><td class="act">제세동기 연결 + 리듬 분석</td><td class="why">CPR 중단 10초 이내로</td></tr>
+    <tr><td class="n">4</td><td class="act">VF/무맥VT → 제세동 200J</td><td class="why">Shock 후 즉시 CPR 재개 (2분)</td></tr>
+    <tr><td class="n">5</td><td class="act">IV 또는 IO 확보</td><td class="why">정맥로 없으면 골수로(IO) 고려</td></tr>
+    <tr><td class="n">6</td><td class="act">Epinephrine 1mg IV (2주기마다)</td><td class="why">Non-shockable: 즉시 / Shockable: 3번째 shock 후</td></tr>
+    <tr><td class="n">7</td><td class="act">전문기도 확보 + 호기말CO₂ 확인</td><td class="why">ETCO₂ &gt;10mmHg → CPR 품질 양호</td></tr>
+    <tr><td class="n">8</td><td class="act">소생 후 처치 (ROSC)</td><td class="why">혈압 유지 · 체온 관리 · PCI 고려</td></tr>
+  </tbody>
+</table>
+
+<div class="tip"><div class="tip-lbl">💡 CPR 품질 체크</div><p>압박 깊이: <strong>5-6cm</strong> (너무 얕으면 소용없어) · 속도: <strong>100-120회/분</strong> (빠르게 부르지 말고 박자 맞춰) · 완전 이완: 압박 후 가슴이 완전히 올라와야 해</p></div>
+<div class="tip"><div class="tip-lbl">⚡ 제세동 패드 위치</div><p>오른쪽: 쇄골 아래 흉골 우측 · 왼쪽: 왼쪽 유두 아래 겨드랑이 쪽. 패드 사이에 물·금속·패치 없도록. Shock 전 반드시 "비켜요!" 외치기</p></div>
+
+<div class="rf">
+  <div class="rf-title">🚨 CPR 멈춰야 할 때 vs 계속해야 할 때</div>
+  <ul>
+    <li>🔴 <span><strong>ROSC (자발순환회복)</strong> 확인 시 → CPR 중단, 소생 후 처치 시작</span></li>
+    <li>🔴 <span>의사가 <strong>소생 중단</strong> 결정 시 → 팀원들과 함께 확인 후 중단</span></li>
+    <li>🟢 <span>20분 CPR 후에도 VF 지속 → 계속 (소생 가능성 있음)</span></li>
+    <li>🟢 <span>ETCO₂ 갑자기 상승 → ROSC 신호, 맥박 확인!</span></li>
+  </ul>
+</div>
+
+<div class="memo">
+  <div class="ml">⚡ 이것만 기억해</div>
+  <div class="mc">Push Hard · Push Fast · Allow Recoil · Minimize Interruptions</div>
+  <div class="ms">VF/무맥VT → 제세동 · PEA/무수축 → CPR + Epi<br>4분 이내 제세동 = 생존율 50~70%</div>
+</div>
+
+<div class="stitle"><span>❓</span> 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">1</span>CPR 중 ETCO₂가 갑자기 40mmHg로 올라갔어. 뭘 의미해?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--green)">ROSC(자발순환회복) 가능성!</strong> ETCO₂ 급상승은 심박출량 회복의 신호. 즉시 맥박 확인. 맥박 있으면 CPR 중단하고 소생 후 처치 시작.</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">2</span>Epinephrine은 언제 투여해? VF에서 첫 번째 shock 직후에 바로 줘야 해?<span class="qa">▼</span></div>
+    <div class="qans"><strong>Shockable (VF/무맥VT):</strong> 3번째 shock 이후부터 Epi 1mg IV. <br><strong>Non-shockable (PEA/무수축):</strong> 가능한 빨리 Epi 1mg IV, 이후 3-5분마다 반복.</div>
+  </div>
+</div>`;
+
+// ─────────────────────────────────────
+// CASE #20 — 허혈성 뇌졸중
+// ─────────────────────────────────────
+FULL_CASES[20] = `
+<button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#4527a0,#7b1fa2)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #20</span>
+      <span style="font-size:12px;color:var(--text3)">🧠 신경계</span>
+      <span style="color:#ffd600;font-size:13px">★★★★★</span>
+    </div>
+    <h1>허혈성 뇌졸중 (Ischemic Stroke)</h1>
+    <p class="sub">FAST — 골든타임 4.5시간, 1분이 뇌세포 190만 개</p>
+    <div class="chips">
+      <span class="chip">FAST</span><span class="chip">tPA/Alteplase</span>
+      <span class="chip">Door-to-Needle 60분</span><span class="chip">혈압 관리</span>
+    </div>
+  </div>
+</div>
+
+<!-- SVG 뇌 해부학 -->
+<div class="svg-wrap">
+  <div class="svg-title">🧠 뇌혈관 영역 — 어디가 막히면 어떤 증상?</div>
+  <svg viewBox="0 0 400 280" style="max-width:400px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <!-- 뇌 외형 -->
+    <ellipse cx="200" cy="120" rx="140" ry="100" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2"/>
+    <!-- 뇌 주름 (간략) -->
+    <path d="M100 90 Q130 75 160 90 Q190 105 220 90" fill="none" stroke="#ce93d8" stroke-width="1.5"/>
+    <path d="M140 130 Q175 115 210 130 Q240 145 270 130" fill="none" stroke="#ce93d8" stroke-width="1.5"/>
+    <path d="M110 160 Q150 148 190 160 Q220 172 250 160" fill="none" stroke="#ce93d8" stroke-width="1.5"/>
+    <!-- MCA 영역 -->
+    <ellipse cx="170" cy="110" rx="45" ry="55" fill="rgba(198,40,40,.2)" stroke="#c62828" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="148" y="105" fill="#c62828" font-size="10" font-weight="bold">MCA</text>
+    <text x="140" y="117" fill="#c62828" font-size="9">편측 마비</text>
+    <text x="140" y="129" fill="#c62828" font-size="9">언어장애</text>
+    <!-- ACA 영역 -->
+    <ellipse cx="200" cy="60" rx="35" ry="30" fill="rgba(21,101,192,.2)" stroke="#1565c0" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="188" y="55" fill="#1565c0" font-size="10" font-weight="bold">ACA</text>
+    <text x="182" y="67" fill="#1565c0" font-size="9">하지 마비</text>
+    <!-- PCA 영역 -->
+    <ellipse cx="235" cy="170" rx="40" ry="30" fill="rgba(46,125,50,.2)" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="222" y="165" fill="#2e7d32" font-size="10" font-weight="bold">PCA</text>
+    <text x="218" y="177" fill="#2e7d32" font-size="9">시야장애</text>
+    <!-- 뇌간 -->
+    <rect x="175" y="205" width="50" height="30" rx="8" fill="#e65100" opacity=".7"/>
+    <text x="200" y="223" text-anchor="middle" fill="white" font-size="10" font-weight="bold">뇌간/소뇌</text>
+    <text x="200" y="248" text-anchor="middle" fill="#e65100" font-size="9">어지럼·구음장애·복시</text>
+    <!-- 범례 -->
+    <rect x="295" y="50" width="12" height="12" fill="rgba(198,40,40,.4)" stroke="#c62828"/>
+    <text x="312" y="61" fill="var(--text)" font-size="10">MCA (가장 흔함)</text>
+    <rect x="295" y="70" width="12" height="12" fill="rgba(21,101,192,.4)" stroke="#1565c0"/>
+    <text x="312" y="81" fill="var(--text)" font-size="10">ACA</text>
+    <rect x="295" y="90" width="12" height="12" fill="rgba(46,125,50,.4)" stroke="#2e7d32"/>
+    <text x="312" y="101" fill="var(--text)" font-size="10">PCA</text>
+  </svg>
+</div>
+
+<div class="stitle"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">📡 119 무전 수신 중...</div>
+  <div class="scene-time">▶ 오전 9:23 — 응급실</div>
+  <div class="scene-txt">68세 여성, 보호자와 함께 내원.<br><br>
+  <span style="color:#ffd60a">"아침 식사 중 갑자기 오른쪽 팔이 안 올라가고, 말이 어눌해졌어요. 1시간 됐어요."</span><br><br>
+  환자는 오른팔 처짐, 말이 느리고 불분명함. 혼동된 표정.</div>
+  <div class="vitals">
+    <div class="vbox warn"><div class="vl">BP</div><div class="vv">175/98</div></div>
+    <div class="vbox ok"><div class="vl">HR</div><div class="vv">84</div></div>
+    <div class="vbox ok"><div class="vl">SpO₂</div><div class="vv">97%</div></div>
+    <div class="vbox ok"><div class="vl">BS</div><div class="vv">112</div></div>
+    <div class="vbox ok"><div class="vl">발병</div><div class="vv">1시간</div></div>
+  </div>
+</div>
+
+<div class="ibox blue">
+  <strong>FAST 암기법</strong>
+  F — Face drooping (얼굴 처짐) &nbsp;|&nbsp; A — Arm weakness (팔 처짐) &nbsp;|&nbsp; S — Speech difficulty (언어 장애) &nbsp;|&nbsp; T — Time to call 119 (즉시 신고)
+</div>
+
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p>뇌졸중은 <span class="hl">시간 싸움</span>이야.<br><br>
+  "1분에 뇌세포 190만 개가 죽는다" — 이거 외워.<br><br>
+  첫 번째 할 일: <span class="hl">마지막으로 정상이었던 시간 확인</span>. 이게 tPA 투여 여부 결정해.<br>
+  증상 발현 4.5시간 이내 + 출혈 아니면 tPA 고려. CT 먼저 찍어야 해.<br><br>
+  그리고 <span class="hl">혈압 조심</span>. 허혈성 뇌졸중에서 혈압 220/120 이하면 건드리지 마. tPA 주기 전엔 185/110 이하로만 낮춰.</p>
+</div>
+
+<div class="stitle"><span>✅</span> 처치 순서</div>
+<table class="atbl">
+  <thead><tr><th>#</th><th>행동</th><th>왜?</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">마지막 정상 시간 확인 (Last Known Well)</td><td class="why">골든타임 4.5시간 계산의 기준</td></tr>
+    <tr><td class="n">2</td><td class="act">즉시 Brain CT (비조영)</td><td class="why">출혈성 vs 허혈성 감별 → tPA 여부 결정</td></tr>
+    <tr><td class="n">3</td><td class="act">혈액검사 (CBC·PT·aPTT·BS·전해질)</td><td class="why">tPA 금기 확인 (혈소판·응고)</td></tr>
+    <tr><td class="n">4</td><td class="act">혈압 모니터링 (침습적 라인 고려)</td><td class="why">tPA 전 185/110 이하 목표</td></tr>
+    <tr><td class="n">5</td><td class="act">산소 투여 (SpO₂ &lt;94%만)</td><td class="why">과산소 공급은 오히려 해로울 수 있음</td></tr>
+    <tr><td class="n">6</td><td class="act">IV 확보 + 생리식염수 유지</td><td class="why">포도당액 금지! 고혈당은 예후 악화</td></tr>
+    <tr><td class="n">7</td><td class="act">NIHSS 점수 평가</td><td class="why">중증도 판단, 기록 기준</td></tr>
+    <tr><td class="n">8</td><td class="act">tPA (Alteplase) 0.9mg/kg IV (해당 시)</td><td class="why">Door-to-Needle 60분 이내 목표</td></tr>
+  </tbody>
+</table>
+
+<div class="tip"><div class="tip-lbl">⚠️ tPA 금기 꼭 확인!</div><p>최근 3개월 내 뇌졸중/두부 외상 · 활성 출혈 · 혈소판 &lt;100,000 · INR &gt;1.7 · 증상 발현 4.5시간 초과 · 혈압 185/110 이상 (조절 후 가능)</p></div>
+<div class="tip"><div class="tip-lbl">💡 포도당액 절대 금지</div><p>뇌졸중 환자에게 5% D/W 투여 → 고혈당 → 허혈 범위 확대 → 예후 악화. 반드시 <strong>생리식염수(0.9% NS)</strong> 사용.</p></div>
+
+<div class="rf">
+  <div class="rf-title">🚨 출혈성 뇌졸중과 감별하라!</div>
+  <ul>
+    <li>🔴 <span>ICH (출혈성): 혈압 180 이상 + 극심한 두통 + 구토 → <strong>tPA 절대 금지</strong></span></li>
+    <li>🔴 <span>SAH: "생애 최악의 두통" → CT 먼저 → LP 고려</span></li>
+    <li>🔴 <span>혈당 &lt;60 → 저혈당도 뇌졸중처럼 보일 수 있어! 먼저 BS 체크</span></li>
+  </ul>
+</div>
+
+<div class="memo">
+  <div class="ml">⚡ 이것만 기억해</div>
+  <div class="mc">FAST · Last Known Well · CT 먼저 · tPA 60분</div>
+  <div class="ms">허혈성: 혈압 220/120 이하면 건드리지 마<br>포도당액 금지 · 출혈 먼저 감별</div>
+</div>
+
+<div class="stitle"><span>❓</span> 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">1</span>환자 BP가 200/110야. tPA 주기 전에 혈압 낮춰야 해?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--green)">tPA 투여 전 185/110 이하로 낮춰야 해.</strong> Labetalol 10-20mg IV 또는 Nicardipine 사용. 단, 허혈성 뇌졸중에서 tPA 안 줄 거면 220/120 이하는 건드리지 않는 게 원칙 (혈압이 허혈 부위에 혈류 공급하고 있을 수 있어).</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">2</span>환자가 "자다가 일어나보니 마비됐어요"라고 해. Last Known Well은?<span class="qa">▼</span></div>
+    <div class="qans"><strong>마지막으로 정상 확인된 시간 = 잠들기 전 시간.</strong> 수면 중 발생 뇌졸중은 Wake-up stroke라고 해. 이 경우 MRI DWI/FLAIR 불일치 소견이 있으면 tPA 고려 가능 (의사 판단). 4.5시간 초과 가능성 높아 기계적 혈전 제거술(EVT) 고려.</div>
+  </div>
+</div>`;
+
+// ─────────────────────────────────────
+// CASE #44 — DKA
+// ─────────────────────────────────────
+FULL_CASES[44] = `
+<button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#e65100,#ff6f00)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #44</span>
+      <span style="font-size:12px;color:var(--text3)">🍬 내분비/대사</span>
+      <span style="color:#ffd600;font-size:13px">★★★★☆</span>
+    </div>
+    <h1>당뇨성 케톤산증 (DKA)</h1>
+    <p class="sub">"숨에서 과일 냄새가 나요" — 당뇨 환자의 가장 위험한 합병증</p>
+    <div class="chips">
+      <span class="chip">인슐린</span><span class="chip">수액</span>
+      <span class="chip">전해질 교정</span><span class="chip">DKA vs HHS</span>
+    </div>
+  </div>
+</div>
+
+<!-- SVG 병태생리 다이어그램 -->
+<div class="svg-wrap">
+  <div class="svg-title">🍬 DKA 병태생리 — 인슐린이 없으면 무슨 일이?</div>
+  <svg viewBox="0 0 400 240" style="max-width:400px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="140" y="8" width="120" height="30" rx="8" fill="#e65100" opacity=".85"/>
+    <text x="200" y="28" text-anchor="middle" fill="white" font-size="11" font-weight="bold">인슐린 절대 부족</text>
+    <line x1="200" y1="38" x2="200" y2="52" stroke="#555" stroke-width="1.5"/>
+    <!-- 두 갈래 -->
+    <line x1="200" y1="52" x2="120" y2="70" stroke="#555" stroke-width="1.5"/>
+    <line x1="200" y1="52" x2="280" y2="70" stroke="#555" stroke-width="1.5"/>
+    <!-- 왼쪽 -->
+    <rect x="60" y="70" width="120" height="30" rx="6" fill="#1565c0" opacity=".8"/>
+    <text x="120" y="89" text-anchor="middle" fill="white" font-size="10" font-weight="bold">포도당 세포 못 들어감</text>
+    <line x1="120" y1="100" x2="120" y2="114" stroke="#555" stroke-width="1.5"/>
+    <rect x="55" y="114" width="130" height="30" rx="6" fill="#0d47a1" opacity=".8"/>
+    <text x="120" y="133" text-anchor="middle" fill="white" font-size="10">혈당 300-800+↑↑</text>
+    <!-- 오른쪽 -->
+    <rect x="220" y="70" width="120" height="30" rx="6" fill="#bf360c" opacity=".8"/>
+    <text x="280" y="89" text-anchor="middle" fill="white" font-size="10" font-weight="bold">지방 분해 (Lipolysis)</text>
+    <line x1="280" y1="100" x2="280" y2="114" stroke="#555" stroke-width="1.5"/>
+    <rect x="215" y="114" width="130" height="30" rx="6" fill="#b71c1c" opacity=".8"/>
+    <text x="280" y="129" text-anchor="middle" fill="white" font-size="10">케톤체 생성 → 산증</text>
+    <text x="280" y="142" text-anchor="middle" fill="white" font-size="9">pH &lt;7.3, HCO₃⁻ &lt;18</text>
+    <!-- 합류 -->
+    <line x1="120" y1="144" x2="120" y2="180" stroke="#555" stroke-width="1.5"/>
+    <line x1="280" y1="148" x2="280" y2="180" stroke="#555" stroke-width="1.5"/>
+    <line x1="120" y1="180" x2="280" y2="180" stroke="#555" stroke-width="1.5"/>
+    <line x1="200" y1="180" x2="200" y2="194" stroke="#555" stroke-width="1.5"/>
+    <rect x="120" y="194" width="160" height="36" rx="8" fill="#880e4f" opacity=".9"/>
+    <text x="200" y="212" text-anchor="middle" fill="white" font-size="11" font-weight="bold">DKA 3요소</text>
+    <text x="200" y="224" text-anchor="middle" fill="white" font-size="9">고혈당 + 대사산증 + 케토산증</text>
+  </svg>
+</div>
+
+<div class="stitle"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">📡 응급실 내원</div>
+  <div class="scene-time">▶ 오후 4:15 — 응급실</div>
+  <div class="scene-txt">22세 여성, 1형 당뇨 병력. 보호자 부축으로 내원.<br><br>
+  <span style="color:#ffd60a">"이틀 전부터 구역질, 배 아프고, 오늘은 숨이 빠르고 멍해요."</span><br><br>
+  환자는 깊고 빠른 호흡(Kussmaul 호흡). 숨에서 달콤한 과일 냄새. 피부 탄력 저하.</div>
+  <div class="vitals">
+    <div class="vbox danger"><div class="vl">BS</div><div class="vv">488</div></div>
+    <div class="vbox warn"><div class="vl">BP</div><div class="vv">102/68</div></div>
+    <div class="vbox danger"><div class="vl">HR</div><div class="vv">122</div></div>
+    <div class="vbox danger"><div class="vl">pH</div><div class="vv">7.21</div></div>
+    <div class="vbox warn"><div class="vl">RR</div><div class="vv">28</div></div>
+  </div>
+</div>
+
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p>DKA의 핵심은 <span class="hl">수액 먼저, 인슐린 나중</span>이야.<br><br>
+  인슐린 먼저 주면 칼륨이 세포 안으로 급격히 이동해서 <span class="hl">저칼륨혈증</span>으로 부정맥 올 수 있어.<br><br>
+  K⁺ 3.5 이상 확인되면 인슐린 시작. K⁺ &lt;3.5면 칼륨 먼저 보충하고 인슐린 시작.<br><br>
+  그리고 <span class="hl">혈당이 250 떨어지면</span> D5W 섞어줘. 인슐린은 계속 줘야 하거든 — 케톤 없애려면.</p>
+</div>
+
+<div class="stitle"><span>✅</span> 처치 순서</div>
+<table class="atbl">
+  <thead><tr><th>#</th><th>행동</th><th>왜?</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">IV 라인 2개 + 생리식염수 1L 빠르게</td><td class="why">탈수 교정 (1~2시간 내 1-2L)</td></tr>
+    <tr><td class="n">2</td><td class="act">혈액검사 (BMP·K⁺·ABG·혈중 케톤·뇨케톤)</td><td class="why">DKA 확진 + 중증도 판단</td></tr>
+    <tr><td class="n">3</td><td class="act">K⁺ 확인 → 3.5 이상이면 인슐린 시작</td><td class="why">K⁺ &lt;3.5 → 칼륨 보충 먼저!</td></tr>
+    <tr><td class="n">4</td><td class="act">Regular Insulin 0.1u/kg/hr IV 지속</td><td class="why">케톤 생성 억제, 산증 교정</td></tr>
+    <tr><td class="n">5</td><td class="act">1시간마다 혈당 체크</td><td class="why">혈당 50-75mg/dL/hr 감소 목표</td></tr>
+    <tr><td class="n">6</td><td class="act">혈당 250 이하 → D5W 0.45%NS로 전환</td><td class="why">저혈당 예방하면서 인슐린 계속</td></tr>
+    <tr><td class="n">7</td><td class="act">K⁺ 2시간마다 체크 + 보충</td><td class="why">인슐린 투여 중 저칼륨혈증 위험</td></tr>
+    <tr><td class="n">8</td><td class="act">원인 찾기 (감염? 인슐린 중단?)</td><td class="why">원인 제거 안 하면 재발</td></tr>
+  </tbody>
+</table>
+
+<div class="stitle"><span>📊</span> DKA vs HHS 비교</div>
+<table class="comp-tbl">
+  <thead><tr><th>구분</th><th>DKA</th><th>HHS</th></tr></thead>
+  <tbody>
+    <tr><td>주로 발생</td><td>1형 당뇨</td><td>2형 당뇨 (고령)</td></tr>
+    <tr><td>혈당</td><td>보통 250-600</td><td>600-1200 (매우 높음)</td></tr>
+    <tr><td>케톤</td><td>양성 ↑↑</td><td>음성 또는 약양성</td></tr>
+    <tr><td>pH</td><td>&lt;7.3 (산증)</td><td>&gt;7.3 (정상에 가까움)</td></tr>
+    <tr><td>삼투압</td><td>정상~약간↑</td><td>320+ 심하게 상승</td></tr>
+    <tr><td>증상</td><td>Kussmaul호흡·구역·복통</td><td>의식변화 주로 나타남</td></tr>
+  </tbody>
+</table>
+
+<div class="memo">
+  <div class="ml">⚡ 이것만 기억해</div>
+  <div class="mc">수액 먼저 → K⁺ 확인 → 인슐린 시작 → 혈당 250에서 D5W</div>
+  <div class="ms">K⁺ &lt;3.5 = 인슐린 절대 먼저 주면 안 돼!<br>Kussmaul 호흡 + 과일 냄새 = DKA 생각</div>
+</div>
+
+<div class="stitle"><span>❓</span> 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">1</span>K⁺ 2.9야. 인슐린 먼저 시작해야 해?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--red)">절대 안 돼.</strong> K⁺ &lt;3.5 시 인슐린 투여 → 칼륨 세포 내 이동 → 심각한 저칼륨혈증 → 부정맥 위험. 먼저 K⁺ 20-40mEq/hr 보충 → K⁺ 3.5 이상 확인 후 인슐린 시작.</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">2</span>혈당 230으로 떨어졌어. 인슐린 중단해야 해?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--green)">인슐린 계속 투여!</strong> 혈당 250 이하가 되면 수액을 D5W 0.45% NS로 바꾸고 인슐린은 계속 줘. DKA 해결 기준은 혈당이 아니라 산증 교정 (pH &gt;7.3, HCO₃⁻ &gt;18, anion gap 정상). 혈당만 보고 중단하면 케톤산증 재악화.</div>
+  </div>
+</div>`;
+
+// ─────────────────────────────────────
+// CASE #50 — 패혈증
+// ─────────────────────────────────────
+FULL_CASES[50] = `
+<button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#880e4f,#c62828)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #50</span>
+      <span style="font-size:12px;color:var(--text3)">🦠 감염/패혈증</span>
+      <span style="color:#ffd600;font-size:13px">★★★★★</span>
+    </div>
+    <h1>패혈증 (Sepsis)</h1>
+    <p class="sub">"Sepsis 1시간 Bundle" — 골든아워를 잡아라</p>
+    <div class="chips">
+      <span class="chip">Sepsis-3</span><span class="chip">1시간 Bundle</span>
+      <span class="chip">혈액배양</span><span class="chip">항생제</span><span class="chip">qSOFA</span>
+    </div>
+  </div>
+</div>
+
+<!-- SVG 패혈증 흐름도 -->
+<div class="svg-wrap">
+  <div class="svg-title">🦠 패혈증 → 패혈성 쇼크 진행 경로</div>
+  <svg viewBox="0 0 380 200" style="max-width:380px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="100" height="40" rx="8" fill="#2e7d32" opacity=".85"/>
+    <text x="60" y="28" text-anchor="middle" fill="white" font-size="10" font-weight="bold">감염원</text>
+    <text x="60" y="42" text-anchor="middle" fill="white" font-size="9">폐렴/UTI/복막염</text>
+    <path d="M110 30 L140 30" stroke="#555" stroke-width="1.5" marker-end="url(#a2)"/>
+    <rect x="140" y="10" width="100" height="40" rx="8" fill="#e65100" opacity=".85"/>
+    <text x="190" y="28" text-anchor="middle" fill="white" font-size="10" font-weight="bold">면역 과잉반응</text>
+    <text x="190" y="42" text-anchor="middle" fill="white" font-size="9">사이토카인 폭풍</text>
+    <path d="M240 30 L270 30" stroke="#555" stroke-width="1.5" marker-end="url(#a2)"/>
+    <rect x="270" y="10" width="100" height="40" rx="8" fill="#c62828" opacity=".85"/>
+    <text x="320" y="28" text-anchor="middle" fill="white" font-size="10" font-weight="bold">장기 손상</text>
+    <text x="320" y="42" text-anchor="middle" fill="white" font-size="9">폐·신장·뇌·간</text>
+    <!-- Sepsis 기준 -->
+    <rect x="80" y="80" width="220" height="45" rx="8" fill="#1565c0" opacity=".85"/>
+    <text x="190" y="98" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Sepsis-3 진단 기준</text>
+    <text x="190" y="112" text-anchor="middle" fill="white" font-size="9">감염 의심 + SOFA ≥2점 증가</text>
+    <text x="190" y="123" text-anchor="middle" fill="white" font-size="9">qSOFA: 의식변화·RR≥22·수축기BP≤100 (2점↑)</text>
+    <!-- 패혈성 쇼크 -->
+    <rect x="80" y="155" width="220" height="40" rx="8" fill="#880e4f" opacity=".85"/>
+    <text x="190" y="173" text-anchor="middle" fill="white" font-size="11" font-weight="bold">패혈성 쇼크</text>
+    <text x="190" y="187" text-anchor="middle" fill="white" font-size="9">Sepsis + 수축기BP &lt;65(수액 후) + Lactate &gt;2</text>
+    <path d="M190 125 L190 155" stroke="#555" stroke-width="1.5" marker-end="url(#a2)"/>
+    <defs>
+      <marker id="a2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L6,3 Z" fill="#555"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<div class="stitle"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">📡 응급실 내원</div>
+  <div class="scene-time">▶ 오전 7:30 — 응급실</div>
+  <div class="scene-txt">78세 남성, 요양원 입소 중. 보호자 없이 구급차로 내원.<br><br>
+  <span style="color:#ffd60a">"어제 저녁부터 소변이 뿌옇고, 오늘 아침에 반응이 이상해서요."</span><br><br>
+  환자는 혼미(Stupor), 피부가 붉고 따뜻함. 호흡이 빠름.</div>
+  <div class="vitals">
+    <div class="vbox danger"><div class="vl">BP</div><div class="vv">88/52</div></div>
+    <div class="vbox danger"><div class="vl">HR</div><div class="vv">118</div></div>
+    <div class="vbox danger"><div class="vl">BT</div><div class="vv">38.9°</div></div>
+    <div class="vbox danger"><div class="vl">RR</div><div class="vv">26</div></div>
+    <div class="vbox warn"><div class="vl">SpO₂</div><div class="vv">93%</div></div>
+  </div>
+</div>
+
+<div class="ibox red">
+  <strong>qSOFA 점수 계산 (이 환자)</strong>
+  의식변화 (1점) + RR≥22 (1점) + BP≤100 (1점) = <strong>3점 → 패혈증 강력 의심!</strong>
+</div>
+
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p>패혈증은 <span class="hl">1시간이 목숨을 결정</span>해.<br><br>
+  1시간 Bundle 외워: <span class="hl">젖산 측정 → 혈액배양 2세트 → 항생제 투여 → 수액 30mL/kg</span><br><br>
+  순서 중요해. 항생제 먼저 주고 싶겠지만 <span class="hl">혈액배양은 항생제 전에</span> 꼭 채취해야 해.<br>
+  배양 결과로 균 동정하고 나중에 항생제 조정해야 하거든.</p>
+</div>
+
+<div class="stitle"><span>✅</span> Sepsis 1시간 Bundle</div>
+<table class="atbl">
+  <thead><tr><th>#</th><th>행동 (1시간 이내)</th><th>왜?</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">Lactate 측정</td><td class="why">≥4 → 패혈성 쇼크 지표. 치료 반응 평가에도 사용</td></tr>
+    <tr><td class="n">2</td><td class="act">혈액배양 2세트 (항생제 투여 전!)</td><td class="why">균 동정 위해 반드시 항생제 전에 채취</td></tr>
+    <tr><td class="n">3</td><td class="act">광범위 항생제 즉시 투여</td><td class="why">1시간 이내 투여마다 생존율 7% 향상</td></tr>
+    <tr><td class="n">4</td><td class="act">생리식염수 30mL/kg IV 30-60분 내</td><td class="why">조직 관류 회복, 저혈압 교정</td></tr>
+    <tr><td class="n">5</td><td class="act">수액 후에도 BP &lt;65 → Norepinephrine 시작</td><td class="why">패혈성 쇼크: 승압제 1차 선택</td></tr>
+    <tr><td class="n">6</td><td class="act">소변량 모니터링 (유치도뇨관 삽입)</td><td class="why">0.5mL/kg/hr 이하 → 신관류 감소</td></tr>
+    <tr><td class="n">7</td><td class="act">감염원 찾기 (CXR·뇨검사·복부 CT)</td><td class="why">원인 제거가 치료의 핵심</td></tr>
+  </tbody>
+</table>
+
+<div class="tip"><div class="tip-lbl">💡 항생제 선택 원칙</div><p>원인균 모를 때: 광범위 항생제 (예: Piperacillin/Tazobactam + Vancomycin). 요로감염 의심: Ceftriaxone. 폐렴 의심: β-lactam + Macrolide. 항생제 지연 1시간마다 사망률 상승!</p></div>
+<div class="tip"><div class="tip-lbl">⚠️ 수액 과부하 주의</div><p>30mL/kg 투여 후 호흡곤란 악화, SpO₂ 저하 → 수액 과부하 의심. 중단 후 이뇨제 고려. 심부전 환자는 더 조심.</p></div>
+
+<div class="rf">
+  <div class="rf-title">🚨 패혈성 쇼크 경보</div>
+  <ul>
+    <li>🔴 <span>수액 후에도 BP &lt;65 → Norepinephrine 즉시 시작</span></li>
+    <li>🔴 <span>Lactate ≥4 → 중증 패혈증, 사망률 40%+</span></li>
+    <li>🔴 <span>소변량 &lt;0.5mL/kg/hr 2시간 → AKI 진행 중</span></li>
+    <li>🔴 <span>의식 급격 저하 → 뇌관류 감소, 즉시 보고</span></li>
+  </ul>
+</div>
+
+<div class="memo">
+  <div class="ml">⚡ 1시간 Bundle</div>
+  <div class="mc">젖산 → 혈배양 → 항생제 → 수액 30mL/kg</div>
+  <div class="ms">혈액배양은 반드시 항생제 전에!<br>Norepinephrine = 패혈성 쇼크 1차 승압제</div>
+</div>
+
+<div class="stitle"><span>❓</span> 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">1</span>항생제 먼저 줘야 하는데 혈액배양 채취가 늦어지고 있어. 항생제 먼저 줘도 돼?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--red)">이상적으로는 배양 먼저지만,</strong> 배양 때문에 항생제가 45분 이상 지연된다면 항생제 먼저 투여. 1시간마다 사망률 상승하는 것이 배양 채취 지연보다 더 위험. 임상적 판단이 중요.</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">2</span>수액 1.5L 투여 후 BP 72/45야. 다음은?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--green)">Norepinephrine 시작.</strong> 패혈성 쇼크에서 수액 30mL/kg 후에도 MAP &lt;65 (BP &lt;65/~) → Norepinephrine 0.01-0.03 mcg/kg/min부터 시작, MAP 65 목표. 중심정맥 확보 후 투여 이상적이지만 응급 시 말초로 시작 가능.</div>
+  </div>
+</div>`;
+
+// ─────────────────────────────────────
+// CASE #59 — 아나필락시스
+// ─────────────────────────────────────
+FULL_CASES[59] = `
+<button class="back-btn" onclick="showSec('dash',document.querySelector('.tnav'))">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#bf360c,#e65100)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #59</span>
+      <span style="font-size:12px;color:var(--text3)">😰 기타 내과 응급</span>
+      <span style="color:#ffd600;font-size:13px">★★★★★</span>
+    </div>
+    <h1>아나필락시스</h1>
+    <p class="sub">"에피네프린 먼저" — 알레르기 쇼크에서 1분이 생사를 가른다</p>
+    <div class="chips">
+      <span class="chip">Epinephrine 1:1000</span><span class="chip">IM 허벅지</span>
+      <span class="chip">항히스타민</span><span class="chip">스테로이드</span>
+    </div>
+  </div>
+</div>
+
+<!-- SVG 아나필락시스 기전 -->
+<div class="svg-wrap">
+  <div class="svg-title">⚡ 아나필락시스 발생 기전</div>
+  <svg viewBox="0 0 380 180" style="max-width:380px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="20" width="90" height="35" rx="8" fill="#e65100" opacity=".85"/>
+    <text x="55" y="38" text-anchor="middle" fill="white" font-size="10" font-weight="bold">알레르겐</text>
+    <text x="55" y="50" text-anchor="middle" fill="white" font-size="9">약물/음식/벌침</text>
+    <path d="M100 37 L125 37" stroke="#555" stroke-width="1.5" marker-end="url(#a3)"/>
+    <rect x="125" y="20" width="100" height="35" rx="8" fill="#880e4f" opacity=".85"/>
+    <text x="175" y="38" text-anchor="middle" fill="white" font-size="10" font-weight="bold">IgE 항체 결합</text>
+    <text x="175" y="50" text-anchor="middle" fill="white" font-size="9">비만세포 활성화</text>
+    <path d="M225 37 L255 37" stroke="#555" stroke-width="1.5" marker-end="url(#a3)"/>
+    <rect x="255" y="20" width="115" height="35" rx="8" fill="#b71c1c" opacity=".85"/>
+    <text x="312" y="38" text-anchor="middle" fill="white" font-size="10" font-weight="bold">히스타민 폭발 분비</text>
+    <text x="312" y="50" text-anchor="middle" fill="white" font-size="9">→ 혈관 확장·투과성 ↑</text>
+    <!-- 결과들 -->
+    <rect x="20" y="95" width="80" height="55" rx="6" fill="#1565c0" opacity=".8"/>
+    <text x="60" y="113" text-anchor="middle" fill="white" font-size="9" font-weight="bold">피부</text>
+    <text x="60" y="125" text-anchor="middle" fill="white" font-size="8">두드러기</text>
+    <text x="60" y="137" text-anchor="middle" fill="white" font-size="8">혈관부종</text>
+    <text x="60" y="149" text-anchor="middle" fill="white" font-size="8">홍조</text>
+    <rect x="115" y="95" width="80" height="55" rx="6" fill="#c62828" opacity=".8"/>
+    <text x="155" y="113" text-anchor="middle" fill="white" font-size="9" font-weight="bold">호흡기</text>
+    <text x="155" y="125" text-anchor="middle" fill="white" font-size="8">후두부종</text>
+    <text x="155" y="137" text-anchor="middle" fill="white" font-size="8">기관지경련</text>
+    <text x="155" y="149" text-anchor="middle" fill="white" font-size="8">천명음</text>
+    <rect x="210" y="95" width="80" height="55" rx="6" fill="#880e4f" opacity=".8"/>
+    <text x="250" y="113" text-anchor="middle" fill="white" font-size="9" font-weight="bold">순환기</text>
+    <text x="250" y="125" text-anchor="middle" fill="white" font-size="8">저혈압</text>
+    <text x="250" y="137" text-anchor="middle" fill="white" font-size="8">빈맥</text>
+    <text x="250" y="149" text-anchor="middle" fill="white" font-size="8">쇼크</text>
+    <rect x="305" y="95" width="65" height="55" rx="6" fill="#4527a0" opacity=".8"/>
+    <text x="337" y="113" text-anchor="middle" fill="white" font-size="9" font-weight="bold">소화기</text>
+    <text x="337" y="125" text-anchor="middle" fill="white" font-size="8">구역</text>
+    <text x="337" y="137" text-anchor="middle" fill="white" font-size="8">구토</text>
+    <text x="337" y="149" text-anchor="middle" fill="white" font-size="8">복통</text>
+    <defs>
+      <marker id="a3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L6,3 Z" fill="#555"/>
+      </marker>
+    </defs>
+  </svg>
+</div>
+
+<div class="stitle"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">📡 응급실 내원</div>
+  <div class="scene-time">▶ 오후 2:44 — 응급실</div>
+  <div class="scene-txt">28세 여성, 외래에서 항생제 주사 후 5분 뒤 응급실 내원.<br><br>
+  <span style="color:#ff7b72">"갑자기 전신이 가렵고 목이 조이는 것 같아요. 숨쉬기 힘들어요!"</span><br><br>
+  전신 두드러기. 입술 부종. 목소리 쉬어있음(쉰 목소리). 식은땀.</div>
+  <div class="vitals">
+    <div class="vbox danger"><div class="vl">BP</div><div class="vv">78/50</div></div>
+    <div class="vbox danger"><div class="vl">HR</div><div class="vv">130</div></div>
+    <div class="vbox danger"><div class="vl">SpO₂</div><div class="vv">91%</div></div>
+    <div class="vbox ok"><div class="vl">BT</div><div class="vv">36.8°</div></div>
+  </div>
+</div>
+
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p><span class="hl">에피네프린 먼저. 항히스타민 나중.</span><br><br>
+  많은 신규들이 항히스타민(항알레르기약) 먼저 주고 싶어 해. 근데 그건 느려.<br>
+  에피네프린이 유일하게 빠른 생명 구하는 약이야.<br><br>
+  부위는 <span class="hl">허벅지 바깥쪽 근육주사(IM)</span>. 정맥주사 아니야!<br>
+  정맥으로 빠르게 주면 심장 독성 있어. IM이 맞아.</p>
+</div>
+
+<div class="stitle"><span>✅</span> 처치 순서</div>
+<table class="atbl">
+  <thead><tr><th>#</th><th>행동</th><th>핵심</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">Epinephrine 1:1000 → 0.3-0.5mg IM (허벅지 바깥쪽)</td><td class="why">히스타민 차단·기관지 확장·혈압 상승 즉시</td></tr>
+    <tr><td class="n">2</td><td class="act">자세: 하지 거상 (쇼크 자세)</td><td class="why">정맥 환류량 증가, 단 호흡곤란 있으면 반좌위</td></tr>
+    <tr><td class="n">3</td><td class="act">고유량 산소 투여 (10-15L/분)</td><td class="why">저산소증 교정</td></tr>
+    <tr><td class="n">4</td><td class="act">IV 확보 + 생리식염수 1-2L 빠르게</td><td class="why">혈관 확장으로 인한 저혈압 교정</td></tr>
+    <tr><td class="n">5</td><td class="act">Epi 5-15분 후 반응 없으면 반복</td><td class="why">필요 시 3회까지 반복 가능</td></tr>
+    <tr><td class="n">6</td><td class="act">Diphenhydramine (항히스타민) 50mg IV</td><td class="why">에피네프린 후 보조 요법</td></tr>
+    <tr><td class="n">7</td><td class="act">Methylprednisolone 125mg IV</td><td class="why">이상성 반응 예방 (4-8시간 후 재발 방지)</td></tr>
+    <tr><td class="n">8</td><td class="act">기도 부종 악화 시 기관내삽관 준비</td><td class="why">쉰 목소리·천명 악화 = 기도 폐쇄 임박</td></tr>
+  </tbody>
+</table>
+
+<div class="tip"><div class="tip-lbl">⚠️ Epi 정맥주사는 언제?</div><p>IM Epi 2-3회 반복 후에도 효과 없을 때만 0.1mg IV (1:10,000으로 희석). 희석 없이 1:1000을 IV로 빠르게 주면 치명적 부정맥 위험!</p></div>
+<div class="tip"><div class="tip-lbl">💡 이상성(biphasic) 반응</div><p>처음 좋아졌다가 4-8시간 후 증상 재발. 스테로이드가 이걸 예방해. 아나필락시스 환자는 증상 완화 후에도 <strong>최소 4-6시간 관찰</strong> 필수!</p></div>
+
+<div class="rf">
+  <div class="rf-title">🚨 기도 폐쇄 임박 신호</div>
+  <ul>
+    <li>🔴 <span>목소리가 갑자기 <strong>쉬어짐 (Hoarseness)</strong> → 후두 부종 시작</span></li>
+    <li>🔴 <span><strong>천명음 (Stridor)</strong> → 기도 50% 이상 폐쇄 신호</span></li>
+    <li>🔴 <span>SpO₂ 빠르게 하락 → 즉시 기도 확보 준비</span></li>
+    <li>🔴 <span>Epi 후 5분 내 무반응 → 반복 투여 + 기도 관리</span></li>
+  </ul>
+</div>
+
+<div class="memo">
+  <div class="ml">⚡ 이것만 기억해</div>
+  <div class="mc">Epi IM 허벅지 → 산소 → 수액 → 항히스타민 → 스테로이드</div>
+  <div class="ms">항히스타민 먼저 주면 안 돼! Epi가 먼저<br>호전 후 4-6시간 관찰 (이상성 반응 대비)</div>
+</div>
+
+<div class="stitle"><span>❓</span> 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">1</span>Epi 0.5mg IM 투여 5분 후에도 BP 70/45야. 어떻게 해?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--green)">Epi IM 반복 투여 + 수액 추가.</strong> 5-15분 간격으로 최대 3회까지 반복. 동시에 수액 소량 추가. 반응 없으면 Epi 0.1mg IV (1:10,000 희석) + Norepinephrine 고려. 기도 부종 악화 시 기관내삽관 준비.</div>
+  </div>
+  <div class="qitem">
+    <div class="qq" onclick="toggleQ(this)"><span class="qn">2</span>증상 완전히 좋아졌어. 바로 집에 가도 돼?<span class="qa">▼</span></div>
+    <div class="qans"><strong style="color:var(--red)">안 돼!</strong> 이상성(biphasic) 반응으로 4-8시간 후 증상 재발 가능. 최소 4-6시간 관찰 필요. EpiPen 처방 및 사용 교육. 알레르겐 확인 + 알레르기 전문의 의뢰. 다음에도 이 약 쓰면 안 됨.</div>
+  </div>
+</div>`;
+
+// 초기 렌더
+renderCards();
+</script>
+</body>
+</html>

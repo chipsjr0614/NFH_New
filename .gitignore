@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# 임시/빌드 산출물
+*.tmp
+*.log
+__pycache__/
+*.pyc
+
+# 엑셀 잠금파일
+~$*.xlsx
+~$*.docx
+~$*.pptx
+
+# 도구(MCP) 부산물 — 브라우저 자동화 캐시·스크린샷·로그
+.playwright-mcp/

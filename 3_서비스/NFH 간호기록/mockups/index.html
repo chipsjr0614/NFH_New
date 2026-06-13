@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호 사정 앱 — 디자인 3버전 비교</title>
+<style>
+  :root{--bg:#0e1320;--card:#171d2e;--ink:#eef2fa;--mut:#90a0c0;--line:#28324c;--ac:#5b9dff;}
+  @media(prefers-color-scheme:light){:root{--bg:#f3f5f9;--card:#fff;--ink:#1a2230;--mut:#667085;--line:#e4e8f0;}}
+  *{box-sizing:border-box;margin:0;}
+  body{background:var(--bg);color:var(--ink);min-height:100vh;
+   font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",sans-serif;line-height:1.6;}
+  .wrap{max-width:860px;margin:0 auto;padding:44px 22px 80px;}
+  h1{font-size:1.8rem;letter-spacing:-.02em;margin-bottom:6px;}
+  .lead{color:var(--mut);margin-bottom:28px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:720px){.grid{grid-template-columns:1fr;}}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);
+   border-radius:16px;padding:20px;transition:.15s;}
+  a.card:hover{border-color:var(--ac);transform:translateY(-3px);}
+  .v{font-size:.74rem;font-weight:800;color:var(--ac);letter-spacing:.05em;}
+  .nm{font-size:1.2rem;font-weight:800;margin:4px 0 8px;letter-spacing:-.01em;}
+  .ref{font-size:.78rem;color:var(--mut);background:color-mix(in srgb,var(--card) 50%,var(--line));
+   display:inline-block;padding:3px 9px;border-radius:20px;margin-bottom:12px;}
+  ul{padding-left:18px;margin:0;}
+  li{font-size:.88rem;margin:5px 0;color:var(--mut);}
+  li b{color:var(--ink);font-weight:600;}
+  .common{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 22px 16px;}
+  .common li{color:var(--ink);}
+  footer{margin-top:26px;color:var(--mut);font-size:.82rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>간호 사정 앱 — 디자인 3버전</h1>
+  <p class="lead">같은 데이터·같은 기능, 디자인 방향만 다릅니다. 셋 다 직접 눌러보고 비교하세요. (예시: 통증 › 두통)</p>
+
+  <div class="grid">
+    <a class="card" href="v1_대화형.html">
+      <div class="v">VERSION 1</div>
+      <div class="nm">대화형</div>
+      <div class="ref">Typeform · TurboTax</div>
+      <ul>
+        <li><b>한 문항씩</b> 큰 화면으로</li>
+        <li>상단 진행 바 (1/6)</li>
+        <li>답하면 자동으로 다음</li>
+        <li>끝에 기록 확인·복사</li>
+        <li>👉 신규·집중도 최고, 누락 거의 0</li>
+      </ul>
+    </a>
+    <a class="card" href="v2_카드리스트.html">
+      <div class="v">VERSION 2</div>
+      <div class="nm">카드 리스트</div>
+      <div class="ref">Toss</div>
+      <ul>
+        <li>한 화면 <b>스크롤</b>, 큰 토글 카드</li>
+        <li>양성(있음) 빨강·음성(없음) 초록</li>
+        <li>진행률 칩 (3/6 평가)</li>
+        <li>하단 시트로 기록 확인·복사</li>
+        <li>👉 친숙하고 빠름, 전체 조망</li>
+      </ul>
+    </a>
+    <a class="card" href="v3_밀도형2단.html">
+      <div class="v">VERSION 3</div>
+      <div class="nm">밀도형 2단</div>
+      <div class="ref">Apple Health · Linear</div>
+      <ul>
+        <li>좌: 사정 / 우: <b>실시간 기록</b></li>
+        <li>드롭다운으로 주호소 전환</li>
+        <li>TSV/CSV 바로 내보내기</li>
+        <li>밀도 높지만 읽힘</li>
+        <li>👉 베테랑·PC/태블릿 가로</li>
+      </ul>
+    </a>
+  </div>
+
+  <div class="common">
+    <p style="font-weight:700;margin:14px 0 4px">세 버전 공통</p>
+    <ul>
+      <li>주호소 34종(엑셀 그대로) → A&amp;E 사정 → 간호진단(D) → 계획·중재(P&amp;E)</li>
+      <li>출력은 <b>간호기록_수정본 형식</b>(소분류/세부분류/과정/진술문), 진술문은 엑셀 원문 그대로</li>
+      <li>있음/없음 토글 자동 생성, 값 입력형(동공크기:), 미평가 처리</li>
+      <li>완성된 기록 복사(EMR 붙여넣기용 TSV)</li>
+    </ul>
+  </div>
+
+  <footer>데이터: <code>data/간호기록_수정본.xlsx</code> · 진술문 마스터: <code>Nr.statement_1023_Final.xlsx</code></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호 사정 앱 — UI/UX 가이드</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#1c2430; --muted:#667085; --line:#e6e9ef;
+    --accent:#2563eb; --accent-soft:#eef3ff; --good:#059669; --good-soft:#ecfdf5;
+    --dx:#7c3aed; --dx-soft:#f3effe; --warn:#b45309; --warn-soft:#fff7ed; --bad:#dc2626;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f1115; --card:#171a21; --ink:#e7ebf3; --muted:#98a2b3; --line:#272c37;
+      --accent:#6ea8fe; --accent-soft:#16223a; --good:#34d399; --good-soft:#0f261d;
+      --dx:#b794f6; --dx-soft:#241b3a; --warn:#fbbf24; --warn-soft:#2a2010; --bad:#f87171;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.65;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:880px;margin:0 auto;padding:44px 22px 90px;}
+  h1{font-size:2rem;letter-spacing:-.025em;margin:0 0 6px;}
+  .lead{color:var(--muted);font-size:.95rem;margin:0 0 28px;}
+  h2{font-size:1.3rem;letter-spacing:-.015em;margin:42px 0 12px;display:flex;align-items:center;gap:10px;}
+  h2 .num{flex:none;width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;
+    font-size:.95rem;font-weight:800;display:grid;place-items:center;}
+  h3{font-size:1.02rem;margin:26px 0 10px;color:var(--ink);}
+
+  .tension{background:linear-gradient(135deg,var(--accent),#1e40af);color:#fff;border-radius:16px;
+    padding:22px 24px;margin:14px 0;}
+  .tension .t{font-size:1.2rem;font-weight:800;margin-bottom:6px;}
+  .tension .s{opacity:.92;font-size:.93rem;}
+
+  .ctx{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 22px 16px;}
+  .ctx li{margin:8px 0;}
+
+  .principles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media(max-width:620px){.principles{grid-template-columns:1fr;}}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .pcard .pn{font-size:.74rem;font-weight:800;color:var(--accent);letter-spacing:.04em;}
+  .pcard b{display:block;font-size:1.02rem;margin:4px 0 4px;}
+  .pcard span{color:var(--muted);font-size:.88rem;}
+
+  .grouplabel{font-weight:800;font-size:.95rem;margin:22px 0 4px;display:flex;align-items:center;gap:8px;}
+  .grouplabel .tag{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;}
+  .tag.a{background:var(--accent-soft);color:var(--accent);}
+  .tag.b{background:var(--dx-soft);color:var(--dx);}
+  .tag.c{background:var(--warn-soft);color:var(--warn);}
+  .tag.d{background:var(--good-soft);color:var(--good);}
+
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;font-size:.9rem;margin:8px 0 4px;}
+  th,td{padding:11px 13px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);}
+  th{background:color-mix(in srgb,var(--card) 70%,var(--line));color:var(--muted);font-size:.78rem;font-weight:700;}
+  tr:last-child td{border-bottom:none;}
+  td b{color:var(--ink);}
+  td.svc{font-weight:800;white-space:nowrap;}
+
+  .summary{background:var(--accent-soft);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:14px 18px;margin:18px 0;font-size:.93rem;}
+  .summary b{color:var(--accent);}
+
+  ul.rec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 22px 16px;}
+  ul.rec li{margin:10px 0;}
+  ul.anti{background:var(--warn-soft);border:1px solid var(--line);border-radius:14px;padding:6px 22px 16px;}
+  ul.anti li{margin:10px 0;}
+  ul.anti li::marker{color:var(--bad);}
+  code{background:color-mix(in srgb,var(--card) 60%,var(--line));padding:1px 6px;border-radius:5px;font-size:.86em;}
+  .kw{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .kw span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 13px;font-size:.84rem;color:var(--muted);}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:.83rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>간호 사정 앱 — UI/UX 가이드</h1>
+  <p class="lead">사정 앱(<code>사정앱_prototype.html</code>)의 화면 설계 방향과 참고 디자인. 프로토타입 수정용이 아니라 <b>앞으로 UI를 다듬을 때의 기준 문서</b>.</p>
+
+  <h2><span class="num">0</span> 사용 맥락</h2>
+  <ul class="ctx">
+    <li><b>장소</b> — 관찰구역. 1분 1초 다투는 소생실이 아님.</li>
+    <li><b>속도</b> — 순차적으로 한 항목씩 진행해도 됨. "빠름"보다 <b>"빠뜨림 없음 + 읽기 쉬움"</b>이 우선.</li>
+    <li><b>사용자</b> — 신규(뭘 물을지 모름) ~ 베테랑(빠르게 넘기고 싶음) 혼재.</li>
+    <li><b>목적</b> — 사정 → 정형 진술문 기록 완성 → (EMR로) 옮기기.</li>
+  </ul>
+  <div class="tension">
+    <div class="t">누락하면 안 된다 ↔ 가독성이 나빠도 안 된다.</div>
+    <div class="s">항목을 다 보여주면 빽빽해서 안 읽히고, 줄이면 빠뜨린다. 이 둘의 균형이 UI/UX의 전부.</div>
+  </div>
+
+  <h2><span class="num">1</span> 설계 원칙 4가지</h2>
+  <div class="principles">
+    <div class="pcard"><div class="pn">PRINCIPLE 01</div><b>순차적 흐름</b><span>한 번에 한 덩어리. 위→아래로 끝까지 자연스럽게. 한 화면에 다 욱여넣지 않는다.</span></div>
+    <div class="pcard"><div class="pn">PRINCIPLE 02</div><b>누락 0</b><span>모든 항목을 한 번은 지나가게. 안 본 항목이 시각적으로 드러나야 한다(진행률·미평가).</span></div>
+    <div class="pcard"><div class="pn">PRINCIPLE 03</div><b>읽기 쉽게</b><span>한 화면 정보량 통제, 명확한 위계(질문 &gt; 보조설명), 충분한 여백·큰 터치 영역.</span></div>
+    <div class="pcard"><div class="pn">PRINCIPLE 04</div><b>정형 진술문 보존</b><span>출력은 엑셀 진술문 그대로. 자유 서술 금지, 자동 완성된 기록만 노출.</span></div>
+  </div>
+
+  <h2><span class="num">2</span> 참고할 디자인</h2>
+
+  <div class="grouplabel"><span class="tag a">A</span> 한 번에 하나씩, 부담 없이 (순차 흐름)</div>
+  <table>
+    <tr><th>서비스</th><th>무엇이 좋은가</th><th>우리가 가져올 점</th></tr>
+    <tr><td class="svc">Typeform</td><td>한 화면 한 질문, 대화하듯. 긴 폼인데 안 질림</td><td>A&amp;E가 많을 때(두통 7·호흡 11) 한 덩어리씩 끊어 보여주기</td></tr>
+    <tr><td class="svc">Toss(토스)</td><td>"한 화면 한 동작", 큰 글씨·버튼, 한국인 친숙</td><td>터치 영역 키우기, 한 동작 단위 화면, 친숙한 인터랙션</td></tr>
+    <tr><td class="svc">TurboTax</td><td>복잡·누락금지인 세금을 인터뷰식으로 끝까지 안내</td><td><b>롤모델에 가장 가까움</b> — 복잡·누락금지·복붙형식</td></tr>
+  </table>
+
+  <div class="grouplabel"><span class="tag b">B</span> 증상 사정·분기 (도메인이 똑같음)</div>
+  <table>
+    <tr><th>서비스</th><th>무엇이 좋은가</th><th>우리가 가져올 점</th></tr>
+    <tr><td class="svc">Ada Health</td><td>증상 입력 → 답에 따라 질문이 갈라지는 트리. 우리 "스무고개"와 동일</td><td>분기형 질문의 흐름·말투·진행 표시</td></tr>
+    <tr><td class="svc">Buoy / K Health</td><td>증상 트리아지를 채팅처럼. 한 번에 하나, 위계 깔끔</td><td>질문 카드 디자인, 선택지 칩 형태</td></tr>
+  </table>
+
+  <div class="grouplabel"><span class="tag c">C</span> 누락 방지 + 진행 가시성</div>
+  <table>
+    <tr><th>서비스</th><th>무엇이 좋은가</th><th>우리가 가져올 점</th></tr>
+    <tr><td class="svc">Duolingo</td><td>상단 진행 바, 한 스텝씩, 안 한 게 명확히 남음</td><td>"3/7 평가됨" 진행 표시, 미평가 항목 하이라이트</td></tr>
+    <tr><td class="svc">WHO 수술 안전 / 항공 체크리스트</td><td>"빠뜨리면 사람이 죽는" 항목을 pause-point로 강제</td><td>핵심 항목은 한 번은 응답하고 지나가게 하는 게이트</td></tr>
+    <tr><td class="svc">Linear / Superhuman</td><td>빠르되 밀도 높고 여전히 읽힘. 키보드/단축</td><td>베테랑용 빠른 모드, 밀도와 가독성 양립</td></tr>
+  </table>
+
+  <div class="grouplabel"><span class="tag d">D</span> 가독성·정보 위계 (의료 데이터)</div>
+  <table>
+    <tr><th>서비스</th><th>무엇이 좋은가</th><th>우리가 가져올 점</th></tr>
+    <tr><td class="svc">Apple 건강</td><td>카드 기반 위계, 의료 수치 한눈에, 색·아이콘 절제</td><td>A&amp;E / 진단(D) / 중재(P&amp;E) 구역을 색·카드로 구분</td></tr>
+    <tr><td class="svc">Stripe 대시보드·문서</td><td>밀도와 여백의 균형, 표·숫자가 안 답답함</td><td>기록 미리보기 표의 가독성, 톤다운된 색</td></tr>
+  </table>
+
+  <div class="summary">세 줄 요약 — 흐름은 <b>TurboTax/Typeform</b>, 분기는 <b>Ada Health</b>, 누락방지·진행은 <b>Duolingo + 체크리스트</b>, 가독성은 <b>Apple 건강/Toss</b>.</div>
+
+  <h2><span class="num">3</span> 화면 권장</h2>
+  <ul class="rec">
+    <li><b>진행 표시</b> — 상단에 "A&amp;E 3/7 평가됨" 같은 진행 바. 안 본 항목이 남으면 보이게.</li>
+    <li><b>한 덩어리씩</b> — A&amp;E를 한 화면에 다 깔기보다 섹션 단위로 끊어 순차 진행(관찰구역이라 가능).</li>
+    <li><b>큰 터치 영역</b> — 버튼 최소 44px. 있음/없음 토글이 손가락으로 정확히 눌리게.</li>
+    <li><b>양성 강조</b> — 대부분 "없음"이므로 음성은 차분하게, <b>양성(있음·통증 있음)만 색으로 튀게</b> → 기록 핵심이 한눈에.</li>
+    <li><b>비고의 두 얼굴</b> — 신규에겐 생명줄(💡 강도/빈도/양상…) 기본 노출, 베테랑에겐 소음이니 접기/펼치기 또는 "빠른 모드".</li>
+    <li><b>완성 → 옮기기</b> — 사정 끝나면 "기록 완성"이 명확히, 복사/내보내기가 메인 액션. 복사 형식이 실제 기록 칸에 그대로 들어가는지 확인.</li>
+    <li><b>색 위계</b> — A&amp;E(파랑·사정) / 진단 D(보라·결론) / 중재 P&amp;E(초록·행동) 일관되게.</li>
+  </ul>
+
+  <h2><span class="num">4</span> 안티패턴 (이렇게는 하지 말기)</h2>
+  <ul class="anti">
+    <li>항목을 한 화면에 빽빽이 — 누락은 막아도 <b>안 읽혀서</b> 결국 대충 넘김(현 EMR들의 문제).</li>
+    <li>클릭 안 하면 안 보이는 숨김형 — 뭘 물어야 할지 모르는 신규에게 최악.</li>
+    <li>자유 서술 허용 — 진술문 표준이 깨지고 EMR 호환 불가.</li>
+    <li>진행 상태 없음 — 옆 환자 때문에 끊기면 어디까지 했는지 잃어버림.</li>
+  </ul>
+
+  <footer>
+    참고 키워드:
+    <div class="kw">
+      <span>Typeform</span><span>Toss</span><span>TurboTax (guided interview)</span>
+      <span>Ada Health</span><span>Buoy Health</span><span>K Health</span>
+      <span>Duolingo progress UX</span><span>WHO Surgical Safety Checklist</span>
+      <span>Apple Health hierarchy</span><span>Stripe dashboard</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

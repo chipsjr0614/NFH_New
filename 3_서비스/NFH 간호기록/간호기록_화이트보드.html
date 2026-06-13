@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호기록 앱 — 간호사 관점 정리</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --ink: #1f2933; --muted: #6b7280;
+    --line: #e5e7eb; --accent: #2563eb; --accent-soft: #eff4ff; --warn: #b45309;
+    --good: #059669; --good-soft:#ecfdf5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0f1115; --card:#171a21; --ink:#e5e7eb; --muted:#9ca3af;
+      --line:#2a2f3a; --accent:#6ea8fe; --accent-soft:#1a2336; --warn:#f59e0b;
+      --good:#34d399; --good-soft:#10231b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",Roboto,sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width: 840px; margin: 0 auto; padding: 40px 20px 80px; }
+  header.page { margin-bottom: 22px; }
+  h1 { font-size: 1.9rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 0.95rem; }
+  .note-banner {
+    background:var(--accent-soft); border:1px solid var(--line); border-left:4px solid var(--accent);
+    border-radius:10px; padding:14px 18px; font-size:.9rem; color:var(--muted); margin:18px 0 30px;
+  }
+  h2.sec { font-size:1.25rem; margin:38px 0 14px; letter-spacing:-.01em; }
+  .concept {
+    background:linear-gradient(135deg,var(--accent),#1e40af); color:#fff;
+    border-radius:14px; padding:22px 24px; margin-bottom:8px;
+  }
+  .concept .big { font-size:1.25rem; font-weight:800; margin-bottom:8px; }
+  .concept .sub { opacity:.92; font-size:.95rem; }
+  .why {
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:6px 22px 14px; margin-bottom:6px;
+  }
+  .why li { margin:8px 0; }
+  .why b { color:var(--ink); }
+  .arrowline { color:var(--muted); font-size:.92rem; margin:10px 2px 0; }
+
+  .flow { display:flex; flex-direction:column; gap:14px; }
+  .step { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px 18px; }
+  .step.key { border:1px solid var(--accent); box-shadow:0 4px 18px rgba(37,99,235,.10); }
+  .step-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+  .badge {
+    flex:none; width:30px; height:30px; border-radius:50%; background:var(--accent);
+    color:#fff; font-weight:700; font-size:.95rem; display:grid; place-items:center;
+  }
+  .step.opt .badge{ background:var(--muted); }
+  .step h3 { font-size:1.12rem; margin:0; letter-spacing:-.01em; }
+  .tag-opt{ font-size:.7rem; font-weight:700; color:var(--muted); border:1px solid var(--line);
+    border-radius:20px; padding:2px 9px; margin-left:8px; vertical-align:middle; }
+  .step ul { margin:6px 0 0; padding-left:22px; }
+  .step ul ul { margin-top:4px; }
+  .step li { margin:3px 0; }
+  .nurse { color:var(--accent); font-weight:600; }
+  .app { color:var(--good); font-weight:600; }
+  .arrow { color:var(--accent); font-weight:600; }
+  .q { color:var(--ink); font-weight:600; }
+  .unc { color:var(--warn); font-style:italic; }
+  .checklist { color:var(--muted); }
+
+  .principles { background:var(--good-soft); border:1px solid var(--line); border-radius:12px; padding:6px 22px 14px; }
+  .principles li { margin:9px 0; }
+  .principles b { color:var(--good); }
+
+  footer.page { margin-top:36px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; }
+  footer.page ul { padding-left:20px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <h1>간호기록 앱 — 간호사 관점 정리</h1>
+    <div class="subtitle">응급실 간호사가 환자 곁에서 태블릿/폰으로 쓰는 앱 · 사정(Assessment) → 기록(Documentation)</div>
+  </header>
+
+  <div class="note-banner">
+    <code>raws/간호기록.JPG</code> 화이트보드 + <code>2026 0613 스터디 (2)</code> 녹취록 기반.
+    불확실한 표기는 <span class="unc">(?)</span>로 표시.
+  </div>
+
+  <h2 class="sec">한 줄 컨셉</h2>
+  <div class="concept">
+    <div class="big">물어본 대로 → 기록이 완성된다.</div>
+    <div class="sub">간호사가 환자에게 묻고 화면을 탭하는 과정이 그대로 정형화된 간호기록 문장으로 자동 정리되어, 마지막에 EMR로 옮길 수 있다. 사정과 기록을 한 흐름으로 묶는 것이 핵심.</div>
+  </div>
+
+  <h2 class="sec">왜 필요한가 <span style="font-weight:400;color:var(--muted);font-size:.9rem">(간호사가 겪는 문제)</span></h2>
+  <ul class="why">
+    <li><b>경험 편차</b> — 신규·저연차는 무엇을 물어야 할지 모르고, 베테랑도 급하면 빠뜨린다.</li>
+    <li><b>중구난방</b> — 간호사마다 묻는 항목이 제각각. "배 아프시구나" 하고 돌아서면 정작 중요한 걸 놓친다.</li>
+    <li><b>놓침 = 위험</b> — 하나라도 안 물어봐서 놓치면 환자가 위험해질 수 있다.</li>
+    <li><b>이중 작업</b> — 묻고, 또 따로 기록하고. 한 번에 끝내야 한다.</li>
+    <li><b>기록 형식</b> — "토했음"이 아니라 "오심·구토 있음"처럼 정형화된 문장이어야 EMR에 쓸 수 있다.</li>
+  </ul>
+  <p class="arrowline">→ 앱이 <b style="color:var(--ink)">물어볼 항목을 안내</b>하고, <b style="color:var(--ink)">탭한 내용으로 기록 문장을 자동 생성</b>해 이 문제들을 해결한다.</p>
+
+  <h2 class="sec">간호사가 따라가는 흐름</h2>
+  <p class="arrowline">각 단계 = <span class="nurse">간호사가 하는 일</span> + <span class="app">앱이 받쳐주는 것</span>.</p>
+
+  <section class="flow">
+
+    <div class="step">
+      <div class="step-head"><span class="badge">1</span><h3>환자 만나기 — 인사 / 신원 확인 (인트로)</h3></div>
+      <ul>
+        <li><span class="nurse">간호사</span>: <span class="q">"안녕하세요~?"</span> 하며 환자 확인.</li>
+        <li><span class="app">앱</span>: 환자 식별 정보로 진입 (잘못된 환자 아닌지 판단).</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="badge">2</span><h3>라인·튜브부터 확인</h3></div>
+      <ul>
+        <li><span class="nurse">간호사</span>: 환자에게 달린 관이 있는지 먼저 본다.</li>
+        <li>체크: <strong>콧줄 / 소변줄</strong> 등.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="badge">3</span><h3>환의 교체 + 귀금속 제거</h3></div>
+      <ul>
+        <li><span class="nurse">간호사</span>: 환자복으로 갈아입히고 귀금속 제거.</li>
+        <li><span class="arrow">↳</span> 하의 쪽 빼고 다.</li>
+      </ul>
+    </div>
+
+    <div class="step key">
+      <div class="step-head"><span class="badge">4</span><h3>사정 (Assessment) — 핵심</h3></div>
+      <ul>
+        <li><strong>스무고개 하듯이</strong> 진행 — 한 번에 다 묻지 않고, 환자 답에 따라 다음 질문이 갈라지며 좁혀 들어간다. 주호소 시작 → 탭(답) → 그 답에 맞는 후속 질문으로 가지치기. 상세 흐름: <a href="사정_플로우_UI.html">사정_플로우_UI.html</a></li>
+        <li><strong>(1) 주호소 파악</strong> — <span class="q">"왜(어떻게) 오셨어요?"</span>
+          <ul>
+            <li><span class="arrow">←</span> <strong>초진(KTAS) 기록과 비교</strong> — 다르면 <span class="unc">환자가 바뀌었거나?!</span> (확인 신호)</li>
+            <li><span class="arrow">→</span> <strong>인터프리터 / 음성 번역</strong> (외국인·의사소통 보조)</li>
+          </ul>
+        </li>
+        <li><strong>(2) 증상 가지치기</strong> (예: 복통)
+          <ul>
+            <li>복통 <span class="arrow">→</span> 오심 / 구토 / 배변 / 통증여부</li>
+            <li>오심 <span class="arrow">→</span> 몇 번 / 음식 / 투사성 / 위액</li>
+            <li>각 증상 공통 질문: <strong>점수(10점 만점)</strong>, 양상, <strong>언제부터?</strong>, 어디가?</li>
+          </ul>
+        </li>
+        <li class="checklist"><strong>(3) 놓치면 안 되는 체크리스트</strong> (하나라도 빠지면 위험)
+          <ul>
+            <li>혈변 / 흑색변 / 흉통 / 임신 가능성 / 열감·오한 …</li>
+            <li><span class="arrow">→</span> 해당 없으면 빠르게 넘기되, <strong>한 번은 반드시 묻고</strong> 지나가게.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="badge">5</span><h3>간호진단</h3></div>
+      <ul><li>사정 결과를 간호진단으로 연결 (예: 급성 통증).</li></ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="badge">6</span><h3>평가 및 중재 — 환자 안내</h3></div>
+      <ul>
+        <li>간호사가 환자에게 안내하는 문구를 한 흐름으로 묶어 제시:
+          <ul>
+            <li>① "금식하세요"</li>
+            <li>② "통증 있으면 말하세요"</li>
+            <li>③ "검사 안내드립니다~"</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="badge">7</span><h3>낙상 교육</h3></div>
+      <ul><li><span class="nurse">간호사</span>: 침대 난간 올리기, 어지러우면 알리기 등 안내 (침대 낙상 예방).</li></ul>
+    </div>
+
+    <div class="step opt">
+      <div class="step-head"><span class="badge">8</span><h3>간호기록 복붙 <span class="tag-opt">고려만</span></h3></div>
+      <ul><li>완성된 간호기록을 EMR로 <strong>복사·붙여넣기</strong> 하는 기능 — 구현하면 좋지만 <strong>지금은 고려만</strong>.</li></ul>
+    </div>
+
+  </section>
+
+  <h2 class="sec">핵심 설계 원칙 <span style="font-weight:400;color:var(--muted);font-size:.9rem">(간호사 관점)</span></h2>
+  <ul class="principles">
+    <li><b>빠뜨림 방지 &gt; 자동화</b> — 모든 항목을 강제하진 않되, 중요한 항목은 한 번은 묻고 지나가게.</li>
+    <li><b>탭 = 기록</b> — 물어보고 탭한 결과가 곧 기록. 두 번 일하지 않는다.</li>
+    <li><b>정형 문장 출력</b> — 자유 서술이 아니라 EMR에 바로 쓰는 표준 문장.</li>
+    <li><b>빠른 손맛</b> — 응급실에서 한 손으로 빠르게. 클릭만 강제하거나 안 보이면 건너뛰게 됨(현 버전 문제).</li>
+    <li><b>현장 그대로</b> — 태블릿/폰을 들고 환자 곁에서 묻는 순서대로 흐른다.</li>
+  </ul>
+
+  <footer class="page">
+    <ul>
+      <li>화이트보드 우상단 "반찬구매"는 본 주제와 무관한 별도 메모.</li>
+      <li>본 정리는 손글씨 판독 + 녹취록 맥락 기반 재구성이며, 불확실한 부분은 <span class="unc">(?)</span>로 표시.</li>
+    </ul>
+  </footer>
+</div>
+</body>
+</html>

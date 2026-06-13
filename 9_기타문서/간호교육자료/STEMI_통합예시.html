@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEMI 통합 예시 — 지식 + 케이스</title>
+<style>
+/* ══════ 변수 ══════ */
+:root {
+  --bg:#f0f2f5; --surface:#fff; --surface2:#f8f9fa; --border:#e0e0e0;
+  --text:#1a1a1a; --text2:#555; --text3:#999;
+  --red:#d32f2f; --red2:#ffebee; --orange:#e65100; --orange2:#fff3e0;
+  --blue:#1565c0; --blue2:#e3f2fd; --green:#2e7d32; --green2:#e8f5e9;
+  --purple:#6a1b9a; --purple2:#f3e5f5; --teal:#00695c; --teal2:#e0f2f1;
+  --shadow:0 2px 10px rgba(0,0,0,.08); --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+  --radius:12px;
+}
+[data-theme="dark"] {
+  --bg:#0d1117; --surface:#161b22; --surface2:#1c2128; --border:#30363d;
+  --text:#e6edf3; --text2:#8b949e; --text3:#6e7681;
+  --red2:#3d1515; --orange2:#3d1f00; --blue2:#0d2144;
+  --green2:#0d2d0d; --purple2:#2d0d3d; --teal2:#0a2a27;
+  --shadow:0 2px 10px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+
+/* ══ 탑바 ══ */
+.topbar{
+  position:sticky;top:0;z-index:100;height:52px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow);display:flex;align-items:center;padding:0 20px;gap:14px;
+}
+.logo{font-size:16px;font-weight:900;color:var(--red)}
+.logo span{color:var(--text);font-weight:400}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.dark-btn{
+  width:42px;height:22px;border-radius:11px;background:var(--border);
+  position:relative;transition:background .3s;border:none;cursor:pointer;
+}
+.dark-btn::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .3s;
+}
+[data-theme="dark"] .dark-btn{background:var(--blue)}
+[data-theme="dark"] .dark-btn::after{transform:translateX(20px)}
+
+/* ══ 레이아웃 ══ */
+.cdetail{max-width:800px;margin:0 auto;padding:28px 16px 80px}
+
+/* ══ 기존 스타일 그대로 ══ */
+.back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 16px;border-radius:20px;background:var(--surface);
+  border:1px solid var(--border);font-size:13px;font-weight:600;
+  color:var(--text2);margin-bottom:22px;transition:all .2s;
+}
+.case-hdr{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:22px;box-shadow:var(--shadow)}
+.case-accent{height:6px}
+.case-hdr-body{padding:26px}
+.case-meta-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.case-badge{background:var(--red);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px}
+.case-hdr-body h1{font-size:22px;font-weight:900;margin-bottom:6px}
+.case-hdr-body .sub{font-size:14px;color:var(--text2);margin-bottom:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:4px 12px;border-radius:10px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+.stitle{font-size:15px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.opening{background:#0d1117;border-radius:12px;padding:22px;margin-bottom:22px;border-left:4px solid var(--red)}
+.radio-txt{color:#58a6ff;font-size:11px;font-weight:700;letter-spacing:1.5px;margin-bottom:10px}
+.scene-time{color:#ffd60a;font-size:13px;font-weight:700;margin-bottom:8px}
+.scene-txt{color:#e6edf3;font-size:14px;line-height:1.8;font-family:'Courier New',monospace}
+.vitals{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.vbox{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;text-align:center}
+.vbox .vl{color:#8b949e;font-size:9px;letter-spacing:.5px}
+.vbox .vv{color:#f0f6fc;font-size:16px;font-weight:800}
+.vbox.danger .vv{color:#ff7b72}
+.vbox.warn .vv{color:#ffd60a}
+.vbox.ok .vv{color:#3fb950}
+.qbanner{
+  background:linear-gradient(135deg,#1a237e,#283593);
+  border-radius:10px;padding:14px 18px;margin-bottom:6px;color:#fff;
+  font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;
+}
+.qbanner::after{content:'▼';margin-left:auto;font-size:11px;transition:transform .3s}
+.qbanner.open::after{transform:rotate(180deg)}
+.bubble{background:var(--surface2);border:1px solid var(--border);border-radius:0 14px 14px 14px;padding:18px 22px;margin-bottom:22px;position:relative}
+.bubble::before{content:'선배';position:absolute;top:-12px;left:0;background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:2px 10px;border-radius:8px 8px 0 0}
+.bubble p{font-size:14px;line-height:1.9}
+.bubble .hl{background:rgba(255,214,0,.25);padding:1px 5px;border-radius:3px;font-weight:700;color:var(--red)}
+.atbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:22px}
+.atbl th{background:var(--text);color:var(--surface);padding:9px 13px;font-size:12px;font-weight:700;text-align:left}
+.atbl th:first-child{border-radius:8px 0 0 0}
+.atbl th:last-child{border-radius:0 8px 0 0}
+.atbl td{padding:11px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;background:var(--surface)}
+.atbl tr:last-child td{border-bottom:none}
+.atbl tr:last-child td:first-child{border-radius:0 0 0 8px}
+.atbl tr:last-child td:last-child{border-radius:0 0 8px 0}
+.atbl .n{font-weight:900;color:var(--red);text-align:center;font-size:17px;width:36px}
+.atbl .act{font-weight:700}
+.atbl .why{color:var(--text2);font-size:12px}
+.why-tag{background:var(--blue2);color:var(--blue);font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;margin-right:4px}
+.ibox{border-left:4px solid;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:14px;font-size:14px}
+.ibox.blue{border-color:var(--blue);background:var(--blue2)}
+.ibox.green{border-color:var(--green);background:var(--green2)}
+.ibox.red{border-color:var(--red);background:var(--red2)}
+.ibox strong{display:block;font-size:11px;font-weight:800;letter-spacing:1px;opacity:.65;margin-bottom:4px}
+.tip{background:var(--orange2);border:1px solid var(--orange);border-radius:10px;padding:16px 18px;margin-bottom:12px}
+.tip-lbl{font-size:11px;font-weight:800;color:var(--orange);letter-spacing:1px;margin-bottom:6px}
+.tip p{font-size:14px;line-height:1.8}
+.rf{background:var(--red2);border:2px solid var(--red);border-radius:12px;padding:18px 22px;margin-bottom:22px}
+.rf-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--red);margin-bottom:12px}
+.rf ul{list-style:none}
+.rf ul li{padding:7px 0;border-bottom:1px solid rgba(211,47,47,.2);font-size:14px;display:flex;gap:8px}
+.rf ul li:last-child{border-bottom:none}
+.memo{background:linear-gradient(135deg,#1a237e,#0d47a1);border-radius:12px;padding:22px;margin-bottom:22px;color:#fff}
+.memo .ml{font-size:11px;font-weight:700;opacity:.65;letter-spacing:2px;margin-bottom:10px}
+.memo .mc{font-size:20px;font-weight:900;line-height:1.6}
+.memo .ms{font-size:13px;opacity:.8;margin-top:8px}
+.quiz{margin-bottom:22px}
+.qitem{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.qq{padding:13px 16px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .2s;background:transparent;color:var(--text);width:100%;text-align:left}
+.qq:hover{background:var(--bg)}
+.qq .qn{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qq .qa{margin-left:auto;color:var(--text3);font-size:11px;transition:transform .3s}
+.qq.open .qa{transform:rotate(180deg)}
+.qans{display:none;padding:13px 16px;background:var(--green2);border-top:1px solid var(--border);font-size:14px;line-height:1.7}
+.qans.show{display:block}
+.svg-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:22px;text-align:center}
+.svg-wrap .svg-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px}
+.patho{display:flex;flex-direction:column;gap:0;margin-bottom:22px}
+.patho-step{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px}
+.patho-arrow{text-align:center;color:var(--text3);font-size:20px;line-height:1.2;padding:2px 0}
+.patho-step.danger{background:var(--red2);border-color:var(--red)}
+.patho-step.warn{background:var(--orange2);border-color:var(--orange)}
+.patho-step .ps-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1px;margin-bottom:2px}
+.patho-step .ps-content{font-weight:700}
+.patho-step .ps-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.drug-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+.drug-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.drug-card .dname{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.drug-card .dname .dico{font-size:18px}
+.drug-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px}
+.drug-row:last-child{border-bottom:none}
+.drug-row .dk{color:var(--text2);font-size:12px}
+.drug-row .dv{font-weight:700}
+.comp-tbl{width:100%;border-collapse:collapse;margin-bottom:22px;font-size:13px}
+.comp-tbl th{background:var(--surface2);padding:9px 12px;font-weight:700;border:1px solid var(--border);text-align:center}
+.comp-tbl td{padding:9px 12px;border:1px solid var(--border);vertical-align:top}
+.comp-tbl tr:nth-child(even) td{background:var(--surface2)}
+@media(max-width:640px){.drug-grid{grid-template-columns:1fr}}
+
+/* ══════════════════════════════════════════
+   📚 새로 추가되는 지식 교육 섹션 전용 스타일
+══════════════════════════════════════════ */
+.edu-section-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow);
+}
+
+.edu-section-header {
+  background: linear-gradient(135deg, #0d2144, #1a237e);
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edu-section-header .edu-badge {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.edu-section-header h2 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.edu-section-header p {
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+  margin-top: 2px;
+}
+
+/* 탭 메뉴 */
+.edu-tabs {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  scrollbar-width: none;
+}
+.edu-tabs::-webkit-scrollbar { display: none; }
+
+.edu-tab {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  transition: all .2s;
+  font-family: inherit;
+}
+.edu-tab:hover { color: var(--text); }
+.edu-tab.on { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* 탭 콘텐츠 */
+.edu-tab-content { display: none; padding: 20px; }
+.edu-tab-content.on { display: block; }
+
+/* 정의 박스 */
+.edu-def-box {
+  background: var(--blue2);
+  border-left: 4px solid var(--blue);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* 위험인자 태그 */
+.etag-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.etag {
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+}
+.etag-r { background: var(--red2); color: var(--red); border: 1px solid rgba(211,47,47,.3); }
+.etag-b { background: var(--blue2); color: var(--blue); border: 1px solid rgba(21,101,192,.3); }
+.etag-g { background: var(--green2); color: var(--green); border: 1px solid rgba(46,125,50,.3); }
+
+/* 병태생리 단계 (지식 섹션용, 기존 .patho와 구분) */
+.edu-flow { display: flex; flex-direction: column; gap: 0; margin: 14px 0; }
+.edu-flow-step {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.edu-flow-step:last-child { border-bottom: none; }
+.edu-flow-num {
+  min-width: 28px; height: 28px; background: var(--red);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; margin-top: 2px;
+}
+.edu-flow-title { font-weight: 700; color: var(--text); font-size: 14px; margin-bottom: 3px; }
+.edu-flow-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* 이미지 블록 */
+.edu-img {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+.edu-img img { width: 100%; display: block; background: #fff; }
+.edu-img-cap {
+  padding: 8px 12px; font-size: 11px; color: var(--text3);
+  text-align: center; border-top: 1px solid var(--border);
+}
+.edu-img-cap a { color: var(--blue); text-decoration: none; }
+
+/* 관상동맥 테이블 */
+.edu-tbl { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+.edu-tbl th {
+  background: var(--surface2); color: var(--text2);
+  font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border);
+}
+.edu-tbl td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 13px; }
+.edu-tbl tr:last-child td { border-bottom: none; }
+.lad { color: #e63946; font-weight: 700; }
+.rca { color: #f5c842; font-weight: 700; }
+.lcx { color: #4a90d9; font-weight: 700; }
+
+/* ECG 변화 그리드 */
+.edu-ecg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+@media(max-width:480px){ .edu-ecg-grid { grid-template-columns: 1fr; } }
+.edu-ecg-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px;
+}
+.edu-ecg-item .phase { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.edu-ecg-item .change { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.edu-ecg-item .why-txt { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* 치료 카드 */
+.edu-tx {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;
+}
+.edu-tx-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.edu-tx-badge {
+  padding: 3px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 800; letter-spacing: .5px;
+}
+.tx-drug { background: var(--blue2); color: var(--blue); }
+.tx-proc { background: var(--green2); color: var(--green); }
+.tx-mon  { background: var(--orange2); color: var(--orange); }
+.edu-tx-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.edu-tx-why {
+  font-size: 13px; color: var(--text2); line-height: 1.6;
+  padding-left: 6px; border-left: 3px solid var(--border);
+}
+
+/* 합병증 테이블 */
+.comp-time { font-size: 12px; font-weight: 700; }
+
+/* 핵심 암기 (지식 섹션용) */
+.edu-memo {
+  background: linear-gradient(135deg, rgba(211,47,47,.12), rgba(21,101,192,.12));
+  border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; margin-top: 14px;
+}
+.edu-memo h4 {
+  font-size: 11px; font-weight: 800; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+}
+.edu-memo ul { list-style: none; padding: 0; }
+.edu-memo ul li {
+  padding: 5px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px; display: flex; gap: 8px; align-items: flex-start;
+}
+.edu-memo ul li:last-child { border-bottom: none; }
+.edu-memo ul li::before { content: '▸'; color: var(--red); flex-shrink: 0; margin-top: 1px; }
+
+/* ══ 구분선 ══ */
+.section-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 32px 0 28px; color: var(--text3); font-size: 12px; font-weight: 700;
+}
+.section-divider::before, .section-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+</style>
+</head>
+<body>
+
+<!-- 탑바 -->
+<div class="topbar">
+  <div class="logo">ER<span>EDU</span> 🏥</div>
+  <div style="font-size:12px;color:var(--text3);margin-left:8px">CASE #01 — STEMI 통합 예시</div>
+  <div class="topbar-right">
+    <button class="dark-btn" onclick="toggleDark()" title="다크모드"></button>
+  </div>
+</div>
+
+<div class="cdetail">
+
+<!-- ══ 케이스 헤더 (기존) ══ -->
+<button class="back-btn">← 목록으로</button>
+<div class="case-hdr">
+  <div class="case-accent" style="background:linear-gradient(90deg,#c62828,#ff7043)"></div>
+  <div class="case-hdr-body">
+    <div class="case-meta-row">
+      <span class="case-badge">CASE #01</span>
+      <span style="font-size:12px;color:var(--text3)">❤️ 심장/순환기</span>
+      <span style="color:#ffd600;font-size:13px">★★★★☆</span>
+    </div>
+    <h1>급성 심근경색 (STEMI)</h1>
+    <p class="sub">"가슴이 쥐어짜인다" — 응급실이 뒤집어지는 그 순간</p>
+    <div class="chips">
+      <span class="chip">Door-to-Balloon 90분</span>
+      <span class="chip">12-lead ECG</span>
+      <span class="chip">DAPT</span>
+      <span class="chip">PCI</span>
+      <span class="chip">ST 상승</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     📚 새로 추가: 지식 교육 섹션
+══════════════════════════════════════ -->
+<div class="edu-section-wrap">
+
+  <div class="edu-section-header">
+    <div>
+      <span class="edu-badge">📚 지식 교육 섹션</span>
+      <h2 style="margin-top:6px">이 병을 이해하자</h2>
+      <p>정의 · 왜 생기는지 · 왜 이 증상인지 · 왜 이 치료인지</p>
+    </div>
+  </div>
+
+  <!-- 탭 메뉴 -->
+  <div class="edu-tabs">
+    <button class="edu-tab on" onclick="switchTab(this,'tab-def')">01 정의</button>
+    <button class="edu-tab" onclick="switchTab(this,'tab-patho')">02 병태생리</button>
+    <button class="edu-tab" onclick="switchTab(this,'tab-anatomy')">03 관상동맥</button>
+    <button class="edu-tab" onclick="switchTab(this,'tab-symptom')">04 임상증상</button>
+    <button class="edu-tab" onclick="switchTab(this,'tab-ecg')">05 ECG 진단</button>
+    <button class="edu-tab" onclick="switchTab(this,'tab-tx')">06 치료 원칙</button>
+    <button class="edu-tab" onclick="switchTab(this,'tab-comp')">07 합병증</button>
+  </div>
+
+  <!-- 탭 01: 정의 -->
+  <div id="tab-def" class="edu-tab-content on">
+    <div class="edu-def-box">
+      관상동맥이 <strong>완전히 막혀</strong> 심근에 혈류가 완전 차단되고,
+      심전도에서 <strong>ST분절 상승</strong>이 나타나는 급성 심근경색.<br>
+      골든타임(90분) 내에 재관류하지 않으면 심근세포가 영구적으로 괴사한다.
+    </div>
+
+    <p style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px">
+      <strong style="color:var(--text)">NSTEMI와 차이:</strong> NSTEMI는 <em>부분 폐색</em>으로 ST 상승 없이 Troponin만 상승.
+      STEMI는 <em>완전 폐색</em>으로 훨씬 더 위험하고 즉각적인 PCI가 필요하다.
+    </p>
+
+    <div class="stitle" style="margin-top:18px"><span>⚠️</span> 누가 잘 걸리나요? — 위험인자</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px">조절 가능</div>
+        <div class="etag-group">
+          <span class="etag etag-r">고혈압</span>
+          <span class="etag etag-r">당뇨병</span>
+          <span class="etag etag-r">고지혈증</span>
+          <span class="etag etag-r">흡연</span>
+          <span class="etag etag-r">비만</span>
+          <span class="etag etag-r">스트레스</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px">조절 불가</div>
+        <div class="etag-group">
+          <span class="etag etag-b">고령 (남 ≥45, 여 ≥55)</span>
+          <span class="etag etag-b">남성</span>
+          <span class="etag etag-b">가족력</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭 02: 병태생리 -->
+  <div id="tab-patho" class="edu-tab-content">
+    <div class="stitle"><span>🔬</span> 발생 메커니즘 — 왜 생기나요?</div>
+
+    <div class="edu-flow">
+      <div class="edu-flow-step">
+        <div class="edu-flow-num">1</div>
+        <div>
+          <div class="edu-flow-title">죽상경화증 (Atherosclerosis) 형성</div>
+          <div class="edu-flow-desc">LDL 콜레스테롤이 혈관 내피세포 손상 부위에 침착 → 대식세포가 LDL을 먹어 거품세포(foam cell) 형성 → 지질 코어를 가진 플라크가 혈관벽에 수년~수십 년 쌓임</div>
+        </div>
+      </div>
+      <div class="edu-flow-step">
+        <div class="edu-flow-num">2</div>
+        <div>
+          <div class="edu-flow-title">플라크 파열 (Plaque Rupture)</div>
+          <div class="edu-flow-desc">불안정한 플라크의 얇은 섬유성 막(fibrous cap)이 파열 → 지질 코어 내부의 조직인자(tissue factor)가 혈액에 노출</div>
+        </div>
+      </div>
+      <div class="edu-flow-step">
+        <div class="edu-flow-num">3</div>
+        <div>
+          <div class="edu-flow-title">혈소판 응집 & 혈전 형성</div>
+          <div class="edu-flow-desc">노출된 조직인자 → 혈소판 활성화 → 응고 연쇄반응 → 혈전(clot) 형성 → <strong style="color:var(--red)">관상동맥 완전 폐색</strong></div>
+        </div>
+      </div>
+      <div class="edu-flow-step">
+        <div class="edu-flow-num">4</div>
+        <div>
+          <div class="edu-flow-title">심근 허혈 → 괴사</div>
+          <div class="edu-flow-desc">폐색 후 <strong style="color:var(--red)">20분</strong>부터 심근세포 괴사 시작 → <strong style="color:var(--red)">6시간</strong> 내 재관류 없으면 전층 심근경색 완성</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="edu-img">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/d/d1/Blausen_0257_CoronaryArtery_Plaque.png" alt="관상동맥 내 플라크 단면" loading="lazy">
+      <div class="edu-img-cap">
+        관상동맥 내 죽상동맥경화 플라크 단면 — 지질 코어와 섬유성 막 구조<br>
+        <a href="https://commons.wikimedia.org/wiki/File:Blausen_0257_CoronaryArtery_Plaque.png" target="_blank">© BruceBlaus / Wikimedia Commons (CC BY 3.0)</a>
+      </div>
+    </div>
+
+    <div class="edu-img">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Blausen_0259_CoronaryArteryDisease_02.png" alt="관상동맥 폐색" loading="lazy">
+      <div class="edu-img-cap">
+        혈전에 의한 관상동맥 완전 폐색<br>
+        <a href="https://commons.wikimedia.org/wiki/File:Blausen_0259_CoronaryArteryDisease_02.png" target="_blank">© BruceBlaus / Wikimedia Commons (CC BY 3.0)</a>
+      </div>
+    </div>
+
+    <div class="ibox blue">
+      <strong>🧠 왜 흉통이 생기는가?</strong>
+      심근에 산소 공급이 차단 → <strong>무산소 대사</strong>로 젖산 축적 + 칼륨·브래디키닌 방출 → 통증 수용체 자극.<br>
+      <strong>방사통의 이유:</strong> 심장 통증 신호가 C7~T4 척수 분절 → 같은 분절의 좌측 팔·턱·어깨로 오인 (referred pain).
+    </div>
+  </div>
+
+  <!-- 탭 03: 관상동맥 해부학 -->
+  <div id="tab-anatomy" class="edu-tab-content">
+    <div class="stitle"><span>🫀</span> 어디가 막히면 어디가 죽나요?</div>
+
+    <div class="edu-img">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Coronary_arteries.svg" alt="관상동맥 해부학" loading="lazy" style="background:#fff;padding:8px">
+      <div class="edu-img-cap">
+        관상동맥 해부학 — LAD(적색), RCA(황색), LCx(청색)<br>
+        <a href="https://commons.wikimedia.org/wiki/File:Coronary_arteries.svg" target="_blank">© Patrick J. Lynch / Wikimedia Commons (CC BY-SA 3.0)</a>
+      </div>
+    </div>
+
+    <table class="edu-tbl">
+      <thead>
+        <tr>
+          <th>관상동맥</th>
+          <th>공급 영역</th>
+          <th>막히면 ECG 변화</th>
+          <th>특이사항</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="lad">LAD</span><br><span style="font-size:11px;color:var(--text3)">좌전하행지</span></td>
+          <td>전벽, 심실 중격, 심첨부</td>
+          <td>V1–V4 ST 상승</td>
+          <td><span class="etag etag-r" style="font-size:11px">가장 위험</span></td>
+        </tr>
+        <tr>
+          <td><span class="rca">RCA</span><br><span style="font-size:11px;color:var(--text3)">우관상동맥</span></td>
+          <td>하벽, 우심실, SA·AV 결절</td>
+          <td>II, III, aVF ST 상승</td>
+          <td><span class="etag etag-b" style="font-size:11px">부정맥/서맥 주의</span></td>
+        </tr>
+        <tr>
+          <td><span class="lcx">LCx</span><br><span style="font-size:11px;color:var(--text3)">좌회선지</span></td>
+          <td>측벽, 후벽 (일부)</td>
+          <td>I, aVL, V5–V6 ST 상승</td>
+          <td><span class="etag etag-g" style="font-size:11px">진단 어려움</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="edu-img">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/8f/Localisation_of_the_occlusion_in_STEMI.svg" alt="STEMI 폐색 위치 ECG 대응" loading="lazy" style="background:#fff;padding:8px">
+      <div class="edu-img-cap">
+        STEMI 폐색 위치와 ECG 유도 변화 대응도<br>
+        <a href="https://commons.wikimedia.org/wiki/File:Localisation_of_the_occlusion_in_STEMI.svg" target="_blank">© WikiVolunteer / Wikimedia Commons (CC BY-SA 4.0)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭 04: 임상 증상 -->
+  <div id="tab-symptom" class="edu-tab-content">
+    <div class="stitle"><span>🩺</span> 증상과 기전 — 왜 이 증상이 나타나나요?</div>
+
+    <table class="edu-tbl">
+      <thead>
+        <tr><th>증상</th><th>기전 (왜 생기나요?)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>흉통 · 압박감</strong><br><span style="font-size:12px;color:var(--text3)">30분 이상, 쥐어짜는 느낌</span></td>
+          <td>무산소 대사 → 젖산·브래디키닌 축적 → 심근 통증 수용체 자극</td>
+        </tr>
+        <tr>
+          <td><strong>좌측 팔/턱 방사통</strong></td>
+          <td>심장 통증 신호 C7~T4 → 같은 분절 팔·턱으로 오인 (referred pain)</td>
+        </tr>
+        <tr>
+          <td><strong>식은땀 · 창백</strong></td>
+          <td>심박출량 감소 → 교감신경 활성화 → 말초혈관 수축 + 땀샘 자극</td>
+        </tr>
+        <tr>
+          <td><strong>오심 · 구토</strong></td>
+          <td>하벽 MI (RCA 폐색) → 미주신경 자극 → 서맥 + 오심/구토</td>
+        </tr>
+        <tr>
+          <td><strong>호흡곤란</strong></td>
+          <td>좌심실 기능 저하 → 폐울혈 → 가스교환 저하</td>
+        </tr>
+        <tr>
+          <td><strong>실신 · 의식 변화</strong></td>
+          <td>심박출량 급감 또는 심한 부정맥 → 뇌관류 저하</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      <div class="tip-lbl">⚠️ 비전형 증상 — 놓치기 쉬운 경우</div>
+      <p>• <strong>당뇨 환자:</strong> 신경병증으로 통증 못 느껴 → 무통성 심근경색<br>
+         • <strong>노인/여성:</strong> 오심·구토·피로감만 호소<br>
+         • <strong>명치 통증:</strong> 소화불량으로 오인 → 의심되면 ECG 먼저</p>
+    </div>
+  </div>
+
+  <!-- 탭 05: ECG 진단 -->
+  <div id="tab-ecg" class="edu-tab-content">
+    <div class="stitle"><span>📈</span> ECG 변화 — 왜 ST가 올라가나요?</div>
+
+    <div class="edu-ecg-grid">
+      <div class="edu-ecg-item">
+        <div class="phase">초기 (수분~1시간)</div>
+        <div class="change">과첨예 T파</div>
+        <div class="why-txt">세포 내 칼륨 이동 → 재분극 변화. 가장 초기 징후, 발견 어려움</div>
+      </div>
+      <div class="edu-ecg-item">
+        <div class="phase">급성기</div>
+        <div class="change" style="color:var(--red)">ST 분절 상승 ▲</div>
+        <div class="why-txt">허혈 심근의 손상 전류(current of injury) → 손상 영역 상방에서 ST 상승</div>
+      </div>
+      <div class="edu-ecg-item">
+        <div class="phase">수시간~수일</div>
+        <div class="change">T파 역전</div>
+        <div class="why-txt">심근 재분극 이상 → 양성 T파가 음성으로 반전</div>
+      </div>
+      <div class="edu-ecg-item">
+        <div class="phase">수일 이후 (영구)</div>
+        <div class="change">병적 Q파</div>
+        <div class="why-txt">괴사 심근은 전기 신호 없음 → 반대 방향 탈분극만 기록</div>
+      </div>
+    </div>
+
+    <div class="edu-img">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/80/ST_elevation_myocardial_infarction_ECG.jpg" alt="STEMI ECG 실제" loading="lazy">
+      <div class="edu-img-cap">
+        전벽 STEMI 실제 12유도 ECG — V1–V4 ST 상승 확인<br>
+        <a href="https://commons.wikimedia.org/wiki/File:ST_elevation_myocardial_infarction_ECG.jpg" target="_blank">© Cureus Journal / Wikimedia Commons (CC BY 4.0)</a>
+      </div>
+    </div>
+
+    <div class="ibox blue">
+      <strong>📋 STEMI 진단 기준 (ST 상승 기준값)</strong>
+      V2–V3: 남성 &lt;40세 ≥2.5mm, 남성 ≥40세 ≥2mm, 여성 ≥1.5mm<br>
+      다른 유도: 인접 2개 이상 유도에서 ≥1mm<br>
+      후벽 MI 의심 시: V7–V9 유도 추가 확인 (LCx 폐색)
+    </div>
+  </div>
+
+  <!-- 탭 06: 치료 원칙 -->
+  <div id="tab-tx" class="edu-tab-content">
+    <div class="stitle"><span>💊</span> 치료 — 왜 이 치료를 하나요?</div>
+
+    <div class="ibox blue" style="margin-bottom:16px">
+      <strong>핵심 원칙</strong>
+      STEMI 치료의 핵심 = <strong>최대한 빨리 막힌 혈관을 다시 열기 (재관류)</strong><br>
+      모든 초기 처치는 재관류 전까지 심근 손상을 최소화하기 위함이다.
+    </div>
+
+    <div class="edu-tx">
+      <div class="edu-tx-hdr"><span class="edu-tx-badge tx-proc">1순위</span><span class="edu-tx-name">Primary PCI (경피적 관상동맥 중재술)</span></div>
+      <div class="edu-tx-why"><strong>왜?</strong> 막힌 관상동맥에 직접 스텐트 삽입 → 재관류. D2B 90분 이내 목표.</div>
+    </div>
+    <div class="edu-tx">
+      <div class="edu-tx-hdr"><span class="edu-tx-badge tx-drug">약물</span><span class="edu-tx-name">Aspirin 300mg (씹어서)</span></div>
+      <div class="edu-tx-why"><strong>왜?</strong> COX-1 비가역적 억제 → TXA2 생성 차단 → 혈소판 응집 억제. 씹으면 흡수 2~3배 빠름.</div>
+    </div>
+    <div class="edu-tx">
+      <div class="edu-tx-hdr"><span class="edu-tx-badge tx-drug">약물</span><span class="edu-tx-name">P2Y12 억제제 (Ticagrelor / Clopidogrel)</span></div>
+      <div class="edu-tx-why"><strong>왜?</strong> ADP 수용체 차단 → Aspirin과 다른 경로로 혈소판 추가 억제 (이중 항혈소판 = DAPT).</div>
+    </div>
+    <div class="edu-tx">
+      <div class="edu-tx-hdr"><span class="edu-tx-badge tx-drug">약물</span><span class="edu-tx-name">Heparin (항응고제)</span></div>
+      <div class="edu-tx-why"><strong>왜?</strong> 응고인자 Xa·IIa 억제 → 혈전 확장 방지 + PCI 시 카테터 혈전 방지.</div>
+    </div>
+    <div class="edu-tx">
+      <div class="edu-tx-hdr"><span class="edu-tx-badge tx-mon">산소</span><span class="edu-tx-name">산소 투여 (SpO₂ &lt;90%인 경우만)</span></div>
+      <div class="edu-tx-why"><strong>왜 조건부인가?</strong> SpO₂ 정상인 경우 과산소혈증이 심근 손상 증가시킬 수 있음 (최신 가이드라인).</div>
+    </div>
+    <div class="edu-tx">
+      <div class="edu-tx-hdr"><span class="edu-tx-badge tx-drug">약물</span><span class="edu-tx-name">Nitroglycerin (NTG)</span></div>
+      <div class="edu-tx-why"><strong>왜?</strong> NO 방출 → 관상동맥·정맥 확장 → 전부하 감소.<br>
+        <strong style="color:var(--red)">금기:</strong> SBP &lt;90, 우심실 경색, 24시간 내 PDE5 억제제 복용.</div>
+    </div>
+
+    <div class="tip">
+      <div class="tip-lbl">🚨 하벽 STEMI (RCA 폐색) 특별 주의</div>
+      <p>RV infarction 동반 가능 → 전부하(preload) 의존적.<br>
+         <strong>NTG, 이뇨제 → 절대 금기</strong> (급성 저혈압 위험)<br>
+         치료: 수액 충분히 → 전부하 유지</p>
+    </div>
+  </div>
+
+  <!-- 탭 07: 합병증 -->
+  <div id="tab-comp" class="edu-tab-content">
+    <div class="stitle"><span>⚡</span> 합병증 — 시간대별 뭘 조심해야 하나요?</div>
+    <table class="edu-tbl">
+      <thead>
+        <tr><th>시간대</th><th>합병증</th><th>기전 / 징후</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="color:var(--red);font-weight:700">즉시~수시간</span></td>
+          <td><strong>심실세동 (VF)</strong></td>
+          <td>허혈 심근의 전기 불안정 → 가장 흔한 사망 원인</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--orange);font-weight:700">24~72시간</span></td>
+          <td><strong>심인성 쇼크</strong></td>
+          <td>대면적 경색 → 좌심실 기능 급감 → 저혈압·조직관류 저하</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--orange);font-weight:700">2~7일</span></td>
+          <td><strong>심실 파열</strong></td>
+          <td>괴사 심근 연화 → 파열 → 즉각 심장눌림증, 드물지만 치명적</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--blue);font-weight:700">수일~수주</span></td>
+          <td><strong>Dressler 증후군</strong></td>
+          <td>괴사 심근 항원 → 자가면역 반응 → 발열·흉통·심낭 마찰음</td>
+        </tr>
+        <tr>
+          <td><span style="color:var(--text3);font-weight:700">수주 이후</span></td>
+          <td><strong>만성 심부전</strong></td>
+          <td>경색 부위 섬유화 → 심실 리모델링 → 만성 심부전</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="edu-memo">
+      <h4>⚡ 지식 섹션 핵심 암기</h4>
+      <ul>
+        <li>STEMI = 관상동맥 <strong>완전 폐색</strong> → ST 상승 → 골든타임 90분</li>
+        <li>플라크 파열 → 혈전 → 폐색 → <strong>20분</strong>부터 괴사 시작</li>
+        <li>LAD → 전벽 (V1–V4), RCA → 하벽 (II·III·aVF), LCx → 측벽 (I·aVL·V5–V6)</li>
+        <li>하벽 STEMI → RV infarction 가능 → NTG 금기, 수액 줘야 함</li>
+        <li>산소는 SpO₂ &lt;90%일 때만</li>
+        <li>Aspirin은 씹어서 (흡수 2~3배 빠름)</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- /edu-section-wrap -->
+
+<!-- ══ 구분선 ══ -->
+<div class="section-divider">🚨 케이스 오프닝</div>
+
+<!-- ══════════════════════════════
+     기존 케이스 내용 (변경 없음)
+══════════════════════════════ -->
+
+<!-- SVG 심장 해부학 -->
+<div class="svg-wrap">
+  <div class="svg-title">❤️ 관상동맥 지도 — 어디가 막히면 어디가 죽어?</div>
+  <svg viewBox="0 0 420 300" style="max-width:420px;width:100%" xmlns="http://www.w3.org/2000/svg">
+    <path d="M210 260 C150 230 60 180 60 120 C60 80 90 55 120 55 C150 55 175 70 210 100 C245 70 270 55 300 55 C330 55 360 80 360 120 C360 180 270 230 210 260Z" fill="#ffcdd2" stroke="#c62828" stroke-width="2.5"/>
+    <path d="M210 100 C210 80 205 60 200 45 C196 35 202 20 215 18 C228 16 234 28 230 40 C225 52 218 68 215 80" fill="none" stroke="#1565c0" stroke-width="4" stroke-linecap="round"/>
+    <text x="235" y="30" fill="#1565c0" font-size="10" font-weight="bold">대동맥</text>
+    <path d="M205 115 C200 130 195 155 190 175 C185 195 183 215 185 230" fill="none" stroke="#c62828" stroke-width="3" stroke-linecap="round"/>
+    <text x="155" y="200" fill="#c62828" font-size="10" font-weight="bold">LAD</text>
+    <text x="148" y="212" fill="#c62828" font-size="9">(전하행동맥)</text>
+    <path d="M200 110 C180 115 155 120 135 130 C118 140 110 155 115 170" fill="none" stroke="#e65100" stroke-width="3" stroke-linecap="round"/>
+    <text x="90" y="155" fill="#e65100" font-size="10" font-weight="bold">LCX</text>
+    <text x="88" y="167" fill="#e65100" font-size="9">(좌선회동맥)</text>
+    <path d="M220 110 C240 118 265 128 280 145 C295 162 295 182 285 198" fill="none" stroke="#1b5e20" stroke-width="3" stroke-linecap="round"/>
+    <text x="295" y="162" fill="#1b5e20" font-size="10" font-weight="bold">RCA</text>
+    <text x="290" y="174" fill="#1b5e20" font-size="9">(우관상동맥)</text>
+    <ellipse cx="188" cy="210" rx="20" ry="14" fill="rgba(198,40,40,.3)" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="162" y="242" fill="#c62828" font-size="9">LAD 막히면</text>
+    <text x="160" y="253" fill="#c62828" font-size="9">좌심실 전벽 경색</text>
+    <text x="175" y="140" fill="#555" font-size="10" font-weight="bold">LV</text>
+    <text x="230" y="145" fill="#555" font-size="10" font-weight="bold">RV</text>
+    <text x="210" y="290" fill="var(--text3)" font-size="9" text-anchor="middle">빨강=LAD 주황=LCX 초록=RCA</text>
+  </svg>
+</div>
+
+<!-- 병태생리 -->
+<div class="stitle"><span>🔬</span> 병태생리 — 심장에서 무슨 일이?</div>
+<div class="patho">
+  <div class="patho-step">
+    <div class="ps-label">1단계 (수년)</div>
+    <div class="ps-content">🧱 관상동맥에 죽상경화반(Plaque) 축적</div>
+    <div class="ps-sub">콜레스테롤 + 염증세포 → 혈관 내벽에 점점 쌓임</div>
+  </div>
+  <div class="patho-arrow">↓</div>
+  <div class="patho-step warn">
+    <div class="ps-label">2단계 (갑자기!)</div>
+    <div class="ps-content">💥 플라크 파열 (Plaque Rupture)</div>
+    <div class="ps-sub">혈압 급상승, 스트레스, 흡연 → 방아쇠 역할</div>
+  </div>
+  <div class="patho-arrow">↓</div>
+  <div class="patho-step warn">
+    <div class="ps-label">3단계 (분~수십분)</div>
+    <div class="ps-content">🩸 혈소판 모여서 혈전(Thrombus) 형성</div>
+    <div class="ps-sub">ADP · TXA2 경로 활성화 → DAPT로 여기를 막는다!</div>
+  </div>
+  <div class="patho-arrow">↓</div>
+  <div class="patho-step danger">
+    <div class="ps-label">4단계 — STEMI</div>
+    <div class="ps-content">🚫 혈관 완전 폐색 → 심근 허혈 시작</div>
+    <div class="ps-sub">20분→손상 / 6시간→광범위 괴사 / Time is Muscle!</div>
+  </div>
+</div>
+
+<!-- 오프닝 -->
+<div class="stitle"><span>🚨</span> 케이스 오프닝</div>
+<div class="opening">
+  <div class="radio-txt">📡 119 무전 수신 중...</div>
+  <div class="scene-time">▶ 오전 2:17 — 응급실 입구</div>
+  <div class="scene-txt">119 대원이 65세 남성을 들것에 싣고 들어옵니다.<br><br>
+  <span style="color:#ffd60a">"30분 전부터 가슴 쥐어짜는 통증, 식은땀, 구역감 있고요.<br>혈압 90/60, 맥박 110, SpO₂ 94%입니다."</span><br><br>
+  환자는 창백하고 불안한 표정. 손을 가슴에 얹고 있습니다.</div>
+  <div class="vitals">
+    <div class="vbox danger"><div class="vl">BP</div><div class="vv">90/60</div></div>
+    <div class="vbox warn"><div class="vl">HR</div><div class="vv">110</div></div>
+    <div class="vbox warn"><div class="vl">SpO₂</div><div class="vv">94%</div></div>
+    <div class="vbox ok"><div class="vl">RR</div><div class="vv">22</div></div>
+    <div class="vbox ok"><div class="vl">BT</div><div class="vv">36.4°</div></div>
+  </div>
+</div>
+
+<div class="qbanner" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('show')">
+  💭 지금 이 환자 앞에 네가 서 있어. 가장 먼저 뭘 해야 할까?
+</div>
+<div class="qans" style="border-radius:10px;margin-bottom:22px;margin-top:-4px">
+  <strong style="color:var(--green)">정답 접근법:</strong> 가슴통증 + 식은땀 + 혈압 저하 = 즉시 AMI 의심 → <strong>10분 내 ECG!</strong> 확진 전에 움직여야 합니다.
+</div>
+
+<!-- 선배 해설 -->
+<div class="stitle"><span>🧠</span> 선배가 말한다</div>
+<div class="bubble">
+  <p>자, 이 환자 보는 순간 뭐가 떠올라야 해?<br><br>
+  <span class="hl">가슴통증 + 식은땀 + 혈압 저하</span> — 이 세 개 동시에 오면<br>
+  일단 AMI 의심하고 움직여야 해. 확진 나오기 전에.<br><br>
+  그리고 진짜 중요한 거 — <span class="hl">Door-to-Balloon 90분</span>.<br>
+  환자가 문 들어오는 순간부터 카운트 시작이야.<br>
+  ECG도 10분 안에 끝내야 해. 시간 싸움이거든.</p>
+</div>
+
+<!-- 처치 순서 -->
+<div class="stitle"><span>✅</span> 지금 당장 해야 할 것</div>
+<table class="atbl">
+  <thead><tr><th style="width:36px">#</th><th>행동</th><th>왜?</th></tr></thead>
+  <tbody>
+    <tr><td class="n">1</td><td class="act">12-lead ECG 시행 (10분 내)</td><td class="why"><span class="why-tag">WHY</span>STEMI 확인 → D2B 카운트 시작</td></tr>
+    <tr><td class="n">2</td><td class="act">산소 투여 (SpO₂ &lt;94%)</td><td class="why"><span class="why-tag">WHY</span>허혈 심근 산소 공급 확보</td></tr>
+    <tr><td class="n">3</td><td class="act">IV 라인 2개 확보 (큰 혈관)</td><td class="why"><span class="why-tag">WHY</span>약물 + 수액 동시 투여 대비</td></tr>
+    <tr><td class="n">4</td><td class="act">모니터 연결 (ECG·SpO₂·BP 지속)</td><td class="why"><span class="why-tag">WHY</span>VF/VT 즉시 감지</td></tr>
+    <tr><td class="n">5</td><td class="act">혈액검사 (Troponin·CK-MB·BMP·CBC)</td><td class="why"><span class="why-tag">WHY</span>심근 손상 정도 + 동반 질환 확인</td></tr>
+    <tr><td class="n">6</td><td class="act">Aspirin 300mg — <strong>씹어서</strong> 복용</td><td class="why"><span class="why-tag">WHY</span>씹으면 흡수 5배 빠름, 혈소판 즉시 억제</td></tr>
+    <tr><td class="n">7</td><td class="act">Clopidogrel 600mg 복용</td><td class="why"><span class="why-tag">WHY</span>PCI 예정 시 600mg → 2시간 내 효과</td></tr>
+    <tr><td class="n">8</td><td class="act">의사 즉시 보고 → PCI팀 활성화</td><td class="why"><span class="why-tag">WHY</span>Cath Lab 준비시간 단축이 예후 결정</td></tr>
+  </tbody>
+</table>
+
+<!-- DAPT -->
+<div class="stitle"><span>💊</span> DAPT — 이중 항혈소판 요법</div>
+<div class="ibox blue">
+  <strong>왜 두 가지를 같이 먹어?</strong>
+  혈소판 활성화 경로가 2개 (COX-1 경로 / ADP경로) → 아스피린은 경로1, 클로피도그렐은 경로2 차단 → 같이 써야 혈전 억제 극대화
+</div>
+<div class="drug-grid">
+  <div class="drug-card">
+    <div class="dname"><span class="dico">💊</span> Aspirin (아스피린)</div>
+    <div class="drug-row"><span class="dk">Loading</span><span class="dv">300mg 씹어서 복용</span></div>
+    <div class="drug-row"><span class="dk">Maintenance</span><span class="dv">100mg 1일 1회 (평생)</span></div>
+    <div class="drug-row"><span class="dk">작용</span><span class="dv">COX-1 억제 → TXA2 차단</span></div>
+    <div class="drug-row"><span class="dk">왜 씹어서?</span><span class="dv">흡수 3분 vs 삼키면 15분</span></div>
+    <div class="drug-row"><span class="dk">금기</span><span class="dv">아스피린 알레르기, 활성 출혈</span></div>
+  </div>
+  <div class="drug-card">
+    <div class="dname"><span class="dico">💊</span> Clopidogrel (플라빅스)</div>
+    <div class="drug-row"><span class="dk">Loading (PCI 예정)</span><span class="dv" style="color:var(--red)">600mg 한 번에</span></div>
+    <div class="drug-row"><span class="dk">Loading (보존적)</span><span class="dv">300mg 한 번에</span></div>
+    <div class="drug-row"><span class="dk">Maintenance</span><span class="dv">75mg 1일 1회 (12개월)</span></div>
+    <div class="drug-row"><span class="dk">작용</span><span class="dv">P2Y12 차단 → ADP 억제</span></div>
+    <div class="drug-row"><span class="dk">600mg 이유</span><span class="dv">300mg보다 2배 빠른 효과</span></div>
+  </div>
+</div>
+
+<div class="tip"><div class="tip-lbl">💡 현장 팁</div><p>IV 라인 왜 <strong>2개</strong>냐고? 한 개로 약 넣는 동안 다른 라인으로 수액 줄 수 있어야 해. 위기 상황에서 라인 하나면 진짜 패닉이야.</p></div>
+<div class="tip"><div class="tip-lbl">⚠️ 주의!</div><p>BP 90 이하 → <strong>Nitroglycerin 절대 금기!</strong> 혈압이 더 떨어져 쇼크 악화. 등이 찢어지는 통증이면 <strong>대동맥 박리 감별</strong> 먼저 (Heparin 금기 달라짐).</p></div>
+
+<!-- Red Flag -->
+<div class="rf">
+  <div class="rf-title">🚨 절대 놓치면 안 되는 신호</div>
+  <ul>
+    <li>🔴 <span>ECG에서 <strong>ST 상승 2mm 이상</strong> → 즉시 의사 호출, PCI 준비</span></li>
+    <li>🔴 <span>새로운 <strong>LBBB</strong> 출현 → STEMI와 동등하게 처치</span></li>
+    <li>🔴 <span>혈압 <strong>90 이하</strong> → Cardiogenic shock, 승압제 준비</span></li>
+    <li>🔴 <span>갑자기 <strong>의식 저하</strong> → CPR 준비, 제세동기 켜두기</span></li>
+  </ul>
+</div>
+
+<!-- 비교 -->
+<div class="stitle"><span>📊</span> STEMI vs NSTEMI</div>
+<table class="comp-tbl">
+  <thead><tr><th>구분</th><th>STEMI</th><th>NSTEMI</th></tr></thead>
+  <tbody>
+    <tr><td>ECG</td><td>ST 상승 ↑</td><td>정상 or ST 하강</td></tr>
+    <tr><td>혈관</td><td>완전 폐색</td><td>부분 폐색</td></tr>
+    <tr><td>Troponin</td><td>빠르게 ↑↑</td><td>느리게 ↑ (재검 필요)</td></tr>
+    <tr><td>긴급도</td><td>즉시 PCI (90분)</td><td>24~72시간 내</td></tr>
+    <tr><td>Clopidogrel</td><td><strong>600mg</strong></td><td>300mg</td></tr>
+  </tbody>
+</table>
+
+<!-- 암기 -->
+<div class="memo">
+  <div class="ml">⚡ 이것만 기억해</div>
+  <div class="mc">Door → ECG (10분) → 보고 → Balloon (90분)</div>
+  <div class="ms">가슴통증 + 식은땀 + 저혈압 = 즉시 AMI 의심<br>확진 전에 움직여라. 시간이 심근이다.</div>
+</div>
+
+<!-- 퀴즈 -->
+<div class="stitle"><span>❓</span> 케이스 스터디 퀴즈</div>
+<div class="quiz">
+  <div class="qitem">
+    <button class="qq" onclick="toggleQ(this)"><span class="qn">1</span>STEMI 확인됐어. BP 88/55야. Nitroglycerin 줘야 할까?<span class="qa">▼</span></button>
+    <div class="qans"><strong style="color:var(--red)">절대 금지.</strong> BP 90 이하에서 NTG 투여 시 혈압 추가 하락 → 쇼크 악화. 수액 소량 투여 + 승압제(Dopamine/Norepinephrine) 고려 후 즉시 의사 보고.</div>
+  </div>
+  <div class="qitem">
+    <button class="qq" onclick="toggleQ(this)"><span class="qn">2</span>환자가 "아스피린 매일 먹는데요(100mg)"라고 하면 Loading 투여해야 해?<span class="qa">▼</span></button>
+    <div class="qans"><strong style="color:var(--green)">그래도 Loading 한다.</strong> 유지용량 100mg 복용 중이라도 급성기엔 300mg Loading 필요. 빠른 혈소판 억제가 목적. 단, 최근 300mg 이미 복용 시 의사 확인.</div>
+  </div>
+  <div class="qitem">
+    <button class="qq" onclick="toggleQ(this)"><span class="qn">3</span>모니터에서 갑자기 VF 발생! 순서는?<span class="qa">▼</span></button>
+    <div class="qans"><strong style="color:var(--red)">즉시 Code Blue + CPR + 제세동.</strong> 1. "도와주세요!" + Code 콜 2. CPR 시작 (100-120회/분, 5cm↑) 3. 제세동기 → 리듬 확인 4. VF/무맥 VT → 200J 제세동 5. 제세동 직후 CPR 재시작 2분 6. 2주기 후 Epinephrine 1mg IV</div>
+  </div>
+</div>
+
+</div><!-- /cdetail -->
+
+<script>
+function toggleDark(){
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+}
+function toggleQ(btn){
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('show');
+}
+function switchTab(btn, id){
+  const wrap = btn.closest('.edu-section-wrap');
+  wrap.querySelectorAll('.edu-tab').forEach(t => t.classList.remove('on'));
+  wrap.querySelectorAll('.edu-tab-content').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById(id).classList.add('on');
+}
+</script>
+</body>
+</html>

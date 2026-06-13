@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V1 · 대화형 사정 (Typeform/TurboTax)</title><style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+:root{--bg:#0b1020;--ink:#f1f5fb;--mut:#8a98b8;--line:#293252;--ac:#4f8cff;--ac2:#2f6be0;
+ --pos:#f97362;--neg:#34d399;--card:#151c34;--card2:#1c264a;}
+body{background:radial-gradient(900px 500px at 50% -10%,#16204a,var(--bg));color:var(--ink);min-height:100vh;
+ font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",sans-serif;}
+.frame{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+.top{padding:18px 22px 10px;}
+.bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden;}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),#7aa8ff);transition:.35s;}
+.barlbl{font-size:.78rem;color:var(--mut);margin-top:8px;display:flex;justify-content:space-between;}
+.body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:8px 26px 24px;}
+h1.t{font-size:1.05rem;font-weight:700;letter-spacing:-.01em;}
+.sub{color:var(--mut);font-size:.85rem;margin-top:3px;}
+/* picker */
+.pick h2{font-size:.78rem;color:var(--mut);margin:18px 0 8px;font-weight:700;}
+.chips{display:flex;flex-wrap:wrap;gap:9px;}
+.chip{background:var(--card);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:.92rem;
+ padding:12px 16px;border-radius:13px;cursor:pointer;transition:.14s;}
+.chip:hover{border-color:var(--ac);transform:translateY(-2px);background:var(--card2);}
+.search{width:100%;padding:13px 15px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;}
+/* question */
+.qtag{font-size:.74rem;font-weight:800;letter-spacing:.08em;color:var(--ac);margin-bottom:14px;}
+.q{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;line-height:1.3;}
+.note{margin-top:14px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ac);
+ border-radius:10px;padding:11px 14px;color:#c4d0ee;font-size:.86rem;line-height:1.5;}
+.ans{margin-top:26px;display:flex;flex-direction:column;gap:11px;}
+.opt{display:flex;align-items:center;gap:13px;background:var(--card);border:2px solid var(--line);color:var(--ink);
+ font:inherit;font-size:1.05rem;font-weight:600;padding:17px 18px;border-radius:14px;cursor:pointer;text-align:left;transition:.13s;}
+.opt:hover{border-color:var(--ac);}
+.opt .k{flex:none;width:26px;height:26px;border-radius:7px;background:var(--card2);display:grid;place-items:center;
+ font-size:.78rem;color:var(--mut);font-weight:800;}
+.opt.pos{border-color:var(--pos);} .opt.pos .k{background:var(--pos);color:#1a0c0a;}
+.opt.neg{border-color:var(--neg);} .opt.neg .k{background:var(--neg);color:#04130d;}
+.opt.skip{justify-content:center;color:var(--mut);font-size:.92rem;border-style:dashed;}
+.valin{width:100%;padding:16px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:1.05rem;}
+.nav{display:flex;gap:10px;margin-top:22px;}
+.btn{border:none;border-radius:13px;padding:14px;font:inherit;font-weight:700;cursor:pointer;font-size:.95rem;}
+.btn.p{background:var(--ac2);color:#fff;flex:1;} .btn.g{background:var(--card2);color:var(--ink);border:1px solid var(--line);}
+/* review */
+.review h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;}
+.rsec{margin-top:18px;} .rsec .lab{font-size:.76rem;font-weight:800;letter-spacing:.04em;margin-bottom:8px;}
+.lab.d{color:#b794f6;} .lab.pe{color:var(--neg);}
+.ck{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:8px;cursor:pointer;}
+.ck input{width:20px;height:20px;accent-color:var(--ac);}
+table{width:100%;border-collapse:collapse;font-size:.82rem;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:8px;}
+th,td{border-bottom:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;}
+th{background:var(--card2);color:var(--mut);font-size:.74rem;}
+td.cat{font-weight:800;background:#10183a;} td.pc{font-weight:700;white-space:nowrap;}
+td.pc.ae{color:#7fb0ff;}td.pc.d{color:#b794f6;}td.pc.pe{color:var(--neg);}
+.empty{color:var(--mut);padding:16px;text-align:center;}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--neg);color:#04130d;
+ font-weight:800;padding:11px 20px;border-radius:30px;opacity:0;transition:.25s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style></head><body>
+<div class="frame">
+  <div class="top" id="top"></div>
+  <div class="body" id="view"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BLOCKS = [{"대분류": "통증", "소분류": "복부통증", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "복부 불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "복부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "급성통증", "n": "Active"}], "PE": [{"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "통증", "소분류": "흉부통증", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 여부 확인"}, {"s": "흉부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "급성통증", "n": "Active"}], "PE": [{"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "통증", "소분류": "두통(headache)", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "동공크기 :", "n": "Rt/Lt/대칭여부/Rt모양/Lt모양"}, {"s": "빛 반사 확인결과 prompt/sluggish/hippus 함", "n": "두통 환자 동공크기 여부 변화 반드시 확인(뇌출혈, 뇌경색 등 감별 위함)"}, {"s": "감각이상 있음/없음", "n": "머리~얼굴~팔~다리~몸통 양쪽 만져가면서 감각 저하가 있는지 감별"}, {"s": "grasp power 강함/약함", "n": "쥐는 함 양손 강한지, 약한지, 양쪽 손 쥐는 힘 같은지 다른지 따라 추가기록 +  post note 기록"}, {"s": "두통 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "급성통증", "n": "Active"}], "PE": [{"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}, {"s": "사지근력 평가함", "n": "LLE/LUE/RLE/RUE(좌하지, 좌상지, 우하지, 우상지) 5점 : 손으로 눌러도 버티거나 더 강함 4점 : 힘은 있으나 손으로 누르면 내려감, 3점: 들기는 하나 손으로 내리면 슥 내려감, 2점 겨우 손을 들긴 하지만 곧바로 내려감, 1점 :손가락을 꼼지락 하는 정도, 0점 : 움직임 없음"}]}, {"대분류": "통증", "소분류": "통증(상지, 하지, 목, 엉덩이, 서혜부 등)", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "열감 있음/없음", "n": "GCS 15 일때"}, {"s": "통증 있음/없음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "급성통증", "n": "Active"}], "PE": [{"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "호흡", "소분류": "호흡곤란(가래 없거나 적을떄- 기타 호흡곤란)", "세부분류": "호흡관련 사정 및 평가", "AE": [{"s": "기침 있음/없음", "n": "GCS 15 일때"}, {"s": "가래 있음/없음", "n": "많지 않을 때"}, {"s": "열감 있음/없음", "n": "열 날때"}, {"s": "chilling 있음/없음", "n": "춥다고 할때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란정도/RR"}, {"s": "산소흡입 중임", "n": "사정 때 산소 흡입 시"}], "D": [{"s": "비효율적 호흡양상", "n": ""}], "PE": [{"s": "호흡곤란이 있는지 확인함", "n": ""}, {"s": "산소포화도 monitor함", "n": "결과치 입력"}, {"s": "산소흡입 시작함", "n": "지금부터 산소 흡입 시작할 떄"}]}, {"대분류": "호흡", "소분류": "기도개방유지불능(가래 많을 떄- 폐렴 의심)", "세부분류": "호흡관련 사정 및 평가", "AE": [{"s": "기침 있음/없음", "n": "GCS 15 일때"}, {"s": "가래 있음/없음", "n": "가래 양 많을 떄"}, {"s": "가래 소리 들림", "n": ""}, {"s": "가래 잘 뱉지 못함", "n": "가래 못 뱉을 때"}, {"s": "열감 있음/없음", "n": "열 날때"}, {"s": "chilling 있음/없음", "n": "춥다고 할때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 정도/RR"}, {"s": "산소흡입 중임", "n": "사정 때 산소 흡입 시"}], "D": [{"s": "비효율적 호흡양상", "n": ""}], "PE": [{"s": "호흡곤란이 있는지 확인함", "n": ""}, {"s": "산소포화도 monitor함", "n": "결과치 입력"}, {"s": "산소흡입 시작함", "n": "지금부터 산소 흡입 시작할 떄"}]}, {"대분류": "호흡", "소분류": "기도개방유지불능(기도는 좁을떄- 천식, croup,종양)", "세부분류": "호흡관련 사정 및 평가", "AE": [{"s": "기침 있음/없음", "n": "GCS 15 일때"}, {"s": "가래 있음/없음", "n": "가래 양 많을 떄"}, {"s": "Wheezing 있음/없음", "n": "쌕쌕거리며 천명음 들릴 때"}, {"s": "열감 있음/없음", "n": "열 날때"}, {"s": "chilling 있음/없음", "n": "춥다고 할때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 정도/RR"}, {"s": "산소흡입 중임", "n": "사정 때 산소 흡입 시"}], "D": [{"s": "비효율적 호흡양상", "n": ""}], "PE": [{"s": "호흡곤란이 있는지 확인함", "n": ""}, {"s": "산소포화도 monitor함", "n": "결과치 입력"}, {"s": "산소흡입 시작함", "n": "지금부터 산소 흡입 시작할 떄"}]}, {"대분류": "호흡", "소분류": "호흡곤란(심부전 의심 / 흉부통증 없음)", "세부분류": "통증관련", "AE": [{"s": "기침 있음/없음", "n": "GCS 15 일때"}, {"s": "가래 있음/없음", "n": "많지 않을 때"}, {"s": "열감 있음/없음", "n": "열 날때"}, {"s": "chilling 있음/없음", "n": "춥다고 할때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란정도/RR"}, {"s": "흉부통증 없음", "n": ""}, {"s": "흉부 불편감 있음/없음", "n": ""}, {"s": "하지부종 있음/없음", "n": "하지부종 여부, Pitting edema 여부, 있을 시 사진 찍어 올리기"}], "D": [{"s": "비효율적 호흡양상", "n": ""}], "PE": [{"s": "호흡곤란이 있는지 확인함", "n": ""}, {"s": "산소포화도 monitor함", "n": "결과치 입력"}, {"s": "산소흡입 시작함", "n": "지금부터 산소 흡입 시작할 떄"}]}, {"대분류": "호흡", "소분류": "호흡곤란(심부전 의심 / 흉부통증 있음)", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "기침 있음/없음", "n": "GCS 15 일때"}, {"s": "가래 있음/없음", "n": "많지 않을 때"}, {"s": "열감 있음/없음", "n": "열 날때"}, {"s": "chilling 있음/없음", "n": "춥다고 할때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란정도/RR"}, {"s": "흉부통증 없음", "n": ""}, {"s": "흉부 불편감 있음/없음", "n": ""}, {"s": "하지부종 있음/없음", "n": "하지부종 여부, Pitting edema 여부, 있을 시 사진 찍어 올리기"}, {"s": "dizziness 있음/없음", "n": "어저러움 여부 확인"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 여부 확인"}, {"s": "흉부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "비효율적 호흡양상", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "호흡곤란이 있는지 확인함", "n": ""}, {"s": "산소포화도 monitor함", "n": "결과치 입력"}, {"s": "산소흡입 시작함", "n": "지금부터 산소 흡입 시작할 떄"}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "객혈 - 흉부통증 없음", "세부분류": "객혈 관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "기침 있음/없음", "n": "빈도/정도"}, {"s": "호흡곤란 있음/없음", "n": ""}, {"s": "열감 있음/없음", "n": ""}, {"s": "Chilling 있음/없음", "n": ""}, {"s": "흉부 통증 없음", "n": ""}, {"s": "객혈 있음/없음", "n": "시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}], "D": [{"s": "출혈", "n": ""}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "객혈 - 흉부통증 있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "기침 있음/없음", "n": "빈도/정도"}, {"s": "호흡곤란 있음/없음", "n": ""}, {"s": "열감 있음/없음", "n": ""}, {"s": "Chilling 있음/없음", "n": ""}, {"s": "객혈 있음/없음", "n": "시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "흉부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "출혈", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "토혈 -복부통증 없음", "세부분류": "토혈 관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "복부 통증 없음", "n": ""}, {"s": "토혈 있음/없음", "n": "시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}], "D": [{"s": "출혈", "n": ""}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "토혈 -복부통증 있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "토혈 있음/없음", "n": "시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "복부 불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "복부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "출혈", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "혈변-복부통증 없음", "세부분류": "혈변 관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "복부통증 없음", "n": ""}, {"s": "혈변 있음/없음", "n": "뺠간변, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "흑색변 있음/없음", "n": "까만변, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}], "D": [{"s": "출혈", "n": ""}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "혈변-복부통증 있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "혈변 있음/없음", "n": "뺠간변, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "흑색변 있음/없음", "n": "까만변, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "복부 불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "복부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "출혈", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "질출혈- 통증 없음", "세부분류": "출혈  관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "질 출혈 있음", "n": "출혈위치, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}], "D": [{"s": "출혈", "n": ""}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}]}, {"대분류": "출혈(눈에 보이는 출혈양상)", "소분류": "질 출혈-통증 있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "질 출혈 있음", "n": "출혈위치, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "출혈", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)", "소분류": "출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)- 통증없음", "세부분류": "출혈  관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "출혈 있음", "n": "출혈위치, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}], "D": [{"s": "출혈", "n": ""}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}]}, {"대분류": "출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)", "소분류": "출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)- 통증있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "출혈 있음", "n": "출혈위치, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "출혈", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "출혈위험(눈에 보이지 않지만 Hemoglobin 낮거나 과거 출혈 경향 있을떄", "소분류": "출혈위험 - 통증 없음", "세부분류": "출혈  관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "출혈 없음", "n": "출혈위치, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "혈중 hemoglobin 수치 정상 이하임", "n": "헤모글로빈 수치 낮을시"}, {"s": "혈소판 수치 감소함", "n": "혈소판 수치 낮을시"}, {"s": "INR :", "n": "INR 수치 정상보다 높을시(1.5이상?)"}], "D": [{"s": "출혈위험", "n": ""}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}]}, {"대분류": "출혈위험(눈에 보이지 않지만 Hemoglobin 낮거나 과거 출혈 경향 있을떄", "소분류": "출혈위험-통증 있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "출혈없음", "n": "출혈위치, 시작시간, 횟수 post note에 작성, 그림첨부(출혈 양상 실물, 폰사진 있을 시)"}, {"s": "혈중 hemoglobin 수치 정상 이하임", "n": "헤모글로빈 수치 낮을시"}, {"s": "혈소판 수치 감소함", "n": "혈소판 수치 낮을시"}, {"s": "INR :", "n": "INR 수치 정상보다 높을시(1.5이상?)"}, {"s": "불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "출혈위험", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "출혈 증상이 있는지 확인함", "n": ""}, {"s": "출혈 양상 확인함", "n": ""}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "감염", "소분류": "CRP 수치 정상 이상일때", "세부분류": "감염관련", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "열감 있음/없음", "n": ""}, {"s": "Chilling있음/없음", "n": ""}, {"s": "C-Reactive protein 수치 증가함", "n": ""}], "D": [{"s": "감염", "n": ""}, {"s": "감염증상이 있는지 확인함", "n": ""}, {"s": "체온 측정함", "n": ""}], "PE": []}, {"대분류": "감염위험", "소분류": "CRP 수치 모를때, 감염 위험성 있을떄(배액관, 있을때, 열감 있을 떄)", "세부분류": "감염위험 관련", "AE": [{"s": "Foley catheter 유지중임", "n": "GCS 15 일때"}, {"s": "dizziness있음/없음", "n": ""}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "열감 있음/없음", "n": ""}, {"s": "Chilling있음/없음", "n": ""}], "D": [{"s": "감염위험", "n": ""}, {"s": "감염증상이 있는지 확인함", "n": ""}, {"s": "체온 측정함", "n": ""}], "PE": []}, {"대분류": "고체온", "소분류": "고체온+통증없음", "세부분류": "고체온+통증 없음", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "열감 있음/없음", "n": ""}, {"s": "Chilling있음/없음", "n": ""}, {"s": "통증 없음", "n": ""}, {"s": "체온 상승함", "n": ""}], "D": [{"s": "감염", "n": ""}, {"s": "감염증상이 있는지 확인함", "n": ""}, {"s": "체온 측정함", "n": ""}], "PE": []}, {"대분류": "고체온", "소분류": "고체온+통증 있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness있음/없음", "n": "GCS 15 일때"}, {"s": "오심, 구토 없음/오심, 구토 있음", "n": ""}, {"s": "열감 있음/없음", "n": ""}, {"s": "Chilling있음/없음", "n": ""}, {"s": "체온 상승함", "n": ""}, {"s": "불편감 있음/없음", "n": "통증은 없으나 불편할 때 사용"}, {"s": "통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}], "D": [{"s": "고체온", "n": ""}, {"s": "감염증상이 있는지 확인함", "n": ""}, {"s": "체온 측정함", "n": ""}, {"s": "급성통증", "n": "Active"}], "PE": [{"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}]}, {"대분류": "저체온", "소분류": "저체온", "세부분류": "저체온 관련", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "동공크기 :", "n": "Rt/Lt/대칭여부/Rt모양/Lt모양"}, {"s": "빛 반사 확인결과 prompt/sluggish/hippus 함", "n": "두통 환자 동공크기 여부 변화 반드시 확인(뇌출혈, 뇌경색 등 감별 위함)"}, {"s": "감각이상 있음/없음", "n": "머리~얼굴~팔~다리~몸통 양쪽 만져가면서 감각 저하가 있는지 감별"}, {"s": "grasp power 강함/약함", "n": "쥐는 함 양손 강한지, 약한지, 양쪽 손 쥐는 힘 같은지 다른지 따라 추가기록 +  post note 기록"}, {"s": "체온 하강됨", "n": "쳉ㅗㄴ 하강"}], "D": [{"s": "저체온", "n": "Active"}], "PE": [{"s": "저체온의 초기 증상에 대해 설명함", "n": ""}, {"s": "체온 측정함", "n": ""}, {"s": "따뜻한 환경 제공함", "n": ""}, {"s": "사지근력 평가함", "n": "LLE/LUE/RLE/RUE(좌하지, 좌상지, 우하지, 우상지) 5점 : 손으로 눌러도 버티거나 더 강함 4점 : 힘은 있으나 손으로 누르면 내려감, 3점: 들기는 하나 손으로 내리면 슥 내려감, 2점 겨우 손을 들긴 하지만 곧바로 내려감, 1점 :손가락을 꼼지락 하는 정도, 0점 : 움직임 없음"}]}, {"대분류": "뇌경색/뇌출혈 의심", "소분류": "뇌경색뇌출혈 관련", "세부분류": "신경학적 사정 및 평가", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "동공크기 :", "n": "Rt/Lt/대칭여부/Rt모양/Lt모양"}, {"s": "빛 반사 확인결과 prompt/sluggish/hippus 함", "n": "두통 환자 동공크기 여부 변화 반드시 확인(뇌출혈, 뇌경색 등 감별 위함)"}, {"s": "감각이상 있음/없음", "n": "머리~얼굴~팔~다리~몸통 양쪽 만져가면서 감각 저하가 있는지 감별"}, {"s": "grasp power 강함/약함", "n": "쥐는 함 양손 강한지, 약한지, 양쪽 손 쥐는 힘 같은지 다른지 따라 추가기록 +  post note 기록"}], "D": [{"s": "조직관류저하 : 뇌", "n": "Active"}], "PE": [{"s": "신경학적 증상이 있는지 확인함", "n": ""}, {"s": "사지근력 평가함", "n": "LLE/LUE/RLE/RUE(좌하지, 좌상지, 우하지, 우상지) 5점 : 손으로 눌러도 버티거나 더 강함 4점 : 힘은 있으나 손으로 누르면 내려감, 3점: 들기는 하나 손으로 내리면 슥 내려감, 2점 겨우 손을 들긴 하지만 곧바로 내려감, 1점 :손가락을 꼼지락 하는 정도, 0점 : 움직임 없음"}]}, {"대분류": "심근경색 의심", "소분류": "심근경색의심+통증없음", "세부분류": "심근경색관련 사정", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 여부 확인"}, {"s": "흉부 불편감 있음/없음", "n": ""}, {"s": "흉부 통증 없음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}, {"s": "심전도에서 불규칙한 리듬 관찰됨", "n": "ECG에서 ST elevation 이나 depression, 부정맥 있음 post note에 기록."}], "D": [{"s": "조직관류저하 : 심폐계", "n": "Active"}], "PE": [{"s": "흉부통증이 있는지 확인함", "n": ""}, {"s": "심전도 변화를 확인함", "n": ""}]}, {"대분류": "심근경색 의심", "소분류": "심근경색의심+통증있음", "세부분류": "통증관련 사정 및 평가", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 여부 확인"}, {"s": "흉부 불편감 있음/없음", "n": ""}, {"s": "흉부 통증 없음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}, {"s": "심전도에서 불규칙한 리듬 관찰됨", "n": "ECG에서 ST elevation 이나 depression, 부정맥 있음 post note에 기록."}, {"s": "흉부 통증 있음", "n": "강도/ 빈도/ 양상/ 기간/ 부위"}, {"s": "급성통증", "n": "Active"}, {"s": "통증을 인정해줌", "n": ""}, {"s": "통증을 관찰하기로 함", "n": ""}, {"s": "통증 양상을 확인함", "n": ""}], "D": [{"s": "조직관류저하 : 심폐계", "n": "Active"}], "PE": [{"s": "흉부통증이 있는지 확인함", "n": ""}, {"s": "심전도 변화를 확인함", "n": ""}]}, {"대분류": "고혈당", "소분류": "고혈당", "세부분류": "고혈당 관련 사정", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 여부 확인"}, {"s": "불편감 있음/없음", "n": ""}, {"s": "혈당 증가함", "n": ""}, {"s": "고혈당 증상 있음/없음", "n": "오심,다뇨,구토, 갈증, 의식변화 등"}], "D": [{"s": "고혈당", "n": ""}], "PE": [{"s": "혈당 검사 측정함", "n": ""}, {"s": "처방에 의해 인슐린 투여함", "n": "인슐린 투여시 용량, 경로, 주입속도, 오더형태, 의사명 기입"}]}, {"대분류": "저혈당", "소분류": "저혈당", "세부분류": "저혈당 관련 사정", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 일때"}, {"s": "호흡곤란 있음/없음", "n": "호흡곤란 여부 확인"}, {"s": "불편감 있음/없음", "n": ""}, {"s": "혈당 떨어짐", "n": ""}, {"s": "저혈당 증상 있음/없음", "n": "진전, 빈맥, 발한, 감각이상, 의식변화"}], "D": [{"s": "저혈당", "n": ""}], "PE": [{"s": "혈당 검사 측정함", "n": ""}, {"s": "저혈당 증상(진전, 빈맥, 발한, 감각이상, 의식변화)애 대해 설명함", "n": ""}, {"s": "처방에 의해 D50W 을 투여함", "n": "D5% 처방시 용량, 경로, 주입속도, 오더형태, 의사명 기입"}]}, {"대분류": "Seizure", "소분류": "지금 Seizure 할 때", "세부분류": "Seizure 할때", "AE": [{"s": "Seizure 있음", "n": "GCS 15 일때"}, {"s": "동공크기 :", "n": "Rt/Lt/대칭여부/Rt모양/Lt모양"}, {"s": "빛 반사 확인결과 prompt/sluggish/hippus 함", "n": "두통 환자 동공크기 여부 변화 반드시 확인(뇌출혈, 뇌경색 등 감별 위함)"}], "D": [{"s": "신체손상위험", "n": "Active"}], "PE": [{"s": "Seizure 양상을 확인함", "n": ""}, {"s": "Seizure시 안전간호 시행함", "n": "airway유지"}, {"s": "Seizure의 유발요인을확인함", "n": ""}, {"s": "처방에 의해 Lorazepam을 투여함", "n": "의사처방시"}]}, {"대분류": "Seizure", "소분류": "이미 Seizure를 하고 멈춘뒤 내원할 때", "세부분류": "Seizure는 멈춤", "AE": [{"s": "dizziness 있음/없음", "n": "GCS 15 미만일 떄"}, {"s": "동공크기 :", "n": "Rt/Lt/대칭여부/Rt모양/Lt모양"}, {"s": "빛 반사 확인결과 prompt/sluggish/hippus 함", "n": "두통 환자 동공크기 여부 변화 반드시 확인(뇌출혈, 뇌경색 등 감별 위함)"}, {"s": "Seizure 멈춤/없음", "n": ""}, {"s": "Seizure 유사증상 있음/없음", "n": ""}], "D": [{"s": "신체손상위험", "n": "Active"}], "PE": [{"s": "Seizure 양상을 확인함", "n": ""}, {"s": "Seizure시 안전간호 시행함", "n": "airway유지"}, {"s": "Seizure의 유발요인을확인함", "n": ""}, {"s": "사지근력 평가함", "n": "LLE/LUE/RLE/RUE(좌하지, 좌상지, 우하지, 우상지) 5점 : 손으로 눌러도 버티거나 더 강함 4점 : 힘은 있으나 손으로 누르면 내려감, 3점: 들기는 하나 손으로 내리면 슥 내려감, 2점 겨우 손을 들긴 하지만 곧바로 내려감, 1점 :손가락을 꼼지락 하는 정도, 0점 : 움직임 없음"}]}, {"대분류": "의식/낙상 사정", "소분류": "의식 및 낙상위험 평가", "세부분류": "의식/낙상관련 사정 및 평가", "AE": [{"s": "의식 명료함", "n": "GCS 15 일때"}, {"s": "의식수준 :", "n": "GCS 15 미만일 떄"}, {"s": "보호자 환자 옆에 상주하고 있음", "n": "보호자 있을시"}, {"s": "보호자 동행하지 않음", "n": "보호자 없을시"}, {"s": "Obey command 가능함/ Obey command 가능하지 않음", "n": "가능하지 않을 떄"}, {"s": "시간에대한 지남력 없음/사람에 대한 지남력 없음/ 장소에 대한 지남력 없음", "n": ""}, {"s": "시간, 사람, 장소에 대한 지남력 없음", "n": "Post note에 세부사항 기록하기"}, {"s": "보호자 환자 옆에 상주하고 있음", "n": "보호자 있을시"}, {"s": "보호자 동행하지 않음", "n": "보호자 없을시"}], "D": [{"s": "낙상위험", "n": "active"}], "PE": [{"s": "낙상방지 교육함", "n": ""}, {"s": "침대 난간을 올려줌", "n": "침대 난간 올려줬을 시.,"}, {"s": "보호자와 같이 있게 함", "n": "보호자 있을시, 낙상 위험 높을시"}, {"s": "보호자 동반하도록 설명함", "n": "보호자 없을시"}]}];
+function parseToggle(s){
+  if(!s.includes("/")) return null;
+  const parts=s.split("/").map(t=>t.trim()).filter(Boolean);
+  const m=parts[0].match(/^(.*?)(있음|없음|강함|약함)\s*$/);
+  const stem=m?m[1].trim():"";
+  const opts=parts.map(p=>((["있음","없음","강함","약함"].includes(p))&&stem)?(stem+" "+p):p);
+  if(!opts.some(o=>/있음|없음|강함|약함|prompt|sluggish/.test(o))) return null;
+  return opts;
+}
+const isVal=s=>/[:：]\s*$/.test(s);
+function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function buildRows(cur,st){
+  const rows=[];
+  cur.AE.forEach((it,i)=>{ if(st.AE[i].sel) rows.push(["사정 및 평가(A&E)","ae",st.AE[i].sel]); });
+  cur.D.forEach((it,i)=>{ if(st.D[i]) rows.push(["간호진단(D)","d",it.s]); });
+  cur.PE.forEach((it,i)=>{ if(st.PE[i]) rows.push(["계획 및 중재(P&E)","pe",it.s]); });
+  return rows;
+}
+function freshState(cur){return {AE:cur.AE.map(()=>({sel:null})),D:cur.D.map(()=>true),PE:cur.PE.map(()=>true)};}
+function copyTSV(cur,st,toast){
+  const rows=buildRows(cur,st); if(!rows.length){toast&&toast("기록이 비어있습니다");return;}
+  const lines=rows.map(r=>[cur.소분류,cur.세부분류||"",r[0],r[2]].join("\t"));
+  navigator.clipboard.writeText(lines.join("\n")).then(()=>toast&&toast("복사됨 — EMR/엑셀에 붙여넣기")).catch(()=>toast&&toast("복사 실패"));
+}
+function recordTable(cur,st){
+  const rows=buildRows(cur,st);
+  if(!rows.length) return '<div class="empty">평가하면 기록이 만들어집니다</div>';
+  let h='<table><thead><tr><th>소분류</th><th>세부분류</th><th>과정</th><th>간호 진술문</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{h+='<tr>';
+    if(i===0){h+=`<td class="cat" rowspan="${rows.length}">${esc(cur.소분류)}</td><td rowspan="${rows.length}">${esc(cur.세부분류||"")}</td>`;}
+    h+=`<td class="pc ${r[1]}">${esc(r[0])}</td><td>${esc(r[2])}</td></tr>`;});
+  return h+'</tbody></table>';
+}
+let _tt; function mkToast(el){return m=>{el.textContent=m;el.classList.add("show");clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove("show"),1700);};}
+
+
+const toast=mkToast(document.getElementById("toast"));
+let cur=null,st=null,qi=0,phase="pick";
+const view=document.getElementById("view"),topEl=document.getElementById("top");
+function renderPick(f=""){
+  phase="pick"; topEl.innerHTML="";
+  const groups={};
+  BLOCKS.forEach((b,i)=>{const hay=(b.대분류+b.소분류).toLowerCase();if(f&&!hay.includes(f.toLowerCase()))return;(groups[b.대분류]=groups[b.대분류]||[]).push(i);});
+  let h='<h1 class="t">🩺 무엇 때문에 오셨나요?</h1><div class="sub">주호소를 선택하면 한 문항씩 사정합니다</div>';
+  h+='<div class="pick" style="margin-top:18px"><input class="search" id="sc" placeholder="검색 (복부·호흡·출혈·seizure...)" value="'+f.replace(/"/g,"")+'">';
+  Object.keys(groups).forEach(k=>{h+=`<h2>${esc(k)}</h2><div class="chips">`+groups[k].map(i=>`<button class="chip" data-i="${i}">${esc(BLOCKS[i].소분류)}</button>`).join("")+`</div>`;});
+  h+='</div>';
+  view.innerHTML=h;
+  const sc=document.getElementById("sc"); sc.oninput=e=>{renderPick(e.target.value);document.getElementById("sc").focus();};
+  view.querySelectorAll(".chip").forEach(b=>b.onclick=()=>start(+b.dataset.i));
+}
+function start(i){cur=BLOCKS[i];st=freshState(cur);qi=0;phase="ae";renderFlow();}
+function progress(){const total=cur.AE.length;const done=st.AE.filter(a=>a.answered).length;
+  topEl.innerHTML=`<div class="bar"><i style="width:${phase==='review'?100:Math.round(done/total*100)}%"></i></div>
+  <div class="barlbl"><span>${esc(cur.소분류)}</span><span>${phase==='review'?'사정 완료':`${qi+1} / ${total}`}</span></div>`;}
+function renderFlow(){
+  if(qi>=cur.AE.length){return renderReview();}
+  progress();
+  const it=cur.AE[qi], tog=parseToggle(it.s);
+  let ans="";
+  if(tog){ans=tog.map((o,j)=>{const pos=/있음|강함/.test(o)&&!/없음/.test(o);const neg=/없음|약함/.test(o);
+      return `<button class="opt ${pos?'pos':neg?'neg':''}" data-sel="${esc(o)}"><span class="k">${j+1}</span>${esc(o)}</button>`;}).join("")
+    +`<button class="opt skip" data-skip="1">미평가 · 건너뛰기</button>`;}
+  else if(isVal(it.s)){ans=`<input class="valin" id="vi" placeholder="값 입력 (선택)"><div class="nav"><button class="btn g" data-skip="1">미평가</button><button class="btn p" id="vnext">다음 →</button></div>`;}
+  else{ans=`<button class="opt pos" data-sel="${esc(it.s)}"><span class="k">✓</span>기록함</button><button class="opt skip" data-skip="1">해당 없음</button>`;}
+  view.innerHTML=`<div class="qtag">사정 및 평가 (A&E)</div><div class="q">${esc(it.s)}</div>`+
+    (it.n?`<div class="note">💡 ${esc(it.n)}</div>`:"")+`<div class="ans">${ans}</div>`+
+    `<div class="nav"><button class="btn g" id="back">← 이전</button></div>`;
+  view.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{st.AE[qi]={sel:b.dataset.sel,answered:true};next();});
+  view.querySelectorAll("[data-skip]").forEach(b=>b.onclick=()=>{st.AE[qi]={sel:null,answered:true};next();});
+  const vn=document.getElementById("vnext");if(vn)vn.onclick=()=>{const v=document.getElementById("vi").value;st.AE[qi]={sel:v?it.s:null,answered:true};next();};
+  document.getElementById("back").onclick=()=>{if(qi>0){qi--;renderFlow();}else renderPick();};
+}
+function next(){qi++;renderFlow();}
+function renderReview(){
+  phase="review";progress();
+  let h='<h1 class="t" style="font-size:1.5rem;font-weight:800">기록 확인</h1><div class="sub">진단·중재를 확인하고 복사하세요</div>';
+  h+='<div class="rsec"><div class="lab d">간호진단 (D)</div>'+cur.D.map((it,i)=>`<label class="ck"><input type="checkbox" data-t="D" data-i="${i}" ${st.D[i]?'checked':''}><span>${esc(it.s)}</span></label>`).join("")+'</div>';
+  h+='<div class="rsec"><div class="lab pe">계획 및 중재 (P&E)</div>'+cur.PE.map((it,i)=>`<label class="ck"><input type="checkbox" data-t="PE" data-i="${i}" ${st.PE[i]?'checked':''}><span>${esc(it.s)}</span></label>`).join("")+'</div>';
+  h+='<div class="rsec"><div class="lab">📋 완성된 간호기록</div><div id="rec">'+recordTable(cur,st)+'</div></div>';
+  h+='<div class="nav"><button class="btn g" id="back">← 이전</button><button class="btn g" id="restart">처음으로</button><button class="btn p" id="copy">복사하기</button></div>';
+  view.innerHTML=h;
+  view.querySelectorAll("input[type=checkbox]").forEach(c=>c.onchange=()=>{st[c.dataset.t][+c.dataset.i]=c.checked;document.getElementById("rec").innerHTML=recordTable(cur,st);});
+  document.getElementById("back").onclick=()=>{qi=cur.AE.length-1;renderFlow();};
+  document.getElementById("restart").onclick=()=>renderPick();
+  document.getElementById("copy").onclick=()=>copyTSV(cur,st,toast);
+}
+renderPick();
+</script></body></html>
