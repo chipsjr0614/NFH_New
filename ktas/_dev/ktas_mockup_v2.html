@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>KTAS v2 시각화 목업 (데스크탑·신설단계)</title>
+<style>
+:root{
+  --bg:#0a0a14;--surf:#13131f;--surf2:#1a1a28;--brd:#22223a;
+  --txt:#e2e8f0;--mute:#64748b;--dim:#2d3748;
+  --k1:#ef4444;--k1bg:#1c0707;--k1bd:#7f1d1d;
+  --k2:#f97316;--k2bg:#1c0e05;--k2bd:#7c2d12;
+  --k3:#eab308;--k3bg:#1c1805;--k3bd:#713f12;
+  --k4:#22c55e;--k4bg:#051c0e;--k4bd:#14532d;
+  --k5:#3b82f6;--k5bg:#05101c;--k5bd:#1e3a5f;
+  --accent:#1e3a5f;--accent-bd:#3b82f6;--accent-tx:#93c5fd;
+  --r:12px;--rs:8px;
+}
+/* ── 라이트 테마 ── */
+body.light{
+  --bg:#eef2f6;--surf:#ffffff;--surf2:#f4f7fa;--brd:#dce3ec;
+  --txt:#0f172a;--mute:#64748b;--dim:#94a3b8;
+  --k1bg:#fef2f2;--k1bd:#fca5a5;
+  --k2bg:#fff7ed;--k2bd:#fdba74;
+  --k3bg:#fefce8;--k3bd:#fde047;
+  --k4bg:#f0fdf4;--k4bd:#86efac;
+  --k5bg:#eff6ff;--k5bd:#93c5fd;
+  --accent:#dbeafe;--accent-bd:#3b82f6;--accent-tx:#1d4ed8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  font-size:17px;line-height:1.5;transition:background .2s,color .2s;}
+
+/* ── 목업 안내 바 ── */
+.mock-bar{position:sticky;top:0;z-index:50;background:var(--surf);border-bottom:1px solid var(--brd);
+  padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.mock-bar h1{font-size:16px;font-weight:800;}
+.mock-bar h1 em{color:var(--k1);font-style:normal;}
+.mock-bar .note{font-size:12px;color:var(--mute);}
+.toggle{display:flex;gap:6px;}
+.toggle button{padding:8px 14px;border-radius:20px;border:1px solid var(--brd);background:var(--surf2);
+  color:var(--mute);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.toggle button.on{background:var(--accent);border-color:var(--accent-bd);color:var(--accent-tx);}
+
+/* ── 데스크탑 레이아웃 컨테이너 ── */
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 80px;}
+.panel{margin-bottom:34px;}
+.panel-tag{display:inline-block;background:var(--accent);border:1px solid var(--accent-bd);color:var(--accent-tx);
+  font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:12px;}
+.panel-tag.new{background:var(--k4bg);border-color:var(--k4bd);color:#16a34a;}
+body:not(.light) .panel-tag.new{color:#86efac;}
+
+/* 화면 프레임 (앱처럼) */
+.frame{background:var(--bg);border:1px solid var(--brd);border-radius:16px;overflow:hidden;
+  box-shadow:0 8px 30px rgba(0,0,0,.18);}
+.frame-top{background:var(--surf);padding:14px 18px;border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;justify-content:space-between;}
+.appname{font-size:19px;font-weight:800;letter-spacing:-.5px;}
+.appname em{color:var(--k1);font-style:normal;}
+.step-lbl{font-size:13px;color:var(--mute);font-weight:600;}
+.prog-bar{height:3px;background:var(--brd);}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--k1),var(--k2));}
+.frame-body{padding:20px;}
+
+/* 데스크탑 2열 */
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:700px){.cols2{grid-template-columns:1fr;}}
+
+/* ── 원본 컴포넌트 클래스 재사용 ── */
+.sec-title{font-size:21px;font-weight:700;margin-bottom:3px;}
+.sec-sub{font-size:14px;color:var(--mute);margin-bottom:16px;}
+.card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:15px;margin-bottom:12px;}
+.card-lbl{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:600;}
+.fi{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:11px 13px;color:var(--txt);font-size:16px;font-family:inherit;outline:none;}
+.fi::placeholder{color:var(--dim);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.flbl{font-size:13px;color:var(--mute);margin-bottom:4px;}
+.fg{margin-bottom:8px;}
+
+/* 버튼 그룹 */
+.bgrp{display:flex;gap:7px;}
+.bbtn{flex:1;padding:12px 8px;border-radius:var(--rs);border:1px solid var(--brd);background:var(--surf2);
+  color:var(--mute);font-size:15px;font-weight:600;text-align:center;cursor:pointer;font-family:inherit;transition:.15s;}
+.bbtn.sel{background:var(--accent);border-color:var(--accent-bd);color:var(--accent-tx);font-weight:700;}
+.bbtn.sel-r{background:var(--k1bg);border-color:var(--k1bd);color:#dc2626;font-weight:700;}
+body:not(.light) .bbtn.sel-r{color:#fca5a5;}
+
+/* 체크 항목 */
+.chk{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--brd);cursor:pointer;}
+.chk:last-child{border:none;}
+.chk-box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--dim);background:var(--surf2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.chk.on .chk-box{background:var(--k4);border-color:var(--k4);color:#fff;}
+.chk-txt{font-size:15px;}
+.chk-txt small{display:block;font-size:12px;color:var(--mute);margin-top:1px;}
+
+/* 태그 */
+.tag-area{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+.tag{background:var(--accent);border:1px solid var(--accent-bd);color:var(--accent-tx);
+  padding:5px 12px;border-radius:20px;font-size:14px;display:flex;align-items:center;gap:5px;}
+.tag.red{background:var(--k1bg);border-color:var(--k1bd);color:#dc2626;}
+body:not(.light) .tag.red{color:#fca5a5;}
+.add-row{display:flex;gap:7px;margin-top:9px;}
+.add-btn{background:var(--k4bg);border:1px solid var(--k4bd);color:#16a34a;padding:11px 16px;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
+body:not(.light) .add-btn{color:#86efac;}
+
+/* 경고 박스 */
+.alert{border-radius:var(--rs);padding:12px 14px;font-size:14px;margin-top:10px;display:flex;align-items:center;gap:8px;}
+.alert.iso{background:var(--k2bg);border:1px solid var(--k2bd);color:#ea580c;}
+body:not(.light) .alert.iso{color:#fdba74;}
+.alert.warn{background:var(--k1bg);border:1px solid var(--k1bd);color:#dc2626;font-weight:600;}
+body:not(.light) .alert.warn{color:#fca5a5;}
+
+/* 임신 강조 */
+.preg-card{border-color:#db2777;}
+.preg-card .card-lbl{color:#db2777;}
+body:not(.light) .preg-card .card-lbl{color:#f9a8d4;}
+
+.hint{font-size:12px;color:var(--mute);margin-top:7px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <div>
+    <h1><em>ER</em> Quick Triage — v2 시각화 <span style="color:var(--mute);font-weight:500">(목업)</span></h1>
+    <div class="note">⚠️ 실제 동작 앱 아님 · 디자인/레이아웃 확인용 · 라이트/다크 토글만 작동</div>
+  </div>
+  <div class="toggle">
+    <button id="tDark" class="on" onclick="setTheme('dark')">🌙 다크</button>
+    <button id="tLight" onclick="setTheme('light')">☀️ 라이트</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ════════ PANEL 1: Step 1 보강 ════════ -->
+  <div class="panel">
+    <span class="panel-tag">① Step 1 보강 — 나이·성별·체중 추가</span>
+    <div class="frame">
+      <div class="frame-top">
+        <span class="appname"><em>ER</em> Quick Triage</span>
+        <span class="step-lbl">Step 1 / 11</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:9%"></div></div>
+      <div class="frame-body">
+        <div class="sec-title">기본정보</div>
+        <div class="sec-sub">날짜 자동 · 시간 탭→현재</div>
+        <div class="cols2">
+          <div>
+            <div class="card">
+              <div class="card-lbl">날짜 / 시간</div>
+              <div class="fg"><div class="flbl">내원날짜</div><input class="fi" value="2026-06-09" readonly></div>
+              <div class="row2">
+                <div class="fg"><div class="flbl">내원시간</div><input class="fi" value="14:30"></div>
+                <div class="fg"><div class="flbl">접수시간</div><input class="fi" value="14:32"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-lbl">환자 정보</div>
+              <div class="fg"><div class="flbl">환자번호 (8자리)</div><input class="fi" value="12345678"></div>
+              <div class="fg"><div class="flbl">이름</div><input class="fi" value="홍길동"></div>
+            </div>
+          </div>
+          <div>
+            <div class="card" style="border-color:var(--accent-bd);">
+              <div class="card-lbl" style="color:var(--accent-tx)">🆕 나이 · 성별 · 체중</div>
+              <div class="row2">
+                <div class="fg"><div class="flbl">나이</div><input class="fi" placeholder="세" value="58"></div>
+                <div class="fg"><div class="flbl">체중 (소아 약물용)</div><input class="fi" placeholder="kg" value=""></div>
+              </div>
+              <div class="flbl" style="margin-top:4px">성별</div>
+              <div class="bgrp">
+                <div class="bbtn">남</div>
+                <div class="bbtn sel">여</div>
+              </div>
+              <div class="hint">※ 성별·나이는 임신 스크리닝·고령 KTAS 보정의 전제예요.</div>
+            </div>
+            <div class="card">
+              <div class="card-lbl">내원경로</div>
+              <div class="row2" style="gap:7px">
+                <div class="bbtn">🚶 도보</div>
+                <div class="bbtn">♿ 휠체어</div>
+                <div class="bbtn">🚐 129 사설</div>
+                <div class="bbtn sel">🚑 119 구급</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ PANEL 2: 신설 안전·간호 확인 ════════ -->
+  <div class="panel">
+    <span class="panel-tag new">② 신설 단계 — 🛡️ 안전·간호 확인 (V/S 뒤, 새 Step 5)</span>
+    <div class="frame">
+      <div class="frame-top">
+        <span class="appname"><em>ER</em> Quick Triage</span>
+        <span class="step-lbl">Step 5 / 11</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:45%"></div></div>
+      <div class="frame-body">
+        <div class="sec-title">🛡️ 안전·간호 확인</div>
+        <div class="sec-sub">모든 환자 공통 — 안전·검사 준비 항목</div>
+        <div class="cols2">
+          <div>
+            <!-- 알레르기 -->
+            <div class="card">
+              <div class="card-lbl">💊 약물 알레르기</div>
+              <div class="bgrp" style="margin-bottom:6px">
+                <div class="bbtn sel-r">NKDA (없음)</div>
+                <div class="bbtn">있음 ↓</div>
+              </div>
+              <div class="add-row">
+                <input class="fi" placeholder="약물명 입력 후 추가…">
+                <button class="add-btn">+</button>
+              </div>
+              <div class="tag-area">
+                <span class="tag red">페니실린 ✕</span>
+                <span class="tag red">조영제 ✕</span>
+              </div>
+            </div>
+            <!-- 주사 금지 팔 -->
+            <div class="card">
+              <div class="card-lbl">🚫 주사 금지 팔</div>
+              <div class="bgrp">
+                <div class="bbtn">없음</div>
+                <div class="bbtn sel-r">왼팔</div>
+                <div class="bbtn">오른팔</div>
+                <div class="bbtn">양팔</div>
+              </div>
+              <div class="fg" style="margin-top:8px"><input class="fi" placeholder="사유 (유방절제·투석 fistula·림프부종 등)" value="좌측 투석 fistula"></div>
+            </div>
+            <!-- 양팔 혈압 -->
+            <div class="card">
+              <div class="card-lbl">🩺 양팔 혈압 (필요시)</div>
+              <div class="chk on"><div class="chk-box">✓</div><div class="chk-txt">양팔 측정함</div></div>
+              <div class="row2" style="margin-top:10px">
+                <div class="fg"><div class="flbl">좌 (mmHg)</div><input class="fi" placeholder="120/80"></div>
+                <div class="fg"><div class="flbl">우 (mmHg)</div><input class="fi" placeholder="124/82"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <!-- 마지막 식사 -->
+            <div class="card">
+              <div class="card-lbl">🍚 마지막 식사 / 금식</div>
+              <div class="fg"><div class="flbl">마지막 식사 시각</div><input class="fi" placeholder="예: 08:00 또는 3시간 전" value="08:00"></div>
+              <div class="chk on"><div class="chk-box">✓</div><div class="chk-txt">금식 안내 완료 <small>검사·시술 대비</small></div></div>
+            </div>
+            <!-- 복용 약물 -->
+            <div class="card">
+              <div class="card-lbl">💊 복용 약물</div>
+              <div class="chk"><div class="chk-box"></div><div class="chk-txt">복용 약물 없음</div></div>
+              <div class="add-row">
+                <input class="fi" placeholder="약물명 입력 후 추가…">
+                <button class="add-btn">+</button>
+              </div>
+              <div class="tag-area">
+                <span class="tag">아스피린 ✕</span>
+                <span class="tag">와파린 ✕</span>
+              </div>
+            </div>
+            <!-- 임신 여부 -->
+            <div class="card preg-card">
+              <div class="card-lbl">🤰 임신 여부 <span style="color:var(--mute);font-weight:500">· 여성 강조</span></div>
+              <div class="bgrp" style="margin-bottom:7px">
+                <div class="bbtn">해당없음</div>
+                <div class="bbtn">없음</div>
+                <div class="bbtn sel">가능성</div>
+                <div class="bbtn">임신중</div>
+              </div>
+              <div class="fg"><div class="flbl">마지막 월경일 (LMP)</div><input class="fi" placeholder="2026-05-15"></div>
+              <div class="hint">※ 복통·질출혈 + 가임기 여성 → 자궁외임신 의심 자동 표시</div>
+            </div>
+            <!-- 감염 격리 -->
+            <div class="card">
+              <div class="card-lbl">🚷 감염 격리 스크리닝</div>
+              <div class="chk on"><div class="chk-box">✓</div><div class="chk-txt">발열 + 호흡기 증상</div></div>
+              <div class="chk"><div class="chk-box"></div><div class="chk-txt">해외 여행력 (2주 이내)</div></div>
+              <div class="chk"><div class="chk-box"></div><div class="chk-txt">확진자 접촉력</div></div>
+              <div class="alert iso">⚠️ 격리 배치 고려 — 독립 공간·마스크 적용</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ PANEL 3: 최종 단계 이름팔찌 ════════ -->
+  <div class="panel">
+    <span class="panel-tag">③ 최종 단계 — 이름 팔찌 확인 (맨 마지막)</span>
+    <div class="frame">
+      <div class="frame-top">
+        <span class="appname"><em>ER</em> Quick Triage</span>
+        <span class="step-lbl">Step 11 / 11</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div>
+      <div class="frame-body">
+        <div class="sec-title">기록 완성</div>
+        <div class="sec-sub">자동 생성된 간호기록 확인 후 복사</div>
+        <div class="cols2">
+          <div>
+            <div class="card" style="border-color:var(--k1bd)">
+              <div class="card-lbl" style="color:#dc2626">🏷️ 퇴실 전 최종 확인</div>
+              <div class="chk on"><div class="chk-box">✓</div><div class="chk-txt">환자 본인 확인 (이름·생년월일)</div></div>
+              <div class="chk"><div class="chk-box"></div><div class="chk-txt">이름 팔찌 착용 확인</div></div>
+              <div class="alert warn">⚠️ 이름 팔찌 미착용 — 착용 후 체크하세요</div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-lbl">📝 자동 간호기록</div>
+              <div style="background:#050e09;border:1px solid var(--k4bd);border-radius:var(--rs);padding:13px;
+                font-family:'Courier New',monospace;font-size:12.5px;color:#4ade80;line-height:1.85;white-space:pre-wrap;">고혈압 #당뇨 과거력 있는 환자로, 복통을(를) 주소로 119 구급대 내원함.
+6시간 전부터 RLQ 부위 찌르는 양상의 복통 (NRS 7/10) 발생, 발열·구토 동반.
+
+[안전·간호] 약물알레르기: 페니실린·조영제 / 주사금지: 좌측(투석 fistula)
+마지막식사 08:00, 금식 안내함 / 복용약물: 아스피린, 와파린
+임신: 가능성(LMP 05-15) / 감염격리: 발열+호흡기 → 격리 고려
+이름팔찌 착용 확인</div>
+              <div class="hint">※ 안전·간호 항목은 엑셀 '내원동기' 칸에 녹여서 한 셀로 들어가요 (컬럼 안 늘어남).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setTheme(t){
+  document.body.classList.toggle('light',t==='light');
+  document.getElementById('tDark').classList.toggle('on',t==='dark');
+  document.getElementById('tLight').classList.toggle('on',t==='light');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💊 통합 투약 앱 (NFH)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+
+/* ── 탭 ── */
+.main-tabs{display:flex;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0;z-index:100}
+.main-tab{flex:1;padding:14px 6px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:#8b949e;border-bottom:3px solid transparent;transition:.2s}
+.main-tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
+.panel{display:none;padding:16px;max-width:1100px;margin:0 auto}
+.panel.active{display:block}
+
+/* ── 공통 카드 ── */
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #30363d}
+.card-body{padding:14px 16px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+h3{font-size:15px;font-weight:700}
+.sub{font-size:12px;color:#8b949e;margin-top:2px}
+
+/* ── 체중 입력 ── */
+.weight-row{display:flex;align-items:center;gap:12px;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;margin-bottom:16px}
+.weight-row label{font-size:14px;color:#8b949e;white-space:nowrap}
+.weight-row input{background:#0d1117;border:1px solid #388bfd;color:#fff;font-size:24px;font-weight:700;width:90px;padding:6px 10px;border-radius:8px;text-align:center}
+.weight-row span{font-size:16px;color:#8b949e}
+.age-btns{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.age-btn{background:#21262d;border:1px solid #30363d;color:#c9d1d9;font-size:12px;padding:5px 11px;border-radius:6px;cursor:pointer}
+.age-btn:hover{background:#30363d;color:#58a6ff}
+
+/* ── 테이블 ── */
+table{width:100%;border-collapse:collapse}
+th{background:#0d1117;color:#8b949e;font-size:11px;font-weight:600;padding:8px 14px;text-align:left;border-bottom:1px solid #30363d}
+td{padding:9px 14px;font-size:13px;border-bottom:1px solid #21262d}
+tr:last-child td{border-bottom:none}
+tr.hl td{background:#1c2d45}
+tr.hl .val{color:#58a6ff;font-size:16px;font-weight:700}
+.val{color:#e6edf3;font-weight:600}
+.dim{color:#8b949e}
+
+/* ── 성인 레이아웃 ── */
+.adult-layout{display:grid;grid-template-columns:160px 1fr;gap:16px}
+.drug-sidebar{display:flex;flex-direction:column;gap:6px;position:sticky;top:60px;height:fit-content}
+.drug-btn{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;font-weight:600;transition:.2s}
+.drug-btn:hover,.drug-btn.active{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
+.drug-section{display:none}
+.drug-section.active{display:block}
+
+/* ── 노에피 두 열 ── */
+.two-col-table th:nth-child(2),.two-col-table td:nth-child(2){color:#66bb6a}
+.two-col-table th:nth-child(3),.two-col-table td:nth-child(3){color:#ffa726}
+
+/* ── 소아 서브탭 ── */
+.sub-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sub-tab{padding:8px 18px;border-radius:20px;background:#21262d;border:1px solid #30363d;color:#8b949e;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.sub-tab.active{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
+.sub-panel{display:none}
+.sub-panel.active{display:block}
+
+/* ── 소아 그리드 ── */
+.peds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+
+/* ── 약물정보 검색 ── */
+.search-box{position:relative;margin-bottom:16px}
+.search-box input{width:100%;background:#161b22;border:1px solid #388bfd;color:#e6edf3;font-size:16px;padding:12px 16px 12px 44px;border-radius:10px}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px}
+.drug-list{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px}
+.drug-chip{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;transition:.2s}
+.drug-chip:hover{border-color:#388bfd;color:#58a6ff}
+.drug-chip.selected{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
+.info-card{background:#161b22;border:1px solid #388bfd;border-radius:10px;padding:18px}
+.info-row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #21262d;font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:#8b949e;min-width:90px;font-weight:600}
+.info-val{color:#e6edf3;flex:1;white-space:pre-line}
+.go-btn{display:block;width:100%;margin-top:14px;padding:11px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;text-align:center}
+.go-btn:hover{background:#388bfd}
+
+/* ── 색상 테마 ── */
+.green{color:#56d364}.orange{color:#ffa726}.red{color:#f85149}.purple{color:#bc8cff}.yellow{color:#e3b341}.blue{color:#58a6ff}.cyan{color:#39c5cf}
+.bg-green{background:#1a2f1a}.bg-blue{background:#1c2d45}.bg-purple{background:#211a2f}.bg-red{background:#2f1a1a}.bg-orange{background:#2f221a}.bg-yellow{background:#2a2412}
+
+/* ── 섹션 헤더 ── */
+.sec-head{font-size:12px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1px;padding:6px 0 10px;border-bottom:1px solid #30363d;margin-bottom:12px}
+.big-val{font-size:20px;font-weight:700;color:#58a6ff}
+.result-box{background:#1c2d45;border:1px solid #388bfd;border-radius:8px;padding:12px 16px;text-align:center;margin:8px 0}
+
+/* ── 반응형 ── */
+@media(max-width:700px){
+  .adult-layout{grid-template-columns:1fr}
+  .drug-sidebar{flex-direction:row;flex-wrap:wrap;position:static}
+  .drug-btn{flex:1;min-width:80px;text-align:center;font-size:12px;padding:8px 6px}
+  .peds-grid{grid-template-columns:1fr}
+  .drug-list{grid-template-columns:1fr}
+  .two-col-table td,.two-col-table th{padding:7px 8px;font-size:12px}
+}
+@media(max-width:400px){
+  .drug-list{grid-template-columns:1fr}
+  .age-btns{display:none}
+}
+
+/* ── 통합 약물정보 (v3) ── */
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.cat-chip{background:#21262d;border:1px solid #30363d;color:#8b949e;font-size:12px;padding:5px 12px;border-radius:16px;cursor:pointer}
+.cat-chip.active{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
+.mix-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:6px 0 14px}
+.mix-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px 10px;text-align:center}
+.mix-box .lbl{font-size:11px;color:#8b949e}
+.mix-box .v{font-size:16px;font-weight:700;margin-top:5px;word-break:keep-all;line-height:1.3}
+.pill{font-size:11px;padding:3px 10px;border-radius:14px;background:#21262d;border:1px solid #30363d;color:#8b949e}
+.pill-blue{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
+@media(max-width:600px){.mix-hero{grid-template-columns:1fr}}
+
+/* ── 아코디언/홈/라이트 (v4) ── */
+.app-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#161b22;border-bottom:1px solid #30363d}
+.app-bar .app-title{font-size:15px;font-weight:700;color:#e6edf3}
+.app-bar .app-actions{display:flex;gap:8px}
+.app-bar button{background:#21262d;border:1px solid #30363d;color:#c9d1d9;font-size:16px;width:40px;height:34px;border-radius:8px;cursor:pointer}
+.app-bar button:hover{border-color:#388bfd}
+.drug-item{margin-bottom:8px}
+.acc-arrow{color:#8b949e;font-size:11px}
+.acc-card{margin-top:8px}
+body.light{background:#f6f8fa;color:#1f2328}
+body.light .app-bar,body.light .main-tabs{background:#fff;border-color:#d0d7de}
+body.light .app-title{color:#1f2328}
+body.light .app-bar button{background:#f6f8fa;border-color:#d0d7de;color:#1f2328}
+body.light .card,body.light .info-card,body.light .weight-row,body.light .result-box{background:#fff;border-color:#d0d7de}
+body.light .search-box input{background:#fff;border-color:#0969da;color:#1f2328}
+body.light .drug-chip,body.light .cat-chip,body.light .age-btn,body.light .drug-btn{background:#fff;border-color:#d0d7de;color:#1f2328}
+body.light .cat-chip.active,body.light .drug-chip.selected,body.light .drug-btn.active{background:#ddf4ff;border-color:#0969da;color:#0969da}
+body.light th{background:#f0f3f6;color:#57606a;border-color:#d0d7de}
+body.light td{border-color:#eaeef2}
+body.light tr.hl td{background:#ddf4ff}
+body.light .mix-box{background:#f6f8fa;border-color:#d0d7de}
+body.light .pill{background:#f6f8fa;border-color:#d0d7de;color:#57606a}
+body.light .pill-blue{background:#ddf4ff;border-color:#0969da;color:#0969da}
+body.light .dim,body.light .sub,body.light .info-label,body.light .acc-arrow,body.light .weight-row label,body.light .weight-row span{color:#57606a}
+body.light .info-val,body.light .val,body.light h3{color:#1f2328}
+body.light .weight-row input{background:#fff;color:#1f2328}
+body.light .card-head{border-color:#d0d7de}
+body.light .main-tab{color:#57606a}
+body.light .main-tab.active{color:#0969da;border-bottom-color:#0969da}
+body.light .sub-tab{background:#fff;border-color:#d0d7de;color:#57606a}
+body.light .sub-tab.active{background:#ddf4ff;border-color:#0969da;color:#0969da}
+body.light .green{color:#1a7f37}body.light .red{color:#cf222e}body.light .orange{color:#bc4c00}body.light .blue{color:#0969da}body.light .purple{color:#8250df}body.light .yellow{color:#9a6700}body.light .cyan{color:#1b7c83}
+body.light tr.hl .val{color:#0969da}
+body.light .bg-green{background:#dafbe1}body.light .bg-blue{background:#ddf4ff}body.light .bg-purple{background:#fbefff}body.light .bg-red{background:#ffebe9}body.light .bg-orange{background:#fff1e5}body.light .bg-yellow{background:#fff8c5}
+body.light .go-btn{background:#0969da}
+.abx-tag{display:inline-block;background:#21262d;border:1px solid #30363d;border-radius:6px;padding:5px 11px;margin:3px;font-size:13px}
+body.light .abx-tag{background:#f6f8fa;border-color:#d0d7de;color:#1f2328}
+.badge-ha{display:inline-block;background:#7d1a1a;color:#ffb3b3;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.badge-ve{display:inline-block;background:#7a4a12;color:#ffd9a8;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
+.warn-lasa{background:#2a2412;border-left:3px solid #e3b341;padding:7px 10px;border-radius:6px;margin:8px 0;font-size:12px;color:#e3b341}
+.warn-rev{background:#16261a;border-left:3px solid #56d364;padding:7px 10px;border-radius:6px;margin:8px 0;font-size:12px;color:#9fe0a6}
+.extrav-box{background:#2f1a1a;border:1px solid #7d1a1a;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#ffc7c7;line-height:1.5}
+body.light .badge-ha{background:#ffebe9;color:#cf222e}body.light .badge-ve{background:#fff1e5;color:#bc4c00}
+body.light .warn-lasa{background:#fff8c5;color:#7a5c00}body.light .warn-rev{background:#dafbe1;color:#1a7f37}
+body.light .extrav-box{background:#ffebe9;border-color:#ffb3b3;color:#a40e26}
+</style>
+</head>
+<body>
+
+<!-- ── 메인 탭 ── -->
+<div class="app-bar">
+  <span class="app-title">💊 통합 투약 앱</span>
+  <div class="app-actions">
+    <button onclick="goHome()" title="홈">🏠</button>
+    <button onclick="toggleTheme()" id="themeBtn" title="테마">🌙</button>
+  </div>
+</div>
+
+<div class="main-tabs">
+  <div class="main-tab" onclick="showMain('info')">🔍 약물정보</div>
+  <div class="main-tab active" onclick="showMain('adult')">💉 성인계산기</div>
+  <div class="main-tab" onclick="showMain('peds')">👶 소아계산기</div>
+  <div class="main-tab" onclick="showMain('abx')">🧬 항생제병용</div>
+  <div class="main-tab" onclick="showMain('anti')">🧪 해독·역전제</div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     탭 1: 약물정보
+════════════════════════════════════════════════ -->
+<div id="tab-info" class="panel">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="drugSearch" placeholder="약물명 검색 (한글/영문)..." oninput="filterDrugs()">
+  </div>
+  <div class="cat-chips" id="catChips"></div>
+  <div class="drug-list" id="drugList"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     탭 2: 성인 계산기
+════════════════════════════════════════════════ -->
+<div id="tab-adult" class="panel active">
+  <div class="weight-row">
+    <label>환자 체중</label>
+    <input type="number" id="adultWeight" value="70" min="1" max="200" oninput="updateAdult()">
+    <span>kg</span>
+    <div class="age-btns">
+      <button class="age-btn" onclick="setAW(50)">50kg</button>
+      <button class="age-btn" onclick="setAW(60)">60kg</button>
+      <button class="age-btn" onclick="setAW(70)">70kg</button>
+      <button class="age-btn" onclick="setAW(80)">80kg</button>
+      <button class="age-btn" onclick="setAW(90)">90kg</button>
+    </div>
+  </div>
+  <div class="adult-layout">
+    <div class="drug-sidebar" id="drugSidebar"></div>
+    <div id="drugContent"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     탭 3: 소아 계산기
+════════════════════════════════════════════════ -->
+<div id="tab-peds" class="panel">
+  <div class="weight-row">
+    <label>체중</label>
+    <input type="number" id="pedsWeight" value="15" min="1" max="80" oninput="updatePeds()">
+    <span>kg</span>
+    <div class="age-btns">
+      <button class="age-btn" onclick="setPW(3.5,'신생아')">신생아</button>
+      <button class="age-btn" onclick="setPW(10,'1세')">1세</button>
+      <button class="age-btn" onclick="setPW(14,'3세')">3세</button>
+      <button class="age-btn" onclick="setPW(18,'5세')">5세</button>
+      <button class="age-btn" onclick="setPW(22,'7세')">7세</button>
+      <button class="age-btn" onclick="setPW(32,'10세')">10세</button>
+    </div>
+  </div>
+  <div class="sub-tabs">
+    <div class="sub-tab active" onclick="showSub('emerg')">🚨 응급</div>
+    <div class="sub-tab" onclick="showSub('drugs')">💊 약물</div>
+    <div class="sub-tab" onclick="showSub('fluids')">💧 수액</div>
+  </div>
+  <div id="sub-emerg" class="sub-panel active"></div>
+  <div id="sub-drugs" class="sub-panel"></div>
+  <div id="sub-fluids" class="sub-panel"></div>
+</div>
+
+<div id="tab-abx" class="panel">
+  <div style="font-size:13px;color:#8b949e;margin-bottom:12px">항생제를 선택하면 같은 라인 <b>병용 가능 여부</b>를 보여줍니다. (출처: 병용투여 가능 항생제.pptx)</div>
+  <div class="cat-chips" id="abxChips"></div>
+  <div id="abxResult"></div>
+</div>
+
+<div id="tab-anti" class="panel">
+  <div id="antiResult"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// 데이터
+// ════════════════════════════════════════════════
+
+// ── 통합약물 85종 (약물_통합정리_초안_v1.xlsx) ──
+const DRUG_DB = [
+  {name:"2% Lidocaine",kr:"리도카인 2%",cat:"심혈관계",full:"2% Lidocaine (400mg/20ml vial)",stock:"",bolus:"(믹스칸 참조)",dil:"D5W 80",push:"",mix:"Bolus : 50~100mg(2.5~5cc) IV push (1시간 동안 max 300mg) \n① CIV : 1ⓥ + ★ D5W 80ml (4mg/ml)\n → 1~4mg/min in 70kg adult (1mg/min = 15cc/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압 등 주의 관찰 필요\n(점적주사 시 빈번한 혈압 측정 감시 필요)  ◾효능: 심실성부정맥 치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Adenosin",kr:"아데노신",cat:"심혈관계",full:"Adenosin (6mg/2ml vial)  ★ Infusion : 희석불가",stock:"O",bolus:"(믹스칸 참조)",dil:"원액 (NS 20 flush)",push:"⚡빠르게 + NS 20cc flush",mix:"Bolus : 반감기가 짦아 빠르게 투약 후 \n        ★ N/S 20ml flusing 필수 \n말초 투약(상완) : 6mg(1차) → 12mg (2차), \n                → 12mg (3차)\n중심정맥 투약 or 심장이식환자 : 3mg → 6mg \n                               → 6mg",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"E-cart 및 주치의 bedside keep 필수\n심전도 모니터 보면서 투여, 투여 전후 EKG print\nIV 확보시 상완(best), 최소 상지(upper extremity)\nN/S 20ml flusing 필수  ◾효능: 발작심실상성빈맥치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Amiodarone HCI",kr:"아미오다론",cat:"심혈관계",full:"Amiodarone HCI (150mg/3ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"D5W 20",push:"⚡빠르게 (D5W 20cc·CPR)",mix:"★ CPR : V.fib, p-VT 시 빠른 Bolus투여\n① 1차 : 300mg + ★ D5W 20ml IV push\n② 2차 : 150mg + ★ D5W 20ml IV push",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"서맥, QT, prolongation 등 주의 관찰 필요\n★ Only D5W  ◾효능: 재발성중증부정맥 치료\n(Heart 환자 A.fib일 때)",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Atropine sulfate",kr:"아트로핀",cat:"심혈관계",full:"Atropine sulfate (0.5mg/1ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"원액(희석불가)",push:"⚡빠르게 (원액)",mix:"Bolus : 1mg(2@) IV push\nInfusion : 희석불가",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"최대 3회(3mg) 가능  ◾효능: 서맥치료\n(부교감신경차단제)",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Digoxin",kr:"디곡신",cat:"심혈관계",full:"Digoxin",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 4배",push:"NS 20cc / 5분",mix:"Bolus 투여가능\nInfusion : 2A + 8ml(4배 이상)",fluid:"N/S, D5W",rate:"Bolus : 5분 이상\nInfusion : 10-20분",caution:"기타 투여경로 : IM",stab:"정보 없음",src:"약물간호.xlsx"},
+  {name:"Diltiazem",kr:"딜티아젬",cat:"심혈관계",full:"Diltiazem (50mg vial)",stock:"O",bolus:"(믹스칸 참조)",dil:"NS 50 / 100",push:"",mix:"① Loading : 5~10mg + 50ml, 3분 이상\n② CIV : 1ⓥ + 50ml 또는 2ⓥ + 100ml (1mg/ml)     → 3~15mg/hr",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압, 서맥 등 주의 관찰 필요\nAmiodarone, Herben 병용 시 AVB, \n서맥위험 증가  ◾효능: (상심실성) 빈맥성부정맥치료\n(Lung 환자 A.fib일 때),\n불안정협심증, 혈압강하",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Dobutamine",kr:"도부타민",cat:"심혈관계",full:"Dobutamine (500mg/250cc bag = premix) (250mg/5cc amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"D5W 120 (or premix)",push:"",mix:"① CIV : premix 제제 또는 250mg 1@ + \n   ★ D5W 120ml (2mg/ml) → 1~5mcg/kg/min",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"★ Only D5W  ◾효능: 심부전환자 심근수축력 증가",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Dopamine",kr:"도파민",cat:"심혈관계",full:"Dopamine (400mg/200cc bag = premix) (200mg/5cc amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"D5W 95 (or premix)",push:"",mix:"① CIV :premix 제제 또는 200mg 1@ + \n   ★ D5W 95ml (2mg/ml)  → 1~5mcg/kg/min",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"3mcg/kg/min 이하는 혈압상승효과 적음\n★ Only D5W  ◾효능: 내독성패혈증, shock, \n저혈압, 심근경색치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Epinephrine HCI",kr:"에피네프린",cat:"심혈관계",full:"Epinephrine HCI (1mg/1ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"NS 100(CIV) / 원액(CPR)",push:"",mix:"Bolus : ★ CPR – 1@ IV push, 4분마다\n      : ☆ 준CPR 상황, 처방에 따라 1@ + \n        N/S 9ml (100mcg/ml) → 1cc IV push\n① CIV : 1@ + N/S 99ml (10mcg/ml)\n   → 0.05~2mcg/kg/min",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"CPR 아닌 상황(ex. ROSC 직후)에서 \nEpi 원액 투여 금기  ◾효능: 강심제, 혈관수축제\n(교감신경흥분제)",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Esmolol HCI",kr:"에스몰롤",cat:"심혈관계",full:"Esmolol HCI (100mg/10ml vial, ★CIV)",stock:"",bolus:"(믹스칸 참조)",dil:"NS/D5W 50(loading)·240(CIV)",push:"",mix:"① Loading : 500mcg/kg에 해당하는 용량 + 50ml, \n   1분 이상 (★ 100mg/10cc 제형 사용)\n② CIV : ★2.5g 1ⓥ + 240ml (10mg/ml)\n   → 50~200mcg/kg/min (max 300mcg/kg/min)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압, 서맥 주의 관찰 필요\n병용금기 : 탄산수소나트륨\n★100mg/10ml과 2.5mg/10ml 제형 구분\n-2.5mg 제형은 고농축으로 반드시 240ml에 \n 희석사용  ◾효능: 심방세동/조동 심실을 조절,\n상실성빈맥, β-blocker",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Heparin",kr:"헤파린",cat:"심혈관계",full:"Heparin (25000unit/5ml vial)",stock:"O",bolus:"(믹스칸 참조)",dil:"NS/D5W 500",push:"",mix:"① Loading : 60units/kg에 해당하는 용량\n             (max 4000units) IV push\n② CIV : ★ 25000unit 1ⓥ + 495ml (50unit/ml)\n         → 10~12unit/kg/hr로 시작",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"aPTT f/u 하면서 결과에 따라 regimen 증/감량\n* Antidote : protamine  ◾효능: 혈전증, 색전성 심방세동\n예방 및 치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Isoket",kr:"이소켓(이소소르비드)",cat:"심혈관계",full:"Isoket (10mg/10ml vial)",stock:"",bolus:"(믹스칸 참조)",dil:"NS 80",push:"",mix:"① CIV : 2ⓥ + 80ml (0.2mg/ml)\n   → 2~7mg/hr (max 10mg/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"◾효능: 급성신부전, 협심증 치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Isoproterenol HCI",kr:"이소프로테레놀",cat:"심혈관계",full:"Isoproterenol HCI (0.2mg/1ml amp)",stock:"",bolus:"(믹스칸 참조)",dil:"D5W 200",push:"",mix:"Bolus : 1@ + ★D5W 10ml 천천히 IV push\n① CIV : 4@ + ★D5W 196ml (4mcg/ml)\n         → 0.5~5mcg/min",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"Bolus 시 주입시간에 대한 정보없음\n★ Only D5W  ◾효능: 급성심부전, 서맥 치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Labetalol HCI",kr:"라베탈롤",cat:"심혈관계",full:"Labetalol HCI (100mg/20ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"D5W 80 / 160",push:"NS 20cc / 1분",mix:"Bolus : 10~50mg(=2~10ml) IV push, 1분 이상\n        (필요시 5분마다 반복투여 가능, max 200mg)\n① CIV : 1@ + ★ D5W 80ml  또는 2@ + ★ D5W 160ml (1mg/ml) → 15~120mg/hr",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압 등 주의 관찰 필요\nAmiodarone, Herben 병용시 AVB, 서맥위험증가  ◾효능: 혈압강하제\nβ-adrenergic blocker\n(α-receptro blocking 겸비)",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Nicardipine",kr:"니카르디핀",cat:"심혈관계",full:"Nicardipine (10mg/10ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"NS 80 / 200",push:"NS 20cc / 1~2분",mix:"Bolus : 0.5~2mg (=0.5~2cc) IV push\n① CIV : 2@ + 80ml 또는 5@ + 200ml (0.2mg/ml)\n        → 1~5mg/hr (1mg = 5cc/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"빈맥, 저혈압 등 주의 관찰 필요\n★ 12시간마다 IV site 교환  ◾효능: 혈압강하제\nCa. channel blocker",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Nitroglycerin",kr:"니트로글리세린",cat:"심혈관계",full:"Nitroglycerin (10mg/10ml amp) (50mg/50ml vial)",stock:"O",bolus:"(믹스칸 참조)",dil:"NS 80 / 200",push:"",mix:"① CIV : 10mg 2@ + 80ml 또는 50mg 1ⓥ + \n         200ml (0.2mg/ml) \n      → 5~100mcg/min (10mcg/min = 3cc/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"non PVC bag, line 사용  ◾효능: 울혈성심부전, 협심증 치료\n(혈관평활근 이완)",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Nitroprusside sodium",kr:"니트로프루시드",cat:"심혈관계",full:"Nitroprusside sodium (50mg/2ml vial)",stock:"",bolus:"(믹스칸 참조)",dil:"D5W 250",push:"",mix:"① CIV : 1ⓥ + ★D5W 248ml (0.2mg/ml)\n   → 0.5~10mcg/kg/min",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압 등 주의 관찰 필요\n★ Only D5W  ◾효능: 혈압강하제",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Norepinephrine",kr:"노르에피네프린",cat:"심혈관계",full:"Norepinephrine (4mg/4ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"D5W 500 (or 100)",push:"",mix:"① CIV : 2@ + ★D5W 492ml(16mcg/ml)\n(1@ + ★D5W 96ml (40mcg/ml)←0.5~32mcg/min\n(4mcg/min = 15ml/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"★ Only D5W  ◾효능: 승압제, Shock의 치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Sigmart",kr:"시그마트(니코란딜)",cat:"심혈관계",full:"Sigmart (48mg/vial)",stock:"",bolus:"(믹스칸 참조)",dil:"NS 200",push:"",mix:"① CIV : 1ⓥ + 200ml (0.24mg/ml)\n     → 2mg/hr로 시작 (max 6mg/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압 등 주의 관찰 필요  ◾효능: 불안정성 협심증",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Terlipressin",kr:"테르리프레신",cat:"심혈관계",full:"Terlipressin",stock:"O",bolus:"✅ 가능(IV)",dil:"원액 (NS 소량)",push:"",mix:"원액 IV 또는 1mg+N/S 소량. 체중별 초회량: <50kg 1mg / 50~70kg 1.5mg / >70kg 2mg",fluid:"N/S",rate:"초회 1~2mg IV → 이후 1mg q4~6h. (또는 1mg bolus 후 4mg/24hr CIV)",caution:"식도정맥류 출혈. 말초허혈·서맥·저나트륨혈증 관찰",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Vasopressin",kr:"바소프레신",cat:"심혈관계",full:"Vasopressin (냉장 보관) (20unit/1ml amp)",stock:"O",bolus:"(믹스칸 참조)",dil:"D5W 100",push:"",mix:"Bolus : 식도출혈시 1@ + \n     ★ D5W 100~200ml, 10분 이상\n① CIV : 1@ + ★D5W 99ml (0.2unit/cc)\n     → 0.01~0.03 unit/min으로 시작 \n        (0.01unit/min = 3cc/hr)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"저혈압, 서맥 등의 주의 관찰 필요\n★ Only D5W  ◾효능: 혈관수축, 승압제. Shock,\n요붕증 치료",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Verapamil",kr:"베라파밀",cat:"심혈관계",full:"Verapamil (5mg/2ml amp)",stock:"",bolus:"(믹스칸 참조)",dil:"NS 8 (총10)",push:"NS 20cc / 2분",mix:"Bolus : 1@ + N/S 8ml (총 10ml 되도록) IV push,\n2분 이상 (Syringe로 천천히 주사, dropping 금지)",fluid:"",rate:"(믹스/투여 칸 참조)",caution:"심전도  & 혈압 모니터 보면서 투여\n★투여속도 주의 : 빠른 주입 시 cardiac arrest \n위험, 느린 주입 시 약물 안정성 저하  ◾효능: 허혈성심질환, 부정맥,\n고혈압 치료\nCa.channel blocker",stab:"",src:"순환기계약물투여방법.docx"},
+  {name:"Dexmedetomidine",kr:"덱스메데토미딘",cat:"진정·진통(RSI)",full:"Dexmedetomidine",stock:"O",bolus:"🚫 급속 bolus 금지",dil:"NS 50 premix(4mcg/mL)",push:"",mix:"Premix 4mcg/mL 즉시 사용 (앰플형은 2mL+N/S 48mL=4mcg/mL)",fluid:"N/S",rate:"Loading 1mcg/kg over 10분 → 유지 0.2~0.7mcg/kg/hr 적정. 24시간 초과 사용 권장 안함",caution:"서맥·저혈압. 고령·간장애 감량",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Diazepam",kr:"디아제팜",cat:"진정·진통(RSI)",full:"Diazepam",stock:"O",bolus:"✅ 가능(느리게)",dil:"원액",push:"⚠️원액(희석X) / ≤5mg분",mix:"원액 사용(희석 시 침전 가능 — 제조사는 희석 비권장). 점적 불가피 시 ≤0.25mg/mL",fluid:"큰 정맥에 직접(희석 시 N/S·D5W)",rate:"≤5mg/min(5mg당 1분 이상). 경련: 5~10mg, 10~15분마다 반복, max 30mg",caution:"큰 정맥 사용(혈전위험), 손등·손목정맥 금지. 호흡억제. 역전제 Flumazenil",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Etomidate",kr:"에토미데이트",cat:"진정·진통(RSI)",full:"Etomidate",stock:"O",bolus:"✅ 가능",dil:"원액",push:"",mix:"원액 IV (희석 불필요)",fluid:"원액",rate:"0.3mg/kg(범위 0.2~0.6) IV over 30~60초. 발현<1분·지속 3~5분. 불안정 시 0.15mg/kg",caution:"단회 투여도 부신피질 억제(cortisol↓ 6~8시간). 주사부위 통증→큰 정맥",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Fentanyl",kr:"펜타닐",cat:"진정·진통(RSI)",full:"Fentanyl",stock:"O",bolus:"✅ 가능(느리게)",dil:"NS 희석(10mcg/mL)",push:"",mix:"50mcg/mL → N/S로 10mcg/mL 희석",fluid:"N/S",rate:"진통 25~100mcg(1~2mcg/kg) over 1~2분(희석 시 30초). CIV 25~200mcg/hr(1~2mcg/kg/hr)",caution:"morphine 100배 강도. 급속주입 시 흉벽경직. benzo·고령 병용 시 감량 [마약]",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ketamine",kr:"케타민",cat:"진정·진통(RSI)",full:"Ketamine",stock:"O",bolus:"⚠️ 원액 IV push 금지",dil:"NS/D5W 1:1 희석",push:"",mix:"등량의 N/S·WFI·D5W로 희석 (50mg/mL 원액 IV 금기)",fluid:"N/S, D5W, WFI",rate:"유도 1~2mg/kg IV over 60초(불안정 시 1mg/kg). 발현 ~30초·지속 5~10분",caution:">2mg/kg 부작용↑(저혈압·후두경련·서맥). 분비물↑",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Lorazepam",kr:"로라제팜",cat:"진정·진통(RSI)",full:"Lorazepam",stock:"O",bolus:"✅ 가능",dil:"NS 1:1 희석",push:"⚠️NS 1:1만 / 2~5분",mix:"Bolus 투여가능 : 1A + 1ml(부피비로 1:1 희석)\n                       침전주의 : 0.08-1.0mg/ml에서 침전생성 보고됨\nInfusion :  정보없음",fluid:"N/S, WFI",rate:"Bolus : 2-5분 이상(2mg/min 이하)\nInfusion : CIV 투여시, 0.01-0.1mg/kr/hr",caution:"기타 투여경로 : IM\n점착성이 있어 투여 전 N/S로 1:1 희석\n-소정맥이나 동맥내에 주사하지 않도록 주의",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Midazolam",kr:"미다졸람",cat:"진정·진통(RSI)",full:"Midazolam",stock:"O",bolus:"✅ 가능(천천히 적정)",dil:"NS 희석(1mg/mL)",push:"NS 20cc / ≥2분",mix:"진정 1mg/mL 권장. CIV는 0.5mg/mL로 희석",fluid:"N/S, D5W",rate:"진정 초회 1~2.5mg over ≥2분, 2분 간격 1mg 추가(보통 max 6mg). 고령·마약 병용 감량",caution:"호흡억제. 역전제 Flumazenil [향정]",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Morphine sulfate",kr:"모르핀",cat:"진정·진통(RSI)",full:"Morphine sulfate",stock:"O",bolus:"✅ 가능",dil:"NS 50 / 100",push:"",mix:"Bolus 투여가능\nInfusion : 10mg, 30mg 1VI + 50ml\n              100mg 1VI + 100ml(1mg/ml)",fluid:"WFI, D5W, NS",rate:"Bolus : 4-10mg, 4-5분 이상\nCIV 투여 시 최대 10mg/hr",caution:"경막외 또는 수막강 내 투여 금지",stab:"0.5-30mg/ml 범윙에서 희석 시 실온에서 14일간 안정",src:"약물간호.xlsx"},
+  {name:"Pethidine",kr:"페티딘",cat:"진정·진통(RSI)",full:"Pethidine",stock:"O",bolus:"✅ 가능",dil:"NS 희석(1mg/mL)",push:"",mix:"Bolus 투여가능(10mg/1ml)\nInfusion : 1mg/ml(Continous infusion)",fluid:"N/S, D5W",rate:"Bolus : 천천히 희석하여 투여",caution:"급속 정맥주사 시 호흡억제, 혈압강하, 순환장애, 심정지 등의 증상이 나타날 수 있음",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Remifentanil",kr:"레미펜타닐",cat:"진정·진통(RSI)",full:"Remifentanil",stock:"O",bolus:"✅ 가능",dil:"NS 100",push:"",mix:"Bolus 투여가능(마취유도 시)\nInfusion : 5mg + 100ml(50mcg/ml)",fluid:"WFI, D5W, D5NS, N/S, Half Saline",rate:"1. 마취유도 시\nBolus : 1mcg/kg로 30초 이상\nInfusion : 0.5-1mcg/kg/min 8-10분 IV infusion 후 기관내삽관\n\n2. 마취유지 시\nBolus : 마취가 충분하지 않으면 2-5분마다 추가로 IV Bolus 단회 투여 가능\nInfusion : 2-5분마다 25-100% 증가범위로 상향조절 또는 하향조절 가능\n\n3. 자발적 환기 마취\nBolus : 권장하지 않음\nInfusion : 권장투여속도 0.04mcg/kg/min(0.025-0.1mcg/kg/min 범위로 투여)",caution:"젖산 함유 수액(ex. Lactated Ringer sol.) 사용 불가, 혈액제제와 같은 정맥주입관 투여 권장되지 않음, 혈액제제 중의 성분이 이 약을 분해 및 비활성화시킴",stab:"실온 24시간",src:"약물간호.xlsx"},
+  {name:"Rocuronium",kr:"로쿠로니움",cat:"진정·진통(RSI)",full:"Rocuronium",stock:"O",bolus:"✅ 가능(RSI IV push)",dil:"원액",push:"",mix:"원액 IV (필요 시 N/S·D5W)",fluid:"원액",rate:"RSI 0.9~1.2mg/kg IV push(60초 내 삽관조건, 발현 ~55초, 지속 30~70분). 일반 0.6mg/kg",caution:"근이완제 — 진정 후 투여, 기도확보·인공호흡 준비 필수. 역전제 Sugammadex(입고목록 미포함, 확인 필요)",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Acetaminophen",kr:"아세트아미노펜",cat:"진통·해열",full:"Acetaminophen",stock:"O",bolus:"🚫 불가(15분 점적)",dil:"Premix(그대로)",push:"",mix:"Premix 그대로(추가 희석 불필요, ≥50kg는 1g vial 직접 주입)",fluid:"premix(10mg/mL)",rate:"1g q6h 또는 650mg q4h, 15분 IV infusion. max 4g/day(<50kg 체중당)",caution:"다른 약물 혼합 금지. 모든 경로 합산 일일한도 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Dexketoprofen",kr:"덱스케토프로펜",cat:"진통·해열",full:"Dexketoprofen",stock:"",bolus:"🚫 불가",dil:"NS 100",push:"",mix:"Bolus 투여불가\nInfusion : 50mg + N/S 100ml",fluid:"N/S",rate:"Infusion : 30분",caution:"투약 전후 N/S flushing\n기타 투여경로 : IM",stab:"25℃에서 차광할 경우 24시간 안정",src:"약물간호.xlsx"},
+  {name:"Ibuprofen",kr:"이부프로펜",cat:"진통·해열",full:"Ibuprofen",stock:"O",bolus:"🚫 불가(반드시 희석)",dil:"NS/D5W 100",push:"",mix:"4mL(400mg)+N/S·D5W·LR ≥100mL → ≤4mg/mL",fluid:"N/S, D5W, LR",rate:"400~800mg over 30분 q6h. 해열 400mg",caution:"미희석 투여 시 용혈. 충분한 수분 유지",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ketorolac",kr:"케토롤락",cat:"진통·해열",full:"Ketorolac",stock:"O",bolus:"⚠️ IV bolus ≥15초",dil:"원액",push:"NS 20cc / ≥15초",mix:"원액(희석 불필요)",fluid:"원액",rate:"30mg q6h, max 120mg/day(IV bolus ≥15초). 느린 점적 15~30분도 가능",caution:"총 사용 5일 이내. NSAID — 신장·위장출혈·고령 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Propacetamol",kr:"프로파세타몰",cat:"진통·해열",full:"Propacetamol",stock:"O",bolus:"✅ 가능",dil:"NS 50~125",push:"NS 20cc / 1~2분",mix:"Bolus 투여가능 : 1VI + WFI 5ml\nInfusion : 1VI + 50-125ml",fluid:"N/S, D5W",rate:"Bolus : 1-2분\nInfusion : 15분",caution:"기타 투여경로 : IM",stab:"2시간 이내 사용",src:"약물간호.xlsx"},
+  {name:"Tramadol",kr:"트라마돌",cat:"진통·해열",full:"Tramadol",stock:"O",bolus:"✅ 가능",dil:"원액(bolus)",push:"NS 20cc / 3~5분",mix:"Bolus 투여가능\nInfusion 정보 없음(mas dose : 400mg/day)",fluid:"N/S, D5W",rate:"Bolus : 3-5분\nInfusion 정보 없음",caution:"기타 투여경로 : IM",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Calcium gluconate",kr:"칼슘글루코네이트",cat:"전해질",full:"Calcium gluconate",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 50~100",push:"",mix:"Bolus 투여가능 : CPR 상황에서만\nInfusion : 1A + 50-100ml(10-50mg/ml)",fluid:"N/S, D5W",rate:"Bolus : CPR, VF, pVT 상황에서만 빠른 Bolus 투여\nInfusion : over 10분 : 10-50mg/ml",caution:"탄산수소나트륨과 배합금지, IM 불가",stab:"희석 후 즉시사용",src:"약물간호.xlsx"},
+  {name:"Magnesium sulfate",kr:"마그네슘설페이트",cat:"전해질",full:"Magnesium sulfate",stock:"O",bolus:"",dil:"NS/D5W 50",push:"",mix:"Bolus  투여가능 : CPR 상황에서만\nInfusion : 1VI + 50ml(10% 이하 농도)",fluid:"N/S, D5W",rate:"Bolus : 1분 이상(심정지 상황에서 사용 시)\nInfusion : 150mg/min 이하",caution:"IM가능",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Phosten",kr:"포스텐(인산염)",cat:"전해질",full:"Phosten",stock:"O",bolus:"🚫 불가",dil:"말초 250 / 중심 100",push:"",mix:"Bolus 투여불가\nInfusion 1) 말초정맥 1A + 최소 250ml(K 최대 80mEq/L)\n            2) 중심정맥 1A + 최소 100ml(K 최대 200mEq/L)",fluid:"TPN, 50% Dextrose, N/S, D5W",rate:"Bolus 투여 불가\nInfusion : 칼륨으로써 최대 25mEq/hr",caution:"",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Potassium chloride",kr:"염화칼륨(KCl)",cat:"전해질",full:"Potassium chloride",stock:"O",bolus:"🚫 불가",dil:"말초 500 / 중심 200",push:"",mix:"Bolus 투여불가\nInfusion 1) 말초정맥 1A + 최소 500ml(최대 80mEq/L)\n            2) 중심정맥 1A + 최소 200ml(최대 200mEq/L)\n               → 최대용량 100-300mEq/day",fluid:"N/S, D5W, Hartman sol., TPN",rate:"Bolus 투여 불가\nInfusion : 칼륨으로써 최대 25mEq/hr",caution:"반드시 희석 후 사용",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Ampicillin",kr:"암피실린",cat:"항생제·항진균",full:"Ampicillin",stock:"O",bolus:"✅ 가능(IV push 3~5분)",dil:"NS 100",push:"",mix:"IV주사: 500mg+WFI 5mL(100mg/mL). 점적: +N/S 100mL(≤30mg/mL)",fluid:"N/S(포도당서 불안정)",rate:"IV push 3~5분(빠르면 경련 위험). 또는 점적",caution:"조제 후 1시간 내 투여(역가↓). aminoglycoside와 동시·혼합 금지",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Cefazolin",kr:"세파졸린",cat:"항생제·항진균",full:"Cefazolin",stock:"O",bolus:"🚫 IV bolus 불가(점적)",dil:"NS/D5W 50~100",push:"",mix:"1g+WFI 2.5mL(330mg/mL) → N/S·D5W 50~100mL",fluid:"N/S, D5W",rate:"50~100mL 점적 over 30분. 1~2g q8h",caution:"세팔로스포린 과민 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ceftazidime",kr:"세프타지딤",cat:"항생제·항진균",full:"Ceftazidime",stock:"O",bolus:"✅ 가능(IV 3~5분) 또는 점적",dil:"NS/D5W 50~100",push:"",mix:"IV주사: 1g+WFI 10mL(용해 시 CO2 발생, 1~2분 후 맑아짐). 점적: +50~100mL",fluid:"WFI, N/S, D5W",rate:"IV push 3~5분 또는 점적 20~30분. 1g q8~12h",caution:"세팔로스포린 과민 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ertapenem",kr:"어타페넴",cat:"항생제·항진균",full:"Ertapenem",stock:"O",bolus:"🚫 불가(30분 점적)",dil:"NS 50 (D5W금지)",push:"",mix:"1g+N/S 10mL 용해 → N/S 50mL (★포도당 사용 금지)",fluid:"N/S only (D5W 불가)",rate:"30분 IV infusion. 다른 약물 혼합·동시투여 금지",caution:"조제 후 상온 6시간/냉장 24시간. carbapenem",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Flomoxef",kr:"플로목세프",cat:"항생제·항진균",full:"Flomoxef",stock:"O",bolus:"✅ 가능(IV) 또는 점적",dil:"NS/D5W (확인필요)",push:"",mix:"IV주사 또는 점적 (일반 cephem 기준 N/S·D5W에 용해)",fluid:"N/S, D5W",rate:"1일 1~2g 2회 분할 IV(중증 2~4회 분할)",caution:"⚠️ 국내 자료 제한적 — 첨부문서 확인 필수. 세팔로스포린계 과민 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Gentamicin",kr:"겐타마이신",cat:"항생제·항진균",full:"Gentamicin",stock:"O",bolus:"⚠️ 느린 bolus(2~3분) 가능 / 점적 권장",dil:"NS/D5W 50~200",push:"",mix:"1회량 + N/S·D5W 50~200mL",fluid:"N/S, D5W",rate:"점적 30분~2시간 (또는 느린 bolus 2~3분). 80mg q8h",caution:"다른 약물(특히 β-lactam)과 혼합 금지. peak/trough 모니터, 신독성·이독성",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Moxifloxacin",kr:"목시플록사신",cat:"항생제·항진균",full:"Moxifloxacin",stock:"O",bolus:"🚫 불가(60분 점적)",dil:"Premix(그대로)",push:"",mix:"Premix 그대로(추가·혼합 금지)",fluid:"premix(ready-to-use)",rate:"400mg over 60분 q24h. 빠른/볼루스 주입 금지",caution:"같은 라인 다른약 혼합 금지(전후 flushing). QT 연장 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ambroxol",kr:"암브록솔",cat:"소화기·항구토",full:"Ambroxol",stock:"O",bolus:"✅ 가능(느린 IV ≥5분)",dil:"원액 / NS·D5W 점적",push:"",mix:"원액 느린 IV 또는 포도당·생리식염 점적",fluid:"N/S, D5W",rate:"15mg 1일 2~3회 느린 IV(≥5분), 중증 30mg",caution:"거담제",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Esomeprazole",kr:"에소메프라졸",cat:"소화기·항구토",full:"Esomeprazole",stock:"O",bolus:"✅ 가능",dil:"NS 50 / 100",push:"NS 20cc / 3분",mix:"Bolus 투여가능 : 1VI + 5ml\nInfusion  1) 1회 투약 1VI + 50ml(0.8mg/ml)\n             2) Loading 2VI + 100ml\n             3) CIV 2VI + 80ml",fluid:"N/S",rate:"Bolus : 3분 이상\nInfusion 1) 1회 투약 10-30분\n            2) Loading 80mg, 30분 이상\n            3)CIV 8mg/hr",caution:"단독투여, only N/S\n투약전후 N/S flushing",stab:"N/S 희석 시 12시간 안정하나 \n가급적 즉시 사용",src:"약물간호.xlsx"},
+  {name:"Famotidine",kr:"파모티딘",cat:"소화기·항구토",full:"Famotidine",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 100",push:"NS 20cc / 2분",mix:"Bolus 투여가능 : 1VI + 5-10ml\nInfusion : 1VI + 100ml(20mg/100ml)",fluid:"N/S, D5W",rate:"Bolus : 2분 이상\nInfusion : 15-30분",caution:"기타 투여경로 : IM",stab:"실온 또는 냉장에서 48시간",src:"약물간호.xlsx"},
+  {name:"Granisetron",kr:"그라니세트론",cat:"소화기·항구토",full:"Granisetron",stock:"",bolus:"✅ 가능",dil:"NS 50",push:"NS 20cc / 30초~1분",mix:"Bolus 투여가능 : 1mg 1A + N/S 5ml(1mg/5ml)\nInfusion : 3mg 1A + 50ml(3mg/20-50ml)",fluid:"1mg : N/S\n3mg : N/S, D5W, Hartman sol., 10% mannitol",rate:"Bolus : 30초 이상 투여(1mg)\nInfusion : 5분 이상 투여(3mg)",caution:"",stab:"즉시사용 권장",src:"약물간호.xlsx"},
+  {name:"Metoclopramide",kr:"메토클로프라미드",cat:"소화기·항구토",full:"Metoclopramide",stock:"O",bolus:"✅ 가능",dil:"NS 50",push:"NS 20cc / 3분",mix:"Bolus 투여가능 \nInfusion : 1A + N/S 50ml(10mg 이상 투여시 50ml에 희석)",fluid:"N/S",rate:"Bolus : 3분 이상\nInfusion : 15분 이상",caution:"알칼리성주사액 배합금기",stab:"희석 후 실온, 비차광에서 24시간 안정",src:"약물간호.xlsx"},
+  {name:"Ondansetron",kr:"온단세트론",cat:"소화기·항구토",full:"Ondansetron",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 50",push:"NS 20cc / 2~5분",mix:"Bolus 투여가능\nInfusion : 1VI + 50ml",fluid:"N/S, D5W, Ringer sol., 10% mannitol",rate:"Bolus : 30초 이상, 2-5분 이상 권장(16mg 까지)\nInfusion : 15분 이상",caution:"",stab:"냉장(2-8℃)에서 24시간",src:"약물간호.xlsx"},
+  {name:"Palonosetron",kr:"팔로노세트론",cat:"소화기·항구토",full:"Palonosetron",stock:"",bolus:"✅ 가능",dil:"원액(bolus)",push:"",mix:"Bolus 투여가능\nInfusion 희석정보 없음",fluid:"N/S, D5W",rate:"Bolus : 0.075mg 10초 이상\n          0.25mg 30초 이상\nInfusion : 15분 이상(일반적으로 소아)",caution:"단독투여, 투약 전후 N/S flushing",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Pantoprazole",kr:"판토프라졸",cat:"소화기·항구토",full:"Pantoprazole",stock:"O",bolus:"✅ 가능",dil:"NS 100",push:"NS 20cc / 2분",mix:"Bolus 투여가능 : 1VI + N/S 10ml\nInfusion 1) 1회 투약 1VI + 100ml\n            2) Loading 2VI + 100ml\n            3) CIV 2VI + 80ml",fluid:"N/S(Bolus시에는 N/S로만 분말을 녹임), D5W",rate:"Bolus : 2분\nInfusion : 15분 이상",caution:"",stab:"25℃ 이하에서 12시간 내 사용",src:"약물간호.xlsx"},
+  {name:"Tiropramide",kr:"티로프라미드",cat:"소화기·항구토",full:"Tiropramide",stock:"O",bolus:"✅ 가능(IM/IV)",dil:"원액",push:"",mix:"원액",fluid:"원액",rate:"50mg(3mL) IM 또는 IV, 필요 시 1시간 후 반복",caution:"진경제(담도산통·복통·요관통)",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Furosemide",kr:"푸로세미드(라식스)",cat:"이뇨",full:"Furosemide",stock:"O",bolus:"✅ 가능(느리게)",dil:"원액 / NS 50(고용량)",push:"",mix:"원액(10mg/mL). 고용량은 N/S 등 50mL(1mg/mL)",fluid:"N/S(산성환경서 침전 — N/S 선호)",rate:"20~40mg 느린 IV 1~2분(≤20mg/min). >120mg는 ≤4mg/min(이독성)",caution:"빠른 투여 시 이독성. 광차단",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Mannitol 20%",kr:"만니톨",cat:"이뇨",full:"Mannitol 20%",stock:"O",bolus:"🚫 불가(점적)",dil:"원액(필터)",push:"",mix:"원액(20%) — ★투여세트에 필터 필수",fluid:"원액",rate:"뇌압/뇌부종 0.25~0.5g/kg over 20분, q6h(max 2g/kg/day)",caution:"필터 사용. 혈청삼투압 모니터(>320mOsm 중단). 저온 시 결정석출→가온 용해",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Acetylcystein",kr:"아세틸시스테인",cat:"해독·기타",full:"Acetylcystein",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 50",push:"",mix:"Bolus 투여가능(900mg 까지)\nInfusion : 1VI + 50ml (0.1-0.75mg/kg/ml)",fluid:"N/S, D5W",rate:"Bolus : 5분 이상\nInfusion : 30분 이상(16시간까지)",caution:"",stab:"실온 24시간",src:"약물간호.xlsx"},
+  {name:"Albumin 20%",kr:"알부민",cat:"해독·기타",full:"Albumin 20%",stock:"O",bolus:"🚫 불가(점적)",dil:"원액",push:"",mix:"원액(20%)",fluid:"원액",rate:"저알부민혈증: 1~2mL/min(최대 ≤4mL/min). 용량은 임상상태에 따라",caution:"용량과부하·폐부종 주의. 혈액제제",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Deferoxamine mesylate",kr:"데페록사민",cat:"해독·기타",full:"Deferoxamine mesylate",stock:"",bolus:"🚫 불가",dil:"NS/D5W 1L",push:"",mix:"Bolus 투여불가\nInfusion : 8VI + WFI(분말 녹일 때) + 1000ml(1-8mg/ml)",fluid:"분말 희석 시 WFI\n추가 희석 N/S, D5W",rate:"Infusion : 15mg/kg/hr 이하",caution:"기타 투여경로 : SC, IM",stab:"실온(23℃이하) 최대 24시간",src:"약물간호.xlsx"},
+  {name:"Flumazenil",kr:"플루마제닐",cat:"해독·기타",full:"Flumazenil",stock:"O",bolus:"✅ 가능(소량 분할)",dil:"원액",push:"⚠️원액 0.2mg/15초 분할",mix:"원액(0.1mg/mL) — 필요 시 N/S·D5W 희석",fluid:"원액 / N/S·D5W",rate:"초회 0.2mg over 15초 → 1분 간격 0.2mg 반복, max 1mg(과량 3~5mg). ★단회 bolus 금지(분할)",caution:"benzo 의존·경련환자 경련 유발 주의. 재진정 관찰(반감기 짧음)",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Insulin",kr:"인슐린(RI)",cat:"해독·기타",full:"Insulin (RI)",stock:"O",bolus:"✅ 가능(고K혈증)",dil:"50%DW 50 (고K)",push:"",mix:"고K혈증: RI 10unit + 50%DW 50mL(포도당 25g). CIV는 N/S에 희석",fluid:"N/S(CIV) / 고K혈증은 포도당과 동시",rate:"고K혈증 10unit IV + 포도당 over 15~30분. 효과 30분~피크 60분",caution:"★포도당 없이 단독투여 금지(저혈당). 혈당 4~6시간 모니터",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"L-ornithine-L-aspartate",kr:"엘오르니틴(헤파메르츠)",cat:"해독·기타",full:"L-ornithine-L-aspartate",stock:"O",bolus:"🚫 불가(점적)",dil:"D5W 250",push:"",mix:"1일 최대 20g(4A) + D5W 250mL, 4시간 점적 (혼수 시 24시간 8A까지)",fluid:"D5W",rate:"점적 (주입속도 ornithine aspartate 5g/hr 이하 권장)",caution:"고암모니아혈증/간성뇌증",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"M.V.H",kr:"종합비타민(MVH)",cat:"해독·기타",full:"M.V.H",stock:"O",bolus:"🚫 불가(수액에 혼합)",dil:"NS/D5W 500~1L",push:"",mix:"1A를 수액(D5W·N/S 500~1000mL)에 혼합",fluid:"D5W, N/S",rate:"점적(수액에 섞어 투여). 단독 IV push 금지",caution:"⚠️ 일반 종합비타민(MVI) 기준 — 제품 첨부문서 확인. 광차단",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Nafamostat",kr:"나파모스타트",cat:"해독·기타",full:"Nafamostat",stock:"O",bolus:"🚫 불가(점적)",dil:"D5W 500 (NS금지)",push:"",mix:"★D5W(5% 포도당)에 용해 — N/S·전해질액엔 침전. 췌장염: 10mg+D5W 500mL",fluid:"D5W only (★N/S 부적합)",rate:"췌장염 1~2시간 점적 1~2회/일. 중증·DIC는 체중당 CIV(문헌상 중증췌장염 240mg/일)",caution:"★N/S·전해질액 용해 금지(침전). 고K혈증·저Na혈증 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Phytonadione",kr:"비타민K1",cat:"해독·기타",full:"Phytonadione",stock:"O",bolus:"⚠️ 권장안함",dil:"NS/D5W 50",push:"",mix:"Bolus 권장하지 않음\nInfusion 1A + 50ml 이상",fluid:"N/S, D5W",rate:"Bolus 권장하지 않음\nInfusion : 20분 이상",caution:"기타 투여경로 : SC, IM",stab:"희석 후 즉시사용",src:"약물간호.xlsx"},
+  {name:"Chlorpheniramine maleate",kr:"클로르페니라민",cat:"기타",full:"Chlorpheniramine maleate",stock:"O",bolus:"✅ 가능",dil:"NS 50",push:"NS 20cc / 1분",mix:"Bolus 투여가능 \nInfusion : 1A + N/S 50ml(권장 농도 정보 없음)",fluid:"N/S",rate:"Bolus : 1분\nInfusion : 정보 없음",caution:"기타 투여경로 : SC, IM",stab:"희석 후 즉시사용\n5℃에서 24시간 안정",src:"약물간호.xlsx"},
+  {name:"Dexamethasone",kr:"덱사메타손",cat:"기타",full:"Dexamethasone",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 50",push:"NS 20cc / 1~4분",mix:"Bolus 투여가능(8mg 까지)\nInfusion : 5A + 50ml(0.5mg/ml)",fluid:"N/S, D5W",rate:"Bolus : 1-4분\nInfusion : 15-30분",caution:"",stab:"24시간 이내 사용",src:"약물간호.xlsx"},
+  {name:"Elcatonin",kr:"엘카토닌",cat:"기타",full:"Elcatonin",stock:"",bolus:"❌ IV불가",dil:"IV 불가(IM)",push:"",mix:"IV 투여불가",fluid:"IV 투여불가",rate:"IV 투여불가",caution:"IM만 가능",stab:"불가",src:"약물간호.xlsx"},
+  {name:"Filgrastim~그라신",kr:"필그라스팀(그라신)",cat:"기타",full:"Filgrastim~그라신",stock:"",bolus:"",dil:"NS/D5W 50",push:"",mix:"Bolus  투여불가, SC 권장\nInfusion : 처방량 + 50ml(5-15mcg/ml)",fluid:"N/S, D5W",rate:"Infusion : 15-30분",caution:"단독투여, SC권고",stab:"D5W에 3mcg/ml로 희석 시 12시간, \n12mg/ml로 희석 시 24시간 인정",src:"약물간호.xlsx"},
+  {name:"Filgrastim~류코스팀",kr:"필그라스팀(류코스팀)",cat:"기타",full:"Filgrastim~류코스팀",stock:"",bolus:"🚫 불가",dil:"D5W 50",push:"",mix:"Bolus 투여불가, SC 권장\nInfusion : 처방량 + D5W 50ml(15mcg/ml 보다 진해야 함)",fluid:"D5W",rate:"",caution:"단독투여, SC권고",stab:"",src:"약물간호.xlsx"},
+  {name:"Fosaprepitant",kr:"포사프레피탄트",cat:"기타",full:"Fosaprepitant",stock:"",bolus:"🚫 불가",dil:"NS 150",push:"",mix:"Bolus 투여불가\nInfusion : 1VI + 150mg(1mg/1ml)",fluid:"N/S",rate:"Infusion : 20-30분",caution:"조제 시 심하게 흔들거나 N/S 급속주입 금기\n벽을 따라 천천히 주입(거품 방지)",stab:"실온(25℃ 이하)에서 24시간 동안 안정",src:"약물간호.xlsx"},
+  {name:"Hydrocortisone",kr:"하이드로코르티손",cat:"기타",full:"Hydrocortisone",stock:"",bolus:"✅ 가능",dil:"NS/D5W 100",push:"NS 20cc / ≥30초",mix:"Bolus 투여가능(100mg 까지) : 1VI + N/S or WFI 2ml\nInfusion 1VI + 100ml(0.1-1mg/ml)",fluid:"N/S, D5W",rate:"Bolus : 30초 이상\nInfusion : 10분 이상",caution:"기타 투여경로 : IM",stab:"즉시사용 권장",src:"약물간호.xlsx"},
+  {name:"Lacosamide",kr:"라코사미드",cat:"기타",full:"Lacosamide",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 100",push:"",mix:"Bolus 투여가능(50-400mg)하나 권장하지 않음\nInfusion : 1VI + 100ml(권장농도 정보 없음, 원액도 사용 가능)",fluid:"N/S, D5W",rate:"Bolus : 권장하지 않음, 80mg/min 이하의 속도\nInfusion : 30-60분",caution:"빠른 속도로 투여시 부작용 증가(서맥 등)",stab:"희석 후 즉시 사용하지 못하는 경우 냉장 보관 및 24시간 이내 사용\n희석 후 상온보관 시 4시간 이내 투여",src:"약물간호.xlsx"},
+  {name:"Levetiracetam",kr:"레베티라세탐",cat:"기타",full:"Levetiracetam",stock:"O",bolus:"⚠️ 권장안함",dil:"NS/D5W 100",push:"",mix:"Bolus 권장하지 않음\nInfusion : 처방량 + 100ml(250-1500mg 까지 100ml에 희석)",fluid:"N/S, D5W",rate:"Bolus : 권장하지 않음, 5분 이상\nInfusion : 15분 이상, CIV 투여시 200-400mg/hr",caution:"",stab:"15-30℃에서 4시간",src:"약물간호.xlsx"},
+  {name:"Methylprednisolone",kr:"메틸프레드니솔론",cat:"기타",full:"Methylprednisolone",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 50",push:"NS 20cc / 5분",mix:"Bolus 투여가능 : 250mg 까지, 적당량 희석\nInfusion : 처방량 + 50ml(적당량 희석)",fluid:"N/S, D5W",rate:"Bolus : 5분 이상\nInfusion : 15-60분(250mg 초과 시 최소 30분 이상에 걸쳐 투여)",caution:"고용량을 급속 투여 시(500mg을 10분 미만) 심정지, 부정맥 등이 나타났다는 보고가 있으니 천천히 투여할 것",stab:"희석 후 48시간 안정(보관조건 정보 없음)",src:"약물간호.xlsx"},
+  {name:"Pamidronate",kr:"파미드로네이트",cat:"기타",full:"Pamidronate",stock:"",bolus:"",dil:"NS 250~500",push:"",mix:"Bolus 정보 부족\nInfusion : 필요량(15-90mg)을 250-500ml에 희석",fluid:"N/S",rate:"2-4시간 이상(최대 20mg/hr), 2-24시간",caution:"칼슘함유액(ex. 링겔, 하트만액)과 혼합불가",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Rasburicase",kr:"라스부리카제",cat:"기타",full:"Rasburicase",stock:"",bolus:"⚠️ 권장안함",dil:"NS 50",push:"",mix:"Bolus 권장하지 않음\nInfusion : 필요량(0.2mg/kg/day) + N/S 50ml",fluid:"N/S",rate:"Bolus : 권장하지 않음\nInfusion : 30분",caution:"희석 후 사용\n단독투여, N/S 외 배합금기\n투약 전후 N/S flushing",stab:"2-8℃에서 24시간 안정",src:"약물간호.xlsx"},
+  {name:"Thiamine",kr:"티아민",cat:"기타",full:"Thiamine",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 100",push:"NS 20cc / 5분",mix:"Bolus 투여가능(100mg 이상 투여 시 가급적 infusion 권고)\nInfusion : 1A + 100ml(최대 200mg 까지)",fluid:"N/S, D5W, Hartman sol.",rate:"Bolus 정보 없음(100mg 미만 투여 시)\nInfusion : 15-30분",caution:"기타 투여경로 : SC, IM\n100mg 이상 투여 시 가급적 Infusion 권고",stab:"정보없음",src:"약물간호.xlsx"},
+  {name:"Tranexamic acid",kr:"트라넥삼산",cat:"기타",full:"Tranexamic acid",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 125",push:"NS 20cc / 3~5분",mix:"Bolus 투여가능\nInfusion : 1A + 125ml",fluid:"N/S, D5W",rate:"Bolus : 3-5분\nInfusion : 100mg/min 속도를 넘기지 말 것",caution:"기타 투여경로 : IM",stab:"실온 4시간",src:"약물간호.xlsx"},
+  {name:"Valproate",kr:"발프로에이트",cat:"기타",full:"Valproate",stock:"O",bolus:"✅ 가능",dil:"NS/D5W 50",push:"NS 20cc / 3~5분",mix:"Bolus 투여가능\nInfusion : 1A + 50ml",fluid:"N/S, D5W",rate:"Bolus : 3-5분\nInfusion : 20mg/min 이하 속도로 투여",caution:"",stab:"15-30℃에서 24시간 안정",src:"약물간호.xlsx"},
+  {name:"Sodium bicarbonate",kr:"탄산수소나트륨(중탄산)",cat:"전해질",full:"Sodium bicarbonate 8.4% 20mEq/20mL",stock:"O",bolus:"✅ 가능(응급)",dil:"원액 / D5W",push:"",mix:"CPR·고K혈증: 1mEq/kg 원액 IV bolus\n비응급: D5W에 희석하여 점적",fluid:"D5W (단독 라인)",rate:"CPR 1mEq/kg IV → 필요시 10분마다 0.5mEq/kg / 비응급 천천히",caution:"★Ca 제제와 침전(별도 라인·전후 flushing). Dopamine·NE·Esmolol 등 카테콜아민 불활성화. Extravasation 주의",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Piperacillin/Tazobactam",kr:"피페라실린/타조박탐(타조신)",cat:"항생제·항진균",full:"Tabactam 4.5g · Tabaxin 2.25g",stock:"O",bolus:"🚫 불가(점적)",dil:"NS/D5W 50~150",push:"",mix:"4.5g + N/S(또는 WFI·D5W) 20mL 용해 → N/S·D5W 50~150mL",fluid:"N/S, D5W (★Lactated Ringer 불가)",rate:"점적 30분 이상 (연장주입 시 4시간)",caution:"★Vancomycin·aminoglycoside와 같은 라인/주사기 혼합 금지(따로 투여). LR 부적합",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ceftriaxone",kr:"세프트리악손",cat:"항생제·항진균",full:"보령 2g · 씨제이 1g · Triaxone 2g kit",stock:"O",bolus:"⚠️ ≤1g 2~4분/점적 권장",dil:"NS/D5W 50~100",push:"",mix:"IV: 1g+WFI 10mL · 2g+WFI 20mL 용해 → N/S·D5W 50~100mL",fluid:"N/S, D5W (★Ca 함유액 금지)",rate:"점적 30분 (또는 ≤1g 느린 IV 2~4분)",caution:"★Ca 함유 수액(Ringer·Hartmann·TPN)과 배합·동일라인 금지 — 침전(신생아 치명적). 라인 flushing",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Cefepime",kr:"세페핌",cat:"항생제·항진균",full:"Maxipime 1g",stock:"O",bolus:"⚠️ 3~5분/점적 권장",dil:"NS/D5W 50~100",push:"",mix:"1g + WFI 10mL 용해 → N/S·D5W 50~100mL",fluid:"N/S, D5W",rate:"점적 30분 (또는 느린 IV 3~5분)",caution:"Vancomycin·aminoglycoside·metronidazole와 같은 라인 금지",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Meropenem",kr:"메로페넴",cat:"항생제·항진균",full:"Mecapem 1g",stock:"O",bolus:"⚠️ ≤20mg/kg 5분/점적 권장",dil:"NS 50~100",push:"",mix:"1g + WFI 20mL 용해 → N/S 50~100mL (D5W는 안정성↓)",fluid:"N/S (D5W는 단시간만)",rate:"점적 15~30분 (또는 IV bolus 5분) / 내성균 3시간 연장주입",caution:"조제 후 신속 투여(상온 ~3시간). 다른 약물 혼합 금지",stab:"상온 ~3시간",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Ciprofloxacin",kr:"시프로플록사신",cat:"항생제·항진균",full:"Citopcin 400mg/200mL bag",stock:"O",bolus:"🚫 불가",dil:"Premix(그대로)",push:"",mix:"Premix 400mg/200mL 그대로 (추가·혼합 금지)",fluid:"premix",rate:"60분 점적 (빠른 주입 금지)",caution:"같은 라인 다른약 혼합 금지(전후 flushing). QT 연장·정맥염",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Levofloxacin",kr:"레보플록사신",cat:"항생제·항진균",full:"750mg/150mL premix (D5W)",stock:"O",bolus:"🚫 불가",dil:"Premix(그대로)",push:"",mix:"Premix 750mg/150mL 그대로",fluid:"premix(D5W)",rate:"90분 점적(750mg) — 빠른 주입 시 저혈압",caution:"QT 연장. 같은 라인 다른약 금지(flushing)",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"},
+  {name:"Metronidazole",kr:"메트로니다졸",cat:"항생제·항진균",full:"Trizel 100mL (500mg)",stock:"O",bolus:"🚫 불가",dil:"Premix(그대로)",push:"",mix:"Premix 500mg/100mL 그대로",fluid:"premix",rate:"20~60분 점적",caution:"단독 라인 권장",stab:"",src:"★외부 약전(첨부문서/SmPC/표준레퍼런스) — ⚠️약제부 검증 필요"}
+];
+
+// ── 성인 CIV 약물 ──
+const ADULT_DRUGS = [
+  {
+    id:'norepi', name:'Norepinephrine', badge:'혈관수축제', color:'green',
+    twoCol:true,
+    routes:[
+      {label:'말초 정맥', detail:'8mg + D5W 492ml', conc:16, unit:'mcg/ml'},
+      {label:'중심 정맥', detail:'4mg + D5W 96ml',  conc:40, unit:'mcg/ml'},
+    ],
+    doses:[4,8,12,16,20], doseUnit:'mcg/min', weightBased:false, highlight:8,
+  },
+  {
+    id:'dopa', name:'Dopamine', badge:'승압제', color:'blue',
+    twoCol:false,
+    routes:[{label:'프리믹스', detail:'400mg/200ml bag', conc:2000, unit:'mcg/ml'}],
+    doses:[5,10,15,20,25,30,35,40], doseUnit:'mcg/kg/min', weightBased:true, highlight:10,
+  },
+  {
+    id:'dobu', name:'Dobutamine', badge:'강심제', color:'purple',
+    twoCol:false,
+    routes:[{label:'프리믹스', detail:'500mg/250ml bag', conc:2000, unit:'mcg/ml'}],
+    doses:[5,10,15,20,25,30,35,40], doseUnit:'mcg/kg/min', weightBased:true, highlight:10,
+  },
+  {
+    id:'epi', name:'Epinephrine', badge:'승압/강심', color:'red',
+    twoCol:false,
+    routes:[{label:'표준', detail:'1mg + NS 99ml', conc:10, unit:'mcg/ml'}],
+    doses:[0.1,0.2,0.3,0.4,0.5], doseUnit:'mcg/kg/min', weightBased:true, highlight:0.1,
+  },
+  {
+    id:'vaso', name:'Vasopressin', badge:'혈관수축제', color:'orange',
+    twoCol:false,
+    routes:[{label:'표준', detail:'20u + D5W 99ml', conc:0.2, unit:'u/ml'}],
+    doses:[0.01,0.02,0.03], doseUnit:'unit/min', weightBased:false, highlight:0.02,
+  },
+];
+
+// ── PALS 기도 장비 ──
+const AIRWAY_TABLE = [
+  {wMin:1, wMax:5,   ett:'3.0',   depth:'9-10',  laryngo:'0 (직날)', opa:'50mm', npa:'3.5Fr', lma:'1'},
+  {wMin:5, wMax:8,   ett:'3.0-3.5',depth:'10-11',laryngo:'1 (직날)', opa:'60mm', npa:'4.0Fr', lma:'1.5'},
+  {wMin:8, wMax:10,  ett:'3.5',   depth:'11-12', laryngo:'1 (직날)', opa:'70mm', npa:'4.5Fr', lma:'1.5'},
+  {wMin:10,wMax:12,  ett:'3.5',   depth:'12-13', laryngo:'1 (만곡)', opa:'70mm', npa:'5.0Fr', lma:'2'},
+  {wMin:12,wMax:15,  ett:'4.0',   depth:'13-15', laryngo:'2 (만곡)', opa:'80mm', npa:'5.5Fr', lma:'2'},
+  {wMin:15,wMax:19,  ett:'4.5',   depth:'15-16', laryngo:'2 (만곡)', opa:'80mm', npa:'6.0Fr', lma:'2'},
+  {wMin:19,wMax:24,  ett:'5.0',   depth:'16-17', laryngo:'2 (만곡)', opa:'90mm', npa:'6.5Fr', lma:'2.5'},
+  {wMin:24,wMax:30,  ett:'5.5',   depth:'17-19', laryngo:'2-3(만곡)',opa:'90mm', npa:'7.0Fr', lma:'2.5'},
+  {wMin:30,wMax:999, ett:'6.0',   depth:'18-20', laryngo:'3 (만곡)', opa:'100mm',npa:'7.5Fr', lma:'3'},
+];
+
+// ── 활력징후 (체중 → 연령군 추정) ──
+const VITAL_TABLE = [
+  {wMax:4,   group:'신생아',  hr:'100-160', rr:'30-60', sbp:'60-90',  dbp:'30-60'},
+  {wMax:10,  group:'영아',    hr:'100-160', rr:'25-55', sbp:'70-100', dbp:'40-65'},
+  {wMax:14,  group:'유아(1-3세)',hr:'90-150',rr:'20-40', sbp:'80-110', dbp:'50-80'},
+  {wMax:18,  group:'학령전기',hr:'80-140', rr:'20-30', sbp:'85-115', dbp:'55-80'},
+  {wMax:32,  group:'학령기',  hr:'70-120', rr:'15-25', sbp:'90-120', dbp:'55-80'},
+  {wMax:999, group:'청소년',  hr:'60-100', rr:'12-20', sbp:'100-130', dbp:'60-85'},
+];
+
+// ════════════════════════════════════════════════
+// 탭 전환
+// ════════════════════════════════════════════════
+function showMain(name){
+  document.querySelectorAll('.main-tab').forEach((t,i)=>t.classList.toggle('active',['info','adult','peds','abx','anti'][i]===name));
+  ['tab-info','tab-adult','tab-peds','tab-abx','tab-anti'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+function showSub(name){
+  document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',['emerg','drugs','fluids'][i]===name));
+  ['sub-emerg','sub-drugs','sub-fluids'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('sub-'+name).classList.add('active');
+}
+
+// ════════════════════════════════════════════════
+// 탭 1: 약물정보
+// ════════════════════════════════════════════════
+let selDrug=null, selCat='전체';
+const CATS=['전체','심혈관계','진정·진통(RSI)','진통·해열','전해질','항생제·항진균','소화기·항구토','이뇨','해독·기타','기타'];
+function initDrugList(){ renderCatChips(); renderDrugList(curList()); }
+function renderCatChips(){ document.getElementById('catChips').innerHTML=CATS.map(c=>`<div class="cat-chip${selCat===c?' active':''}" onclick="setCat('${c}')">${c}</div>`).join(''); }
+function setCat(c){ selCat=c; renderCatChips(); renderDrugList(curList()); }
+function curList(){ const q=document.getElementById('drugSearch').value.toLowerCase(); return DRUG_DB.filter(d=>(selCat==='전체'||d.cat===selCat)&&(!q||d.name.toLowerCase().includes(q)||(d.kr||'').includes(q)||(d.full||'').toLowerCase().includes(q))); }
+function filterDrugs(){ renderDrugList(curList()); }
+function bolusColor(b){ if(/불가|금지|빠르게/.test(b))return'red'; if(/주의|⚠|조건|권장\s*안|확인/.test(b))return'orange'; if(/가능|✅/.test(b))return'green'; return''; }
+function pushColor(p){ if(/⚡|빠르게/.test(p))return'red'; if(/⚠/.test(p))return'orange'; if(p&&p!=='—')return'green'; return''; }
+function clean(v){ return (!v||/참조/.test(v))?'—':v; }
+function drugCardHTML(d){
+  const stockBadge=d.stock==='O'?'<span class="pill pill-blue">소방병원 입고</span>':'';
+  const bol=clean(d.bolus), psh=d.push||'—';
+  const match=ADULT_DRUGS.find(a=>d.name.toLowerCase().includes(a.name.toLowerCase().split(' ')[0]));
+  return `<div class="info-card acc-card">
+     <div style="font-size:13px;color:#8b949e;margin-bottom:10px">${d.kr||''}${d.full&&d.full!==d.name?' · '+d.full:''} ${stockBadge}</div>
+     ${HIGH_ALERT.has(d.name)?'<span class="badge-ha">⚠️ 고위험</span> ':''}${VESICANT.has(d.name)?'<span class="badge-ve">🟠 유출주의</span> ':''}
+     ${LASA[d.name]?`<div class="warn-lasa">🔀 헷갈림 주의: ${LASA[d.name]}</div>`:''}
+     ${REVERSAL[d.name]?`<div class="warn-rev">💊 역전제: ${REVERSAL[d.name]}</div>`:''}
+     <div class="mix-hero">
+       <div class="mix-box"><div class="lbl">💧 희석액(표준)</div><div class="v blue">${d.dil||'—'}</div></div>
+       <div class="mix-box"><div class="lbl">💉 IV푸시 (NS 20cc/시간)</div><div class="v ${pushColor(psh)}">${psh}</div></div>
+       <div class="mix-box"><div class="lbl">Bolus 가능여부</div><div class="v ${bolusColor(bol)}">${bol}</div></div>
+     </div>
+     <div class="info-row"><span class="info-label">💉 믹스 상세</span><span class="info-val">${d.mix||'—'}</span></div>
+     <div class="info-row"><span class="info-label">🧪 희석수액</span><span class="info-val">${d.fluid||'—'}</span></div>
+     <div class="info-row"><span class="info-label">⏱️ 투여속도</span><span class="info-val">${d.rate||'—'}</span></div>
+     ${d.caution?`<div class="info-row"><span class="info-label">⚠️ 주의·배합금기</span><span class="info-val red">${d.caution}</span></div>`:''}
+     <div class="info-row"><span class="info-label">🧊 안정시간</span><span class="info-val">${d.stab||'—'}</span></div>
+     <div class="info-row"><span class="info-label">📄 출처</span><span class="info-val dim" style="font-size:11px">${d.src||''}</span></div>
+     ${VESICANT.has(d.name)?`<div class="extrav-box"><b>🩹 혈관외유출 시</b><br>${EXTRAV}</div>`:''}
+     ${match?`<button class="go-btn" onclick="gotoAdult('${d.name.replace(/'/g,"\\'")}')">💉 성인 계산기로 바로 이동 →</button>`:''}
+   </div>`;
+}
+function renderDrugList(list){
+  const el=document.getElementById('drugList');
+  if(!list.length){ el.innerHTML='<div style="color:#8b949e;padding:18px">검색 결과 없음</div>'; return; }
+  el.innerHTML=list.map(d=>{
+    const open=selDrug===d.name;
+    return `<div class="drug-item">
+      <div class="drug-chip${open?' selected':''}" onclick="toggleDrug('${d.name.replace(/'/g,"\\'")}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div><span style="font-weight:600">${d.name}</span>${HIGH_ALERT.has(d.name)?'<span class="badge-ha">고위험</span>':''}${VESICANT.has(d.name)?'<span class="badge-ve">유출</span>':''} ${d.stock==='O'?'<span style="color:#58a6ff;font-size:10px">●</span>':''}
+            <div style="font-size:11px;color:#8b949e">${d.kr||''} · ${d.cat}</div></div>
+          <span class="acc-arrow">${open?'▲':'▼'}</span>
+        </div>
+      </div>
+      ${open?drugCardHTML(d):''}
+    </div>`;
+  }).join('');
+}
+function toggleDrug(name){
+  selDrug=(selDrug===name)?null:name;
+  renderDrugList(curList());
+  if(selDrug){ const sel=document.querySelector('.drug-chip.selected'); if(sel) setTimeout(()=>sel.scrollIntoView({behavior:'smooth',block:'start'}),40); }
+}
+// ── 항생제 병용 매트릭스 ──
+const ABX_LIST=["Acyclovir", "Caspofungin", "Cefepime", "Ceftriaxone", "Ciprofloxacin", "Fluconazole", "Levofloxacin", "Linezolid", "Liposomal ampho B", "Meropenem", "Metronidazole", "Micafungin", "Pip/tazo", "TMP-SMX", "Vancomycin", "Voriconazole"];
+const ABX_PAIR={"Acyclovir": {"Caspofungin": "불가", "Cefepime": "불가", "Ceftriaxone": "가능", "Ciprofloxacin": "불가", "Fluconazole": "가능", "Levofloxacin": "불가", "Linezolid": "가능", "Meropenem": "불가", "Pip/tazo": "불가", "TMP-SMX": "가능", "Vancomycin": "가능", "Liposomal ampho B": "가능", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Voriconazole": "가능"}, "Caspofungin": {"Acyclovir": "불가", "Cefepime": "불가", "Ceftriaxone": "불가", "Ciprofloxacin": "가능", "Fluconazole": "가능", "Levofloxacin": "가능", "Linezolid": "가능", "Meropenem": "가능", "Pip/tazo": "불가", "TMP-SMX": "불가", "Vancomycin": "가능", "Liposomal ampho B": "불가", "Metronidazole": "불가", "Micafungin": "근거없음", "Voriconazole": "가능"}, "Cefepime": {"Acyclovir": "불가", "Caspofungin": "불가", "Ceftriaxone": "근거없음", "Ciprofloxacin": "불가", "Fluconazole": "가능", "Levofloxacin": "가능", "Linezolid": "가능", "Meropenem": "근거없음", "Pip/tazo": "가능", "TMP-SMX": "가능", "Vancomycin": "불가", "Liposomal ampho B": "불가", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Voriconazole": "불가"}, "Ceftriaxone": {"Acyclovir": "가능", "Caspofungin": "불가", "Cefepime": "근거없음", "Ciprofloxacin": "근거없음", "Fluconazole": "불가", "Levofloxacin": "가능", "Linezolid": "가능", "Meropenem": "근거없음", "Pip/tazo": "근거없음", "TMP-SMX": "불가", "Vancomycin": "불가", "Liposomal ampho B": "가능", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Voriconazole": "가능"}, "Ciprofloxacin": {"Acyclovir": "불가", "Caspofungin": "가능", "Cefepime": "불가", "Ceftriaxone": "근거없음", "Fluconazole": "근거없음", "Levofloxacin": "근거없음", "Linezolid": "가능", "Meropenem": "불가", "Pip/tazo": "불가", "TMP-SMX": "근거없음", "Vancomycin": "가능", "Liposomal ampho B": "불가", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Voriconazole": "가능"}, "Fluconazole": {"Acyclovir": "가능", "Caspofungin": "가능", "Cefepime": "가능", "Ceftriaxone": "불가", "Ciprofloxacin": "근거없음", "Levofloxacin": "가능", "Linezolid": "가능", "Liposomal ampho B": "근거없음", "Meropenem": "가능", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Pip/tazo": "가능", "TMP-SMX": "불가", "Vancomycin": "가능", "Voriconazole": "가능"}, "Levofloxacin": {"Acyclovir": "불가", "Caspofungin": "가능", "Cefepime": "가능", "Ceftriaxone": "가능", "Ciprofloxacin": "근거없음", "Fluconazole": "가능", "Linezolid": "가능", "Meropenem": "근거없음", "Pip/tazo": "불가", "TMP-SMX": "가능", "Vancomycin": "가능", "Liposomal ampho B": "불가", "Metronidazole": "근거없음", "Micafungin": "불가", "Voriconazole": "가능"}, "Linezolid": {"Acyclovir": "가능", "Caspofungin": "가능", "Cefepime": "가능", "Ceftriaxone": "가능", "Ciprofloxacin": "가능", "Levofloxacin": "가능", "Fluconazole": "가능", "Meropenem": "가능", "Pip/tazo": "가능", "TMP-SMX": "가능", "Vancomycin": "가능", "Liposomal ampho B": "가능", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Voriconazole": "가능"}, "Meropenem": {"Acyclovir": "불가", "Caspofungin": "가능", "Cefepime": "근거없음", "Ceftriaxone": "근거없음", "Ciprofloxacin": "불가", "Levofloxacin": "근거없음", "Linezolid": "가능", "Liposomal ampho B": "불가", "Fluconazole": "가능", "Pip/tazo": "근거없음", "TMP-SMX": "근거없음", "Vancomycin": "가능", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Voriconazole": "가능"}, "Pip/tazo": {"Acyclovir": "불가", "Caspofungin": "불가", "Cefepime": "가능", "Ceftriaxone": "근거없음", "Ciprofloxacin": "불가", "Levofloxacin": "불가", "Linezolid": "가능", "Liposomal ampho B": "가능", "Meropenem": "근거없음", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Fluconazole": "가능", "TMP-SMX": "가능", "Vancomycin": "불가", "Voriconazole": "가능"}, "TMP-SMX": {"Acyclovir": "가능", "Caspofungin": "불가", "Cefepime": "가능", "Ceftriaxone": "불가", "Ciprofloxacin": "근거없음", "Levofloxacin": "가능", "Linezolid": "가능", "Liposomal ampho B": "가능", "Meropenem": "근거없음", "Metronidazole": "가능", "Micafungin": "근거없음", "Pip/tazo": "가능", "Fluconazole": "불가", "Vancomycin": "불가", "Voriconazole": "가능"}, "Vancomycin": {"Acyclovir": "가능", "Caspofungin": "가능", "Cefepime": "불가", "Ceftriaxone": "불가", "Ciprofloxacin": "가능", "Levofloxacin": "가능", "Linezolid": "가능", "Liposomal ampho B": "불가", "Meropenem": "가능", "Metronidazole": "근거없음", "Micafungin": "근거없음", "Pip/tazo": "불가", "TMP-SMX": "불가", "Fluconazole": "가능", "Voriconazole": "가능"}, "Liposomal ampho B": {"Acyclovir": "가능", "Caspofungin": "불가", "Cefepime": "불가", "Ceftriaxone": "가능", "Ciprofloxacin": "불가", "Fluconazole": "근거없음", "Levofloxacin": "불가", "Linezolid": "가능", "Meropenem": "불가", "Pip/tazo": "가능", "TMP-SMX": "가능", "Vancomycin": "불가"}, "Metronidazole": {"Acyclovir": "근거없음", "Caspofungin": "불가", "Cefepime": "근거없음", "Ceftriaxone": "근거없음", "Ciprofloxacin": "근거없음", "Fluconazole": "근거없음", "Levofloxacin": "근거없음", "Linezolid": "근거없음", "Meropenem": "근거없음", "Pip/tazo": "근거없음", "TMP-SMX": "가능", "Vancomycin": "근거없음"}, "Micafungin": {"Acyclovir": "근거없음", "Caspofungin": "근거없음", "Cefepime": "근거없음", "Ceftriaxone": "근거없음", "Ciprofloxacin": "근거없음", "Fluconazole": "근거없음", "Levofloxacin": "불가", "Linezolid": "근거없음", "Meropenem": "근거없음", "Pip/tazo": "근거없음", "TMP-SMX": "근거없음", "Vancomycin": "근거없음"}, "Voriconazole": {"Acyclovir": "가능", "Caspofungin": "가능", "Cefepime": "불가", "Ceftriaxone": "가능", "Ciprofloxacin": "가능", "Fluconazole": "가능", "Levofloxacin": "가능", "Linezolid": "가능", "Meropenem": "가능", "Pip/tazo": "가능", "TMP-SMX": "가능", "Vancomycin": "가능"}};
+const ABX_FLUID={"Amphotericin B": {"d5w": "가능", "ns": "불가"}, "Ampicillin": {"d5w": "불가", "ns": "가능"}, "Caspofungin": {"d5w": "불가", "ns": "가능"}, "Ertapenem": {"d5w": "불가", "ns": "가능"}, "Liposomal ampho B": {"d5w": "가능", "ns": "불가"}};
+function initAbx(){ document.getElementById('abxChips').innerHTML=ABX_LIST.map(n=>`<div class="cat-chip" onclick="selAbx('${n.replace(/'/g,"\\'")}')">${n}</div>`).join(''); }
+function selAbx(name){
+  document.querySelectorAll('#abxChips .cat-chip').forEach(c=>c.classList.toggle('active',c.textContent===name));
+  const no=[],yes=[],unk=[];
+  ABX_LIST.forEach(o=>{ if(o===name)return; const v=(ABX_PAIR[name]&&ABX_PAIR[name][o])||'근거없음'; if(v==='불가')no.push(o); else if(v==='가능')yes.push(o); else unk.push(o); });
+  const fl=ABX_FLUID[name];
+  const tag=a=>a.length?a.map(x=>`<span class="abx-tag">${x}</span>`).join(''):'<span class="dim">없음</span>';
+  let h=`<div class="info-card" style="margin-bottom:14px"><div style="font-size:19px;font-weight:700">${name}</div>`;
+  if(fl) h+=`<div style="margin-top:8px;font-size:13px">💧 수액 호환: D5W <b class="${fl.d5w==='가능'?'green':'red'}">${fl.d5w}</b> · N/S <b class="${fl.ns==='가능'?'green':'red'}">${fl.ns}</b></div>`;
+  h+='</div>';
+  h+=`<div class="card"><div class="card-head bg-red"><h3 class="red">🚫 병용 불가 (${no.length})</h3></div><div class="card-body">${tag(no)}</div></div>`;
+  h+=`<div class="card"><div class="card-head bg-green"><h3 class="green">✅ 병용 가능 (${yes.length})</h3></div><div class="card-body">${tag(yes)}</div></div>`;
+  h+=`<div class="card"><div class="card-head"><h3 class="dim">❓ 근거 없음 — 별도 라인 권장 (${unk.length})</h3></div><div class="card-body">${tag(unk)}</div></div>`;
+  const el=document.getElementById('abxResult'); el.innerHTML=h; el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// ── 신규간호사 안전 데이터 (v5) ──
+const HIGH_ALERT=new Set(["Epinephrine HCI", "Norepinephrine", "Dopamine", "Dobutamine", "Isoproterenol HCI", "Vasopressin", "Amiodarone HCI", "2% Lidocaine", "Esmolol HCI", "Heparin", "Insulin (RI)", "Potassium chloride", "Phosten", "Magnesium sulfate", "Calcium gluconate", "Sodium bicarbonate", "Morphine sulfate", "Fentanyl", "Pethidine", "Remifentanil", "Ketamine", "Etomidate", "Midazolam", "Diazepam", "Lorazepam", "Dexmedetomidine", "Rocuronium", "Digoxin", "Nitroglycerin", "Nitroprusside sodium", "Nicardipine", "Diltiazem", "Labetalol HCI", "Terlipressin"]);
+const VESICANT=new Set(["Norepinephrine", "Dopamine", "Dobutamine", "Epinephrine HCI", "Vasopressin", "Calcium gluconate", "Potassium chloride", "Phosten", "Sodium bicarbonate", "Magnesium sulfate", "Mannitol 20%"]);
+const LASA={"Epinephrine HCI": "Norepinephrine와 구분 · ★농도 1:1,000(IM·아나필락시스) vs 1:10,000(IV·CPR)", "Norepinephrine": "Epinephrine와 구분 (이름·작용 유사)", "Dopamine": "Dobutamine와 구분 (이름 유사·용도 다름)", "Dobutamine": "Dopamine와 구분", "Midazolam": "★제형 2종: 5mg/5mL(1mg/mL) vs 15mg/3mL(5mg/mL)", "Heparin": "★농도 2종: 25,000U/5mL(치료) vs 1,000U/10mL(라인유지)", "Fentanyl": "제형 2종: 50mcg/1mL vs 100mcg/2mL", "2% Lidocaine": "농도 1% vs 2% 구분 · 국소마취용/부정맥용 구분"};
+const REVERSAL={"Midazolam": "Flumazenil", "Diazepam": "Flumazenil", "Lorazepam": "Flumazenil", "Morphine sulfate": "Naloxone (※입고확인)", "Fentanyl": "Naloxone (※입고확인)", "Pethidine": "Naloxone (※입고확인)", "Remifentanil": "Naloxone (※입고확인)", "Tramadol": "Naloxone 부분 (※입고확인)", "Heparin": "Protamine (※입고확인)", "Rocuronium": "Sugammadex/Neostigmine (※입고확인)", "Digoxin": "Digoxin immune Fab (※입고확인)"};
+const EXTRAV="① 즉시 주입 중단(라인 유지) ② 잔여 약물 흡인 후 카테터 제거 ③ 환부 거상 ④ 카테콜아민·Vasopressin → 온찜질 + Phentolamine 침윤 ⑤ Ca·KCl·고삼투 → 냉찜질 ⑥ 의사 보고·기록·사진";
+const ANTIDOTES=[{"tox": "마약·아편유사제(Morphine·Fentanyl 등)", "anti": "Naloxone", "dose": "0.04~0.4mg IV, 2~3분마다 반복 (필요시 CIV)", "stock": false}, {"tox": "벤조디아제핀(Midazolam·Diazepam·Lorazepam)", "anti": "Flumazenil", "dose": "0.2mg IV 15초 → 1분마다, max 1mg", "stock": true}, {"tox": "헤파린", "anti": "Protamine", "dose": "헤파린 100U당 1mg (max 50mg), 천천히 IV", "stock": false}, {"tox": "와파린·VitK 길항", "anti": "Vitamin K1 (Phytonadione)", "dose": "2.5~10mg IV/PO (출혈 시 +FFP/PCC)", "stock": true}, {"tox": "β차단제·CCB", "anti": "Glucagon / Calcium", "dose": "Glucagon 3~10mg IV / Ca gluconate 1~3g", "stock": false}, {"tox": "고마그네슘·CCB 독성", "anti": "Calcium gluconate", "dose": "1~2g IV over 5~10분", "stock": true}, {"tox": "아세트아미노펜", "anti": "N-acetylcysteine", "dose": "150mg/kg loading → 프로토콜", "stock": true}, {"tox": "디곡신 독성", "anti": "Digoxin immune Fab", "dose": "중독 정도에 따라 vial 수 계산", "stock": false}, {"tox": "국소마취제 전신독성(LAST)", "anti": "Intralipid 20%", "dose": "1.5mL/kg bolus → 0.25mL/kg/min", "stock": false}, {"tox": "철분 중독", "anti": "Deferoxamine", "dose": "15mg/kg/hr IV", "stock": true}, {"tox": "근이완제(Rocuronium)", "anti": "Sugammadex / Neostigmine", "dose": "Sugammadex 2~16mg/kg", "stock": false}, {"tox": "혈관외유출(카테콜아민)", "anti": "Phentolamine", "dose": "5~10mg + N/S 10~15mL 환부 침윤", "stock": false}];
+function initAntidote(){
+  const rows=ANTIDOTES.map(a=>`<tr><td class="dim">${a.tox}</td><td><b>${a.anti}</b></td><td class="dim" style="font-size:12px">${a.dose}</td><td>${a.stock?'<span class="green">입고</span>':'<span class="orange">※확인</span>'}</td></tr>`).join('');
+  document.getElementById('antiResult').innerHTML=`<div class="card"><div class="card-head"><h3 class="cyan">🧪 해독제·역전제 빠른참조</h3></div><div class="card-body"><div style="font-size:12px;color:#8b949e;margin-bottom:8px">⚠️ 표준값 — 약제부 검증 필요. ※확인=입고목록에 없음</div><table><tr><th>중독·약물</th><th>해독/역전제</th><th>용량(성인)</th><th>입고</th></tr>${rows}</table></div></div>`;
+}
+function gotoAdult(name){
+  showMain('adult');
+  // 해당 약물이 성인 계산기에 있으면 선택
+  const match=ADULT_DRUGS.find(d=>name.toLowerCase().includes(d.name.toLowerCase().split(' ')[0]));
+  if(match) selectDrug(match.id);
+}
+
+// ════════════════════════════════════════════════
+// 탭 2: 성인 계산기
+// ════════════════════════════════════════════════
+let activeAdultDrug = 'norepi';
+function setAW(w){ document.getElementById('adultWeight').value=w; updateAdult(); }
+function calcRate(dose,conc,weightBased,w){
+  return weightBased ? (dose*w*60)/conc : (dose*60)/conc;
+}
+function selectDrug(id){ activeAdultDrug=id; updateAdult(); }
+
+function updateAdult(){
+  const w=parseFloat(document.getElementById('adultWeight').value)||70;
+  // 사이드바
+  document.getElementById('drugSidebar').innerHTML=ADULT_DRUGS.map(d=>
+    `<button class="drug-btn ${d.id===activeAdultDrug?'active':''}" onclick="selectDrug('${d.id}')">
+      <span class="${d.color}">${d.name}</span><br>
+      <span style="font-size:10px;color:#8b949e">${d.badge}</span>
+    </button>`
+  ).join('');
+  // 컨텐츠
+  const content=document.getElementById('drugContent');
+  const drug=ADULT_DRUGS.find(d=>d.id===activeAdultDrug);
+  if(!drug){content.innerHTML='';return;}
+
+  if(drug.twoCol){
+    // 노에피 - 말초/중심 동시 표시
+    const r0=drug.routes[0], r1=drug.routes[1];
+    const rows=drug.doses.map(dose=>{
+      const rate0=calcRate(dose,r0.conc,drug.weightBased,w);
+      const rate1=calcRate(dose,r1.conc,drug.weightBased,w);
+      const hl=dose===drug.highlight;
+      return `<tr class="${hl?'hl':''}">
+        <td class="dim">${dose} ${drug.doseUnit}</td>
+        <td class="${hl?'val green':'green'}" style="font-size:${hl?'17px':'14px'};font-weight:700">${rate0.toFixed(1)} ml/hr</td>
+        <td class="${hl?'val orange':'orange'}" style="font-size:${hl?'17px':'14px'};font-weight:700">${rate1.toFixed(1)} ml/hr</td>
+      </tr>`;
+    }).join('');
+    content.innerHTML=`
+      <div class="card">
+        <div class="card-head bg-green">
+          <div><h3 class="green">${drug.name}</h3><div class="sub">체중 ${w}kg 기준</div></div>
+          <span class="badge" style="background:#1a2f1a;color:#56d364">${drug.badge}</span>
+        </div>
+        <div class="card-body">
+          <table class="two-col-table">
+            <tr>
+              <th>용량</th>
+              <th>🟢 말초 (${r0.conc}mcg/ml)<br><span style="font-weight:400;font-size:10px">${r0.detail}</span></th>
+              <th>🟠 중심 (${r1.conc}mcg/ml)<br><span style="font-weight:400;font-size:10px">${r1.detail}</span></th>
+            </tr>
+            ${rows}
+          </table>
+        </div>
+      </div>`;
+  } else {
+    const route=drug.routes[0];
+    const rows=drug.doses.map(dose=>{
+      const rate=calcRate(dose,route.conc,drug.weightBased,w);
+      const hl=dose===drug.highlight;
+      return `<tr class="${hl?'hl':''}">
+        <td class="dim">${dose} ${drug.doseUnit}</td>
+        <td class="${hl?'val':'val'}" style="font-size:${hl?'18px':'14px'};font-weight:700;color:var(--c)">${rate.toFixed(1)} ml/hr</td>
+      </tr>`;
+    }).join('');
+    const colors={blue:'#58a6ff',purple:'#bc8cff',red:'#f85149',orange:'#ffa726'};
+    const c=colors[drug.color]||'#58a6ff';
+    content.innerHTML=`
+      <div class="card">
+        <div class="card-head" style="background:var(--bg)">
+          <div><h3 style="color:${c}">${drug.name}</h3>
+            <div class="sub">${route.detail} · ${route.conc} ${route.unit} · 체중 ${w}kg</div>
+          </div>
+          <span class="badge" style="background:#21262d;color:${c}">${drug.badge}</span>
+        </div>
+        <div class="card-body">
+          <style scoped>:root{--c:${c}}</style>
+          <table>
+            <tr><th>용량</th><th>주입 속도</th></tr>
+            ${rows}
+          </table>
+        </div>
+      </div>`;
+  }
+}
+
+// ════════════════════════════════════════════════
+// 탭 3: 소아 계산기
+// ════════════════════════════════════════════════
+function setPW(w,label){ document.getElementById('pedsWeight').value=w; updatePeds(); }
+function getAirway(w){
+  return AIRWAY_TABLE.find(r=>w>=r.wMin&&w<r.wMax)||AIRWAY_TABLE[AIRWAY_TABLE.length-1];
+}
+function getVitals(w){
+  return VITAL_TABLE.find(r=>w<=r.wMax)||VITAL_TABLE[VITAL_TABLE.length-1];
+}
+function maintenance(w){
+  if(w<=10) return (4*w).toFixed(1);
+  if(w<=20) return (40+2*(w-10)).toFixed(1);
+  return (60+(w-20)).toFixed(1);
+}
+function f(n,d=1){ return parseFloat(n.toFixed(d)); }
+
+function updatePeds(){
+  const w=parseFloat(document.getElementById('pedsWeight').value)||15;
+  const aw=getAirway(w);
+  const vt=getVitals(w);
+  const tvMin=f(w*6), tvMax=f(w*8);
+  const defi1=f(w*2), defi2=f(w*4), defiMax=Math.min(f(w*10),200);
+
+  // ── 🚨 응급 ──
+  document.getElementById('sub-emerg').innerHTML=`
+  <div class="peds-grid">
+
+    <div class="card">
+      <div class="card-head bg-blue"><h3 class="blue">🌡️ 정상 활력징후</h3><span class="sub">${vt.group}</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>항목</th><th>정상 범위</th></tr>
+          <tr><td class="dim">심박수 (HR)</td><td class="val">${vt.hr} 회/분</td></tr>
+          <tr><td class="dim">호흡수 (RR)</td><td class="val">${vt.rr} 회/분</td></tr>
+          <tr><td class="dim">수축기혈압 (SBP)</td><td class="val">${vt.sbp} mmHg</td></tr>
+          <tr><td class="dim">이완기혈압 (DBP)</td><td class="val">${vt.dbp} mmHg</td></tr>
+          <tr><td class="dim">SpO2</td><td class="val">≥ 95%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="cyan">🫁 기도 장비</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>장비</th><th>크기</th></tr>
+          <tr><td class="dim">ETT (커프드)</td><td class="val cyan">${aw.ett}</td></tr>
+          <tr><td class="dim">삽입 깊이</td><td class="val">${aw.depth} cm</td></tr>
+          <tr><td class="dim">후두경</td><td class="val">${aw.laryngo}</td></tr>
+          <tr><td class="dim">OPA</td><td class="val">${aw.opa}</td></tr>
+          <tr><td class="dim">NPA</td><td class="val">${aw.npa}</td></tr>
+          <tr><td class="dim">LMA</td><td class="val">${aw.lma}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-blue"><h3 class="blue">🌬️ 인공호흡기 초기 세팅</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>항목</th><th>설정값</th></tr>
+          <tr><td class="dim">일회호흡량 (TV)</td><td class="val blue">${tvMin}-${tvMax} ml <span class="dim">(6-8ml/kg)</span></td></tr>
+          <tr><td class="dim">호흡수 (RR)</td><td class="val">${vt.rr} 회/분</td></tr>
+          <tr><td class="dim">FiO2</td><td class="val">1.0 → SpO2 94-99% titrate</td></tr>
+          <tr><td class="dim">PEEP</td><td class="val">5 cmH₂O</td></tr>
+          <tr><td class="dim">흡기시간</td><td class="val">${w<5?'0.3-0.4':w<10?'0.4-0.5':w<18?'0.5-0.7':'0.7-1.0'}초</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-yellow"><h3 class="yellow">⚡ 제세동</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>단계</th><th>에너지</th></tr>
+          <tr><td class="dim">1차 (2 J/kg)</td><td><span class="big-val yellow">${defi1} J</span></td></tr>
+          <tr><td class="dim">2차 (4 J/kg)</td><td><span class="big-val" style="color:#ffa726">${defi2} J</span></td></tr>
+          <tr><td class="dim">최대 (10 J/kg, max 200J)</td><td><span class="big-val red">${defiMax} J</span></td></tr>
+        </table>
+        <div style="font-size:11px;color:#8b949e;margin-top:10px">VF/pVT: 즉시 제세동 우선 · Epi는 2차 shock 후 투여</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-red"><h3 class="red">💊 심정지 약물</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IV/IO</span><br><span style="font-size:11px;color:#58a6ff">믹스: <b>Epi 1A(1mg/1mL) + NS 9mL = 10mL</b> (1:10,000 = 0.1mg/mL)</span></td><td><span class="val red">${f(Math.min(w*0.01,1),2)} mg</span><br><span class="val red" style="font-size:20px">= ${f(Math.min(w*0.1,10),1)} mL</span><br><span class="dim" style="font-size:11px">0.1 mL/kg · max 1mg(10mL) · q3~5분</span></td></tr>
+          <tr><td class="dim">Amiodarone (5mg/kg)</td><td><span class="val">${f(w*5)} mg</span> <span class="dim">IV/IO</span></td></tr>
+          <tr><td class="dim">Lidocaine (1mg/kg)</td><td><span class="val">${f(w*1)} mg</span> <span class="dim">IV/IO</span></td></tr>
+          <tr><td class="dim">NaHCO₃ (1mEq/kg)</td><td><span class="val">${f(w*1)} mEq</span></td></tr>
+          <tr><td class="dim">Calcium Gluconate (60mg/kg)</td><td><span class="val">${f(w*60)} mg</span></td></tr>
+          <tr><td class="dim">Glucose D50W (0.5g/kg)</td><td><span class="val">${f(w*0.5)} g = ${f(w*1)} ml</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-purple"><h3 class="purple">🧠 경련</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물 (단계)</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">Midazolam IN (0.2mg/kg) 1차</td><td><span class="val purple">${f(w*0.2)} mg</span></td></tr>
+          <tr><td class="dim">Lorazepam IV (0.1mg/kg) 1차</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
+          <tr><td class="dim">Levetiracetam IV (60mg/kg) 2차</td><td><span class="val">${f(w*60)} mg</span></td></tr>
+          <tr><td class="dim">Valproate IV (30mg/kg) 2차</td><td><span class="val">${f(w*30)} mg</span></td></tr>
+          <tr><td class="dim">Phenobarbital IV (20mg/kg) 2차</td><td><span class="val">${f(w*20)} mg</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-orange"><h3 class="orange">🚨 아나필락시스</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IM (대퇴 전외측)</span><br><span style="font-size:11px;color:#ffa726">★ <b>1:1,000 원액(1mg/mL) 그대로</b> — 희석 X</span></td><td><span class="val orange">${f(Math.min(w*0.01,0.5),2)} mg</span><br><span class="val orange" style="font-size:20px">= ${f(Math.min(w*0.01,0.5),2)} mL</span><br><span class="dim" style="font-size:11px">0.01 mL/kg · max 0.3mg(소아)·0.5mg(청소년)</span></td></tr>
+          <tr><td class="dim">수액 볼루스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
+          <tr><td class="dim">Hydrocortisone (1mg/kg)</td><td><span class="val">${f(w*1)} mg</span></td></tr>
+          <tr><td class="dim">Chlorpheniramine (0.1mg/kg)</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>`;
+
+  // ── 💊 약물 ──
+  document.getElementById('sub-drugs').innerHTML=`
+  <div class="peds-grid">
+
+    <div class="card">
+      <div class="card-head"><h3 class="cyan">💉 RSI</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr><td class="dim">Atropine 전처치 (0.02mg/kg)</td><td><span class="val">${f(Math.max(Math.min(w*0.02,0.5),0.1),2)} mg</span> <span class="dim">min 0.1mg</span></td></tr>
+          <tr class="hl"><td class="dim">Ketamine 유도 (1-2mg/kg)</td><td><span class="val cyan">${f(w*1)}-${f(w*2)} mg</span></td></tr>
+          <tr class="hl"><td class="dim">Rocuronium (1.2mg/kg)</td><td><span class="val cyan">${f(w*1.2)} mg</span></td></tr>
+          <tr><td class="dim">Succinylcholine (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
+          <tr><td class="dim">Midazolam 보조 (0.1mg/kg)</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="green">💊 진통제</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">Fentanyl IV (1-2mcg/kg)</td><td><span class="val green">${f(w*1)}-${f(w*2)} mcg</span></td></tr>
+          <tr><td class="dim">Fentanyl IN (1.5-2mcg/kg)</td><td><span class="val">${f(w*1.5)}-${f(w*2)} mcg</span></td></tr>
+          <tr><td class="dim">Morphine IV (0.05-0.1mg/kg)</td><td><span class="val">${f(w*0.05,2)}-${f(w*0.1,2)} mg</span></td></tr>
+          <tr><td class="dim">Ketorolac IV (0.5mg/kg)</td><td><span class="val">${f(w*0.5)} mg</span> <span class="dim">max 30mg</span></td></tr>
+          <tr><td class="dim">Acetaminophen PO (15mg/kg)</td><td><span class="val">${f(w*15)} mg</span></td></tr>
+          <tr><td class="dim">Ibuprofen PO (10mg/kg)</td><td><span class="val">${f(w*10)} mg</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-purple"><h3 class="purple">😴 진정제</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">Midazolam IV (0.05-0.1mg/kg)</td><td><span class="val purple">${f(w*0.05,2)}-${f(w*0.1,2)} mg</span></td></tr>
+          <tr><td class="dim">Midazolam IN (0.2-0.3mg/kg)</td><td><span class="val">${f(w*0.2)}-${f(w*0.3)} mg</span></td></tr>
+          <tr><td class="dim">Ketamine IV 해리진정 (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
+          <tr><td class="dim">Ketamine IM (4-5mg/kg)</td><td><span class="val">${f(w*4)}-${f(w*5)} mg</span></td></tr>
+          <tr><td class="dim">Propofol IV (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
+          <tr><td class="dim">Dexmedetomidine loading (0.5-1mcg/kg)</td><td><span class="val">${f(w*0.5)}-${f(w*1)} mcg</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="yellow">🤢 항구토제</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">Ondansetron IV (0.15mg/kg)</td><td><span class="val yellow">${f(Math.min(w*0.15,8),1)} mg</span> <span class="dim">max 8mg</span></td></tr>
+          <tr><td class="dim">Metoclopramide IV (0.1mg/kg)</td><td><span class="val">${f(Math.min(w*0.1,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
+          <tr><td class="dim">Dexamethasone IV (0.15mg/kg)</td><td><span class="val">${f(Math.min(w*0.15,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
+        </table>
+        <div style="font-size:11px;color:#f85149;margin-top:10px">⚠️ Promethazine: 2세 미만 FDA 흑색경고 — 금기</div>
+      </div>
+    </div>
+
+  </div>`;
+
+  // ── 💧 수액 ──
+  const maint=maintenance(w);
+  document.getElementById('sub-fluids').innerHTML=`
+  <div class="peds-grid">
+
+    <div class="card">
+      <div class="card-head bg-blue"><h3 class="blue">💧 수액 볼루스</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>상황</th><th>용량</th></tr>
+          <tr class="hl"><td class="dim">저혈량/탈수 (20ml/kg)</td><td><span class="val blue">${f(w*20)} ml</span></td></tr>
+          <tr><td class="dim">패혈성 쇼크 (10-20ml/kg)</td><td><span class="val">${f(w*10)}-${f(w*20)} ml</span></td></tr>
+          <tr><td class="dim">아나필락시스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
+          <tr><td class="dim">심인성 쇼크 (5-10ml/kg)</td><td><span class="val">${f(w*5)}-${f(w*10)} ml <span class="dim">천천히</span></span></td></tr>
+          <tr><td class="dim">DKA 초기 (10-20ml/kg)</td><td><span class="val">${f(w*10)}-${f(w*20)} ml <span class="dim">뇌부종 주의</span></span></td></tr>
+          <tr><td class="dim">신생아 소생 (10ml/kg)</td><td><span class="val">${f(w*10)} ml</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="green">🧴 유지수액 (Holliday-Segar)</h3></div>
+      <div class="card-body">
+        <div class="result-box">
+          <div style="font-size:13px;color:#8b949e;margin-bottom:4px">체중 ${w}kg 유지수액</div>
+          <div class="big-val">${maint} ml/hr</div>
+        </div>
+        <table>
+          <tr><th>체중 구간</th><th>공식</th></tr>
+          <tr><td class="dim">≤ 10 kg</td><td class="dim">4 ml/kg/hr</td></tr>
+          <tr><td class="dim">10-20 kg</td><td class="dim">40 + 2×(초과 kg) ml/hr</td></tr>
+          <tr><td class="dim">> 20 kg</td><td class="dim">60 + 1×(초과 kg) ml/hr</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head bg-red"><h3 class="red">🩸 쇼크별 수액 전략</h3></div>
+      <div class="card-body">
+        <table>
+          <tr><th>쇼크 유형</th><th>전략</th></tr>
+          <tr><td class="dim">저혈량성</td><td class="val">N/S 20ml/kg 반복 (총 60ml/kg)</td></tr>
+          <tr><td class="dim">패혈성</td><td class="val">10-20ml/kg, 매 bolus 후 재평가</td></tr>
+          <tr><td class="dim">심인성</td><td class="val red">5-10ml/kg 매우 주의, 느리게</td></tr>
+          <tr><td class="dim">아나필락시스</td><td class="val">20ml/kg + Epi IM 필수</td></tr>
+          <tr><td class="dim">폐쇄성</td><td class="val red">원인 제거 우선 (감압, 심낭천자)</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// 초기화
+// ════════════════════════════════════════════════
+function goHome(){ showMain('info'); selDrug=null; selCat='전체'; var sb=document.getElementById('drugSearch'); if(sb) sb.value=''; renderCatChips(); renderDrugList(curList()); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleTheme(){ var l=document.body.classList.toggle('light'); var b=document.getElementById('themeBtn'); if(b)b.textContent=l?'☀️':'🌙'; try{localStorage.setItem('nfh_theme',l?'light':'dark');}catch(e){} }
+(function(){ try{ if(localStorage.getItem('nfh_theme')==='light'){ document.body.classList.add('light'); var b=document.getElementById('themeBtn'); if(b)b.textContent='☀️'; } }catch(e){} })();
+initDrugList();
+updateAdult();
+updatePeds();
+initAbx();
+initAntidote();
+</script>
+</body>
+</html>
