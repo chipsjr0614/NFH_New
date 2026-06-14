@@ -1358,13 +1358,23 @@ function copyText(id,btnId){
     setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
   });
 }
+function safetyLines(){
+  var L=[];
+  if(S.preg && S.preg!=='해당없음') L.push('임신 : '+S.preg);
+  var al=[];
+  if(S.algyContrast==='있음') al.push('조영제');
+  if((S.algyDrug||'').trim()) al.push('약물('+S.algyDrug.trim()+')');
+  if(al.length) L.push('알러지 : '+al.join(', '));
+  if((S.curMeds||'').trim()) L.push('복용약물 : '+S.curMeds.trim());
+  return L;
+}
 function copySection(type){
   let txt='';
   const vs=S.vs;
   const bp=vs.sbp&&vs.dbp?`${vs.sbp}/${vs.dbp}`:(vs.sbp||vs.dbp||'');
   const o2=vs.o2==='O2'?`O2 ${vs.o2L||'?'}L`:'RA';
   const vsStr=`BP ${bp} / HR ${vs.hr||''} / RR ${vs.rr||''} / BT ${vs.bt||''}°C / SpO2 ${vs.spo2||''}% (${o2})`;
-  const ccFull=[pmhxText(),S.ccReason,S.ccPresent].filter(x=>x&&x!=='없음').join('\n');
+  const ccFull=[...safetyLines(),pmhxText(),S.ccReason,S.ccPresent].filter(x=>x&&x!=='없음').join('\n');
   switch(type){
     case 'date': txt=`${S.date}\t${S.arr}\t${S.reg}`; break;
     case 'patient': txt=`${S.pid}\t${S.pname}`; break;
@@ -1375,6 +1385,7 @@ function copySection(type){
     case 'all': {
       const strip=s=>(s||'').replace(/\t/g,' ');
       const ccLines=[
+        ...safetyLines().map(function(l){return '- '+l;}),
         `- 과거력 : ${pmhxText()}`,
         `- 내원이유 : ${strip(S.ccReason)||''}`,
         `- 현재호소 : ${strip(S.ccPresent)||''}`
