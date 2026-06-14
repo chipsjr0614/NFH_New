@@ -1359,14 +1359,14 @@ function copyText(id,btnId){
   });
 }
 function safetyLines(){
-  var L=[];
-  if(S.preg && S.preg!=='해당없음') L.push('임신 : '+S.preg);
+  var p=[];
+  if(S.preg && S.preg!=='해당없음') p.push('임신 '+S.preg);
   var al=[];
   if(S.algyContrast==='있음') al.push('조영제');
   if((S.algyDrug||'').trim()) al.push('약물('+S.algyDrug.trim()+')');
-  if(al.length) L.push('알러지 : '+al.join(', '));
-  if((S.curMeds||'').trim()) L.push('복용약물 : '+S.curMeds.trim());
-  return L;
+  if(al.length) p.push('알러지 '+al.join(', '));
+  if((S.curMeds||'').trim()) p.push('복용약물 '+S.curMeds.trim());
+  return p.length?[p.join(' / ')]:[];
 }
 function copySection(type){
   let txt='';
