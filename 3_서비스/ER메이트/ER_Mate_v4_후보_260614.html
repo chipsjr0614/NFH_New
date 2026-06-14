@@ -1,0 +1,2666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFH ER Mate v4</title>
+<style>
+:root{
+  --bg:#0a0e14; --panel:#12181f; --card:#1a212b; --card2:#222b38;
+  --line:#2a3441; --tx:#e6edf3; --tx2:#8b97a7; --red:#ff4d5e; --red2:#3a1216;
+  --green:#2ecc71; --gold:#ffc857; --blue:#4aa8ff;
+}
+[data-theme=light]{
+  --bg:#f2f4f7; --panel:#ffffff; --card:#ffffff; --card2:#f0f3f7;
+  --line:#dde3ea; --tx:#1a2230; --tx2:#5a6878; --red:#e02436; --red2:#fde8ea;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all;overflow-wrap:anywhere}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  padding-bottom:40px}
+header{position:sticky;top:0;z-index:30;background:var(--panel);border-bottom:1px solid var(--line);
+  padding:14px 16px 0}
+.htop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.logo{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:800;letter-spacing:-.5px}
+.logo .b{background:var(--red);color:#fff;font-size:13px;font-weight:900;padding:3px 7px;border-radius:7px}
+.logo em{color:var(--red);font-style:normal}
+.hbtns{margin-left:auto;display:flex;gap:8px}
+.hbtns button{background:var(--card2);color:var(--tx);border:1px solid var(--line);
+  border-radius:9px;padding:8px 12px;font-size:13px;cursor:pointer}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:11px 14px;margin-bottom:12px}
+.search input{flex:1;background:none;border:none;color:var(--tx);font-size:16px;outline:none}
+.fav{display:flex;gap:7px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.fav::-webkit-scrollbar{display:none}
+.fav .chip{flex:none;background:var(--card2);border:1px solid var(--line);border-radius:20px;
+  padding:7px 13px;font-size:13px;cursor:pointer;white-space:nowrap}
+.fav .chip:active{border-color:var(--red)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:11px 14px;font-size:14px;font-weight:600;color:var(--tx2);
+  border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tab.on{color:var(--tx);border-bottom-color:var(--red)}
+main{max-width:980px;margin:0 auto;padding:16px}
+.sec-h{font-size:13px;font-weight:700;color:var(--tx2);margin:18px 4px 10px;text-transform:uppercase;letter-spacing:.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cardx{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;
+  transition:.12s;position:relative;overflow:hidden}
+.cardx:active{transform:scale(.97);border-color:var(--red)}
+.cardx .ic{font-size:24px}
+.cardx .ti{font-weight:700;margin-top:8px;font-size:15px;line-height:1.3}
+.cardx .su{color:var(--tx2);font-size:12px;margin-top:3px}
+.cardx .kd{position:absolute;top:10px;right:10px;font-size:10px;font-weight:700;
+  padding:2px 6px;border-radius:6px}
+.kd.prep{background:#16324a;color:#7cc4ff}.kd.flow{background:#3a2a16;color:#ffc857}
+.kd.ref{background:#1d3324;color:#6ee7a0}.kd.judge{background:#3a1630;color:#ff9ee0}
+[data-theme=light] .kd.prep{background:#dbeeff;color:#1668b0}
+[data-theme=light] .kd.flow{background:#fff0d6;color:#a06a00}
+[data-theme=light] .kd.ref{background:#d6f5e1;color:#1a7a42}
+[data-theme=light] .kd.judge{background:#fbe0f4;color:#a01a7a}
+/* 상세 패널 */
+.ov{position:fixed;inset:0;z-index:50;background:var(--bg);display:none;flex-direction:column}
+.ov.on{display:flex}
+.ovh{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);
+  padding:14px 16px;display:flex;align-items:center;gap:12px}
+.ovh .bk{background:none;border:none;color:var(--tx);font-size:22px;cursor:pointer;padding:0 4px}
+.ovh .tt{font-size:18px;font-weight:800}.ovh .ss{font-size:12px;color:var(--tx2)}
+.ovbody{flex:1;overflow-y:auto;padding:16px;max-width:760px;margin:0 auto;width:100%}
+.progress{display:flex;align-items:center;gap:10px;margin:0 0 16px}
+.pbar{flex:1;height:9px;background:var(--card2);border-radius:6px;overflow:hidden}
+.pfill{height:100%;background:var(--red);width:0;transition:.25s}
+.ptx{font-size:13px;color:var(--tx2);font-weight:600;min-width:42px;text-align:right}
+.sgroup{margin-bottom:14px}
+.sglab{font-size:13px;font-weight:700;color:var(--red);margin:0 0 8px;padding-left:2px}
+.it{display:flex;gap:11px;padding:13px 12px;background:var(--card);border:1px solid var(--line);
+  border-radius:11px;margin-bottom:7px;cursor:pointer;align-items:flex-start}
+.it.warn{border-color:var(--red);background:var(--red2)}
+.it.done{opacity:.5}
+.it .ck{width:22px;height:22px;border:2px solid var(--tx2);border-radius:6px;flex:none;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.it.done .ck{background:var(--green);border-color:var(--green)}
+.it .tx{flex:1;font-size:15px;line-height:1.45}
+.it.done .tx{text-decoration:line-through}
+.it .wb{color:var(--red);font-weight:800;margin-right:3px}
+/* flow 타임라인 */
+.fl{display:flex;gap:12px;margin-bottom:4px}
+.fl .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--card2);
+  border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;cursor:pointer}
+.fl.done .num{background:var(--green);border-color:var(--green);color:#fff}
+.fl .ln{flex:1;padding:0 0 16px}
+.fl .ft{font-weight:700;font-size:15px;cursor:pointer}
+.fl.done .ft{text-decoration:line-through;opacity:.6}
+.fl .fd{font-size:13px;color:var(--tx2);margin-top:3px;line-height:1.5}
+.fl .wb{color:var(--red);font-weight:800}
+/* ref 참조 */
+
+.refbox{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 4px}
+.refrow{padding:11px 14px;border-bottom:1px solid var(--line);font-size:15px;line-height:1.5}
+.refrow:last-child{border:none}
+.refrow.warn{color:var(--red);font-weight:600}
+.gate{position:sticky;bottom:0;margin-top:10px;padding:14px;border-radius:13px;text-align:center;
+  font-weight:800;font-size:16px;background:var(--card2);color:var(--tx2);border:1px solid var(--line)}
+.gate.ok{background:var(--green);color:#063;border-color:var(--green);cursor:pointer}
+.hint{font-size:12px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);
+  border-radius:10px;padding:10px 12px;margin-bottom:14px;line-height:1.5}
+.empty{text-align:center;color:var(--tx2);padding:50px 0}
+.note{font-size:11px;color:var(--tx2);text-align:center;padding:20px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <div class="logo"><span class="b">NFH</span> <span><em>ER</em> Mate</span></div>
+    <div class="hbtns">
+      <button onclick="toggleTheme()" id="thBtn">🌙</button>
+      <button onclick="exportTxt()">📤 내보내기</button>
+    </div>
+  </div>
+  <div class="search">
+    🔍 <input id="q" placeholder="시술·업무·가이드 검색 (CT, 수혈, 전원…)" oninput="doSearch()">
+  </div>
+  <div class="fav" id="fav"></div>
+  <div class="tabs" id="tabs">
+    <div class="tab on" data-t="home" onclick="setTab('home')">🏠 전체</div>
+    <div class="tab" data-t="proc" onclick="setTab('proc')">🏥 시술/검사</div>
+    <div class="tab" data-t="task" onclick="setTab('task')">📋 필수업무</div>
+    <div class="tab" data-t="guide" onclick="setTab('guide')">📚 업무가이드</div>
+  </div>
+</header>
+<main id="main"></main>
+
+<div class="ov" id="ov">
+  <div class="ovh">
+    <button class="bk" onclick="closeOv()">←</button>
+    <div><div class="tt" id="ovtt"></div><div class="ss" id="ovss"></div></div>
+  </div>
+  <div class="ovbody" id="ovbody"></div>
+</div>
+
+<script>
+const DATA = {
+ "procedures": [
+  {
+   "en": "★ ERCP(변경중)",
+   "ko": "내시경역행담췌관조영",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "진정 내시경적 역행성 담췌관 배액술 동의서 확인",
+       "w": false
+      },
+      {
+       "t": "NPO(금식) 유지",
+       "w": false
+      },
+      {
+       "t": "보호자 동반 필수",
+       "w": true
+      },
+      {
+       "t": "Pre-lab: CBC, PT/aPTT",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "투약/약물",
+     "items": [
+      {
+       "t": "예방적 항생제 확인",
+       "w": false
+      },
+      {
+       "t": "첫 ERCP 시 Futhan(Nafamostat) 투약할지 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "4hr Post-lab: Amy/Lip + Abd supine/erect 확인",
+       "w": false
+      },
+      {
+       "t": "Abd pain 사정",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "⚠️ Pancreatitis 발생 주의",
+       "w": true
+      },
+      {
+       "t": "⚠️ Massive Hydration(Hartmann Sol) 필요 가능성",
+       "w": true
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "소화기내시경센터 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "EGD(변경중)",
+   "ko": "위내시경",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "L-tube 있으면 제거",
+       "w": false
+      },
+      {
+       "t": "위내시경 검사 동의서 확인",
+       "w": false
+      },
+      {
+       "t": "출혈시 내시경적 지혈술(Hemostasis)/EVL 동의서 필요",
+       "w": false
+      },
+      {
+       "t": "Pre-lab: CBC, PLT, PT/aPTT, ABO/Rh",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S 체크",
+       "w": false
+      },
+      {
+       "t": "출혈 징후 관찰",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "소화기내시경센터 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "CFS(변경중)",
+   "ko": "대장내시경",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "대장내시경검사 동의서",
+       "w": false
+      },
+      {
+       "t": "Haprep 투여 확인",
+       "w": false
+      },
+      {
+       "t": "장정결 확인: #1 전날저녁 #2 당일아침",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S 체크",
+       "w": false
+      },
+      {
+       "t": "Abd pain 사정",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "소화기내시경센터 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "SFS",
+   "ko": "에스자결장내시경",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "에스자결장내시경검사 동의서",
+       "w": false
+      },
+      {
+       "t": "Leclean solution 1~2회 장정결 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S 체크",
+       "w": false
+      },
+      {
+       "t": "Abd pain 사정",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "소화기내시경센터 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "CT(변경중)",
+   "ko": "CT 조영제",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "CT동의서 준비(조영제 사용시)",
+       "w": false
+      },
+      {
+       "t": "환의(아래 속옷만 입힌다)로 갈아입기 + 귀금속(귀걸이 목걸이 등) 제거 - 영상 방해될 수 있음",
+       "w": false
+      },
+      {
+       "t": "GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)",
+       "w": false
+      },
+      {
+       "t": "20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)",
+       "w": false
+      },
+      {
+       "t": "조영제 알러지 시 전처치: Avil 다 들어간 후 30min, 스테로이드는 1hr 후 촬영",
+       "w": false
+      },
+      {
+       "t": "전처치 시작 전 CT실 전화해서 투약 시간 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "15분 후 영상병동뷰어 영상 올라왔는지 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "CT Heart angio+3D: TNI 확인 & HR>70 → betaloc 후 30분 f/u",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "응급CT (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "MRI",
+   "ko": "MRI",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "MRI 동의서 준비(조영제 사용시)",
+       "w": false
+      },
+      {
+       "t": "20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)",
+       "w": false
+      },
+      {
+       "t": "GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)",
+       "w": false
+      },
+      {
+       "t": "금속물질(안경, 보청기, 틀니, ECG lead, SPO2 sensor, 뇌심부자극기, pacemaker 등) 제거된 지 직접 확인 및 질문.",
+       "w": false
+      },
+      {
+       "t": "Sedation 시: midazolam #1 출발 시 IVS 준비물: O2, mask/nasal, ambu, O2 line, fitting mask",
+       "w": false
+      },
+      {
+       "t": "Sedation tl 이송모니터 + 의료진 동반",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "Sedation 후 의식/호흡 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "응급 MRI (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "CAG",
+   "ko": "관상동맥조영·심도자술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "심도자술 동의서 (봉합기 포함)",
+       "w": false
+      },
+      {
+       "t": "ICU vs 병동 확인 — ICU면 입실동의서 추가",
+       "w": false
+      },
+      {
+       "t": "Skin prep (사타구니) → 족배동맥 촉지 확인, 마커 표시, 간호기록 → Sandbag",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "투약/약물",
+     "items": [
+      {
+       "t": "DAPT 로딩: Aspirin Protect 100mg 3T + Pidogul(Clopidogrel) 75mg 8T + Statin(Lipitor or Vivacor) + 위장약(PPI) — 4가지 P.O 확인",
+       "w": false
+      },
+      {
+       "t": "기존에 Aspirin이나 clopidogrel 복용하던 사람은 각각 1tab만 복용(주치의확인 추천)",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      },
+      {
+       "t": "위급상황 아니면 이송용카로 바꿔서 이송",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "BAE",
+   "ko": "기관지동맥색전술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "동의서 2건: 기관지 동맥색전술(+ 천자부위 봉합기)",
+       "w": false
+      },
+      {
+       "t": "Skin prep (사타구니) → 족배동맥 촉지 확인, 마커 표시, 간호기록 → Sandbag",
+       "w": false
+      },
+      {
+       "t": "Foley 여부 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "검사 후 4~8hr ABR(절대안정)",
+       "w": false
+      },
+      {
+       "t": "천자부위봉합기 사용시 1~2hr ABR(절대안정)",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "Embolization",
+   "ko": "출혈환자 색전술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "출혈환자 색전술 동의서",
+       "w": false
+      },
+      {
+       "t": "Skin prep (사타구니) → 족배동맥 촉지 확인, 마커 표시, 간호기록 → Sandbag",
+       "w": false
+      },
+      {
+       "t": "Foley 여부 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "검사 후 4~8hr ABR(절대안정)",
+       "w": false
+      },
+      {
+       "t": "천자부위봉합기 사용시 1~2hr ABR(절대안정)",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "PTBD",
+   "ko": "경피경간담도배액술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "경피경간담도배액술(PTBD) 동의서",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "QOD dressing",
+       "w": false
+      },
+      {
+       "t": "2주 1번 bile bag change",
+       "w": false
+      },
+      {
+       "t": "검체 → culture 검사 나갈지 주치의 noti",
+       "w": false
+      },
+      {
+       "t": "얇은 코니칼튜브 검체 나가기",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "abdPCD",
+   "ko": "복부경피배액술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "복부경피배액술 동의서",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "검체 → culture 검사 나갈지 주치의 noti",
+       "w": false
+      },
+      {
+       "t": "얇은 코니칼튜브",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "chestPCD",
+   "ko": "경피흉관삽관술(Pigtail)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "경피흉관삽관술 동의서",
+       "w": false
+      },
+      {
+       "t": "Chest bottle 걸이, 투약실에 네임라벨 붙이기",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "PCN",
+   "ko": "경피적신루설치술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "경피적신루 설치술 동의서",
+       "w": false
+      },
+      {
+       "t": "좌우 확인 필수",
+       "w": true
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "4hr ABR",
+       "w": false
+      },
+      {
+       "t": "QOD dressing",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "홀터",
+   "ko": "24시간 심전도",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "검사 전 얇은 런닝",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "정규: 24시간 심전도방 예약 / 비정규: 1588-5700 전화 안내",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "심전도검사실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "EEG",
+   "ko": "뇌파검사",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "주의사항",
+     "items": []
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "뇌파검사실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "Echo",
+   "ko": "심초음파",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "TTE면 동의서 필요없음",
+       "w": false
+      },
+      {
+       "t": "TEE면 경식도초음파 동의서 + 금식 8시간",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": []
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "심장초음파실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "DJstent",
+   "ko": "요관부목(DJ stent)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "역행성 신우 조영술 동의서 + 요관 부목 설치술 동의서",
+       "w": false
+      },
+      {
+       "t": "NPO 4시간",
+       "w": false
+      },
+      {
+       "t": "IV 확보 (Gauge 상관없음)",
+       "w": false
+      },
+      {
+       "t": "하의 속옷 탈의",
+       "w": false
+      },
+      {
+       "t": "On call 진통제 pethidine 또는 fentanyl mixed clamping",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S check",
+       "w": false
+      },
+      {
+       "t": "2hr ABR & supine — vasovagal syncope 위험 높음",
+       "w": false
+      },
+      {
+       "t": "소변 배출 관찰",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "DJ 교환 시: 역행성신우조영술 + 요관부목 교체술 동의서",
+       "w": false
+      },
+      {
+       "t": "DJ 제거 시: 요관부목 제거술 동의서만",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "방광경실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "C-line",
+   "ko": "중심정맥관",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "중심정맥 도관삽입술 동의서 (lumen 수 주치의 확인)",
+       "w": false
+      },
+      {
+       "t": "22G IV + Main fluid or KVO fluid (CIV 사용 중이면 새 IV 필요)",
+       "w": false
+      },
+      {
+       "t": "금식 없음 (진정 시: 고형 6~8hr, 유동식 2~3hr)",
+       "w": false
+      },
+      {
+       "t": "1달 이내 Lab 확인 (INR<2.0, PLT>2만)",
+       "w": false
+      },
+      {
+       "t": "상의 속옷 탈의",
+       "w": false
+      },
+      {
+       "t": "Change/revision 시 Central line 에 연결 된 모든 수액 약물 제거",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S check",
+       "w": false
+      },
+      {
+       "t": "삽입부위 oozing/bleeding 관찰 (필요시 sandbag 압박)",
+       "w": false
+      },
+      {
+       "t": "중심정맥관 원위부 위치 주치의 확인 후 사용",
+       "w": false
+      },
+      {
+       "t": "채혈 가능 여부 주치의 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "혈관조영실 외 삽입 시 Post Chest xray 오더 필요",
+       "w": false
+      },
+      {
+       "t": "투석용 IJC: 투석/혈장교환 외 사용 금기 (응급 제외)",
+       "w": true
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "PEG",
+   "ko": "경피적 위루술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "내시경적 경피 위루술 동의서",
+       "w": false
+      },
+      {
+       "t": "MNNPO",
+       "w": false
+      },
+      {
+       "t": "18G IV + Main fluid or KVO fluid",
+       "w": false
+      },
+      {
+       "t": "Mouth opening 확인: 3cm 이상 (3손가락)",
+       "w": false
+      },
+      {
+       "t": "L-tube 있으면 제거하고 이송",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "투약/약물",
+     "items": [
+      {
+       "t": "Cefazolin 1g IV O.C (AST 확인 후)",
+       "w": false
+      },
+      {
+       "t": "Pethidine 25mg — 내시경센터에서 준비/투약",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S check",
+       "w": false
+      },
+      {
+       "t": "시술 다음 날 이상 없으면 식이 시작",
+       "w": false
+      },
+      {
+       "t": "경관영양 처음 시작 시 NST consult",
+       "w": false
+      },
+      {
+       "t": "삽입부위 2주간 매일 베타딘 소독 → 이후 2일마다",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "소화기내시경센터 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "Cardioversion",
+   "ko": "전기적 동율동 전환(DCC)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "전기적 동율동 전환 시술 동의서",
+       "w": false
+      },
+      {
+       "t": "NPO 8시간",
+       "w": false
+      },
+      {
+       "t": "3way 2개 카테터 Antecubital area에 가깝게 IV 확보",
+       "w": false
+      },
+      {
+       "t": "Etomidate prep, 향정 투약시 반납 잔량 확인!",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S check",
+       "w": false
+      },
+      {
+       "t": "Post 12-lead ECG 촬영, EKG monitoring 유지",
+       "w": false
+      },
+      {
+       "t": "흉부 통증, 피부 화상 관찰",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "합병증: 피부화상, 부정맥, 색전, 저산소증, Etomidate 부작용(전신tremor)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "Pacemaker",
+   "ko": "인공심박동기 시술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "인공심박동기 시술동의서",
+       "w": false
+      },
+      {
+       "t": "NPO 8시간",
+       "w": false
+      },
+      {
+       "t": "Cefazolin 1g AST 시행 → 시술장에 cefazolin 1g 2개 + d5w 50cc 1bag 보내기",
+       "w": false
+      },
+      {
+       "t": "항혈소판/항응고제 복용 시 주치의 확인",
+       "w": false
+      },
+      {
+       "t": "Complete AVB: 양쪽 서혜부 제모 + DPP/SMC 확인",
+       "w": false
+      },
+      {
+       "t": "Sandbag 1개 (Complete AVB: 2개)",
+       "w": false
+      },
+      {
+       "t": "보호자 동반, 환의만 (속옷 제거)",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "투약/약물",
+     "items": [
+      {
+       "t": "Cefa AST(+) 시: Levofloxacin 750mg 투약 + 250mg/50ml 1bag 보내기",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S check + EKG monitoring",
+       "w": false
+      },
+      {
+       "t": "4hr ABR + sandbag (항응고제 환자: 6~8hr, ILR: 2hr)",
+       "w": false
+      },
+      {
+       "t": "PM 모드/횟수 확인 (심혈관센터 인계)",
+       "w": false
+      },
+      {
+       "t": "과도한 팔운동 제한",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "HIS Alert → MRI 금기 장치 → Pacemaker 체크",
+       "w": true
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "PTGBD",
+   "ko": "경피경간 담낭배액술",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "경피경간 담낭배액술 동의서",
+       "w": false
+      },
+      {
+       "t": "NPO 4시간 (진정 시: 고형 6~8hr, 유동식 2~3hr)",
+       "w": false
+      },
+      {
+       "t": "22G IV + Main fluid",
+       "w": false
+      },
+      {
+       "t": "상의 속옷 탈의",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "V/S check",
+       "w": false
+      },
+      {
+       "t": "통증 사정 및 조절",
+       "w": false
+      },
+      {
+       "t": "배액관 배액양상/배액량 관찰",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "이송 부서",
+     "items": [
+      {
+       "t": "혈관조영실 (☏)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "OP",
+   "ko": "수술(OR 이송)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "수술 전 Anti 투여 확인 (Antibiotics)",
+       "w": false
+      },
+      {
+       "t": "입원자리 확인 후 수속",
+       "w": false
+      },
+      {
+       "t": "수술 전 간호기록 작성",
+       "w": false
+      },
+      {
+       "t": "전과전동기록지 작성 (입원병동용)",
+       "w": false
+      },
+      {
+       "t": "Foley 삽입 여부 주치의 확인",
+       "w": false
+      },
+      {
+       "t": "수술동의서 확인 — 수술/마취동의서 수혈동의서 누가 받을지 확이 후 받기.",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "투약/약물",
+     "items": [
+      {
+       "t": "수술 전 Antibiotics 투여 시간 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "⚠️ 이송용 car에 눕혀서 이송",
+       "w": true
+      },
+      {
+       "t": "⚠️ 병동인계 후 이송보낸 시간에 이름빼기",
+       "w": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "복수천자",
+   "ko": "복수천자(Paracentesis)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "Hb, PLT, INR 확인",
+       "w": false
+      },
+      {
+       "t": "복수천자술 동의서",
+       "w": false
+      },
+      {
+       "t": "Max drain 양 주치의 confirm",
+       "w": false
+      },
+      {
+       "t": "3L 이상 시 Albumin replace 오더 확인 (5L 이상 시 필수)",
+       "w": true
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "남은 검체(이름, 날짜, 시간, 부위) 실보/냉보/폐기 주치의 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "drain 안 나오면 체위변경, 심호흡 격려 10분 대기 후 주치의 확인 후 removal",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "요추천자",
+   "ko": "요추천자(Lumbar Puncture)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "bedside시 성인 척추 천자 동의서, 혈관조영실 이면 영상유도하 척추천자 동의서",
+       "w": false
+      },
+      {
+       "t": "천자 전 BST check",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "실온보관 냉장보관 확인 (이름, 날짜, 시간, 부위)",
+       "w": false
+      },
+      {
+       "t": "4hr ABR (flat position)",
+       "w": false
+      },
+      {
+       "t": "두통 사정 (post-LP headache)",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "흉수천자",
+   "ko": "흉수천자(Thoracentesis)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "Hb, PLT, INR 확인",
+       "w": false
+      },
+      {
+       "t": "흉수천자술 동의서 (좌우 확인 필수)",
+       "w": true
+      },
+      {
+       "t": "Max drain 양 주치의 confirm (보통 1~1.5L)",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "Post chest X-ray 확인",
+       "w": false
+      },
+      {
+       "t": "남은 검체(이름, 날짜, 시간, 부위) 실보/냉보/폐기 주치의 확인",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "주의사항",
+     "items": [
+      {
+       "t": "drain 안 나오면 체위변경, 심호흡 격려 10분 대기 후 주치의 확인 후 removal",
+       "w": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "en": "PCC",
+   "ko": "심낭천자(Pericardiocentesis)",
+   "kind": "prep",
+   "sections": [
+    {
+     "label": "준비사항",
+     "items": [
+      {
+       "t": "심낭천자술 동의서",
+       "w": false
+      },
+      {
+       "t": "보통 소생실에서 시행 — 주임선생님께 보고",
+       "w": false
+      },
+      {
+       "t": "PCC set 콜",
+       "w": false
+      }
+     ]
+    },
+    {
+     "label": "검사 후",
+     "items": [
+      {
+       "t": "PCC bag 비우지 말고 bag 자체를 교체",
+       "w": false
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "name": "퇴원",
+   "kind": "flow",
+   "items": [
+    {
+     "no": "1",
+     "title": "퇴원약 확인",
+     "detail": "퇴원약 있는지 여부 확인",
+     "w": false
+    },
+    {
+     "no": "2",
+     "title": "남은약 반납",
+     "detail": "반납용지+약→간호조무사 선생님 / 접수만된약→약국 전화 취소",
+     "w": false
+    },
+    {
+     "no": "3",
+     "title": "퇴원 서류 확인",
+     "detail": "진단서·입원사실증명서 등 필요서류 확인",
+     "w": false
+    },
+    {
+     "no": "4",
+     "title": "최종 수가 확인",
+     "detail": "미입력 수가 여부 확인, 중복 여부 수가도 확인",
+     "w": false
+    },
+    {
+     "no": "5",
+     "title": "검체 접수여부 확인",
+     "detail": "검체접수- 검체가 scan 되어있는지 확인",
+     "w": false
+    },
+    {
+     "no": "6",
+     "title": "Line 제거",
+     "detail": "IV line 등 제거",
+     "w": false
+    },
+    {
+     "no": "7",
+     "title": "퇴원간호기록지 전달",
+     "detail": "수납 전달",
+     "w": false
+    },
+    {
+     "no": "8",
+     "title": "응급실퇴실간호기록",
+     "detail": "퇴실일시=간호기록'퇴원함'시간",
+     "w": false
+    },
+    {
+     "no": "9",
+     "title": "침상정리",
+     "detail": "간호조무사, 청소담당 직원 연락",
+     "w": false
+    }
+   ]
+  },
+  {
+   "name": "입원",
+   "kind": "flow",
+   "items": [
+    {
+     "no": "1",
+     "title": "입원지시 확인",
+     "detail": "담당 주치의에게 입원 여부 확인 및 병실/중환자실 갈지 확인",
+     "w": false
+    },
+    {
+     "no": "2",
+     "title": "병실배정",
+     "detail": "원무 문의하기",
+     "w": false
+    },
+    {
+     "no": "3",
+     "title": "입원수속 안내",
+     "detail": "보호자에게 입원지시라벨 출력 및 병실 호수 안내→응급원무수납안내",
+     "w": false
+    },
+    {
+     "no": "4",
+     "title": "약 반납 확인",
+     "detail": "남은약 반납처리(환자 원래 가지고 있는약은 인계, 응급실 처방하고 남은 경구 주사, 수액은 반납)",
+     "w": false
+    },
+    {
+     "no": "5",
+     "title": "전과전동기록지",
+     "detail": "인계 전 기록하기",
+     "w": false
+    },
+    {
+     "no": "6",
+     "title": "인계",
+     "detail": "검체·pen insulin 등 함께인계. 수혈남으면 병동알리기",
+     "w": false
+    },
+    {
+     "no": "7",
+     "title": "응급실퇴실간호기록",
+     "detail": "처치(빠지거나 중복된건 없는지)·검사(접수 안된 검사나 시행 안되거 없는지)·오더(사인 안하거나 놓친거 없는지)  재확인후 작성",
+     "w": false
+    },
+    {
+     "no": "8",
+     "title": "환자이송",
+     "detail": "환자 이송하기",
+     "w": false
+    },
+    {
+     "no": "9",
+     "title": "침상정리",
+     "detail": "간호조무사 연락하기, 케이블·이름표정리",
+     "w": false
+    }
+   ]
+  },
+  {
+   "name": "전원",
+   "kind": "flow",
+   "items": [
+    {
+     "no": "1",
+     "title": "전원동의서",
+     "detail": "주치의 전원동의서 받기",
+     "w": false
+    },
+    {
+     "no": "2",
+     "title": "전원소견서",
+     "detail": "이송수단(자차, 사설 구급차) ·병원이름. 정규:전원전담간호사",
+     "w": false
+    },
+    {
+     "no": "3",
+     "title": "의무기록복사",
+     "detail": "확인필요",
+     "w": false
+    },
+    {
+     "no": "4",
+     "title": "CD/DVD복사",
+     "detail": "확인필요",
+     "w": false
+    },
+    {
+     "no": "5",
+     "title": "전원회신확인",
+     "detail": "진료협력센터경유여부확인",
+     "w": false
+    },
+    {
+     "no": "6",
+     "title": "전원 서류 확인",
+     "detail": "진단서·입원사실증명서 등 필요서류 확인",
+     "w": false
+    },
+    {
+     "no": "7",
+     "title": "구급차안내",
+     "detail": "구급차 비용 안내, 구급차 연락하기",
+     "w": false
+    },
+    {
+     "no": "8",
+     "title": "퇴원약확인",
+     "detail": "필요시퇴원약안내",
+     "w": false
+    },
+    {
+     "no": "9",
+     "title": "외래예약확인",
+     "detail": "다음외래꼭확인!",
+     "w": false
+    },
+    {
+     "no": "10",
+     "title": "퇴실30분전 V/S",
+     "detail": "반드시 입력해야함",
+     "w": false
+    },
+    {
+     "no": "11",
+     "title": "응급실퇴실간호기록",
+     "detail": "작성 및 환자 퇴실 누른 뒤",
+     "w": false
+    },
+    {
+     "no": "12",
+     "title": "침상정리",
+     "detail": "간호조무사 연락하기, 케이블·이름표정리",
+     "w": false
+    }
+   ]
+  },
+  {
+   "name": "사망",
+   "kind": "flow",
+   "items": [
+    {
+     "no": "1",
+     "title": "주치의 사망 선언 확인",
+     "detail": "주치의에게 사망 선언 시각 확인 및 기록",
+     "w": false
+    },
+    {
+     "no": "2",
+     "title": "사망 시각 기록",
+     "detail": "차트에 정확한 사망 시각 기록(사망시간 = 주치의 사망선언시간 = ECG flat 시간)",
+     "w": false
+    },
+    {
+     "no": "3",
+     "title": "보호자 연락",
+     "detail": "보호자에게 사망 사실 통보 및 병원 내원 안내",
+     "w": false
+    },
+    {
+     "no": "4",
+     "title": "시신 정리",
+     "detail": "눈·입 닫기, 자세 정리, 깨끗한 시트로 교체",
+     "w": false
+    },
+    {
+     "no": "5",
+     "title": "IV line 등 제거",
+     "detail": "IV line·foley·NG tube 등 의료기기 전부 제거",
+     "w": false
+    },
+    {
+     "no": "6",
+     "title": "귀중품 확인 및 인계",
+     "detail": "귀중품 목록 작성 후 보호자에게 직접 인계",
+     "w": false
+    },
+    {
+     "no": "7",
+     "title": "사망진단서 확인",
+     "detail": "주치의 사망진단서 발급 여부 확인(가족관계증명서 발급 여부 확인 ) 보통 10부",
+     "w": false
+    },
+    {
+     "no": "8",
+     "title": "사망간호기록지 작성",
+     "detail": "사망 전 처치 발행·V/S·경과 포함하여 간호기록 작성",
+     "w": false
+    },
+    {
+     "no": "9",
+     "title": "응급실 퇴실 간호기록",
+     "detail": "퇴실 기록에 '사망' 시각 및 사유 입력",
+     "w": false
+    },
+    {
+     "no": "10",
+     "title": "원무과 사망 신고",
+     "detail": "원무과에 사망 신고 후 행정 처리 확인",
+     "w": false
+    },
+    {
+     "no": "11",
+     "title": "영안실 연락 및 이송",
+     "detail": "영안실(☏ 내선 확인) 연락 → 이송 등록 후 이송",
+     "w": false
+    },
+    {
+     "no": "12",
+     "title": "침상 정리 및 소독",
+     "detail": "간호조무사, 침상·장비 소독 및 정리",
+     "w": false
+    }
+   ]
+  }
+ ],
+ "guides": [
+  {
+   "en": "ICU",
+   "ko": "ICU 중환자실",
+   "cat": "동의서",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "중환자실입실동의서 필요",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "수혈",
+   "ko": "수혈 (Transfusion)",
+   "cat": "준비",
+   "kind": "prep",
+   "items": [
+    {
+     "t": "수혈동의서 확인",
+     "w": false
+    },
+    {
+     "t": "수혈 단독 line 20G 이상 잡기",
+     "w": false
+    },
+    {
+     "t": "ABO 오더: 환자명 옆 혈액형 있으면 1개, 없으면 2개 (3일마다 채혈)",
+     "w": false
+    },
+    {
+     "t": "수혈 시 MF hold 여부 주치의 확인",
+     "w": false
+    },
+    {
+     "t": "수혈 전 과거 수혈전 부작용 있는지 여부 확인 및 필요시 전처치(Chlorphniramine +NS 50ml ivs 주입 후 )",
+     "w": false
+    },
+    {
+     "t": "RBC (320ml 유래: 190cc / 400ml 유래: 250cc)",
+     "w": false
+    },
+    {
+     "t": "FFP (320ml 유래: 150cc / 400ml 유래: 170cc)",
+     "w": false
+    },
+    {
+     "t": "PLT (320ml 유래: 40cc / 400ml 유래: 50cc)",
+     "w": false
+    },
+    {
+     "t": "Pheresis (240cc) / Cryo (35cc)",
+     "w": false
+    },
+    {
+     "t": "Leukocyte depleted RBC (240cc)",
+     "w": false
+    },
+    {
+     "t": "FFP: 30분~1시간 / INR 교정 or Volume",
+     "w": false
+    },
+    {
+     "t": "Pheresis(PLT): 30분~1시간 / PLT 저하 시",
+     "w": false
+    },
+    {
+     "t": "RBC : 최초 15분간 50~75ml/hr로 투여 후 이상 반응 없으면 150~200ml/hr증량, 4시간 내 수혈 완료.",
+     "w": false
+    },
+    {
+     "t": "⚠️ 남은 수혈 병동인계 시: ER 오더 유지 여부 확인",
+     "w": true
+    },
+    {
+     "t": "⚠️ 폐기/반납 시: 폐기요청서 주치의 작성 및 사인 → 혈액과 함께 간호조무사 전달",
+     "w": true
+    }
+   ]
+  },
+  {
+   "en": "마약반납",
+   "ko": "마약 반납 절차",
+   "cat": "절차",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "mix 안 하고 반납: HIS 약물에 E사인 넣어서 보라색 없애기",
+     "w": false
+    },
+    {
+     "t": "mix 후 반납: 마약장에 넣고 X사인",
+     "w": false
+    },
+    {
+     "t": "마약현황조회 → 약물조회 → 반납량/사유 입력 → 반납내역 출력",
+     "w": false
+    },
+    {
+     "t": "마약반납내역 출력지' + 환자약 함께 간호조무사(파워텔 :)께 전달",
+     "w": false
+    },
+    {
+     "t": "HIS 에 실제 반납 되었는지도 반드시 확인(안 될시 분실 및 책임 위험)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "enema",
+   "ko": "관장 (Enema)",
+   "cat": "준비",
+   "kind": "prep",
+   "items": [
+    {
+     "t": "찍찍이 기저귀(팬티형 절대 안됨) + 물티슈 미리 안내 → 기저귀 채워놓기",
+     "w": false
+    },
+    {
+     "t": "Kalimate 5g×6포 + D5W 200ml → 15분 이상 참으라고 안내",
+     "w": false
+    },
+    {
+     "t": "Lactulose 200ml [간성혼수용] + D5W mix — 50cc syringe + rectal tube + 윤활제 + 휴지",
+     "w": false
+    },
+    {
+     "t": "Leclean & Glycerin: 완제품 (비품 있음) /",
+     "w": false
+    },
+    {
+     "t": "수가: 글리세린 관장 or drug retention enema, 관장 시행함, 관장 후 대변 봄(양상 기록 및 사진 업로드-필요시)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "고칼륨혈증",
+   "ko": "고칼륨혈증 처치",
+   "cat": "투약",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "Calcium gluconate 1@ + N/S 50ml IV",
+     "w": false
+    },
+    {
+     "t": "D50% + Humulin R IV (용량 주의!!) ex 10units : 0.1 ml",
+     "w": true
+    },
+    {
+     "t": "30min / 1hr BST 재확인(저혈당 위험 확인)",
+     "w": false
+    },
+    {
+     "t": "Kalimate enema 병행 가능",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "mix금기",
+   "ko": "약물 배합금기",
+   "cat": "금기",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "★ 같은 라인 mix 금지 — 모르는 약은 더블클릭해서 약품정보조회 확인 ★",
+     "w": false
+    },
+    {
+     "t": "Phosten(KH2PO4) + MgSO4 → 침전물 생김 / 투약순서: Mg → Ca → Phosten",
+     "w": false
+    },
+    {
+     "t": "Bivon(Bicarbonate sodium) + Calcium제제 → 크리스탈 생김",
+     "w": false
+    },
+    {
+     "t": "TPN + Triaxone → 칼슘함유용액 동시투여 불가 (침전위험)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "투약속도",
+   "ko": "수액 투약 속도 참고",
+   "cat": "속도",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "40cc/hr = 3~4초에 1방울 = 24시간",
+     "w": false
+    },
+    {
+     "t": "80cc/hr = 2~3초에 1방울 = 12시간",
+     "w": false
+    },
+    {
+     "t": "120cc/hr = 1~2초에 1방울 = 8~9시간",
+     "w": false
+    },
+    {
+     "t": "[SUP] = Y사인 넣을 때마다 올라옴 / [TIT] 청구 → 투약 시 'Y-'사인",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "TDM",
+   "ko": "약물 농도 모니터링",
+   "cat": "대상",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "Digoxin, Vancomycin, 항경련제, 면역억제제",
+     "w": false
+    },
+    {
+     "t": "보통 약 먹기 30min 전 채혈 (ER에서는 먹어도 나갈 때 있음)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "ACTH",
+   "ko": "ACTH 검사 절차",
+   "cat": "절차",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "ACTH 검사 오더",
+     "w": false
+    },
+    {
+     "t": "ACTH + Cortisol(basal) 채혈(IV 채혈 용 keep 하기)",
+     "w": false
+    },
+    {
+     "t": "기본 샘플 후 Synacthen IV shooting → N/S flushing",
+     "w": false
+    },
+    {
+     "t": "30min 후 Cortisol 채혈 → 60min 후 Cortisol 채혈",
+     "w": false
+    },
+    {
+     "t": "ACTH stimulation test 검사오더는 초기상태가 맞음 (수가 없음)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "투석",
+   "ko": "혈액투석",
+   "cat": "동의서",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "Perm cath 삽입시술 동의서 + 응급혈액투석시술동의서 or 동정맥루풍선확장술(AVF PTA)동의서",
+     "w": false
+    },
+    {
+     "t": "AVF malfunction이거나 없는 사람 → 응급투석",
+     "w": false
+    },
+    {
+     "t": "혈관조영실 → X-ray실(Perm cath 삽입 확인)→ 투석(인공신장실) 이송",
+     "w": false
+    },
+    {
+     "t": "투석실 전화: perm 꽂으러 가는데 XR 찍고 바로 투석 가도 되는지 여부 확인",
+     "w": false
+    },
+    {
+     "t": "Post XR confirm: 신장내과",
+     "w": false
+    },
+    {
+     "t": "⚠️ 투석 못하면 K+ level ▲",
+     "w": true
+    }
+   ]
+  },
+  {
+   "en": "A-line",
+   "ko": "A-line (동맥라인)",
+   "cat": "준비",
+   "kind": "prep",
+   "items": [
+    {
+     "t": "수가: transducer + cannular + 나픽스 + 동맥혈압측정",
+     "w": false
+    },
+    {
+     "t": "A-line 카테터, 나픽스: 소독물품실",
+     "w": false
+    },
+    {
+     "t": "Pressure bag: 소생실",
+     "w": false
+    },
+    {
+     "t": "고정용 집게, 커넥터: 소생실",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "신환접수(변경중)",
+   "ko": "신환 접수 루틴",
+   "cat": "대기실",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "① 오더 screening, 처치 끊기 (예진실 IV set → IV 확보 + 수액 연결)",
+     "w": false
+    },
+    {
+     "t": "② X-ray/CT/MRI 있으면 환자복 들고가기 (중자·대자 3구역 옷장)",
+     "w": false
+    },
+    {
+     "t": "③ 채혈, X-ray, 금식, 보호자 상주 원칙 설명",
+     "w": false
+    },
+    {
+     "t": "④ 환자 사정, V/S check",
+     "w": false
+    },
+    {
+     "t": "⑤ 담당간호사 구역 안내 (안내 안하면 예진실 업무 마비)",
+     "w": false
+    },
+    {
+     "t": "① 오더 screening, 주증상, 과거력 확인 및 처치 끊기",
+     "w": false
+    },
+    {
+     "t": "② monitoring set, 환자복 준비",
+     "w": false
+    },
+    {
+     "t": "③ initial lab, CT, X-ray[p], MRI 등 call (), 영상병동뷰어, 동의서",
+     "w": false
+    },
+    {
+     "t": "④ 환자 사정, monitor admit, V/S check",
+     "w": false
+    },
+    {
+     "t": "⑤ 금식, 보호자 1인 상주 원칙 설명",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "간호기록",
+   "ko": "간호기록 / GCS",
+   "cat": "GCS-E",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "E4 자발적 눈뜸 / E3 소리에 / E2 통증에 / E1 눈뜨지 않음",
+     "w": false
+    },
+    {
+     "t": "V5 시간장소사람 지남력모두 있을시 / V4 지남력 하나라도 있을시 / V3 혼란 / V2 신음 / V1 발화없음 (기관절개관시 T, 기관삽관시 E))",
+     "w": false
+    },
+    {
+     "t": "M6 obey / M5 통증 적극회피 / M4 소극회피 / M3 이상굴곡 / M2 이상신전 / M1 무반응",
+     "w": false
+    },
+    {
+     "t": "V: 정상(아주 강한힘) / IV: 약간 저항 / III: 중력을 이기며 들어올리나 못버팀 / II: 들지는 못하나 좌우 움직임 / I: 손 발만 살짝 움찔 / O: 없음",
+     "w": false
+    },
+    {
+     "t": "빛반사: prompt / hippus / sluggish / 없음 —",
+     "w": false
+    },
+    {
+     "t": "타원 foley/PTBD/PCN/L-tube/C-line → 삽입일자, 교환주기, 드레싱일자 확인 후 기록",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "간호진단",
+   "ko": "자주 쓰는 간호진단",
+   "cat": "진단",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "출혈위험 / 출혈",
+     "w": false
+    },
+    {
+     "t": "비효율적 호흡 양상",
+     "w": false
+    },
+    {
+     "t": "조직관류 저하: 뇌, 심폐계, 신장 등",
+     "w": false
+    },
+    {
+     "t": "장폐색증 / 고칼륨혈증 / 저나트륨혈증",
+     "w": false
+    },
+    {
+     "t": "급성 통증",
+     "w": false
+    },
+    {
+     "t": "감염 위험 (CRP↑, 발열)",
+     "w": false
+    },
+    {
+     "t": "전염 위험 (Flu, Covid, TB 등)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "드레싱주기",
+   "ko": "드레싱 교환 주기",
+   "cat": "주기",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "Medress: 2일마다",
+     "w": false
+    },
+    {
+     "t": "Tegaderm: 1주일마다",
+     "w": false
+    },
+    {
+     "t": "L-tube: 4주마다",
+     "w": false
+    },
+    {
+     "t": "C-line: 안 쓸 경우 lumen마다 regurge/push 확인 → heparin locking",
+     "w": false
+    },
+    {
+     "t": "IV : 72 시간마다 iv site 교체하기.",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "I/O",
+   "ko": "I/O 모니터링",
+   "cat": "시간",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "q6h: 06:00, 12:00, 18:00, 23:59",
+     "w": false
+    },
+    {
+     "t": "q8h: 08:00, 16:00, 23:59",
+     "w": false
+    },
+    {
+     "t": "Night 00:00에 23:59 기록과 동일하게 한번 더 기록",
+     "w": false
+    },
+    {
+     "t": "임상관찰기록: 전날 23:59 & 당일 00:00 fluid양 기록, 인퓨전펌프 제로잉",
+     "w": false
+    },
+    {
+     "t": "네가티브 500~+500 정상범위 / 심부전 환자나 신장 질환 환자는 다 noti",
+     "w": false
+    },
+    {
+     "t": "I/O 오더 있는데 foley 없으면 → self 체크할건지 주치의 확인",
+     "w": false
+    },
+    {
+     "t": "F/D 환자: drip 포함해서 I/O noti / UO 적은 환자: 시간당 알려주기",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "약반납",
+   "ko": "약 반납 절차",
+   "cat": "반납",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "이미 올라온 약: '반납용지' + 약 같이 내리기",
+     "w": false
+    },
+    {
+     "t": "HIS 에서 접수만 되고 응급실엔 안올라온 약: 약국 전화 → 접수취소(취소 후 취소 되었는지 다시 확인)",
+     "w": false
+    },
+    {
+     "t": "⚠️ 핑크색 [반납] 표시되어야 이름 뺄 수 있음!",
+     "w": true
+    },
+    {
+     "t": "비정규: 기송관 or 약국전화 후 보조원 SMS",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "환자접수취소",
+   "ko": "환자 접수 취소",
+   "cat": "절차",
+   "kind": "flow",
+   "items": [
+    {
+     "t": "'응급환자비등록대장'에 환자이름 올라왔는지 확인",
+     "w": false
+    },
+    {
+     "t": "오더 D/C, 약·처치 다 반납 및 취소 확인",
+     "w": false
+    },
+    {
+     "t": "수납 call: 접수 취소해주세요",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "chest tube",
+   "ko": "흉관삽입술 준비",
+   "cat": "동의서",
+   "kind": "prep",
+   "items": [
+    {
+     "t": "흉관삽입술 동의서 (좌, 우 확인)",
+     "w": false
+    },
+    {
+     "t": "NA님에게 C-tube 준비, 사용할 tube(보통 24fr, 28fr, Minitube 10fr) 콜",
+     "w": false
+    },
+    {
+     "t": "chest bottle에 멸균생리식염수 채워넣기 + 멸균장갑, chest bottle 걸이 투약실에서 네임라벨 두고 준비",
+     "w": false
+    },
+    {
+     "t": "Wall Suction 할 경우: PVC line + I자 커넥터, NA님에게 wall suction 20cm으로 준비 부탁",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "post seizure",
+   "ko": "경련 후 처치",
+   "cat": "준비",
+   "kind": "prep",
+   "items": [
+    {
+     "t": "Wall O2 + Face mask (reservoir+)",
+     "w": false
+    },
+    {
+     "t": "IV line 확보",
+     "w": false
+    },
+    {
+     "t": "Suction tip + Saline",
+     "w": false
+    },
+    {
+     "t": "장갑 + 헬멧",
+     "w": false
+    },
+    {
+     "t": "Keppra 2000mg loading: NS 150ml btl에 mix",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "파상풍",
+   "ko": "파상풍 접종",
+   "cat": "확인",
+   "kind": "judge",
+   "items": [
+    {
+     "t": "5년 이내 접종 이력 있는지 확인 → 투약 전 물어보기",
+     "w": false
+    },
+    {
+     "t": "파상풍 약(약이름 명시) -> 냉장보관",
+     "w": false
+    },
+    {
+     "t": "Boostrix: 약국 비품시 요청 → 같이 요청",
+     "w": false
+    },
+    {
+     "t": "2개일시 양쪽 팔에 따로 주기",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "heparin",
+   "ko": "헤파린 투약",
+   "cat": "투약",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "IVS max 4000 unit",
+     "w": false
+    },
+    {
+     "t": "Heparinization 시 반드시 몸무게 측정",
+     "w": false
+    },
+    {
+     "t": "Heparin 1:100 희석 — 휴온스 heparin 1000unit/10cc (옴니셀 접수)",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "dalteparin",
+   "ko": "LMWH(저분자헤파린)",
+   "cat": "적응증",
+   "kind": "judge",
+   "items": [
+    {
+     "t": "PTE 환자",
+     "w": false
+    },
+    {
+     "t": ">200 unit/kg/day [SC]",
+     "w": false
+    },
+    {
+     "t": "DPP 촉지해보기",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "terlipressin",
+   "ko": "Terlipressin 투약",
+   "cat": "위치",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "냉장고에 있음",
+     "w": false
+    },
+    {
+     "t": "보통 2mg loading → 1mg qid, 보통 3일까지",
+     "w": false
+    },
+    {
+     "t": "이후 사용은 주치의 확인 필요",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "statin",
+   "ko": "Statin(리피토)",
+   "cat": "적응증",
+   "kind": "judge",
+   "items": [
+    {
+     "t": "NSTEMI 환자 → Lipitor(statin) + water P.O",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "steroid",
+   "ko": "스테로이드 투약",
+   "cat": "투약",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "Dexamethasone 10mg loading + 4mg/ml 유지",
+     "w": false
+    },
+    {
+     "t": "PPI 병용 가능",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "lasix",
+   "ko": "Lasix(푸로세마이드)",
+   "cat": "투약",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "투약 후 1hr effect 기록 및 의사 보고",
+     "w": false
+    }
+   ]
+  },
+  {
+   "en": "Grasin",
+   "ko": "Grasin (G-CSF)",
+   "cat": "투약",
+   "kind": "ref",
+   "items": [
+    {
+     "t": "Grasin 300mcg(비품) + D5W or NS 50ml 또는 SC",
+     "w": false
+    },
+    {
+     "t": "ANC 낮은 사람 보통 qd",
+     "w": false
+    },
+    {
+     "t": "⚠️ 150mcg랑 혼동주의!!",
+     "w": true
+    }
+   ]
+  }
+ ]
+};
+const KIND_LABEL={prep:"준비물",flow:"절차",ref:"참조",judge:"판단"};
+const ICON={prep:"🏥",flow:"📋",ref:"📚",judge:"❓"};
+const PROC_ICON={"CT":"🩻","MRI":"🧲","CAG":"❤️","OP":"🔪","C-line":"💉","PEG":"🍽️",
+  "Echo":"🫀","EEG":"🧠","Pacemaker":"⏱️","Cardioversion":"⚡"};
+let checks={};
+
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function markWarn(t){return esc(t).replace(/⚠️/g,'<span class="wb">⚠️</span>');}
+
+// 통합 인덱스
+let IDX=[];
+DATA.procedures.forEach((p,i)=>IDX.push({type:"proc",i,kind:p.kind,
+  ko:p.ko,en:p.en,title:p.ko||p.en,sub:p.en}));
+DATA.tasks.forEach((t,i)=>IDX.push({type:"task",i,kind:t.kind,ko:t.name,title:t.name,sub:t.items.length+"단계"}));
+DATA.guides.forEach((g,i)=>IDX.push({type:"guide",i,kind:g.kind,ko:g.ko,en:g.en,title:g.ko||g.en,sub:g.cat}));
+
+function pic(it){ if(it.type==="proc"){for(const k in PROC_ICON){if((it.en||"").startsWith(k)||it.title.includes(k))return PROC_ICON[k];}} return ICON[it.kind]; }
+
+function card(it,gi){
+  return `<div class="cardx" onclick="openDetail('${it.type}',${it.i})">
+    <span class="kd ${it.kind}">${KIND_LABEL[it.kind]}</span>
+    <div class="ic">${pic(it)}</div>
+    <div class="ti">${esc(it.title)}</div>
+    <div class="su">${esc(it.sub||"")}</div></div>`;
+}
+
+const FAV=["CT","CAG","MRI","수혈","전원","고칼륨혈증 처치","GCS","파상풍 접종"];
+function renderFav(){
+  document.getElementById("fav").innerHTML=FAV.map(f=>{
+    const hit=IDX.find(x=>x.title.includes(f)||(x.en||"").startsWith(f));
+    if(!hit)return "";
+    return `<div class="chip" onclick="openDetail('${hit.type}',${hit.i})">${esc(f)}</div>`;
+  }).join("");
+}
+
+let curTab="home";
+function setTab(t){curTab=t;document.querySelectorAll(".tab").forEach(e=>e.classList.toggle("on",e.dataset.t===t));render();}
+function render(){
+  const m=document.getElementById("main");
+  const sec=(title,arr)=>`<div class="sec-h">${title}</div><div class="grid">${arr.map(x=>card(x)).join("")}</div>`;
+  let h="";
+  if(curTab==="home"){
+    h+=sec("🏥 시술 / 검사 ("+DATA.procedures.length+")",IDX.filter(x=>x.type==="proc"));
+    h+=sec("📋 필수업무 ("+DATA.tasks.length+")",IDX.filter(x=>x.type==="task"));
+    h+=sec("📚 업무가이드 ("+DATA.guides.length+")",IDX.filter(x=>x.type==="guide"));
+  }else if(curTab==="proc") h+=sec("시술 / 검사",IDX.filter(x=>x.type==="proc"));
+  else if(curTab==="task") h+=sec("필수업무",IDX.filter(x=>x.type==="task"));
+  else if(curTab==="guide") h+=sec("업무가이드",IDX.filter(x=>x.type==="guide"));
+  h+=`<div class="note">데이터 출처: ER-Mate_간호기록_병합완성본_수정본20260607.xlsx · 분기(스무고개)는 임상 검수 후 추가 예정</div>`;
+  m.innerHTML=h;
+}
+
+function doSearch(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  if(!q){render();return;}
+  const m=document.getElementById("main");
+  const hits=IDX.filter(x=>{
+    if((x.title||"").toLowerCase().includes(q)||(x.en||"").toLowerCase().includes(q)||(x.sub||"").toLowerCase().includes(q))return true;
+    // 내용까지 검색
+    let txt="";
+    if(x.type==="proc")DATA.procedures[x.i].sections.forEach(s=>s.items.forEach(i=>txt+=i.t));
+    if(x.type==="task")DATA.tasks[x.i].items.forEach(i=>txt+=i.title+i.detail);
+    if(x.type==="guide")DATA.guides[x.i].items.forEach(i=>txt+=i.t);
+    return txt.toLowerCase().includes(q);
+  });
+  m.innerHTML = hits.length
+    ? `<div class="sec-h">검색 결과 ${hits.length}</div><div class="grid">${hits.map(x=>card(x)).join("")}</div>`
+    : `<div class="empty">검색 결과 없음</div>`;
+}
+
+let curDetail=null;
+function openDetail(type,i){
+  document.getElementById("ov").classList.add("on");
+  let obj,kind,title,sub;
+  if(type==="proc"){obj=DATA.procedures[i];kind=obj.kind;title=obj.ko||obj.en;sub=obj.en;}
+  else if(type==="task"){obj=DATA.tasks[i];kind=obj.kind;title=obj.name;sub="필수업무 · "+obj.items.length+"단계";}
+  else {obj=DATA.guides[i];kind=obj.kind;title=obj.ko||obj.en;sub=obj.cat+" 가이드";}
+  curDetail={type,i,obj,kind};
+  document.getElementById("ovtt").textContent=title;
+  document.getElementById("ovss").textContent=KIND_LABEL[kind]+" · "+(sub||"");
+  renderDetail();
+}
+function ckKey(a,b){return curDetail.type+curDetail.i+"_"+a+"_"+b;}
+
+function renderDetail(){
+  const {obj,kind}=curDetail; const b=document.getElementById("ovbody");
+  let h="";
+  if(kind==="prep"){
+    // 시술 or 준비물 가이드
+    const secs = obj.sections || [{label:obj.cat||"항목",items:obj.items}];
+    let tot=0,done=0,reqTot=0,reqDone=0;
+    secs.forEach((s,si)=>s.items.forEach((it,ii)=>{tot++;if(checks[ckKey(si,ii)])done++;
+      if(it.w){reqTot++;if(checks[ckKey(si,ii)])reqDone++;}}));
+    h+=`<div class="hint">✅ 준비물형 — 빠뜨리면 안 되는 항목을 체크하세요. <span class="wb">⚠️</span>는 놓치면 사고 위험.</div>`;
+    h+=progBar(done,tot);
+    secs.forEach((s,si)=>{
+      h+=`<div class="sgroup"><div class="sglab">${esc(s.label)}</div>`;
+      s.items.forEach((it,ii)=>{
+        const on=checks[ckKey(si,ii)];
+        h+=`<div class="it ${it.w?'warn':''} ${on?'done':''}" onclick="tog(${si},${ii})">
+          <div class="ck">${on?'✓':''}</div><div class="tx">${markWarn(it.t)}</div></div>`;
+      });
+      h+=`</div>`;
+    });
+    const ok=reqTot===0?done===tot:reqDone===reqTot;
+    h+=`<div class="gate ${ok?'ok':''}">${ok?'🚑 이송 준비 완료':'🔒 필수항목('+reqDone+'/'+reqTot+') 남음'}</div>`;
+  }
+  else if(kind==="flow"){
+    let done=0;obj.items.forEach((it,ii)=>{if(checks[ckKey(0,ii)])done++;});
+    h+=`<div class="hint">📋 절차형 — 위에서 아래로 순서대로 진행하세요.</div>`;
+    h+=progBar(done,obj.items.length);
+    obj.items.forEach((it,ii)=>{
+      const on=checks[ckKey(0,ii)];
+      const wb=it.w?'<span class="wb">⚠️ </span>':'';
+      h+=`<div class="fl ${on?'done':''}">
+        <div class="num" onclick="tog(0,${ii})">${on?'✓':(it.no||ii+1)}</div>
+        <div class="ln"><div class="ft" onclick="tog(0,${ii})">${wb}${esc(it.title||it.t)}</div>
+        ${it.detail?`<div class="fd">${markWarn(it.detail)}</div>`:''}</div></div>`;
+    });
+  }
+  else if(kind==="judge"){
+    h+=`<div class="hint">❓ 판단형 — 조건을 확인하고 해당되면 아래대로 진행하세요.</div>`;
+    h+=`<div class="refbox">`+obj.items.map(it=>`<div class="refrow ${it.w?'warn':''}">${markWarn(it.t)}</div>`).join("")+`</div>`;
+  }
+  else { // ref
+    h+=`<div class="hint">📚 참조 — 보는 자료입니다 (체크 없음).</div>`;
+    h+=`<div class="refbox">`+obj.items.map(it=>`<div class="refrow ${it.w?'warn':''}">${markWarn(it.t)}</div>`).join("")+`</div>`;
+  }
+  b.innerHTML=h;
+}
+function progBar(d,t){const p=t?Math.round(d/t*100):0;
+  return `<div class="progress"><div class="pbar"><div class="pfill" style="width:${p}%"></div></div><div class="ptx">${d}/${t}</div></div>`;}
+function tog(si,ii){const k=ckKey(si,ii);checks[k]=!checks[k];renderDetail();}
+function closeOv(){document.getElementById("ov").classList.remove("on");curDetail=null;}
+
+function exportTxt(){
+  if(!curDetail){alert("내보낼 항목을 먼저 여세요.");return;}
+  const {obj,kind}=curDetail;
+  let title=obj.ko||obj.en||obj.name;
+  let lines=["["+title+"] 체크 결과 - "+new Date().toLocaleString("ko-KR")];
+  const secs = obj.sections || [{label:obj.cat||"",items:obj.items}];
+  secs.forEach((s,si)=>{ if(s.label)lines.push("\n■ "+s.label);
+    s.items.forEach((it,ii)=>{const on=checks[ckKey(si,ii)];
+      lines.push((on?"[v] ":"[ ] ")+(it.title||it.t)+(it.detail?" - "+it.detail:""));});});
+  const txt=lines.join("\n");
+  navigator.clipboard?.writeText(txt).then(()=>alert("복사됨! 간호기록에 붙여넣기 하세요.")).catch(()=>prompt("복사:",txt));
+}
+
+function toggleTheme(){
+  const d=document.body.getAttribute("data-theme")==="light";
+  document.body.setAttribute("data-theme",d?"":"light");
+  document.getElementById("thBtn").textContent=d?"🌙":"☀️";
+}
+
+renderFav();render();
+</script>
+</body>
+</html>
