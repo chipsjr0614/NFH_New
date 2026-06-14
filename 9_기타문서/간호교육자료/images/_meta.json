@@ -1,0 +1,74 @@
+{
+ "01_ecg_stemi": {
+  "file": "images/01_ecg_stemi.jpg",
+  "title": "File:12 Lead EKG ST Elevation tracing color coded.jpg",
+  "license": "Public domain",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/7/76/12_Lead_EKG_ST_Elevation_tracing_color_coded.jpg"
+ },
+ "06_ecg_vf": {
+  "file": "images/06_ecg_vf.jpg",
+  "title": "File:Ventricular fibrillation (from ecg-quiz.com).jpg",
+  "license": "CC BY-SA 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Ventricular_fibrillation_%28from_ecg-quiz.com%29.jpg"
+ },
+ "08_ecg_af": {
+  "file": "images/08_ecg_af.jpg",
+  "title": "File:Atrial Fibrillation in two leads.jpg",
+  "license": "CC BY-SA 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Atrial_Fibrillation_in_two_leads.jpg"
+ },
+ "13_xray_pneumonia": {
+  "file": "images/13_xray_pneumonia.jpg",
+  "title": "File:X-ray of lobar pneumonia.jpg",
+  "license": "CC0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/5/51/X-ray_of_lobar_pneumonia.jpg"
+ },
+ "40_ecg_hyperK": {
+  "file": "images/40_ecg_hyperK.jpg",
+  "title": "File:Hyperkalemia ECG.jpg",
+  "license": "CC BY 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/6/67/Hyperkalemia_ECG.jpg"
+ },
+ "15_xray_pneumothorax": {
+  "file": "images/15_xray_pneumothorax.png",
+  "title": "File:Chest X-ray of pneumothorax.png",
+  "license": "CC BY 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Chest_X-ray_of_pneumothorax.png"
+ },
+ "14_ct_pe": {
+  "file": "images/14_ct_pe.png",
+  "title": "File:CTPA showing mass at the right lower neck and corresponding ultrasound of the neck showing the mass.png",
+  "license": "CC BY-SA 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/f/f1/CTPA_showing_mass_at_the_right_lower_neck_and_corresponding_ultrasound_of_the_neck_showing_the_mass.png"
+ },
+ "20_ct_ischemic": {
+  "file": "images/20_ct_ischemic.jpg",
+  "title": "File:Right MCA and PCA territories infarct.jpg",
+  "license": "CC BY-SA 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/9/93/Right_MCA_and_PCA_territories_infarct.jpg"
+ },
+ "21_ct_ich": {
+  "file": "images/21_ct_ich.jpg",
+  "title": "File:Intracerebral hemorrage (CT scan).jpg",
+  "license": "Public domain",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Intracerebral_hemorrage_%28CT_scan%29.jpg"
+ },
+ "23_ct_sah": {
+  "file": "images/23_ct_sah.jpg",
+  "title": "File:CT scan - subarachnoid hemorrhage.jpg",
+  "license": "CC BY-SA 3.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/f/f3/CT_scan_-_subarachnoid_hemorrhage.jpg"
+ },
+ "36_xray_ileus": {
+  "file": "images/36_xray_ileus.jpg",
+  "title": "File:1. Bowel-obstruction-x-ray.jpg",
+  "license": "CC BY-SA 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/a/a3/1._Bowel-obstruction-x-ray.jpg"
+ },
+ "11_ct_aortic": {
+  "file": "images/11_ct_aortic.png",
+  "title": "File:Diagnostic Algorithm of aortic dissection.png",
+  "license": "CC BY-SA 4.0",
+  "src": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Diagnostic_Algorithm_of_aortic_dissection.png"
+ }
+}

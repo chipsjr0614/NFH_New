@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 460" font-family="'Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <radialGradient id="lumen" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#ffe1e3"/><stop offset="1" stop-color="#f2b8bc"/>
+    </radialGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5c9a0"/><stop offset="1" stop-color="#e0a173"/>
+    </linearGradient>
+  </defs>
+  <rect width="880" height="460" rx="18" fill="#ffffff"/>
+  <text x="32" y="46" font-size="25" font-weight="800" fill="#1a2a3a">죽상경화 진행 4단계 — 혈관이 막히기까지</text>
+  <line x1="32" y1="60" x2="848" y2="60" stroke="#e3e8ee" stroke-width="2"/>
+
+  <!-- 공통 혈관 단면 그리는 좌표 4개 -->
+  <!-- 1 정상 -->
+  <g transform="translate(120,210)">
+    <circle r="95" fill="url(#wall)" stroke="#c98248" stroke-width="3"/>
+    <circle r="62" fill="url(#lumen)" stroke="#d98a90" stroke-width="2"/>
+    <text x="0" y="6" font-size="15" fill="#b23039" font-weight="700" text-anchor="middle">정상 혈류</text>
+    <text x="0" y="135" font-size="18" font-weight="800" fill="#1a2a3a" text-anchor="middle">① 정상</text>
+    <text x="0" y="160" font-size="13.5" fill="#5b6876" text-anchor="middle">내강이 넓게 열림</text>
+  </g>
+
+  <!-- 2 플라크 축적 -->
+  <g transform="translate(345,210)">
+    <circle r="95" fill="url(#wall)" stroke="#c98248" stroke-width="3"/>
+    <circle r="62" fill="url(#lumen)" stroke="#d98a90" stroke-width="2"/>
+    <path d="M-62 0 A62 62 0 0 1 40 -47 C8 -18 8 18 40 47 A62 62 0 0 1 -62 0 Z" fill="#ffd54a" stroke="#d9a200" stroke-width="2"/>
+    <text x="-6" y="6" font-size="13" fill="#7a5b00" font-weight="700" text-anchor="middle">플라크</text>
+    <text x="0" y="135" font-size="18" font-weight="800" fill="#1a2a3a" text-anchor="middle">② 플라크 축적</text>
+    <text x="0" y="160" font-size="13.5" fill="#5b6876" text-anchor="middle">콜레스테롤 쌓여 좁아짐</text>
+  </g>
+
+  <!-- 3 파열 -->
+  <g transform="translate(570,210)">
+    <circle r="95" fill="url(#wall)" stroke="#c98248" stroke-width="3"/>
+    <circle r="62" fill="url(#lumen)" stroke="#d98a90" stroke-width="2"/>
+    <path d="M-62 0 A62 62 0 0 1 40 -47 C8 -18 8 18 40 47 A62 62 0 0 1 -62 0 Z" fill="#ffd54a" stroke="#d9a200" stroke-width="2"/>
+    <path d="M-2 -40 L-18 -8 L2 2 L-14 38" fill="none" stroke="#b23039" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="-6" y="-52" font-size="13" fill="#b23039" font-weight="800" text-anchor="middle">파열!</text>
+    <text x="0" y="135" font-size="18" font-weight="800" fill="#1a2a3a" text-anchor="middle">③ 플라크 파열</text>
+    <text x="0" y="160" font-size="13.5" fill="#5b6876" text-anchor="middle">표면 터지며 혈액 노출</text>
+  </g>
+
+  <!-- 4 혈전 폐색 -->
+  <g transform="translate(795,210)">
+    <circle r="95" fill="url(#wall)" stroke="#c98248" stroke-width="3"/>
+    <circle r="62" fill="url(#lumen)" stroke="#d98a90" stroke-width="2"/>
+    <path d="M-62 0 A62 62 0 0 1 40 -47 C8 -18 8 18 40 47 A62 62 0 0 1 -62 0 Z" fill="#ffd54a" stroke="#d9a200" stroke-width="2"/>
+    <circle cx="-8" cy="0" r="34" fill="#6b2d34"/>
+    <circle cx="-22" cy="-12" r="9" fill="#8d3a43"/>
+    <circle cx="6" cy="10" r="8" fill="#8d3a43"/>
+    <text x="-8" y="5" font-size="12" fill="#ffd7da" font-weight="700" text-anchor="middle">혈전</text>
+    <text x="0" y="135" font-size="18" font-weight="800" fill="#b23039" text-anchor="middle">④ 혈전 폐색</text>
+    <text x="0" y="160" font-size="13.5" fill="#5b6876" text-anchor="middle">완전 막힘 → 심근경색</text>
+  </g>
+
+  <!-- 진행 화살표 -->
+  <g fill="#9aa7b5">
+    <path d="M222 200 l24 0 l0 -7 l16 12 l-16 12 l0 -7 l-24 0 Z"/>
+    <path d="M447 200 l24 0 l0 -7 l16 12 l-16 12 l0 -7 l-24 0 Z"/>
+    <path d="M672 200 l24 0 l0 -7 l16 12 l-16 12 l0 -7 l-24 0 Z"/>
+  </g>
+  <text x="440" y="410" font-size="14" fill="#8b98a8" text-anchor="middle">※ "수도관에 녹이 쌓이다 → 터지고 → 막힌다"  ·  DAPT는 ③④단계(혈전 형성)를 차단</text>
+</svg>

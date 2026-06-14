@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>미리보기 — 급성 심근경색 (STEMI)</title>
+<style>
+:root{
+  --bg:#0d1117; --surf:#161b22; --surf2:#1c2330; --brd:#2a3441;
+  --txt:#e6edf3; --mute:#8b98a8; --dim:#586273;
+  --accent:#ef4444; --accent2:#f97316;
+  --why:#1565C0; --whybg:#0d2440; --whybd:#1e4976;
+  --red:#ef4444; --redbg:#2a1012; --redbd:#7f1d1d;
+  --navy:#1A237E; --gold:#e3b341;
+  --c-def:#1565C0; --c-path:#2e7d32; --c-anat:#e65100; --c-sx:#8e24aa; --c-ecg:#c62828; --c-tx:#00838f;
+}
+body.light{
+  --bg:#eef2f6; --surf:#ffffff; --surf2:#f5f8fb; --brd:#dde5ee;
+  --txt:#16202c; --mute:#5b6876; --dim:#9aa7b5;
+  --whybg:#eaf2fd; --whybd:#bcd6f5; --why:#1565C0;
+  --redbg:#fdeced; --redbd:#f5b5b5;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  font-size:18px;line-height:1.7;padding-bottom:60px;transition:background .2s,color .2s;}
+.wrap{max-width:860px;margin:0 auto;padding:0 18px;}
+
+/* 미리보기 바 */
+.devbar{background:var(--surf);border-bottom:1px solid var(--brd);padding:10px 18px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:30;}
+.devbar small{color:var(--mute);font-size:12px;}
+.devbar b{font-size:13px;}
+.tgl{display:flex;gap:5px;}
+.tgl button{padding:6px 12px;border:1px solid var(--brd);background:var(--surf2);color:var(--mute);
+  border-radius:18px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.tgl button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* 헤더 */
+.hero{background:linear-gradient(135deg,#7f1d1d,#b71c1c);color:#fff;border-radius:0 0 20px 20px;
+  padding:26px 22px 22px;margin-bottom:18px;}
+.hero .case-no{font-size:14px;font-weight:700;opacity:.85;letter-spacing:1px;}
+.hero h1{font-size:32px;font-weight:800;margin:4px 0 12px;letter-spacing:-.5px;}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
+  padding:5px 13px;border-radius:16px;font-size:14px;font-weight:600;}
+
+/* 선배 말씀 */
+.mentor{background:var(--surf2);border:1px solid var(--brd);border-left:4px solid var(--gold);
+  border-radius:12px;padding:17px 19px;margin-bottom:20px;}
+.mentor .mh{font-size:15px;font-weight:800;color:var(--gold);margin-bottom:7px;}
+.mentor p{font-size:16.5px;color:var(--txt);}
+
+/* 탭 */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:6px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:10px 16px;border-radius:20px;border:1px solid var(--brd);background:var(--surf);
+  color:var(--mute);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.15s;}
+.tab.active{color:#fff;border-color:transparent;}
+.tab[data-c="def"].active{background:var(--c-def);}
+.tab[data-c="path"].active{background:var(--c-path);}
+.tab[data-c="anat"].active{background:var(--c-anat);}
+.tab[data-c="sx"].active{background:var(--c-sx);}
+.tab[data-c="ecg"].active{background:var(--c-ecg);}
+.tab[data-c="tx"].active{background:var(--c-tx);}
+
+/* 섹션 */
+.panel{display:none;animation:fade .25s ease;}
+.panel.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.sec-head{display:flex;align-items:center;gap:9px;margin:14px 0 12px;}
+.sec-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.sec-head h2{font-size:21px;font-weight:800;}
+
+.item{background:var(--surf);border:1px solid var(--brd);border-radius:13px;padding:18px;margin-bottom:13px;}
+.item-title{font-size:17.5px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.item-title::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.item-body{font-size:16px;color:var(--txt);white-space:pre-line;}
+.why{margin-top:12px;background:var(--whybg);border:1px solid var(--whybd);border-radius:10px;padding:13px 15px;}
+.why .wl{font-size:13px;font-weight:800;color:var(--why);letter-spacing:.5px;margin-bottom:5px;}
+.why .wt{font-size:15px;color:var(--txt);white-space:pre-line;}
+body.light .why .wt{color:#243447;}
+
+/* Red flag */
+.redbox{background:var(--redbg);border:1px solid var(--redbd);border-radius:14px;padding:17px;margin:22px 0 14px;}
+.redbox h2{color:var(--red);font-size:20px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.rf{display:flex;gap:10px;padding:11px 0;border-bottom:1px dashed var(--redbd);font-size:16px;}
+.rf:last-child{border:none;}
+.rf .ri{color:var(--red);flex-shrink:0;}
+
+/* 핵심암기 */
+.memo{background:linear-gradient(135deg,#1A237E,#283593);color:#fff;border-radius:14px;padding:20px;margin-bottom:14px;}
+.memo .ml{font-size:15px;font-weight:800;color:var(--gold);margin-bottom:8px;}
+.memo p{font-size:16.5px;font-weight:600;line-height:1.7;}
+
+/* 이미지 자리 */
+.imgnote{margin-top:11px;font-size:14px;color:var(--mute);background:var(--surf2);border:1px dashed var(--brd);
+  border-radius:9px;padding:10px 13px;display:flex;gap:7px;align-items:center;}
+</style>
+</head>
+<body>
+
+<div class="devbar">
+  <div><b>🔎 디자인 미리보기</b> &nbsp;<small>케이스 1개(STEMI)만 · 실제 프로그램은 60개 케이스 + 검색·진행률 포함 예정</small></div>
+  <div class="tgl">
+    <button id="bd" class="on" onclick="theme('dark')">🌙 다크</button>
+    <button id="bl" onclick="theme('light')">☀️ 라이트</button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap" style="padding:0">
+    <div class="case-no">CASE #01 · ❤️ 심장/순환기</div>
+    <h1>급성 심근경색 (STEMI)</h1>
+    <div class="meta">
+      <span class="chip">난이도 ★★★★☆</span>
+      <span class="chip">D2B 90분</span>
+      <span class="chip">DAPT</span>
+      <span class="chip">12-lead ECG</span>
+      <span class="chip">ST 상승</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="mentor">
+    <div class="mh">💬 선배 말씀 (프셉마음)</div>
+    <p>"AMI는 응급실에서 제일 긴장되는 케이스야. 근데 신규 때 제일 힘든 게 뭔지 알아? 왜 이걸 하는지 모르고 손만 움직이는 거야. 오늘은 검사 하나, 약 하나에도 전부 이유를 붙여서 설명해줄게. 이유를 알면 흔들리지 않아."</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-c="def" onclick="tab(this,'p-def')">📖 이게 무슨 병?</button>
+    <button class="tab" data-c="path" onclick="tab(this,'p-path')">🔬 왜 생겨?</button>
+    <button class="tab" data-c="anat" onclick="tab(this,'p-anat')">🗺️ 해부 지도</button>
+    <button class="tab" data-c="sx" onclick="tab(this,'p-sx')">😣 왜 이런 증상?</button>
+    <button class="tab" data-c="ecg" onclick="tab(this,'p-ecg')">📈 검사 보는 법</button>
+    <button class="tab" data-c="tx" onclick="tab(this,'p-tx')">💊 왜 이 치료?</button>
+  </div>
+
+  <!-- 정의 -->
+  <div class="panel active" id="p-def">
+    <div class="sec-head"><div class="sec-ico" style="background:var(--c-def)">📖</div><h2>이게 무슨 병?</h2></div>
+    <div class="item">
+      <div class="item-title">한 줄 정의</div>
+      <div class="item-body">관상동맥이 완전히 막혀 심근세포가 산소를 못 받아 죽어가는 상태</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">심근세포는 한번 죽으면 절대 재생 불가. Time is Muscle — 20분부터 괴사 시작, 6시간이면 광범위 괴사 완성.</div></div>
+      <div class="imgnote">🖼️ 심장 전체 해부도 — 관상동맥 분포 조감 (실제 의학 일러스트 삽입 예정)</div>
+    </div>
+    <div class="item">
+      <div class="item-title">위험인자</div>
+      <div class="item-body">고칠 수 있음: 고혈압, 당뇨, 고지혈증, 흡연, 비만, 스트레스
+고칠 수 없음: 고령(남45↑ 여55↑), 남성, 가족력</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">죽상경화증은 수년간 진행. 위험인자가 많을수록 플라크 형성 속도↑, 파열 위험↑</div></div>
+    </div>
+    <div class="item">
+      <div class="item-title">STEMI vs NSTEMI</div>
+      <div class="item-body">STEMI: 완전 폐색, ST 상승, D2B 90분 PCI
+NSTEMI: 부분 폐색, ST 하강/정상, 안정화 후 PCI</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">폐색 정도의 차이. 둘 다 심근효소 상승하지만 STEMI가 훨씬 긴박함.</div></div>
+    </div>
+  </div>
+
+  <!-- 병태생리 -->
+  <div class="panel" id="p-path">
+    <div class="sec-head"><div class="sec-ico" style="background:var(--c-path)">🔬</div><h2>왜 생겨?</h2></div>
+    <div class="item">
+      <div class="item-title">진행 4단계</div>
+      <div class="item-body">1) 죽상경화반 수년 형성
+2) 플라크 파열 (스트레스·흡연 방아쇠)
+3) 혈소판 집합 → 혈전 형성
+4) 완전 폐색 → 심근 괴사</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">DAPT(Aspirin+Clopidogrel)는 3단계 혈전 형성을 두 가지 경로에서 동시 차단</div></div>
+      <div class="imgnote">🖼️ 죽상경화증 4단계 혈관 단면도 (정상→축적→파열→혈전)</div>
+    </div>
+  </div>
+
+  <!-- 해부 -->
+  <div class="panel" id="p-anat">
+    <div class="sec-head"><div class="sec-ico" style="background:var(--c-anat)">🗺️</div><h2>해부 지도</h2></div>
+    <div class="item">
+      <div class="item-title">관상동맥 3가지</div>
+      <div class="item-body">LAD(전하행): 심실 전벽 → V1~V4 ST↑ ★가장 위험
+RCA(우관상): 하벽·우심실 → II·III·aVF ST↑ → NTG 금기!
+LCX(좌선회): 측벽 → I·aVL·V5~V6 ST↑ → 진단 어려움</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">RCA 막히면 우심실 경색 동반 가능. 우심실은 전부하 의존 → NTG로 혈관 확장하면 혈압 급락 위험.</div></div>
+      <div class="imgnote">🖼️ 관상동맥 주행 경로 + 공급 영역 컬러 표시</div>
+    </div>
+  </div>
+
+  <!-- 증상 -->
+  <div class="panel" id="p-sx">
+    <div class="sec-head"><div class="sec-ico" style="background:var(--c-sx)">😣</div><h2>왜 이런 증상?</h2></div>
+    <div class="item">
+      <div class="item-title">증상별 근거</div>
+      <div class="item-body">흉통·압박감 30분↑: 허혈 심근 → 젖산·브레디키닌 축적 → 통증수용체 자극
+왼팔·턱 방사통: 심장 구심신경(C8~T4) = 왼팔·턱 피부분절 같은 척수레벨 → 연관통
+식은땀·창백: 심박출량↓ → 교감신경↑ → 카테콜아민 → 말초혈관 수축
+오심·구토: RCA경색 → 하벽 자극 → 미주신경 반사항진</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">당뇨·노인·여성은 신경 둔화로 흉통 없는 경우 多. "그냥 피곤해요"도 ECG 먼저!</div></div>
+    </div>
+  </div>
+
+  <!-- 검사 -->
+  <div class="panel" id="p-ecg">
+    <div class="sec-head"><div class="sec-ico" style="background:var(--c-ecg)">📈</div><h2>검사 보는 법</h2></div>
+    <div class="item">
+      <div class="item-title">ECG 근거 & 읽기</div>
+      <div class="item-body">근거: 심근 허혈 → 이온 펌프 손상 → 재분극 이상 → ST↑
+변화 순서: 과첨예 T파 → ST 상승★ → T파 역전 → 병적 Q파
+진단: 인접 2개 유도 1mm↑ (V2-V3은 2mm↑)</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">V1-V4: LAD / II·III·aVF: RCA / I·aVL·V5-V6: LCX
+새로운 LBBB + 흉통 = STEMI로 취급</div></div>
+      <div class="imgnote">🖼️ 실제 STEMI 12-lead ECG — ST 상승 부위 강조</div>
+    </div>
+    <div class="item">
+      <div class="item-title">심근효소 근거</div>
+      <div class="item-body">Troponin I: 3h↑ → 24h 정점 → 7~10일 지속
+CK-MB: 3h↑ → 18h 정점 → 3~4일
+초기 음성 가능 → Serial Troponin (6h 재검) 필수!</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">심근세포 괴사 → 세포막 파괴 → 세포내 단백질 혈액 유출. Troponin은 심근에만 특이적으로 존재.</div></div>
+      <div class="imgnote">🖼️ 심근효소 시간별 상승·하강 그래프 (Troponin/CK-MB)</div>
+    </div>
+  </div>
+
+  <!-- 치료 -->
+  <div class="panel" id="p-tx">
+    <div class="sec-head"><div class="sec-ico" style="background:var(--c-tx)">💊</div><h2>왜 이 치료?</h2></div>
+    <div class="item">
+      <div class="item-title">즉시 처치</div>
+      <div class="item-body">12-lead ECG 10분내: 혈관위치·폐색범위 파악
+IV 라인 2개: 응급약물·수액 동시투여
+채혈(Troponin·CK-MB·CBC·BMP·Coag·혈형): 진단확인 + PCI전 출혈위험평가
+지속 심전도: VF·VT 즉각 대비</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">D2B 90분 = Door to Balloon. 응급실 도착 → 스텐트 삽입까지 90분 이내 목표.</div></div>
+    </div>
+    <div class="item">
+      <div class="item-title">약물 근거</div>
+      <div class="item-body">Aspirin 300mg 씹어서: COX-1억제→TXA₂차단→혈소판응집억제. 씹으면 3분 vs 삼키면 15분
+Clopidogrel: ADP수용체(P2Y12) 차단 → Aspirin과 다른 경로 → DAPT=이중차단
+산소: SpO₂<90%만! 과산소→활성산소↑→심근손상 악화
+NTG: 혈관확장→전부하↓→심근산소요구량↓ BUT SBP<90 / 하벽STEMI 금기!
+Morphine: 통증·교감흥분완화→심근산소소비↓</div>
+      <div class="why"><div class="wl">💡 왜?</div><div class="wt">Primary PCI(스텐트): 혈전 직접 제거 + 고정. 약물보다 재개통률·생존율 압도적↑</div></div>
+      <div class="imgnote">🖼️ PCI 시술 과정 일러스트 (카테터→풍선→스텐트)</div>
+    </div>
+  </div>
+
+  <!-- Red Flag -->
+  <div class="redbox">
+    <h2>🔴 Red Flag — 절대 놓치면 안 되는 것</h2>
+    <div class="rf"><span class="ri">⚠️</span><span>하벽 STEMI + 저혈압 → <b>NTG 금지!</b> NS 250~500mL 수액</span></div>
+    <div class="rf"><span class="ri">⚠️</span><span>초기 Troponin 음성 → 6시간 후 Serial 재검 필수</span></div>
+    <div class="rf"><span class="ri">⚠️</span><span>새로운 LBBB + 흉통 → STEMI 동일 대응</span></div>
+    <div class="rf"><span class="ri">⚠️</span><span>SBP&lt;90 + 의식변화 → 심인성 쇼크, 즉시 보고</span></div>
+    <div class="rf"><span class="ri">⚠️</span><span>30분마다 통증 NRS 재평가 기록</span></div>
+  </div>
+
+  <!-- 핵심암기 -->
+  <div class="memo">
+    <div class="ml">⚡ 핵심 암기</div>
+    <p>DAPT (Aspirin 씹어서 + Clopidogrel) / D2B 90분 / NTG 금기 2가지(SBP&lt;90, 하벽STEMI) / Serial Troponin 6h</p>
+  </div>
+
+</div>
+
+<script>
+function theme(t){
+  document.body.classList.toggle('light',t==='light');
+  document.getElementById('bd').classList.toggle('on',t==='dark');
+  document.getElementById('bl').classList.toggle('on',t==='light');
+}
+function tab(btn,pid){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(pid).classList.add('active');
+}
+</script>
+</body>
+</html>

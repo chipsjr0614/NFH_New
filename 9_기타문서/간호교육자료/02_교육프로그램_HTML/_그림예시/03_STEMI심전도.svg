@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 470" font-family="'Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <pattern id="sm" width="11" height="11" patternUnits="userSpaceOnUse">
+      <path d="M11 0 H0 V11" fill="none" stroke="#f4c9cd" stroke-width="0.8"/>
+    </pattern>
+    <pattern id="lg" width="55" height="55" patternUnits="userSpaceOnUse">
+      <rect width="55" height="55" fill="url(#sm)"/>
+      <path d="M55 0 H0 V55" fill="none" stroke="#e98c93" stroke-width="1.6"/>
+    </pattern>
+  </defs>
+  <rect width="860" height="470" rx="18" fill="#ffffff"/>
+  <text x="32" y="46" font-size="25" font-weight="800" fill="#1a2a3a">정상 vs STEMI 심전도 — ST를 보라</text>
+  <line x1="32" y1="60" x2="828" y2="60" stroke="#e3e8ee" stroke-width="2"/>
+
+  <!-- 정상 ECG -->
+  <g transform="translate(40,90)">
+    <rect width="360" height="150" rx="8" fill="url(#lg)" stroke="#e98c93" stroke-width="1.5"/>
+    <text x="10" y="24" font-size="15" font-weight="800" fill="#2e9d4f">정상</text>
+    <!-- baseline + PQRST x2 -->
+    <polyline fill="none" stroke="#1a2a3a" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"
+      points="8,95 40,95 52,84 60,95 72,95 78,98 84,40 92,120 100,95 118,82 134,95 175,95
+              207,95 219,84 227,95 239,95 245,98 251,40 259,120 267,95 285,82 301,95 352,95"/>
+    <line x1="8" y1="95" x2="352" y2="95" stroke="#2e9d4f" stroke-width="1" stroke-dasharray="5 4"/>
+    <text x="120" y="140" font-size="12.5" fill="#5b6876">ST 분절이 기준선과 같은 높이</text>
+  </g>
+
+  <!-- STEMI ECG -->
+  <g transform="translate(440,90)">
+    <rect width="380" height="150" rx="8" fill="url(#lg)" stroke="#e98c93" stroke-width="1.5"/>
+    <text x="10" y="24" font-size="15" font-weight="800" fill="#b23039">STEMI (ST 상승)</text>
+    <!-- baseline -->
+    <line x1="8" y1="95" x2="372" y2="95" stroke="#2e9d4f" stroke-width="1" stroke-dasharray="5 4"/>
+    <!-- waveform with elevated, coved ST -->
+    <polyline fill="none" stroke="#b23039" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"
+      points="8,95 40,95 52,86 60,95 72,95 78,98 84,42 92,118 100,70
+              112,62 128,60 150,72 168,95 200,95
+              212,86 220,95 232,95 238,98 244,42 252,118 260,70
+              272,62 288,60 310,72 328,95 372,95"/>
+    <!-- ST elevation highlight -->
+    <path d="M100,70 C112,62 128,60 150,72" fill="none" stroke="#ff7a00" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="124" cy="61" r="20" fill="none" stroke="#ff7a00" stroke-width="2.4"/>
+    <text x="150" y="138" font-size="12.5" fill="#b23039" font-weight="700">ST가 기준선 위로 볼록하게 상승</text>
+  </g>
+
+  <!-- 화살표 + 큰 라벨 -->
+  <g>
+    <path d="M540 50 l0 18 l-7 0 l12 16 l12 -16 l-7 0 l0 -18 Z" fill="#ff7a00"/>
+    <text x="564" y="68" font-size="18" font-weight="800" fill="#ff7a00">여기! ST 상승</text>
+  </g>
+
+  <!-- 하단 핵심 박스 -->
+  <g transform="translate(40,270)">
+    <rect width="780" height="150" rx="12" fill="#fff4ec" stroke="#ff7a00" stroke-width="2"/>
+    <text x="22" y="34" font-size="17" font-weight="800" fill="#b23039">💡 ST 상승 = 즉시 보고</text>
+    <text x="22" y="66" font-size="15" fill="#3a4654">• 진단 기준: 인접한 2개 유도에서 1mm↑ (V2~V3은 2mm↑)</text>
+    <text x="22" y="92" font-size="15" fill="#3a4654">• 변화 순서: 과첨예 T파 → <tspan font-weight="800" fill="#b23039">ST 상승</tspan> → T파 역전 → 병적 Q파</text>
+    <text x="22" y="118" font-size="15" fill="#3a4654">• 기전: 심근 허혈 → 세포막 이온펌프 손상 → 재분극 이상 → ST 변화</text>
+    <text x="22" y="142" font-size="13.5" fill="#8b6a4f">처음엔 ST만 봐. 기준선보다 올라갔으면 일단 보고 — 나머지는 나중에 배워도 돼.</text>
+  </g>
+</svg>
