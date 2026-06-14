@@ -282,6 +282,18 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
 @media (min-width:900px) and (max-width:1140px){
   #app{max-width:96vw;}
 }
+
+/* ── 추가 항목 + 최종 확인 팝업 ── */
+.bgrp4{display:flex;gap:6px;flex-wrap:wrap;}
+.pbtn{flex:1;min-width:60px;padding:10px 6px;border-radius:var(--rs);border:1px solid var(--brd);background:var(--surf2);color:var(--mute);font-size:14px;font-weight:600;text-align:center;cursor:pointer;font-family:inherit;}
+.pbtn.sel{background:var(--accent);border-color:var(--accent-bd);color:var(--accent-tx);font-weight:700;}
+.pbtn.sel-r{background:var(--k1bg);border-color:var(--k1bd);color:#dc2626;font-weight:700;}
+.modal.wide{max-width:400px;}
+.fm-chk{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:7px;cursor:pointer;font-size:15px;color:var(--txt);background:var(--surf2);}
+.fm-chk .fm-box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--dim);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;}
+.fm-chk.on{border-color:var(--k4);} .fm-chk.on .fm-box{background:var(--k4);border-color:var(--k4);}
+.fm-chk.on .fm-box::after{content:"✓";}
+.fm-warn{font-size:13px;color:var(--k2);background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:9px 11px;margin:4px 0 10px;}
 </style>
 </head>
 <body>
@@ -318,6 +330,23 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
   </div>
 </div>
 
+<div class="modal-overlay" id="finalModal">
+  <div class="modal wide" style="text-align:left">
+    <div class="modal-icon">🏷️</div>
+    <div class="modal-title">엑셀 입력 전 최종 확인</div>
+    <div class="modal-body" style="margin-bottom:12px">환자 정보를 다시 확인하세요. 빠지면 진행할 수 없습니다.</div>
+    <div class="fg"><div class="flbl">이름 *</div><input class="fi" id="fmName" oninput="S.pname=this.value;var e=document.getElementById('pname');if(e)e.value=this.value;fmValidate()"></div>
+    <div class="fg"><div class="flbl">등록번호 *</div><input class="fi" id="fmPid" oninput="S.pid=this.value;var e=document.getElementById('pid');if(e)e.value=this.value;fmValidate()"></div>
+    <div style="height:6px"></div>
+    <div class="fm-chk" id="fmC1" onclick="fmToggle('fmC1')"><span class="fm-box"></span>🏷️ 이름 팔찌 확인</div>
+    <div class="fm-chk" id="fmC2" onclick="fmToggle('fmC2')"><span class="fm-box"></span>🦮 낙상 교육</div>
+    <div class="fm-chk" id="fmC3" onclick="fmToggle('fmC3')"><span class="fm-box"></span>🚱 금식 교육 (물 포함)</div>
+    <div class="fm-warn" id="fmWarn">이름·등록번호 입력 + 3가지 확인을 모두 완료하세요.</div>
+    <button class="modal-btn blue" id="fmGo" disabled onclick="doFinalCopy()">✅ 확인 완료 → 엑셀 복사</button>
+    <button class="modal-btn gray" onclick="closeFinal()">취소</button>
+  </div>
+</div>
+
 <!-- Screens -->
 <div id="screens">
 
@@ -350,6 +379,26 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
       <div class="fg"><div class="flbl">환자번호</div><input class="fi" id="pid" placeholder="100-000000" inputmode="text" maxlength="8" oninput="S.pid=this.value"></div>
       <div class="fg"><div class="flbl">이름</div><input class="fi" id="pname" placeholder="홍○○" oninput="S.pname=this.value"></div>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="card-lbl">🛡️ 임신 · 알러지 · 복용약물 <span style="color:var(--mute);font-weight:500">· 간단 입력</span></div>
+    <div class="flbl">🤰 임신 여부 <span style="color:var(--mute)">(여성)</span></div>
+    <div class="bgrp4">
+      <div class="pbtn" data-v="해당없음" onclick="pick(this,'preg')">해당없음</div>
+      <div class="pbtn" data-v="없음" onclick="pick(this,'preg')">없음</div>
+      <div class="pbtn" data-v="가능성" onclick="pick(this,'preg')">가능성</div>
+      <div class="pbtn" data-v="임신중" onclick="pick(this,'preg')">임신중</div>
+    </div>
+    <div class="flbl" style="margin-top:9px">💉 조영제 알러지</div>
+    <div class="bgrp4">
+      <div class="pbtn" data-v="없음" onclick="pick(this,'algyContrast')">없음</div>
+      <div class="pbtn" data-v="있음" onclick="pick(this,'algyContrast')">있음 ⚠️</div>
+    </div>
+    <div class="flbl" style="margin-top:9px">💊 약물 알러지</div>
+    <input class="fi" placeholder="약물 알러지 (없으면 비움)" oninput="S.algyDrug=this.value;try{renderSide()}catch(e){}">
+    <div class="flbl" style="margin-top:9px">💊 현재 복용약물</div>
+    <input class="fi" placeholder="복용 중인 약 (없으면 비움)" oninput="S.curMeds=this.value;try{renderSide()}catch(e){}">
   </div>
 
   <div class="card">
@@ -654,7 +703,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:-apple-s
     <div class="copy-sec" onclick="copySection('pmhx')">📋 과거력</div>
     <div class="copy-sec" onclick="copySection('cc')">📝 내원동기</div>
   </div>
-  <button class="copy-btn blue" id="copyAllBtn" onclick="copySection('all')">📊 전체 한 줄 복사 → 엑셀</button>
+  <button class="copy-btn blue" id="copyAllBtn" onclick="openFinalConfirm()">📊 전체 한 줄 복사 → 엑셀</button>
   <button class="reset-btn" onclick="resetAll()">🔄 새 환자 (초기화)</button>
   <div style="height:8px;"></div>
 </div>
@@ -1364,12 +1413,20 @@ function renderSide(){
     +spRow('내원',(S.route||'-'))
     +spRow('KTAS',ktas)
     +spRow('V/S','BP '+bp+' · HR '+(vs.hr||'-')+' · SpO2 '+(vs.spo2||'-'))
-    +spRow('주호소',(S.cc||'-'));
+    +spRow('주호소',(S.cc||'-'))+(S.preg?spRow('임신',S.preg):'')+(S.algyContrast==='있음'?spRow('조영제',"<b style='color:var(--k1)'>있음</b>"):'')+(S.algyDrug?spRow('약물알러지',S.algyDrug):'')+(S.curMeds?spRow('복용약물',S.curMeds):'');
   const np=document.getElementById('spNote');
   if(np){ try{ np.textContent=buildNote()||'(입력하면 여기에 미리보기)'; }catch(e){ np.textContent='(입력 진행 중)'; } }
 }
 document.addEventListener('input',function(){try{renderSide();}catch(e){}});
 document.addEventListener('click',function(){setTimeout(function(){try{renderSide();}catch(e){}},0);});
+
+// ── 추가 항목 선택 + 최종 확인 팝업 ──
+function pick(btn,key){var p=btn.parentElement;p.querySelectorAll('.pbtn').forEach(function(b){b.classList.remove('sel','sel-r');});btn.classList.add(btn.dataset.v.indexOf('있음')>=0?'sel-r':'sel');S[key]=btn.dataset.v;try{renderSide();}catch(e){}}
+function openFinalConfirm(){document.getElementById('fmName').value=S.pname||'';document.getElementById('fmPid').value=S.pid||'';['fmC1','fmC2','fmC3'].forEach(function(id){document.getElementById(id).classList.remove('on');});document.getElementById('finalModal').classList.add('show');fmValidate();}
+function fmToggle(id){document.getElementById(id).classList.toggle('on');fmValidate();}
+function fmValidate(){var nm=(S.pname||'').trim(),pid=(S.pid||'').trim();var ck=['fmC1','fmC2','fmC3'].every(function(id){return document.getElementById(id).classList.contains('on');});var ok=nm&&pid&&ck;document.getElementById('fmGo').disabled=!ok;document.getElementById('fmWarn').style.display=ok?'none':'block';document.getElementById('fmName').style.borderColor=nm?'':'var(--k1)';document.getElementById('fmPid').style.borderColor=pid?'':'var(--k1)';}
+function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
+function doFinalCopy(){closeFinal();copySection('all');}
 
 S.route='119 구급대';
 showScreen(1);
