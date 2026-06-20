@@ -12,7 +12,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:240px;font-size:16px;line-height:1.5}
-body.bw{filter:grayscale(1)}
+[data-theme=light]{--bg:#eef1f6;--panel:#ffffff;--card:#ffffff;--card2:#eef2f7;--line:#d4dae3;--tx:#1a2230;--tx2:#5a6878}
 header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
 header .logo{font-weight:800;font-size:16px}.logo em{color:var(--pos);font-style:normal}
 header button{margin-left:auto;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
@@ -117,7 +117,7 @@ main{max-width:520px;margin:0 auto;padding:14px}
 <header>
   <div class="logo">NFH <em>간호기록</em></div>
   <span class="pat" id="patInfo"></span>
-  <button onclick="document.body.classList.toggle('bw')">⬜ 흑백</button>
+  <button id="thBtn" onclick="toggleTheme()">🌙</button>
   <button onclick="location.reload()">🏠 처음</button>
 </header>
 
@@ -125,8 +125,11 @@ main{max-width:520px;margin:0 auto;padding:14px}
   <div id="riskBanner"></div>
 
   <!-- 도관 -->
-  <div class="sec"><div class="sec-h">① 도관 확인 <span style="font-size:11px;color:var(--tx2);text-transform:none">· 있으면 탭 → 배액 상태 차팅</span></div>
-    <div class="card"><div id="lines" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <div class="sec"><div class="sec-h">① 도관 확인</div>
+    <div class="card">
+      <div class="row"><div class="opt neg" id="lineNoneBtn" onclick="lineNone()">도관 없음</div><div class="opt" id="lineExpBtn" onclick="lineExpand()">＋ 도관 있음</div></div>
+      <div id="lines" class="hide" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
+    </div>
   </div>
 
   <!-- 주호소 -->
@@ -208,7 +211,10 @@ main{max-width:520px;margin:0 auto;padding:14px}
         <div class="opt" id="gd1" onclick="setGuard('보호자 환자 옆에 상주하고 있음',this)">상주</div>
         <div class="opt" id="gd2" onclick="setGuard('보호자 동행하지 않음',this)">없음</div>
       </div>
-      <div class="tip">자동: 낙상위험(진단) + 낙상방지 교육함 · 침대 난간을 올려줌</div>
+    </div>
+    <div class="card">
+      <div class="lbl">🟡 낙상 교육 (말하며 체크) <span style="font-size:11px;color:var(--tx2)">· 낙상위험 자동</span></div>
+      <div id="falledu"></div>
     </div>
   </div>
 </main>
@@ -220,7 +226,7 @@ main{max-width:520px;margin:0 auto;padding:14px}
 </div>
 
 <script>
-const S={lines:{},drain:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},pupL:null,pupR:null,light:null,
+const S={lines:{},drain:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},pupL:null,pupR:null,light:null,falledu:{},
   gate:{},dx:{},iv:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,riskDone:false,risk:{}};
 
 const LINES=[
@@ -267,6 +273,12 @@ const IVS=[
  {id:'i2',s:'의사 선생님께 확인 후 처방받아 드릴게요.',t:'통증을 재평가함'},
  {id:'i3',s:'통증 어떤지 계속 지켜볼게요. 심해지면 말씀하세요.',t:'통증을 관찰하기로 함'},
 ];
+const FALL_EDU=[
+ {id:'fe1',s:'침대에서 내려오실 때 간호사 불러주세요',t:'낙상방지 교육함'},
+ {id:'fe2',s:'침대 난간 올려드릴게요',t:'침대 난간을 올려줌'},
+ {id:'fe3',s:'보호자분 옆에 같이 계셔 주세요',t:'보호자와 같이 있게 함'},
+ {id:'fe4',s:'보호자분 꼭 동반해 주세요',t:'보호자 동반하도록 설명함'},
+];
 
 // 게이트
 function gchk(id){document.getElementById(id).classList.toggle('on');gval();}
@@ -283,6 +295,7 @@ function startOK(){
   document.getElementById('main').classList.remove('hide');
   initUI();
 }
+function toggleTheme(){var l=document.body.getAttribute('data-theme')==='light';document.body.setAttribute('data-theme',l?'':'light');var b=document.getElementById('thBtn');if(b)b.textContent=l?'🌙':'☀️';}
 function rtog(id){document.getElementById(id).classList.toggle('on');}
 function riskOK(){
   S.riskDone=true; S.risk={};
@@ -312,8 +325,12 @@ function initUI(){
   document.getElementById('gM').innerHTML=GM.map(([l,n])=>`<div class="chip" onclick="setGcs('M',${n},this)">${l}</div>`).join('');
   document.getElementById('orient').innerHTML=ORI.map(([k,n])=>`<div class="lbl" style="font-weight:500;margin-top:4px">${n}<div class="row" style="margin-left:auto;max-width:150px"><div class="opt" onclick="setOri('${k}',1,this)">있음</div><div class="opt" onclick="setOri('${k}',0,this)">없음</div></div></div>`).join('');
   document.getElementById('iv').innerHTML=IVS.map(it=>`<div class="iv" id="${it.id}" onclick="togIv('${it.id}')"><div class="s"><span class="spk">📢</span> "${it.s}"</div><div class="r">기록: ${it.t}</div></div>`).join('');
+  renderFalledu();
   render();
 }
+function lineExpand(){document.getElementById('lines').classList.remove('hide');document.getElementById('lineExpBtn').classList.add('pos');document.getElementById('lineNoneBtn').classList.remove('neg');}
+function lineNone(){document.getElementById('lines').classList.add('hide');document.getElementById('lineNoneBtn').classList.add('neg');document.getElementById('lineExpBtn').classList.remove('pos');S.lines={};S.drain={};renderLines();render();}
+function isInterv(t){return /관찰함|측정함|교육함|알림|시켜줌|적용함|투여함|설명함/.test(t);}
 function renderLines(){
   document.getElementById('lines').innerHTML=LINES.map(l=>{
     const on=S.lines[l.n];
@@ -342,6 +359,8 @@ function setGcs(k,n,el){S.gcs[k]=n;el.parentElement.querySelectorAll('.chip').fo
 function setOri(k,v,el){S.orient[k]=v;[...el.parentElement.children].forEach(x=>x.className='opt');el.classList.add(v?'neg':'pos');render();}
 function setGuard(t,el){S.guard=t;document.getElementById('gd1').className='opt';document.getElementById('gd2').className='opt';el.classList.add('neg');render();}
 function togIv(id){S.iv[id]=!S.iv[id];document.getElementById(id).classList.toggle('on');render();}
+function renderFalledu(){document.getElementById('falledu').innerHTML=FALL_EDU.map(it=>`<div class="iv ${S.falledu[it.id]?'on':''}" onclick="togFalledu('${it.id}')"><div class="s"><span class="spk">📢</span> "${it.s}"</div><div class="r">기록: ${it.t}</div></div>`).join('');}
+function togFalledu(id){S.falledu[id]=!S.falledu[id];renderFalledu();render();}
 
 function autoDx(){
   const painPos=S.part||S.assoc.nv===1;
@@ -369,11 +388,12 @@ function buildLines(){
   if(S.consc==='low'){if(S.gcs.E&&S.gcs.V&&S.gcs.M)fae.push('Glasgow Coma Scale : '+(S.gcs.E+S.gcs.V+S.gcs.M));fae.push('의식수준 저하됨');
     ORI.forEach(([k,n])=>{if(S.orient[k]!==undefined)fae.push(n+'에 대한 지남력 '+(S.orient[k]?'있음':'없음'));});}
   if(S.guard)fae.push(S.guard);
-  return {ae,note,dx,pe,fae,fall:(S.consc||S.guard)};
+  const fpe=[]; FALL_EDU.forEach(it=>{if(S.falledu[it.id])fpe.push(it.t);});
+  return {ae,note,dx,pe,fae,fpe,fall:(S.consc||S.guard||fpe.length>0)};
 }
 function render(){
   const L=buildLines();let h='';
-  Object.keys(S.lines).forEach(n=>{(S.drain[n]||[]).forEach(d=>h+=`<div class="rl ae"><span class="tg">도관</span>${d}</div>`);});
+  Object.keys(S.lines).forEach(n=>{(S.drain[n]||[]).forEach(d=>{const pe=isInterv(d);h+=`<div class="rl ${pe?'pe':'ae'}"><span class="tg">${pe?'P&E':'도관'}</span>${d}</div>`;});});
   if(L.ae.length||L.dx.length||L.pe.length){
     h+='<div style="font-weight:700;margin:4px 0 2px">[복통]</div>';
     L.ae.forEach(x=>h+=`<div class="rl ae"><span class="tg">A&E</span>${x}</div>`);
@@ -384,7 +404,8 @@ function render(){
   if(L.fall){
     h+='<div style="font-weight:700;margin:6px 0 2px">[의식/낙상]</div>';
     L.fae.forEach(x=>h+=`<div class="rl ae"><span class="tg">A&E</span>${x}</div>`);
-    h+=`<div class="rl d"><span class="tg">D</span>낙상위험</div><div class="rl pe"><span class="tg">P&E</span>낙상방지 교육함 / 침대 난간을 올려줌</div>`;
+    h+=`<div class="rl d"><span class="tg">D</span>낙상위험</div>`;
+    L.fpe.forEach(x=>h+=`<div class="rl pe"><span class="tg">P&E</span>${x}</div>`);
   }
   document.getElementById('preview').innerHTML=h||'<div class="empty">탭하면 정형 간호기록이 쌓입니다.</div>';
   const n=(h.match(/class="rl/g)||[]).length;document.getElementById('cnt').textContent=n?n+'줄':'';
@@ -394,10 +415,10 @@ function render(){
 }
 function copyNote(){
   const L=buildLines();let t='';
-  Object.keys(S.lines).forEach(n=>{(S.drain[n]||[]).forEach(d=>t+='도관· '+d+'\n');});
+  Object.keys(S.lines).forEach(n=>{(S.drain[n]||[]).forEach(d=>t+=(isInterv(d)?'P&E· ':'도관· ')+d+'\n');});
   t+='[복통]\n';L.ae.forEach(x=>t+='A&E· '+x+'\n');if(L.note.length)t+='비고· '+L.note.join(' / ')+'\n';
   L.dx.forEach(x=>t+='D· '+x+'\n');L.pe.forEach(x=>t+='P&E· '+x+'\n');
-  if(L.fall){t+='[의식/낙상]\n';L.fae.forEach(x=>t+='A&E· '+x+'\n');t+='D· 낙상위험\nP&E· 낙상방지 교육함 / 침대 난간을 올려줌\n';}
+  if(L.fall){t+='[의식/낙상]\n';L.fae.forEach(x=>t+='A&E· '+x+'\n');t+='D· 낙상위험\n';L.fpe.forEach(x=>t+='P&E· '+x+'\n');}
   navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));
 }
 </script>
