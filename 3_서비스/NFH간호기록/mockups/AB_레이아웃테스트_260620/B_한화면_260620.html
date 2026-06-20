@@ -49,44 +49,52 @@
 const N=window.NFH, U=window.NFHUI;
 const ge=id=>document.getElementById(id);
 
+let pickingSymId=null;
 function renderSymbar(){
   ge('symbar').innerHTML = N.SYMS.map(s=>`<div class="opt-btn" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
 }
+// 어느 주증상에서 온 주호소가 있는지 / 지금 분기 고르는 중인지 → 버튼 활성화 표시
+function refreshSymState(){
+  const active=new Set(U.S.selected.map(e=>e._symId).filter(Boolean));
+  if(pickingSymId) active.add(pickingSymId);
+  ge('symbar').querySelectorAll('[data-sym]').forEach(b=>b.classList.toggle('on', active.has(b.dataset.sym)));
+}
+function clearPicker(){ pickingSymId=null; ge('picker').innerHTML=''; refreshSymState(); }
 ge('symbar').addEventListener('click', e=>{
   const b=e.target.closest('[data-sym]'); if(!b) return;
   const sym=N.SYMS.find(s=>s.id===b.dataset.sym);
-  if(sym.skipToFall){ ge('picker').innerHTML=''; return; } // 이상없음: 낙상만
-  if(sym.direct){ addLeaf([sym.direct], sym.label); ge('picker').innerHTML=''; return; }
-  if(sym.branch) openPicker(sym.branch, sym.label);
+  if(sym.skipToFall){ clearPicker(); return; } // 이상없음: 낙상만
+  if(sym.direct){ addLeaf([sym.direct], sym.label, sym.id); pickingSymId=null; ge('picker').innerHTML=''; return; }
+  if(sym.branch){ pickingSymId=sym.id; openPicker(sym.branch, sym.label, sym.id); refreshSymState(); }
 });
 
 // 분기 인라인 리졸버
-function openPicker(branchId, label){
+function openPicker(branchId, label, symId){
   const br=N.BRANCHES[branchId];
   ge('picker').innerHTML = `<div class="q" style="margin-top:10px;border-color:var(--ae)">
     <div class="q-prompt">💬 ${N.esc(br.q)}</div>
     <div class="opt-grid c1">${br.opts.map((o,i)=>`<div class="opt-btn" data-bi="${i}">${N.esc(o.label)}</div>`).join('')}</div>
-    <button class="allnorm" style="margin-top:8px" onclick="document.getElementById('picker').innerHTML=''">취소</button></div>`;
+    <button class="allnorm" style="margin-top:8px" onclick="clearPicker()">취소</button></div>`;
   ge('picker').querySelectorAll('[data-bi]').forEach(btn=>btn.addEventListener('click',()=>{
     const o=br.opts[+btn.dataset.bi];
-    if(o.next) openPicker(o.next, label);
-    else if(o.key){ addLeaf(o.key, label+' · '+o.label); ge('picker').innerHTML=''; }
+    if(o.next) openPicker(o.next, label, symId);
+    else if(o.key){ addLeaf(o.key, label+' · '+o.label, symId); pickingSymId=null; ge('picker').innerHTML=''; }
   }));
 }
-function addLeaf(key, label){
+function addLeaf(key, label, symId){
   const entry=U.addComplaint(label, [key]);
   if(!entry){ alert('이미 추가된 주호소입니다'); return; }
+  entry._symId = symId;
   const tmp=document.createElement('div'); tmp.innerHTML=U.assessHTML(entry);
   ge('sections').appendChild(tmp.firstElementChild);
   U.bindAssess(ge('sections'), entry);
-  renderChips(); U.fire();
-  entry._el = ge('sections').lastElementChild;
+  renderChips(); refreshSymState(); U.fire();
 }
 function renderChips(){
   ge('chips').innerHTML = U.S.selected.map(e=>`<span class="badge" style="cursor:pointer" data-rm="${e.id}">${N.esc(e.label)} ✕</span>`).join('');
   ge('chips').querySelectorAll('[data-rm]').forEach(c=>c.addEventListener('click',()=>{
     const id=c.dataset.rm; const sec=ge('sections').querySelector(`[data-entry="${id}"]`); if(sec) sec.remove();
-    U.removeComplaint(id); renderChips(); U.fire();
+    U.removeComplaint(id); renderChips(); refreshSymState(); U.fire();
   }));
 }
 
@@ -104,7 +112,7 @@ function copyNote(){
   const t=U.recordText(); if(!t){ alert('기록이 비어 있습니다'); return; }
   navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));
 }
-function resetAll(){ U.reset(); ge('sections').innerHTML=''; ge('picker').innerHTML=''; renderChips(); renderFallOnce(); U.fire(); }
+function resetAll(){ pickingSymId=null; U.reset(); ge('sections').innerHTML=''; ge('picker').innerHTML=''; renderChips(); refreshSymState(); renderFallOnce(); U.fire(); }
 
 renderSymbar(); renderFallOnce(); U.fire();
 </script>

@@ -148,5 +148,31 @@ main{max-width:600px;margin:0 auto;padding:14px}
 .popup-body{overflow-y:auto;padding:14px 16px}
 .popup-foot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:10px}
 
+/* 누락 방지 게이트 */
+.q.ae-pending,.chk-item.ae-pending{border-color:var(--pos);border-style:dashed}
+.q.ae-pending .q-prompt::after{content:'미응답';margin-left:6px;color:var(--pos);font-size:11px;font-weight:800;border:1px solid var(--pos);border-radius:6px;padding:0 6px}
+.gate{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px;margin:16px 0 4px}
+.gate-status{font-size:14px;font-weight:700;margin-bottom:10px}
+.gate-status .miss{color:var(--pos)} .gate-status .ok{color:var(--ok)}
+.gate-jump{font-size:12.5px;color:var(--ae);cursor:pointer;margin-bottom:10px;display:inline-block}
+.gate-chk{display:flex;align-items:center;gap:11px;font-size:14.5px;font-weight:600;color:var(--tx);cursor:pointer;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--card2)}
+.gate-chk.locked{opacity:.5;cursor:not-allowed}
+.gate-chk input{width:22px;height:22px;accent-color:var(--ok);flex:none}
+.btn[disabled]{cursor:not-allowed;opacity:.4}
+
+/* 접이식 라이브 미리보기 */
+.dock{position:fixed;bottom:0;left:0;right:0;z-index:30}
+.dock .navbar{position:static}
+.preview-panel{background:var(--panel);border-top:2px solid var(--line);max-height:0;overflow:hidden;transition:max-height .22s ease}
+.preview-panel.open{max-height:50vh;overflow-y:auto}
+.preview-panel .inner{max-width:600px;margin:0 auto;padding:12px 16px;font-size:13.5px;line-height:1.6}
+.peek{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line);cursor:pointer;font-size:13.5px}
+.peek .pk-ico{font-size:15px}
+.peek b{color:var(--ae)}
+.peek .pk-last{color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.peek .pk-tw{color:var(--tx2);transition:transform .2s}
+.peek.open .pk-tw{transform:rotate(180deg)}
+.peek .pk-copy{background:var(--ok);color:#063;border:none;border-radius:7px;padding:6px 11px;font-weight:700;font-size:12.5px;cursor:pointer}
+
 .screen{display:none}
 .screen.active{display:block}

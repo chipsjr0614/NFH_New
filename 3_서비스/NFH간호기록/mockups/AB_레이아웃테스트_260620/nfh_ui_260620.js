@@ -62,7 +62,7 @@ function assessHTML(entry){
     if(isSlash(item.text)){
       const parts = getSlashParts(item.text);
       const cur = (S.items.find(x=>x.uid===item.uid)||{}).text;
-      h += `<div class="q" data-slash="${item.uid}">
+      h += `<div class="q" data-ae="${item.uid}" data-slash="${item.uid}">
         <div class="q-prompt">💬 ${esc(q)}</div>
         <div class="opts">${parts.map(p=>{
           const on = cur===p; const pos = posOf(p);
@@ -72,14 +72,14 @@ function assessHTML(entry){
     } else if(isInput(item.text)){
       const cur = (S.items.find(x=>x.uid===item.uid)||{}).text || '';
       const val = cur.startsWith(item.text) ? cur.slice(item.text.length).trim() : '';
-      h += `<div class="q">
+      h += `<div class="q" data-ae="${item.uid}">
         <div class="q-prompt">💬 ${esc(q)}</div>
         <div class="note-tag" style="margin-top:0;margin-bottom:4px;">${esc(item.text)}</div>
         <input class="txt-input" data-inp="${item.uid}" data-ib="${esc(item.text)}" placeholder="직접 입력" value="${esc(val)}">
         ${note}</div>`;
     } else {
       const on = !!S.items.find(x=>x.uid===item.uid);
-      h += `<div class="chk-item ${on?'on':''}" data-chk="${item.uid}" data-ct="${esc(item.text)}">
+      h += `<div class="chk-item ${on?'on':''}" data-ae="${item.uid}" data-chk="${item.uid}" data-ct="${esc(item.text)}">
         <div class="chk-box">${on?'✓':''}</div>
         <div style="flex:1"><div class="q-prompt" style="margin-bottom:4px">💬 ${esc(q)}</div>
         <div class="chk-text">${esc(item.text)}</div>${note}</div></div>`;
@@ -205,9 +205,11 @@ function bindAssess(root, entry){
         if(neg) setItem(item.uid,{text:neg, section:'A&E', symLabel:label});
       } // 체크형/입력형은 강제 안 함(양성·값이라 누락 표시 유지)
     });
-    fire(); rerenderEntry(root, entry);
+    rerenderEntry(root, entry); fire();
   });
 }
+// 미응답 A&E 문항 (게이트용)
+function pendingAE(entry){ return entry.collected.aeItems.filter(it=>!S.items.find(x=>x.uid===it.uid)); }
 function rerenderEntry(root, entry){
   const old = root.querySelector(`[data-entry="${entry.id}"]`); if(!old) return;
   const tmp=document.createElement('div'); tmp.innerHTML=assessHTML(entry);
@@ -309,7 +311,7 @@ function previewHTML(){
 function recordText(){ return N.recordText(allItems()); }
 function count(){ return allItems().length; }
 
-global.NFHUI = { S, addComplaint, removeComplaint, reset,
+global.NFHUI = { S, addComplaint, removeComplaint, reset, pendingAE,
   assessHTML, bindAssess, dxHTML, fallHTML, bindFall, previewHTML, recordText, count,
   set onChange(fn){ _onChange=fn; }, fire };
 })(window);
