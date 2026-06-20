@@ -218,12 +218,15 @@ const S={lines:{},drain:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},p
   gate:{},dx:{},iv:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,riskDone:false,risk:{}};
 
 const LINES=[
- {n:'Foley',d:['Foley catheter 통해 소변배출 잘됨','소변량 감소함','소변량 없음']},
- {n:'L-tube',d:['배액관 자연배액 유지함','배액량 측정함']},
- {n:'PTBD',d:['배액관 자연배액 유지함','배액량 측정함','배액관 삽입부위 출혈 있음']},
- {n:'PTGBD',d:['배액관 자연배액 유지함','배액량 측정함','배액관 삽입부위 출혈 있음']},
- {n:'PCD',d:['배액관 자연배액 유지함','배액량 측정함']},
- {n:'흉관',d:['흉관 자연배액 중임','흉관 통한 배액량 증가함','흉관 통한 배액량 감소함']},
+ {s:'Foley',n:'Foley catheter',d:['Foley catheter 통해 소변 배출되고 있음','Foley catheter 유지 중임','Foley catheter 삽입부위로 소변 leakage 있음','소변량 감소함']},
+ {s:'L-tube',n:'Levin tube',d:['Levin tube 유지 중임','Levin tube 통해 배액됨','Levin tube 삽입부위 불편감 있음']},
+ {s:'PTBD',n:'Percutaneous Transhepatic Biliary Drainage',d:['배액관 자연배액 유지함','배액량 측정함','Percutaneous Transhepatic Biliary Drainage 삽입부위 출혈 없음']},
+ {s:'PTGBD',n:'Percutaneous Transhepatic Gallbladder Drainage',d:['배액관 자연배액 유지함','배액량 측정함']},
+ {s:'PCD',n:'PCD',d:['배액관 자연배액 유지함','배액량 측정함']},
+ {s:'CVC',n:'중심정맥관',d:['중심정맥관 삽입부위 출혈 없음','중심정맥관 막힘']},
+ {s:'A-line',n:'arterial line',d:['arterial line site 상태 양호함','arterial line site 출혈 없음','arterial line site oozing 있음']},
+ {s:'흉관',n:'흉관',d:['흉관 자연배액 중임','흉관 통한 배액량 증가함','흉관 통한 배액량 감소함']},
+ {s:'hemovac',n:'hemovac',d:['hemovac 자연배액 중임','hemovac 막힘','hemovac 삽입부위 leakage 있음']},
 ];
 const CC=[['😣','복통'],['❤️','흉통'],['🫁','호흡곤란'],['🤕','두통'],['🌡️','발열'],['🤮','오심구토'],['💩','설사'],['🩹','외상'],['🩸','출혈'],['🧠','어지럼'],['👁️','안과'],['🩹','피부']];
 const FACES=[['😀',0],['🙂',2],['😐',4],['😟',6],['😣',8],['😭',10]];
@@ -303,7 +306,8 @@ function renderLines(){
   document.getElementById('lines').innerHTML=LINES.map(l=>{
     const on=S.lines[l.n];
     const chips=on?`<div style="font-size:12px;color:var(--tx2);margin:8px 0 5px">💧 배액 상태 (탭)</div><div class="chips">${l.d.map(d=>`<div class="chip ${(S.drain[l.n]||[]).includes(d)?'on':''}" onclick="togDrain('${l.n}',this)" data-d="${d}">${d}</div>`).join('')}</div>`:'';
-    return `<div><div class="opt ${on?'pos':''}" style="max-width:140px" onclick="togLine('${l.n}')">${l.n}${on?' ✓':''}</div>${chips}</div>`;
+    const sub=l.s!==l.n?`<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.8">${l.n}</div>`:'';
+    return `<div><div class="opt ${on?'pos':''}" style="max-width:none;text-align:left" onclick="togLine('${l.n}')"><b>${l.s}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;
   }).join('');
 }
 function togLine(n){if(S.lines[n]){delete S.lines[n];delete S.drain[n];}else S.lines[n]=true;renderLines();render();}
