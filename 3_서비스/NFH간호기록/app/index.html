@@ -54,6 +54,9 @@
   </div>
 </main>
 
+<!-- 미리보기 펼침 시 배경 어둡게 -->
+<div class="scrim" id="scrim" onclick="setPanel(false)"></div>
+
 <!-- 하단 도크: 접이식 미리보기 + 네비 -->
 <div class="dock">
   <div class="preview-panel" id="ppanel"><div class="inner" id="preview"></div></div>
@@ -68,7 +71,7 @@
 </div>
 
 <!-- 완성: 전체 기록 모달 -->
-<div class="overlay" id="overlay">
+<div class="overlay" id="overlay" onclick="if(event.target===this)closePopup()">
   <div class="popup">
     <div class="popup-h"><div class="popup-title">✅ 간호기록 완성</div><button onclick="closePopup()">✕ 닫기</button></div>
     <div class="popup-body" id="popup-body"></div>
@@ -300,8 +303,9 @@ function finish(){
 function closePopup(){ ge('overlay').classList.remove('on'); }
 
 // ── 도크: 접이식 미리보기 ──
-function openPanel(){ ge('ppanel').classList.add('open'); ge('peek').classList.add('open'); }
-function togglePanel(){ ge('ppanel').classList.toggle('open'); ge('peek').classList.toggle('open'); }
+function setPanel(open){ ge('ppanel').classList.toggle('open',open); ge('peek').classList.toggle('open',open); ge('scrim').classList.toggle('on',open); }
+function openPanel(){ setPanel(true); }
+function togglePanel(){ setPanel(!ge('ppanel').classList.contains('open')); }
 function copyNote(){
   const t=U.recordText(); if(!t){ alert('기록이 비어 있습니다'); return; }
   navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));
@@ -319,7 +323,7 @@ U.onChange=()=>{
   updateGate();
 };
 
-function resetAll(){ curEntry=null; identityOK=false; gownState={}; U.reset(); ge('overlay').classList.remove('on'); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderIntro(); }
+function resetAll(){ curEntry=null; identityOK=false; gownState={}; U.reset(); ge('overlay').classList.remove('on'); setPanel(false); U.fire(); renderIntro(); }
 
 renderIntro(); U.fire();
 </script>

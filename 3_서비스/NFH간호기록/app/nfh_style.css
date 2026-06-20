@@ -179,6 +179,8 @@ main{max-width:600px;margin:0 auto;padding:14px}
 @keyframes gatepulse{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
 /* 접이식 라이브 미리보기 */
+.scrim{position:fixed;inset:0;z-index:29;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
 .dock{position:fixed;bottom:0;left:0;right:0;z-index:30}
 .dock .navbar{position:static}
 .preview-panel{background:var(--panel);border-top:2px solid var(--line);max-height:0;overflow:hidden;transition:max-height .22s ease}
