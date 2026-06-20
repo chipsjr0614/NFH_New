@@ -108,3 +108,29 @@ chips/
 | 🟡 진행 중 | 일부 미완(데이터·기능) |
 | 🔴 재설계 중 | 갈아엎는 중 |
 | ⚪ 백로그 | 아직 시작 전 |
+
+---
+
+## 6. 문서 상태 마커 + 정본 검증 (doc-status)
+
+§3·§4를 **문서 단위로 강제**하는 계층. 한 서비스에 문서가 여러 개일 때 "뭐가 정본/최신인지"를 사람 기억이 아니라 **문서가 스스로 선언**하게 한다. (`auto-save` 훅 때문에 git 날짜는 최신 근거가 못 됨.)
+
+**모든 문서 맨 위에 상태 마커를 단다.**
+
+- `.md` — YAML frontmatter:
+  ```yaml
+  ---
+  status: canonical      # canonical(정본) | support(보조·배경) | deprecated(구버전) | archived
+  ssot_for: 요구사항       # 이 문서가 '정본'인 관심사 (요구사항/기능/흐름/UI ...)
+  version: v4
+  updated: 2026-06-20
+  supersedes: v3.1        # (선택) 대체한 이전 버전
+  ---
+  ```
+- `.html` — 맨 위 주석: `<!-- doc-status: status=canonical ssot_for=UI version=v4 updated=2026-06-18 -->`
+- `_archive/` 안은 마커 없어도 자동 archived. `README.md`·`CLAUDE.md`·`CONVENTION.md`는 면제.
+
+**규칙**
+- 관심사(`ssot_for`) 하나당 **정본(canonical)은 정확히 하나.** 새 정본을 만들면 이전 정본은 `deprecated`로 내리거나 `_archive/`로 옮긴다(§3 — 파일명에 버전 박지 않기).
+- 서비스 README 최상단에 **「정본 표」**(관심사 → 정본 파일 → 상태)를 둔다. = 단일 진입점.
+- 검증: `python3 .claude/skills/doc-status/status.py [서비스폴더]` 또는 `/doc-status`. 정본 충돌·구버전 참조·마커 누락을 잡는다(커밋 전 게이트 가능).

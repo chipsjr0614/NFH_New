@@ -1,7 +1,13 @@
+---
+status: support
+ssot_for: UI가이드
+updated: 2026-06-13
+---
+
 # 간호 사정 앱 — UI/UX 가이드
 
-> 사정 앱(`mockups/사정앱_prototype.html`)의 화면 설계 방향과 참고 디자인 정리.
-> 프로토타입 수정용이 아니라, **앞으로 UI를 다듬을 때의 기준 문서**.
+> 사정 앱 초기 프로토타입(`mockups/_archive/사정앱_prototype.html`, 아카이브)의 화면 설계 방향과 참고 디자인 정리.
+> 프로토타입 수정용이 아니라, **앞으로 UI를 다듬을 때의 기준 문서**. 현 정본 시안은 `mockups/v4_차팅흐름_260618.html`.
 
 ---
 
