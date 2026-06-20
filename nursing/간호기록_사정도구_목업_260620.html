@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호기록 사정 도구 목업 (복통 데모)</title>
+<style>
+:root{
+  --bg:#0a0e14;--panel:#12181f;--card:#1a212b;--card2:#222b38;--line:#2a3441;
+  --tx:#e6edf3;--tx2:#8b97a7;--pos:#ff4d5e;--ok:#2ecc71;
+  --ae:#4aa8ff;--d:#ff6b6b;--pe:#ffc857;--warn:#ff9800;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:240px;font-size:16px;line-height:1.5}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
+header .logo{font-weight:800;font-size:16px}.logo em{color:var(--pos);font-style:normal}
+header button{margin-left:auto;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+.pat{font-size:12px;color:var(--tx2);margin-left:6px}
+main{max-width:520px;margin:0 auto;padding:14px}
+.sec{margin-bottom:16px}.sec-h{font-size:13px;font-weight:800;color:var(--tx2);margin:6px 2px 9px;text-transform:uppercase;letter-spacing:.4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.opt{flex:1;min-width:64px;text-align:center;padding:12px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:15px;font-weight:600;cursor:pointer;transition:.1s}
+.opt.neg{border-color:#5a6878;color:var(--tx);background:#2a3038}
+.opt.pos{border-color:var(--pos);color:#fff;background:var(--pos)}
+.lbl{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.tip{font-size:12px;color:var(--pe);background:rgba(255,200,87,.1);border:1px solid rgba(255,200,87,.3);border-radius:8px;padding:7px 10px;margin:6px 0}
+.wb{color:var(--pos);font-size:11px;font-weight:800;border:1px solid var(--pos);border-radius:5px;padding:1px 5px}
+/* 바디맵 */
+.body{display:flex;flex-direction:column;align-items:center;gap:5px;margin:6px 0}
+.bpart{background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:11px 14px;cursor:pointer;font-size:14px;color:var(--tx2);text-align:center;min-width:80px}
+.bpart.on{background:var(--pos);border-color:var(--pos);color:#fff;font-weight:700}
+.abdo{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:180px}
+/* NRS 얼굴 */
+.faces{display:flex;justify-content:space-between;gap:4px}
+.face{flex:1;text-align:center;padding:8px 2px;border-radius:10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;font-size:22px}
+.face.on{background:var(--pe);border-color:var(--pe)}
+.face small{display:block;font-size:11px;color:var(--tx2)}.face.on small{color:#1a1a1a;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{padding:7px 11px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}
+.chip.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe);font-weight:700}
+/* 동공 */
+.pupils{display:flex;gap:18px;justify-content:center;margin:8px 0}
+.peye{text-align:center}.peye .t{font-size:12px;color:var(--tx2);margin-bottom:5px}
+.pdots{display:flex;gap:7px;align-items:center}
+.pdot{border-radius:50%;background:#cfd8e3;cursor:pointer;border:2px solid transparent}
+.pdot.on{border-color:var(--pos);box-shadow:0 0 0 2px var(--pos)}
+/* 진단/중재 */
+.dx{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:7px;cursor:pointer}
+.dx .ck{width:21px;height:21px;border:2px solid var(--d);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.dx.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dx.on .ck{background:var(--d)}
+.dx .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:5px;padding:1px 6px}
+.iv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:7px;cursor:pointer}
+.iv.on{border-color:var(--pe);background:rgba(255,200,87,.07)}
+.iv .s{font-size:14px}.iv .s .spk{color:var(--pe);font-weight:700}
+.iv .r{font-size:12px;color:var(--tx2);margin-top:6px}.iv.on .r{color:var(--pe)}
+/* 모달 */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:18px}
+.modal.on{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;max-width:440px;width:100%}
+.mbox h3{margin:0 0 12px;font-size:17px}
+.mchk{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer}
+.mchk .ck{width:24px;height:24px;border:2px solid var(--tx2);border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px}
+.mchk.on{border-color:var(--ok)}.mchk.on .ck{background:var(--ok);border-color:var(--ok)}
+.mbox input{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--tx);font-size:15px;margin-bottom:8px;outline:none}
+.mgo{width:100%;padding:13px;border:none;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px}
+.mgo.ok{background:var(--ok);color:#063}.mgo.off{background:var(--card2);color:var(--tx2);cursor:not-allowed}
+.mwarn{border-color:var(--pos)!important}.mwarn h3{color:var(--pos)}
+/* 기록 시트 */
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:230px;display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.sh-h b{font-size:14px}.sh-h .c{font-size:12px;color:var(--tx2)}
+.sh-h button{margin-left:auto;background:var(--ok);color:#063;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:10px 16px;max-width:520px;margin:0 auto;width:100%;font-size:13.5px;line-height:1.55}
+.rl{margin:1px 0}.rl.ae{color:var(--ae)}.rl.d{color:var(--d)}.rl.pe{color:var(--pe)}.rl.note{color:var(--tx2);font-size:12px}
+.rl .tg{font-weight:800;font-size:10px;margin-right:5px}
+.empty{color:var(--tx2);font-size:13px}
+.addbtn{width:100%;background:var(--card2);border:1px dashed var(--line);color:var(--tx2);border-radius:10px;padding:11px;font-size:14px;cursor:pointer;margin-top:4px}
+.hide{display:none}
+.banner{background:var(--pos);color:#fff;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+</style>
+</head>
+<body>
+
+<!-- 시작 게이트 -->
+<div class="modal on" id="startGate">
+  <div class="mbox">
+    <h3>🛡️ 시작 전 확인</h3>
+    <div class="mchk" id="g1" onclick="gchk('g1')"><span class="ck"></span><div>🧼 손위생 하셨나요?</div></div>
+    <div class="mchk" id="g2" onclick="gchk('g2')"><span class="ck"></span><div>🗣️ "성함이 어떻게 되세요?" (개방형)</div></div>
+    <div class="mchk" id="g3" onclick="gchk('g3')"><span class="ck"></span><div>🏷️ 팔찌 확인 (이름+등록번호)</div></div>
+    <input id="pname" placeholder="이름" oninput="gval()">
+    <input id="pid" placeholder="등록번호" oninput="gval()">
+    <button class="mgo off" id="gGo" onclick="startOK()">✅ 간호기록 시작</button>
+  </div>
+</div>
+
+<!-- 위험 중재 게이트 -->
+<div class="modal" id="riskGate">
+  <div class="mbox mwarn">
+    <h3>🚨 위험 징후 — 중재 확인</h3>
+    <div class="mwarn" style="font-size:13px;color:var(--pos);margin-bottom:10px" id="riskWhy"></div>
+    <div class="mchk" id="r1" onclick="rchk('r1')"><span class="ck"></span><div>📟 모니터 부착 (EKG·SpO2)</div></div>
+    <div class="mchk" id="r2" onclick="rchk('r2')"><span class="ck"></span><div>📞 담당 의사에게 보고</div></div>
+    <div class="mchk" id="r3" onclick="rchk('r3')"><span class="ck"></span><div>🩺 활력징후 측정</div></div>
+    <div class="mchk" id="r4" onclick="rchk('r4')"><span class="ck"></span><div>💨 산소 적용 (필요 시)</div></div>
+    <button class="mgo off" id="rGo" onclick="riskOK()">✅ 확인 완료 → 계속</button>
+  </div>
+</div>
+
+<header>
+  <div class="logo">NFH <em>간호기록</em></div>
+  <span class="pat" id="patInfo"></span>
+  <button onclick="location.reload()">🏠 처음</button>
+</header>
+
+<main id="main" class="hide">
+  <div id="riskBanner"></div>
+
+  <!-- 도관 -->
+  <div class="sec"><div class="sec-h">① 도관 확인</div>
+    <div class="card"><div class="row" id="lines"></div></div>
+  </div>
+
+  <!-- 주호소 -->
+  <div class="sec"><div class="sec-h">② 어디가 불편하세요? (여러 개 탭)</div>
+    <div class="card"><div class="row" id="cc"></div>
+      <div style="margin-top:9px;font-size:13px;color:var(--tx2)" id="ccSel">선택 없음</div>
+    </div>
+  </div>
+
+  <!-- 복통 사정 (선택 시) -->
+  <div class="sec hide" id="abdSec"><div class="sec-h">③ 😣 복통 사정</div>
+    <div class="card">
+      <div class="lbl">🧍 어디가 아프세요? (배 그림 탭)</div>
+      <div class="body">
+        <div class="bpart" onclick="setPart('상복부 통증 있음',this)">상복부 (명치)</div>
+        <div class="abdo">
+          <div class="bpart" onclick="setPart('상복부 통증 있음',this)">상복부</div>
+          <div class="bpart" onclick="setPart('상복부 통증 있음',this)">상복부</div>
+          <div class="bpart" onclick="setPart('하복부 통증 있음',this)">우하복부</div>
+          <div class="bpart" onclick="setPart('하복부 통증 있음',this)">좌하복부</div>
+        </div>
+        <div class="bpart" onclick="setPart('복부 통증 있음',this)">배 전체</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="lbl">😣 얼마나 아파요? (얼굴 탭)</div>
+      <div class="faces" id="faces"></div>
+      <div style="font-size:12px;color:var(--tx2);margin-top:8px">양상</div>
+      <div class="chips" id="patt"></div>
+      <div style="font-size:12px;color:var(--tx2);margin-top:6px">발병</div>
+      <div class="chips" id="onset"></div>
+    </div>
+    <div class="card">
+      <div class="lbl">동반 증상 <span style="font-size:12px;color:var(--tx2)">(있음=빨강)</span></div>
+      <div id="assoc"></div>
+    </div>
+    <div class="card">
+      <div class="lbl">👁 동공 (눈 보고 탭)</div>
+      <div class="pupils" id="pupils"></div>
+      <div class="chips" id="light"></div>
+    </div>
+    <div class="card" style="border-color:var(--pos)">
+      <div class="lbl"><span class="wb">필수</span> ⚠️ 놓치면 안 됨 — 한 번은 확인</div>
+      <div id="gate"></div>
+    </div>
+    <div id="hint"></div>
+    <div class="sec-h" style="margin-top:14px">🔴 간호진단 (자동추천)</div>
+    <div id="dx"><div class="empty">사정에서 양성(있음)을 누르면 추천됩니다.</div></div>
+    <div class="sec-h" style="margin-top:10px">🟡 중재·설명 (말하며 체크)</div>
+    <div id="iv"></div>
+    <button class="addbtn" onclick="document.getElementById('cc').scrollIntoView({behavior:'smooth'})">＋ 다른 증상 추가</button>
+  </div>
+
+  <!-- 의식/낙상 -->
+  <div class="sec"><div class="sec-h">④ 🔒 의식 / 낙상 (항상)</div>
+    <div class="card">
+      <div class="lbl">의식</div>
+      <div class="row">
+        <div class="opt" id="cClear" onclick="setConsc('clear')">GCS 15 · 명료</div>
+        <div class="opt" id="cLow" onclick="setConsc('low')">명료하지 않음</div>
+      </div>
+      <div id="gcsBox" class="hide" style="margin-top:11px">
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:5px">🧮 GCS (E/V/M 보고 탭)</div>
+        <div style="font-size:12px;margin:4px 0">눈뜸 E</div><div class="chips" id="gE"></div>
+        <div style="font-size:12px;margin:4px 0">언어 V</div><div class="chips" id="gV"></div>
+        <div style="font-size:12px;margin:4px 0">운동 M</div><div class="chips" id="gM"></div>
+        <div style="font-size:13px;font-weight:700;margin:8px 0;color:var(--ae)" id="gcsSum"></div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:5px">🧭 지남력 (각각)</div>
+        <div id="orient"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="lbl">보호자</div>
+      <div class="row">
+        <div class="opt" id="gd1" onclick="setGuard('보호자 환자 옆에 상주하고 있음',this)">상주</div>
+        <div class="opt" id="gd2" onclick="setGuard('보호자 동행하지 않음',this)">없음</div>
+      </div>
+      <div class="tip">자동: 낙상위험(진단) + 낙상방지 교육함 · 침대 난간을 올려줌</div>
+    </div>
+  </div>
+</main>
+
+<!-- 실시간 기록 -->
+<div class="sheet">
+  <div class="sh-h"><b>📋 간호기록</b><span class="c" id="cnt"></span><button onclick="copyNote()">📤 복사</button></div>
+  <div class="sh-b" id="preview"><div class="empty">탭하면 정형 간호기록이 쌓입니다.</div></div>
+</div>
+
+<script>
+const S={lines:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},pupL:null,pupR:null,light:null,
+  gate:{},dx:{},iv:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,riskDone:false};
+
+const LINES=['Foley','L-tube','PTBD','PTGBD','CVC','흉관'];
+const CC=[['😣','복통'],['❤️','흉통'],['🫁','호흡곤란'],['🤕','두통'],['🌡️','발열'],['🤮','오심구토'],['💩','설사'],['🩹','외상'],['🩸','출혈'],['🧠','어지럼'],['👁️','안과'],['🩹','피부']];
+const FACES=[['😀',0],['🙂',2],['😐',4],['😟',6],['😣',8],['😭',10]];
+const PATT=['쥐어짜듯','찌르듯','둔하게','타는듯'];
+const ONSET=['방금 전','몇 시간 전','어제','며칠 전'];
+const ASSOC=[
+ {id:'nv',q:'오심·구토',neg:'오심 없음',pos:'오심 있음'},
+ {id:'st',q:'대변',neg:'대변 봄',pos:'대변 못 봄',pp:true},
+ {id:'gas',q:'gas out',neg:'gas out 있음',pos:'gas out 없음',pp:true},
+ {id:'di',q:'설사',neg:'설사 없음',pos:'설사 있음'},
+];
+const GATE=[
+ {id:'preg',q:'가임기 여성? 임신 가능성',neg:'',pos:'임신 가능성 확인 필요'},
+ {id:'blood',q:'혈변·흑색변',neg:'혈변 없음',pos:'혈변 있음'},
+ {id:'sweat',q:'식은땀·창백 (쇼크)',neg:'',pos:'식은땀 있음',risk:'쇼크/ACS 의심'},
+ {id:'fever',q:'열감·오한',neg:'',pos:'열감 있음'},
+];
+const PUP=[[16,2],[20,3],[26,4],[32,5],[38,6]];
+const LIGHT=['신속 prompt','느림 sluggish','hippus','무반응'];
+const GE=[['4 자발',4],['3 소리',3],['2 통증',2],['1 없음',1]];
+const GV=[['5 지남',5],['4 혼돈',4],['3 부적절',3],['2 이해불가',2],['1 없음',1]];
+const GM=[['6 명령',6],['5 국소',5],['4 회피',4],['3 굴곡',3],['2 신전',2],['1 없음',1]];
+const ORI=[['time','시간'],['place','장소'],['person','사람']];
+const IVS=[
+ {id:'i1',s:'많이 아프세요? 진통제가 필요하실 만큼 아프신가요?',t:'통증을 인정해줌'},
+ {id:'i2',s:'의사 선생님께 확인 후 처방받아 드릴게요.',t:'통증을 재평가함'},
+ {id:'i3',s:'검사 위해 금식하시고, 아프면 바로 말씀하세요.',t:'금식하도록 교육함'},
+];
+
+// 게이트
+function gchk(id){document.getElementById(id).classList.toggle('on');gval();}
+function gval(){
+  const ok=['g1','g2','g3'].every(i=>document.getElementById(i).classList.contains('on'))
+    && document.getElementById('pname').value.trim() && document.getElementById('pid').value.trim();
+  const b=document.getElementById('gGo');b.className='mgo '+(ok?'ok':'off');
+}
+function startOK(){
+  if(document.getElementById('gGo').classList.contains('off'))return;
+  S.pname=document.getElementById('pname').value.trim();S.pid=document.getElementById('pid').value.trim();
+  document.getElementById('patInfo').textContent=S.pname+' · '+S.pid;
+  document.getElementById('startGate').classList.remove('on');
+  document.getElementById('main').classList.remove('hide');
+  initUI();
+}
+function rchk(id){document.getElementById(id).classList.toggle('on');
+  const ok=['r1','r2','r3'].every(i=>document.getElementById(i).classList.contains('on'));
+  document.getElementById('rGo').className='mgo '+(ok?'ok':'off');}
+function riskOK(){
+  if(document.getElementById('rGo').classList.contains('off'))return;
+  S.riskDone=true;
+  document.getElementById('riskGate').classList.remove('on');
+  document.getElementById('riskBanner').innerHTML='<div class="banner">✅ 위험 중재 완료 — EKG monitor 중임 · 담당 의사에게 알림 · 활력징후 측정함</div>';
+  render();
+}
+function triggerRisk(why){
+  if(S.riskDone)return;
+  document.getElementById('riskWhy').textContent='⚠️ '+why+' → 즉시 중재 필요';
+  document.getElementById('riskGate').classList.add('on');
+}
+
+function initUI(){
+  document.getElementById('lines').innerHTML=LINES.map(l=>`<div class="opt" onclick="togLine('${l}',this)">${l}</div>`).join('')+`<div class="opt" onclick="this.classList.toggle('neg')">없음</div>`;
+  document.getElementById('cc').innerHTML=CC.map(([e,n])=>`<div class="opt" style="min-width:74px" onclick="togCC('${n}',this)">${e} ${n}</div>`).join('');
+  document.getElementById('faces').innerHTML=FACES.map(([f,n])=>`<div class="face" onclick="setNrs('s',${n},this)">${f}<small>${n}</small></div>`).join('');
+  document.getElementById('patt').innerHTML=PATT.map(p=>`<div class="chip" onclick="setNrs('p','${p}',this)">${p}</div>`).join('');
+  document.getElementById('onset').innerHTML=ONSET.map(p=>`<div class="chip" onclick="setNrs('o','${p}',this)">${p}</div>`).join('');
+  document.getElementById('assoc').innerHTML=ASSOC.map(a=>`<div class="lbl" style="font-weight:500;margin-top:6px">${a.q}<div class="row" style="margin-left:auto;max-width:170px"><div class="opt" onclick="setAssoc('${a.id}',0,this)">${a.neg.split(' ').pop()||'없음'}</div><div class="opt" onclick="setAssoc('${a.id}',1,this)">${a.pos.split(' ').pop()}</div></div></div>`).join('');
+  document.getElementById('pupils').innerHTML=['L','R'].map(side=>`<div class="peye"><div class="t">${side==='L'?'좌':'우'}안</div><div class="pdots">${PUP.map(([px,mm])=>`<div class="pdot" style="width:${px}px;height:${px}px" onclick="setPup('${side}',${mm},this)"></div>`).join('')}</div></div>`).join('');
+  document.getElementById('light').innerHTML=LIGHT.map(l=>`<div class="chip" onclick="setLight('${l}',this)">${l}</div>`).join('');
+  document.getElementById('gate').innerHTML=GATE.map(g=>`<div class="lbl" style="font-weight:500;margin-top:6px">${g.q}<div class="row" style="margin-left:auto;max-width:150px"><div class="opt" onclick="setGate('${g.id}',0,this)">없음/확인</div><div class="opt" onclick="setGate('${g.id}',1,this)">있음</div></div></div>`).join('');
+  document.getElementById('gE').innerHTML=GE.map(([l,n])=>`<div class="chip" onclick="setGcs('E',${n},this)">${l}</div>`).join('');
+  document.getElementById('gV').innerHTML=GV.map(([l,n])=>`<div class="chip" onclick="setGcs('V',${n},this)">${l}</div>`).join('');
+  document.getElementById('gM').innerHTML=GM.map(([l,n])=>`<div class="chip" onclick="setGcs('M',${n},this)">${l}</div>`).join('');
+  document.getElementById('orient').innerHTML=ORI.map(([k,n])=>`<div class="lbl" style="font-weight:500;margin-top:4px">${n}<div class="row" style="margin-left:auto;max-width:150px"><div class="opt" onclick="setOri('${k}',1,this)">있음</div><div class="opt" onclick="setOri('${k}',0,this)">없음</div></div></div>`).join('');
+  document.getElementById('iv').innerHTML=IVS.map(it=>`<div class="iv" id="${it.id}" onclick="togIv('${it.id}')"><div class="s"><span class="spk">📢</span> "${it.s}"</div><div class="r">기록: ${it.t}</div></div>`).join('');
+  render();
+}
+function togLine(l,el){el.classList.toggle('pos');if(el.classList.contains('pos'))S.lines[l]=l;else delete S.lines[l];render();}
+function togCC(n,el){el.classList.toggle('pos');const i=S.cc.indexOf(n);if(i<0)S.cc.push(n);else S.cc.splice(i,1);
+  document.getElementById('ccSel').textContent=S.cc.length?'선택: '+S.cc.join(' · '):'선택 없음';
+  document.getElementById('abdSec').classList.toggle('hide',!S.cc.includes('복통'));render();}
+function setPart(t,el){S.part=t;document.querySelectorAll('.bpart').forEach(b=>b.classList.remove('on'));el.classList.add('on');render();}
+function setNrs(k,v,el){S.nrs[k]=v;el.parentElement.querySelectorAll(el.className.split(' ')[0]==='face'?'.face':'.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
+function setAssoc(id,pos,el){S.assoc[id]=pos;[...el.parentElement.children].forEach(x=>x.className='opt');el.classList.add(pos?'pos':'neg');autoDx();render();}
+function setPup(side,mm,el){S['pup'+side]=mm;el.parentElement.querySelectorAll('.pdot').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
+function setLight(l,el){S.light=l;el.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
+function setGate(id,pos,el){S.gate[id]=pos;[...el.parentElement.children].forEach(x=>x.className='opt');el.classList.add(pos?'pos':'neg');
+  const g=GATE.find(x=>x.id===id);if(pos&&g.risk)triggerRisk(g.risk);autoDx();render();}
+function setConsc(v){S.consc=v;document.getElementById('cClear').className='opt'+(v==='clear'?' neg':'');document.getElementById('cLow').className='opt'+(v==='low'?' pos':'');
+  document.getElementById('gcsBox').classList.toggle('hide',v!=='low');if(v==='low')triggerRisk('의식 저하');render();}
+function setGcs(k,n,el){S.gcs[k]=n;el.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');
+  const t=(S.gcs.E||0)+(S.gcs.V||0)+(S.gcs.M||0);document.getElementById('gcsSum').textContent='합계 GCS '+(S.gcs.E&&S.gcs.V&&S.gcs.M?t:'__');render();}
+function setOri(k,v,el){S.orient[k]=v;[...el.parentElement.children].forEach(x=>x.className='opt');el.classList.add(v?'neg':'pos');render();}
+function setGuard(t,el){S.guard=t;document.getElementById('gd1').className='opt';document.getElementById('gd2').className='opt';el.classList.add('neg');render();}
+function togIv(id){S.iv[id]=!S.iv[id];document.getElementById(id).classList.toggle('on');render();}
+
+function autoDx(){
+  const painPos=S.part||S.assoc.nv===1;
+  S._cand=[];if(painPos)S._cand.push('급성통증');if(S.assoc.nv===1)S._cand.push('오심');
+  Object.keys(S.dx).forEach(k=>{if(!S._cand.includes(k))delete S.dx[k];});
+  document.getElementById('dx').innerHTML=S._cand.length?S._cand.map(d=>`<div class="dx ${S.dx[d]?'on':''}" onclick="togDx('${d}')"><div class="ck">${S.dx[d]?'✓':''}</div><div>${d}</div><span class="auto">자동</span></div>`).join(''):'<div class="empty">사정에서 양성(있음)을 누르면 추천됩니다.</div>';
+}
+function togDx(d){S.dx[d]=!S.dx[d];autoDx();render();}
+
+function buildLines(){
+  const ae=[],note=[],pe=[];
+  if(S.part)ae.push(S.part);
+  ASSOC.forEach(a=>{if(S.assoc[a.id]!==undefined)ae.push(S.assoc[a.id]?a.pos:a.neg);});
+  if(S.pupL)ae.push('동공크기 좌 '+S.pupL+'mm');if(S.pupR)ae.push('우 '+S.pupR+'mm');
+  if(S.light)ae.push('빛 반사 확인결과 '+S.light.split(' ')[1]+'함');
+  GATE.forEach(g=>{if(S.gate[g.id]===1&&g.pos)ae.push(g.pos);else if(S.gate[g.id]===0&&g.neg)ae.push(g.neg);});
+  if(S.nrs.s!==null)note.push('통증강도 '+S.nrs.s+'점');if(S.nrs.p)note.push('통증양상 '+S.nrs.p);if(S.nrs.o)note.push('통증기간 '+S.nrs.o+'부터');
+  const dx=Object.keys(S.dx).filter(k=>S.dx[k]);
+  IVS.forEach(it=>{if(S.iv[it.id])pe.push(it.t);});
+  if(S.riskDone){pe.push('EKG monitor 중임');pe.push('담당 의사에게 알림');pe.push('활력징후 측정함');}
+  // 의식/낙상
+  const fae=[];
+  if(S.consc==='clear')fae.push('의식 명료함');
+  if(S.consc==='low'){if(S.gcs.E&&S.gcs.V&&S.gcs.M)fae.push('Glasgow Coma Scale : '+(S.gcs.E+S.gcs.V+S.gcs.M));fae.push('의식수준 저하됨');
+    ORI.forEach(([k,n])=>{if(S.orient[k]!==undefined)fae.push(n+'에 대한 지남력 '+(S.orient[k]?'있음':'없음'));});}
+  if(S.guard)fae.push(S.guard);
+  return {ae,note,dx,pe,fae,fall:(S.consc||S.guard)};
+}
+function render(){
+  const L=buildLines();let h='';
+  const ln=Object.keys(S.lines);
+  if(ln.length)h+=`<div class="rl ae"><span class="tg">도관</span>${ln.map(x=>x+' 삽입중').join(' / ')}</div>`;
+  if(L.ae.length||L.dx.length||L.pe.length){
+    h+='<div style="font-weight:700;margin:4px 0 2px">[복통]</div>';
+    L.ae.forEach(x=>h+=`<div class="rl ae"><span class="tg">A&E</span>${x}</div>`);
+    if(L.note.length)h+=`<div class="rl note">📌비고· ${L.note.join(' / ')}</div>`;
+    L.dx.forEach(x=>h+=`<div class="rl d"><span class="tg">D</span>${x}</div>`);
+    L.pe.forEach(x=>h+=`<div class="rl pe"><span class="tg">P&E</span>${x}</div>`);
+  }
+  if(L.fall){
+    h+='<div style="font-weight:700;margin:6px 0 2px">[의식/낙상]</div>';
+    L.fae.forEach(x=>h+=`<div class="rl ae"><span class="tg">A&E</span>${x}</div>`);
+    h+=`<div class="rl d"><span class="tg">D</span>낙상위험</div><div class="rl pe"><span class="tg">P&E</span>낙상방지 교육함 / 침대 난간을 올려줌</div>`;
+  }
+  document.getElementById('preview').innerHTML=h||'<div class="empty">탭하면 정형 간호기록이 쌓입니다.</div>';
+  const n=(h.match(/class="rl/g)||[]).length;document.getElementById('cnt').textContent=n?n+'줄':'';
+  // 감별 힌트
+  const ileus=S.assoc.st===1&&S.assoc.gas===1;
+  document.getElementById('hint').innerHTML=ileus?'<div class="tip" style="color:var(--pos);border-color:var(--pos);background:rgba(255,77,94,.1)">🔀 대변 못 봄 + gas out 없음 → 🔴 ileus(장폐색) 의심 → 의사 보고 고려</div>':'';
+}
+function copyNote(){
+  const L=buildLines();let t='';
+  const ln=Object.keys(S.lines);if(ln.length)t+='도관· '+ln.map(x=>x+' 삽입중').join(' / ')+'\n';
+  t+='[복통]\n';L.ae.forEach(x=>t+='A&E· '+x+'\n');if(L.note.length)t+='비고· '+L.note.join(' / ')+'\n';
+  L.dx.forEach(x=>t+='D· '+x+'\n');L.pe.forEach(x=>t+='P&E· '+x+'\n');
+  if(L.fall){t+='[의식/낙상]\n';L.fae.forEach(x=>t+='A&E· '+x+'\n');t+='D· 낙상위험\nP&E· 낙상방지 교육함 / 침대 난간을 올려줌\n';}
+  navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));
+}
+</script>
+</body>
+</html>
