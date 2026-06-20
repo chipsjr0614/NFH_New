@@ -12,19 +12,28 @@
 <header>
   <div class="htop">
     <div class="logo">NFH <em>간호기록</em></div>
-    <span class="badge" id="stepbadge">1 / 4</span>
+    <span class="badge" id="stepbadge">1 / 5</span>
     <button onclick="resetAll()">🏠 처음</button>
   </div>
   <div class="progress" id="prog">
-    <div class="pstep on"></div><div class="pstep"></div><div class="pstep"></div><div class="pstep"></div>
+    <div class="pstep on"></div><div class="pstep"></div><div class="pstep"></div><div class="pstep"></div><div class="pstep"></div>
   </div>
 </header>
 
 <main>
+  <!-- S0 맞이·확인 (신원·도관·환의/귀금속) -->
+  <div id="s-intro" class="screen active">
+    <div class="hint">💡 환자 곁에 도착해 <b>맞이·사전확인</b>을 한 번에. 신원 확인은 안전의 첫 단추예요.</div>
+    <div class="screen-title">① 맞이 · 확인</div>
+    <div class="screen-sub">신원 확인 → 라인·튜브 → 환의·귀금속</div>
+    <div id="intro-body"></div>
+    <div id="intro-gate"></div>
+  </div>
+
   <!-- S1 주증상 -->
-  <div id="s-symptom" class="screen active">
+  <div id="s-symptom" class="screen">
     <div class="hint">💡 한 번에 한 덩어리씩 진행합니다. 주증상을 고르고 <b>다음</b>을 누르면, 증상마다 사정 화면이 차례로 나와요.</div>
-    <div class="screen-title">① 주증상</div>
+    <div class="screen-title">② 주증상</div>
     <div class="screen-sub">해당하는 증상을 모두 고르세요 (여러 개 가능)</div>
     <div class="sym-grid" id="symptom-grid"></div>
   </div>
@@ -64,6 +73,7 @@
 const N=window.NFH, U=window.NFHUI;
 const ge=id=>document.getElementById(id);
 let symQueue=[], curEntry=null, picked=[], scrolledBottom=false;
+let identityOK=false, gownState={};   // 맞이·확인 상태
 
 const activeScreen=()=>[...document.querySelectorAll('.screen')].find(s=>s.classList.contains('active')).id;
 function goto(name, stepIdx){
@@ -71,7 +81,7 @@ function goto(name, stepIdx){
   ge('s-'+name).classList.add('active');
   window.scrollTo(0,0); scrolledBottom=false;
   if(stepIdx!=null){
-    ge('stepbadge').textContent=(stepIdx+1)+' / 4';
+    ge('stepbadge').textContent=(stepIdx+1)+' / 5';
     [...ge('prog').children].forEach((d,i)=>{ d.className='pstep'+(i<stepIdx?' done':i===stepIdx?' on':''); });
   }
   setTimeout(updateGate,0);
@@ -113,12 +123,19 @@ function updateGate(){
     gate.querySelector('.gate-status').innerHTML = conscSet
       ? `의식 확인 <span class="ok">완료 ✓</span> · 낙상위험 자동 포함`
       : `<span class="miss">⚠️ 의식(명료/저하)을 먼저 선택하세요</span>`;
+  } else if(screen==='s-intro'){
+    pending=identityOK?0:1;
+    gate.querySelector('.gate-status').innerHTML = identityOK
+      ? `신원확인 <span class="ok">완료 ✓</span>`
+      : `<span class="miss">⚠️ 본인 확인을 먼저 체크하세요</span>`;
   }
+  const strict = (screen==='s-fall' || screen==='s-intro'); // 필수항목 있어야 통과
+  const showMiss = (screen==='s-assess' && pending);
   gate.querySelector('.gate-cklabel').textContent = !atBottom
     ? '↓ 맨 아래까지 보면 확인할 수 있어요'
-    : (pending? `미응답 ${pending}개를 확인했고 넘어갑니다` : '모두 확인했습니다');
+    : (showMiss ? `미응답 ${pending}개를 확인했고 넘어갑니다` : '모두 확인했습니다');
   const baseOk = atBottom && chk.checked;
-  enableNext(screen==='s-fall' ? (baseOk && pending===0) : baseOk);
+  enableNext(strict ? (baseOk && pending===0) : baseOk);
 }
 window.addEventListener('scroll', ()=>{
   if(window.innerHeight+window.scrollY >= document.documentElement.scrollHeight-90) scrolledBottom=true;
@@ -126,11 +143,66 @@ window.addEventListener('scroll', ()=>{
 }, {passive:true});
 document.addEventListener('change', e=>{ if(e.target.classList.contains('gate-confirm')) updateGate(); });
 
+// ── S0 맞이·확인 (신원확인 + 도관 + 환의/귀금속) ──
+const GOWN=['환의(상의) 갈아입힘','환의(하의) 갈아입힘','귀금속 제거함','귀금속 없음/해당없음'];
+function introHTML(){
+  const catChecked=i=>!!U.S.items.find(c=>c.uid==='cat'+i);
+  const etc=(U.S.items.find(c=>c.uid==='cat-etc')||{}).text||'';
+  return `
+  <div class="sec sec-ae"><div class="sec-h">🤝 신원확인 (대본)</div>
+    <div class="iv" style="cursor:default">
+      <div class="script"><span class="spk">📢</span> "안녕하세요~ 〇〇〇님 맞으세요? 확인을 위해 성함이랑 생년월일 말씀해 주시겠어요?"</div>
+      <div class="rec">🪪 팔찌(환자정보)와 대조 · 초진(KTAS) 주호소와 <b style="color:var(--pos)">다르면 ⚠️ 환자 재확인</b></div></div>
+    <div class="chk-item ${identityOK?'on':''}" data-idchk><div class="chk-box">${identityOK?'✓':''}</div>
+      <div style="flex:1"><div class="chk-text">본인(성함·생년월일·팔찌) 확인함</div>
+      <div class="note-tag">※ 신원확인 자체의 기록 진술문은 미확정 — <b>칩스확인필요</b> (현재 기록 미포함)</div></div></div>
+  </div>
+  <div class="sec sec-ae"><div class="sec-h">🔌 라인 · 튜브 (도관)</div>
+    <div class="note-tag" style="margin-bottom:8px">타 병원에서 달고 올 수 있음. 있으면 체크 → 기록에 남음. <b>[마스터 대조 필요]</b></div>
+    <div id="cat-list">${N.CATS.map((c,i)=>`<div class="chk-item ${catChecked(i)?'on':''}" data-cat="${i}"><div class="chk-box">${catChecked(i)?'✓':''}</div><div style="flex:1"><div class="chk-text">${N.esc(c)}</div></div></div>`).join('')}</div>
+    <input class="txt-input" id="cat-etc" placeholder="기타 직접 입력 (예: L-tube 삽입중)" value="${N.esc(etc)}">
+  </div>
+  <div class="sec sec-ae"><div class="sec-h">👕 환의 · 귀금속</div>
+    <div class="note-tag" style="margin-bottom:8px">교체·제거 체크리스트(누락 방지용). <b>기록 진술문은 칩스확인필요 → 현재 기록 미포함.</b></div>
+    ${GOWN.map((g,i)=>`<div class="chk-item ${gownState[i]?'on':''}" data-gown="${i}"><div class="chk-box">${gownState[i]?'✓':''}</div><div style="flex:1"><div class="chk-text">${N.esc(g)}</div></div></div>`).join('')}
+  </div>`;
+}
+function bindIntro(){
+  const body=ge('intro-body');
+  body.querySelector('[data-idchk]').addEventListener('click',function(){
+    identityOK=!identityOK; this.classList.toggle('on',identityOK); this.querySelector('.chk-box').textContent=identityOK?'✓':''; updateGate();
+  });
+  body.querySelectorAll('[data-cat]').forEach(row=>row.addEventListener('click',()=>{
+    const i=row.dataset.cat, on=!row.classList.contains('on');
+    row.classList.toggle('on',on); row.querySelector('.chk-box').textContent=on?'✓':'';
+    U.S.items=U.S.items.filter(c=>c.uid!=='cat'+i);
+    if(on) U.S.items.push({uid:'cat'+i, text:N.CATS[i], section:'도관', symLabel:'침습적 도관'});
+    U.fire();
+  }));
+  body.querySelector('#cat-etc').addEventListener('blur',function(){
+    const v=this.value.trim(); U.S.items=U.S.items.filter(c=>c.uid!=='cat-etc');
+    if(v) U.S.items.push({uid:'cat-etc', text:v, section:'도관', symLabel:'침습적 도관'}); U.fire();
+  });
+  body.querySelectorAll('[data-gown]').forEach(row=>row.addEventListener('click',()=>{
+    const i=row.dataset.gown; gownState[i]=!gownState[i];
+    row.classList.toggle('on',gownState[i]); row.querySelector('.chk-box').textContent=gownState[i]?'✓':'';
+  }));
+}
+function renderIntro(){
+  ge('intro-body').innerHTML=introHTML(); bindIntro();
+  ge('intro-gate').innerHTML=gateHTML('intro');
+  goto('intro',0);
+  setNav(`<button class="btn prim" onclick="introNext()">다음 →</button>`);
+  U.fire();
+}
+function introNext(){ renderSymptom(); }
+
 // ── S1 주증상 ──
 function renderSymptom(){
   ge('symptom-grid').innerHTML=N.SYMS.map(s=>`<div class="opt-btn ${picked.includes(s.id)?'on':''}" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
-  goto('symptom',0);
-  setNav(`<button class="btn prim" onclick="startQueue()">다음 →</button>`);
+  goto('symptom',1);
+  setNav(`<button class="btn ghost" onclick="renderIntro()">← 맞이</button>
+    <button class="btn prim" onclick="startQueue()">다음 →</button>`);
 }
 ge('symptom-grid').addEventListener('click',e=>{
   const b=e.target.closest('[data-sym]'); if(!b) return;
@@ -141,7 +213,10 @@ ge('symptom-grid').addEventListener('click',e=>{
 });
 function startQueue(){
   if(!picked.length){ alert('주증상을 선택하세요'); return; }
-  U.reset(); U.fire();
+  // 이전 주호소 사정만 비우고 도관(맞이·확인) 기록은 보존
+  U.S.selected.length=0;
+  U.S.items=U.S.items.filter(c=>c.section==='도관');
+  U.S.nrs={}; U.fire();
   if(picked.includes('ok')){ goFall(); return; }
   symQueue=[...picked]; nextSym();
 }
@@ -161,7 +236,7 @@ function renderBranch(branchId, label){
     ${br.hint?`<div class="screen-sub">💬 ${N.esc(br.hint)}</div>`:'<div style="height:8px"></div>'}
     <div class="q"><div class="q-prompt">${N.esc(br.q)}</div>
     <div class="opt-grid c1" id="br-opts">${br.opts.map((o,i)=>`<div class="opt-btn" data-bi="${i}">${N.esc(o.label)}</div>`).join('')}</div></div>`;
-  goto('branch',0);
+  goto('branch',1);
   setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>`);
   ge('br-opts').addEventListener('click', function h(e){
     const btn=e.target.closest('[data-bi]'); if(!btn) return;
@@ -175,7 +250,7 @@ function openAssess(key, label){
   curEntry=U.addComplaint(label,[key]) || U.S.selected.find(e=>e.label===label);
   ge('assess-body').innerHTML=U.assessHTML(curEntry)+gateHTML('assess');
   U.bindAssess(ge('assess-body'), curEntry);
-  goto('assess',1);
+  goto('assess',2);
   const more=symQueue.length>0;
   setNav(`<button class="btn ghost" onclick="backFromAssess()">← 뒤로</button>
     <button class="btn prim" onclick="nextSym()">${more?'다음 증상 →':'의식·낙상 →'}</button>`);
@@ -188,12 +263,16 @@ function goFall(){
   ge('fall-body').innerHTML=U.fallHTML(); U.bindFall(ge('fall-body'));
   ge('fall-gate').innerHTML=gateHTML('fall');
   renderDxReview();
-  goto('fall',2);
+  goto('fall',3);
   setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>
     <button class="btn go" onclick="finish()">기록 완성 →</button>`);
 }
 function renderDxReview(){ ge('dx-review').innerHTML=U.dxHTML(); }
-function finish(){ openPanel(); ge('preview').scrollIntoView({behavior:'smooth'}); }
+function finish(){
+  openPanel(); ge('preview').scrollIntoView({behavior:'smooth'});
+  ge('stepbadge').textContent='5 / 5';
+  [...ge('prog').children].forEach((d,i)=>d.className='pstep'+(i<4?' done':' on'));
+}
 
 // ── 도크: 접이식 미리보기 ──
 function openPanel(){ ge('ppanel').classList.add('open'); ge('peek').classList.add('open'); }
@@ -214,9 +293,9 @@ U.onChange=()=>{
   updateGate();
 };
 
-function resetAll(){ picked=[]; symQueue=[]; curEntry=null; U.reset(); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderSymptom(); }
+function resetAll(){ picked=[]; symQueue=[]; curEntry=null; identityOK=false; gownState={}; U.reset(); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderIntro(); }
 
-renderSymptom(); U.fire();
+renderIntro(); U.fire();
 </script>
 </body>
 </html>
