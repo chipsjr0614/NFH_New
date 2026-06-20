@@ -1,0 +1,152 @@
+/* nfh_style_260620.css — 단계형 A / 한화면 B 공유 디자인 시스템
+   두 버전의 색·컴포넌트를 동일하게 묶어 '레이아웃' 변수만 비교되게 한다. */
+:root{
+  --bg:#0a0e14; --panel:#12181f; --card:#1a212b; --card2:#222b38; --line:#2a3441;
+  --tx:#e6edf3; --tx2:#8b97a7;
+  --ae:#4aa8ff;   /* 사정 파랑 */
+  --d:#ff6b6b;    /* 진단 빨강 */
+  --pe:#ffc857;   /* 중재 노랑 */
+  --pos:#ff4d5e;  /* 양성(있음) 강조 */
+  --neg:#3a4452;  /* 음성 차분 */
+  --ok:#2ecc71;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:16px;line-height:1.5}
+
+/* 헤더 */
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 16px}
+.htop{display:flex;align-items:center;gap:10px;max-width:600px;margin:0 auto}
+.htop .logo{font-weight:800;font-size:17px}
+.htop .logo em{color:var(--pos);font-style:normal}
+.htop .badge{margin-left:auto;font-size:12px;color:var(--tx2);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:4px 9px}
+.htop button{background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+
+/* 진행바 (단계형) */
+.progress{max-width:600px;margin:8px auto 0;display:flex;gap:6px}
+.progress .pstep{flex:1;height:5px;border-radius:3px;background:var(--card2)}
+.progress .pstep.on{background:var(--ae)}
+.progress .pstep.done{background:var(--ok)}
+
+main{max-width:600px;margin:0 auto;padding:14px}
+.hint{font-size:12.5px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin-bottom:14px;line-height:1.55}
+
+/* 섹션 */
+.sec{margin-bottom:20px}
+.sec-h{font-size:13px;font-weight:800;letter-spacing:.3px;padding:7px 12px;border-radius:9px;margin-bottom:10px;display:inline-block}
+.sec-ae .sec-h{background:rgba(74,168,255,.15);color:var(--ae)}
+.sec-d  .sec-h{background:rgba(255,107,107,.15);color:var(--d)}
+.sec-pe .sec-h{background:rgba(255,200,87,.15);color:var(--pe)}
+.sec-fall .sec-h{background:rgba(46,204,113,.15);color:var(--ok)}
+.screen-title{font-size:20px;font-weight:800;margin:4px 0 2px}
+.screen-sub{font-size:13.5px;color:var(--tx2);margin-bottom:14px}
+
+/* 질문 카드 */
+.q{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin-bottom:9px}
+.q.warn{border-color:var(--pos)}
+.q-prompt{font-size:15px;font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.q-prompt .wb{color:var(--pos);font-size:11px;font-weight:800;border:1px solid var(--pos);border-radius:6px;padding:1px 6px}
+.note-tag{font-size:12px;color:var(--tx2);margin-top:6px}
+
+/* 있음/없음·슬래시 토글 */
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{flex:1;min-width:64px;text-align:center;padding:12px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);
+  color:var(--tx2);font-size:15px;font-weight:600;cursor:pointer;transition:.12s}
+.opt:hover{border-color:#5a6878}
+.opt.sel-neg{border-color:#5a6878;color:var(--tx);background:#2a3038}
+.opt.sel-pos{border-color:var(--pos);color:#fff;background:var(--pos)}
+
+/* 값 입력 */
+.txt-input{width:100%;margin-top:8px;background:#0c1119;border:1px solid var(--line);color:var(--tx);
+  border-radius:9px;padding:11px 12px;font-size:15px;font-family:inherit}
+
+/* 체크 항목 */
+.chk-item{display:flex;align-items:flex-start;gap:11px;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:12px 13px;margin-bottom:8px;cursor:pointer}
+.chk-item.on{border-color:var(--ae);background:rgba(74,168,255,.07)}
+.chk-box{width:22px;height:22px;border:2px solid var(--line);border-radius:6px;flex:none;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
+.chk-item.on .chk-box{background:var(--ae);border-color:var(--ae)}
+.chk-text{font-size:15px;font-weight:600}
+
+/* NRS */
+.nrs-wrap{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px}
+.nrs-lab{font-size:13px;color:var(--tx2);margin:10px 0 6px}
+.nrs-lab:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:9px 12px;border-radius:18px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:14px;cursor:pointer}
+.chip.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe);font-weight:700}
+.nrsnum{display:flex;flex-wrap:wrap;gap:5px}
+.nrsnum .chip{min-width:38px;text-align:center;font-weight:700}
+
+/* 진단 */
+.dx{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:8px;cursor:pointer}
+.dx .ck{width:22px;height:22px;border:2px solid var(--d);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
+.dx.on{border-color:var(--d);background:rgba(255,107,107,.08)}
+.dx.on .ck{background:var(--d)}
+.dx .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:6px;padding:1px 6px}
+.dx.locked{opacity:.95}
+.dx.locked .auto{color:var(--ok);border-color:var(--ok)}
+
+/* 환자설명 / 중재 카드 */
+.iv{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px;cursor:pointer}
+.iv.on{border-color:var(--pe);background:rgba(255,200,87,.07)}
+.iv .script{font-size:15px;line-height:1.55}
+.iv .script .spk{color:var(--pe);font-weight:700}
+.iv .rec{font-size:12.5px;color:var(--tx2);margin-top:7px;display:flex;align-items:center;gap:6px}
+.iv.on .rec{color:var(--pe)}
+.iv .rec .ck{width:18px;height:18px;border:2px solid var(--pe);border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#1a1a1a}
+.iv.on .rec .ck{background:var(--pe)}
+
+/* 빠른 모드 버튼 */
+.allnorm{width:100%;margin-top:4px;background:var(--card2);border:1px solid var(--line);color:var(--tx2);border-radius:10px;padding:12px;font-size:13.5px;cursor:pointer}
+.allnorm:hover{color:var(--tx);border-color:#5a6878}
+
+/* 주증상 그리드 */
+.sym-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.opt-btn{background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:16px 8px;text-align:center;
+  font-size:14px;font-weight:600;cursor:pointer;transition:.12s;display:flex;flex-direction:column;align-items:center;gap:7px}
+.opt-btn:hover{border-color:#5a6878}
+.opt-btn.on{border-color:var(--ae);background:rgba(74,168,255,.12);color:#fff}
+.opt-btn .ico{font-size:24px}
+.opt-grid.c1{display:flex;flex-direction:column;gap:9px}
+.opt-grid.c1 .opt-btn{flex-direction:row;justify-content:flex-start;gap:10px;padding:15px 16px;font-size:15px}
+
+/* 하단 네비 (단계형) */
+.navbar{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:1px solid var(--line);padding:12px 16px}
+.navbar .inner{max-width:600px;margin:0 auto;display:flex;gap:10px}
+.btn{flex:1;border-radius:11px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;border:1px solid var(--line)}
+.btn.ghost{background:var(--card2);color:var(--tx2)}
+.btn.prim{background:var(--ae);color:#04121f;border-color:var(--ae);flex:2}
+.btn.go{background:var(--ok);color:#053;border-color:var(--ok)}
+
+/* 실시간 미리보기 시트 (한화면) */
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);
+  max-height:230px;display:flex;flex-direction:column}
+.sheet-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);max-width:600px;margin:0 auto;width:100%}
+.sheet-h b{font-size:14px}
+.sheet-h .cnt{font-size:12px;color:var(--tx2)}
+.sheet-h button{margin-left:auto;background:var(--ok);color:#063;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.sheet-body{overflow-y:auto;padding:10px 16px;max-width:600px;margin:0 auto;width:100%;font-size:13.5px;line-height:1.6}
+
+/* 기록 줄 (미리보기/팝업 공용) */
+.rl{margin:2px 0}
+.rl.ae{color:var(--ae)} .rl.d{color:var(--d)} .rl.pe{color:var(--pe)} .rl.note{color:var(--tx2);font-size:12px}
+.rl .tag{font-weight:800;font-size:11px;margin-right:5px}
+.rl-grp{font-weight:800;margin:8px 0 4px}
+.rl-grp:first-child{margin-top:0}
+.empty2{color:var(--tx2);font-size:13px}
+
+/* 팝업 (단계형 최종 기록) */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
+.overlay.on{display:flex}
+.popup{background:var(--panel);width:100%;max-width:600px;max-height:88vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column}
+.popup-h{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.popup-title{font-size:17px;font-weight:800}
+.popup-h button{margin-left:auto;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:6px 12px;cursor:pointer}
+.popup-body{overflow-y:auto;padding:14px 16px}
+.popup-foot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:10px}
+
+.screen{display:none}
+.screen.active{display:block}
