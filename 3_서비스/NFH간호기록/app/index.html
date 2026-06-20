@@ -67,6 +67,15 @@
   <div class="navbar"><div class="inner" id="nav"></div></div>
 </div>
 
+<!-- 완성: 전체 기록 모달 -->
+<div class="overlay" id="overlay">
+  <div class="popup">
+    <div class="popup-h"><div class="popup-title">✅ 간호기록 완성</div><button onclick="closePopup()">✕ 닫기</button></div>
+    <div class="popup-body" id="popup-body"></div>
+    <div class="popup-foot"><button class="btn go" style="flex:1" onclick="copyNote()">📤 EMR용 복사</button></div>
+  </div>
+</div>
+
 <script src="nfh_core.js"></script>
 <script src="nfh_ui.js"></script>
 <script>
@@ -283,10 +292,12 @@ function goFall(){
 }
 function renderDxReview(){ ge('dx-review').innerHTML=U.dxHTML(); }
 function finish(){
-  openPanel(); ge('preview').scrollIntoView({behavior:'smooth'});
+  ge('popup-body').innerHTML=U.previewHTML();
+  ge('overlay').classList.add('on');
   ge('stepbadge').textContent='5 / 5';
   [...ge('prog').children].forEach((d,i)=>d.className='pstep'+(i<4?' done':' on'));
 }
+function closePopup(){ ge('overlay').classList.remove('on'); }
 
 // ── 도크: 접이식 미리보기 ──
 function openPanel(){ ge('ppanel').classList.add('open'); ge('peek').classList.add('open'); }
@@ -304,10 +315,11 @@ U.onChange=()=>{
   const lines=[...new DOMParser().parseFromString(U.previewHTML(),'text/html').querySelectorAll('.rl')];
   ge('pk-last').textContent = lines.length? lines[lines.length-1].textContent : '탭한 결과가 여기에 쌓여요';
   if(activeScreen()==='s-fall') renderDxReview();
+  if(ge('overlay').classList.contains('on')) ge('popup-body').innerHTML=U.previewHTML();
   updateGate();
 };
 
-function resetAll(){ curEntry=null; identityOK=false; gownState={}; U.reset(); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderIntro(); }
+function resetAll(){ curEntry=null; identityOK=false; gownState={}; U.reset(); ge('overlay').classList.remove('on'); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderIntro(); }
 
 renderIntro(); U.fire();
 </script>

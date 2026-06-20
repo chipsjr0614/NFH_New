@@ -69,6 +69,10 @@ main{max-width:600px;margin:0 auto;padding:14px}
   display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
 .chk-item.on .chk-box{background:var(--ae);border-color:var(--ae)}
 .chk-text{font-size:15px;font-weight:600}
+/* A&E 체크: 질문(💬)과 '기록될 진술문'을 시각적으로 분리 */
+.rec-line{display:flex;align-items:baseline;gap:7px;margin-top:2px;font-size:13.5px;color:var(--tx2);font-weight:500}
+.rectag{flex:none;font-size:10px;font-weight:800;color:var(--ae);border:1px solid var(--ae);border-radius:5px;padding:1px 5px;letter-spacing:.3px}
+.chk-item.on .rectag{color:#fff;background:var(--ae);border-color:var(--ae)}
 
 /* NRS */
 .nrs-wrap{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px}

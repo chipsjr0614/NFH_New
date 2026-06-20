@@ -81,8 +81,8 @@ function assessHTML(entry){
       const on = !!S.items.find(x=>x.uid===item.uid);
       h += `<div class="chk-item ${on?'on':''}" data-ae="${item.uid}" data-chk="${item.uid}" data-ct="${esc(item.text)}">
         <div class="chk-box">${on?'✓':''}</div>
-        <div style="flex:1"><div class="q-prompt" style="margin-bottom:4px">💬 ${esc(q)}</div>
-        <div class="chk-text">${esc(item.text)}</div>${note}</div></div>`;
+        <div style="flex:1"><div class="q-prompt" style="margin-bottom:5px">💬 ${esc(q)}</div>
+        <div class="rec-line"><span class="rectag">기록</span><span>${esc(item.text)}</span></div>${note}</div></div>`;
     }
   });
 
