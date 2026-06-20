@@ -163,11 +163,6 @@ main{max-width:520px;margin:0 auto;padding:14px}
       <div class="lbl">동반 증상 <span style="font-size:12px;color:var(--tx2)">(있음=빨강)</span></div>
       <div id="assoc"></div>
     </div>
-    <div class="card">
-      <div class="lbl">👁 동공 (눈 보고 탭)</div>
-      <div class="pupils" id="pupils"></div>
-      <div class="chips" id="light"></div>
-    </div>
     <div class="card" style="border-color:var(--pos)">
       <div class="lbl"><span class="wb">필수</span> ⚠️ 놓치면 안 됨 — 한 번은 확인</div>
       <div id="gate"></div>
@@ -178,6 +173,15 @@ main{max-width:520px;margin:0 auto;padding:14px}
     <div class="sec-h" style="margin-top:10px">🟡 중재·설명 (말하며 체크)</div>
     <div id="iv"></div>
     <button class="addbtn" onclick="document.getElementById('cc').scrollIntoView({behavior:'smooth'})">＋ 다른 증상 추가</button>
+  </div>
+
+  <!-- 신경 사정 (두통·어지럼·신경 문제 시) -->
+  <div class="sec hide" id="neuroSec"><div class="sec-h">👁 신경 사정 <span style="font-size:11px;color:var(--tx2);text-transform:none">· 두통·어지럼·신경 문제 시</span></div>
+    <div class="card">
+      <div class="lbl">👁 동공 (눈 보고 탭) <span style="font-size:11px;color:var(--tx2)">— 두통·신경 의심 시 측정</span></div>
+      <div class="pupils" id="pupils"></div>
+      <div class="chips" id="light"></div>
+    </div>
   </div>
 
   <!-- 의식/낙상 -->
@@ -228,7 +232,7 @@ const LINES=[
  {s:'CVC',n:'중심정맥관',d:['중심정맥관 유지 중임','중심정맥관 삽입부위 출혈 없음','중심정맥관 삽입부위 출혈 있음','중심정맥관 삽입부위 oozing 없음','중심정맥관 막힘']},
  {s:'A-line',n:'arterial line',d:['arterial line 유지 중임','arterial line site 출혈 없음','arterial line site 출혈 있음','arterial line site oozing 없음','arterial line site oozing 있음']},
  {s:'흉관',n:'흉관',d:['흉관 유지 중임','흉관 자연배액 중임','흉관 삽입부위 출혈 없음','흉관 삽입부위 출혈 있음','흉관 통한 배액량 증가함']},
- {s:'hemovac',n:'hemovac',d:['hemovac 유지 중임','hemovac 삽입부위 leakage 없음','hemovac 삽입부위 leakage 있음','hemovac 삽입부위 출혈 없음','hemovac 막힘']},
+ {s:'hemovac',n:'hemovac',d:['hemovac 유지 중임','hemovac 삽입부위 leakage 없음','hemovac 삽입부위 leakage 있음','hemovac 삽입부위 oozing 있음','hemovac 막힘']},
 ];
 const CC=[['😣','복통'],['❤️','흉통'],['🫁','호흡곤란'],['🤕','두통'],['🌡️','발열'],['🤮','오심구토'],['💩','설사'],['🩹','외상'],['🩸','출혈'],['🧠','어지럼'],['👁️','안과'],['🩹','피부']];
 const FACES=[['😀',0],['🙂',2],['😐',4],['😟',6],['😣',8],['😭',10]];
@@ -237,11 +241,11 @@ const ONSET=['방금 전','몇 시간 전','어제','며칠 전'];
 const ASSOC=[
  {id:'nv',q:'오심·구토',nl:'없음',pl:'있음',neg:'오심, 구토 없음',pos:'오심, 구토 있음'},
  {id:'st',q:'대변',nl:'봄',pl:'못 봄',neg:'대변 봄',pos:'대변 못 봄'},
- {id:'gas',q:'gas out',nl:'있음',pl:'없음',neg:'gas out 있음',pos:'gas out 없음'},
+ {id:'gas',q:'gas out',nl:'됨',pl:'안됨',neg:'gas out 됨',pos:'gas out 안됨'},
  {id:'di',q:'설사',nl:'없음',pl:'있음',neg:'설사 없음',pos:'설사 있음'},
 ];
 const GATE=[
- {id:'preg',q:'가임기 여성? 임신 가능성',neg:'',pos:'임신 가능성 확인 필요'},
+ {id:'preg',q:'가임기 여성? 임신 가능성 (확인만, 기록 X)',neg:'',pos:''},
  {id:'blood',q:'혈변·흑색변',neg:'혈변 없음',pos:'혈변 있음'},
  {id:'sweat',q:'식은땀·창백 (쇼크)',neg:'',pos:'식은땀 있음',risk:'쇼크/ACS 의심'},
  {id:'fever',q:'열감·오한',neg:'',pos:'열감 있음'},
@@ -255,7 +259,7 @@ const ORI=[['time','시간'],['place','장소'],['person','사람']];
 const IVS=[
  {id:'i1',s:'많이 아프세요? 진통제가 필요하실 만큼 아프신가요?',t:'통증을 인정해줌'},
  {id:'i2',s:'의사 선생님께 확인 후 처방받아 드릴게요.',t:'통증을 재평가함'},
- {id:'i3',s:'검사 위해 금식하시고, 아프면 바로 말씀하세요.',t:'금식하도록 교육함'},
+ {id:'i3',s:'통증 어떤지 계속 지켜볼게요. 심해지면 말씀하세요.',t:'통증을 관찰하기로 함'},
 ];
 
 // 게이트
@@ -312,11 +316,12 @@ function renderLines(){
     return `<div><div class="opt ${on?'pos':''}" style="max-width:none;text-align:left" onclick="togLine('${l.n}')"><b>${l.s}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;
   }).join('');
 }
-function togLine(n){if(S.lines[n]){delete S.lines[n];delete S.drain[n];}else S.lines[n]=true;renderLines();render();}
+function togLine(n){if(S.lines[n]){delete S.lines[n];delete S.drain[n];}else{S.lines[n]=true;const l=LINES.find(x=>x.n===n);S.drain[n]=[l.d[0]];}renderLines();render();}
 function togDrain(n,el){const d=el.dataset.d;if(!S.drain[n])S.drain[n]=[];const i=S.drain[n].indexOf(d);if(i<0)S.drain[n].push(d);else S.drain[n].splice(i,1);renderLines();render();}
 function togCC(n,el){el.classList.toggle('pos');const i=S.cc.indexOf(n);if(i<0)S.cc.push(n);else S.cc.splice(i,1);
   document.getElementById('ccSel').textContent=S.cc.length?'선택: '+S.cc.join(' · '):'선택 없음';
-  document.getElementById('abdSec').classList.toggle('hide',!S.cc.includes('복통'));render();}
+  document.getElementById('abdSec').classList.toggle('hide',!S.cc.includes('복통'));
+  document.getElementById('neuroSec').classList.toggle('hide',!(S.cc.includes('두통')||S.cc.includes('어지럼')));render();}
 function setPart(t,el){S.part=t;document.querySelectorAll('.bpart').forEach(b=>b.classList.remove('on'));el.classList.add('on');render();}
 function setNrs(k,v,el){S.nrs[k]=v;el.parentElement.querySelectorAll(el.className.split(' ')[0]==='face'?'.face':'.chip').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
 function setAssoc(id,pos,el){S.assoc[id]=pos;[...el.parentElement.children].forEach(x=>x.className='opt');el.classList.add(pos?'pos':'neg');autoDx();render();}
@@ -362,7 +367,7 @@ function buildLines(){
 }
 function render(){
   const L=buildLines();let h='';
-  Object.keys(S.lines).forEach(n=>{h+=`<div class="rl ae"><span class="tg">도관</span>${n} 삽입중</div>`;(S.drain[n]||[]).forEach(d=>h+=`<div class="rl ae"><span class="tg">A&E</span>${d}</div>`);});
+  Object.keys(S.lines).forEach(n=>{(S.drain[n]||[]).forEach(d=>h+=`<div class="rl ae"><span class="tg">도관</span>${d}</div>`);});
   if(L.ae.length||L.dx.length||L.pe.length){
     h+='<div style="font-weight:700;margin:4px 0 2px">[복통]</div>';
     L.ae.forEach(x=>h+=`<div class="rl ae"><span class="tg">A&E</span>${x}</div>`);
@@ -383,7 +388,7 @@ function render(){
 }
 function copyNote(){
   const L=buildLines();let t='';
-  Object.keys(S.lines).forEach(n=>{t+='도관· '+n+' 삽입중\n';(S.drain[n]||[]).forEach(d=>t+='A&E· '+d+'\n');});
+  Object.keys(S.lines).forEach(n=>{(S.drain[n]||[]).forEach(d=>t+='도관· '+d+'\n');});
   t+='[복통]\n';L.ae.forEach(x=>t+='A&E· '+x+'\n');if(L.note.length)t+='비고· '+L.note.join(' / ')+'\n';
   L.dx.forEach(x=>t+='D· '+x+'\n');L.pe.forEach(x=>t+='P&E· '+x+'\n');
   if(L.fall){t+='[의식/낙상]\n';L.fae.forEach(x=>t+='A&E· '+x+'\n');t+='D· 낙상위험\nP&E· 낙상방지 교육함 / 침대 난간을 올려줌\n';}
