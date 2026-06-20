@@ -93,7 +93,7 @@ main{max-width:520px;margin:0 auto;padding:14px}
     <div class="mchk" id="g2" onclick="gchk('g2')"><span class="ck"></span><div>🗣️ "성함이 어떻게 되세요?" (개방형)</div></div>
     <div class="mchk" id="g3" onclick="gchk('g3')"><span class="ck"></span><div>🏷️ 팔찌 확인 (이름+등록번호)</div></div>
     <input id="pname" placeholder="이름" oninput="gval()">
-    <input id="pid" placeholder="등록번호" oninput="gval()">
+    <input id="pid" placeholder="등록번호 (8자리)" maxlength="8" inputmode="numeric" oninput="gval()">
     <button class="mgo off" id="gGo" onclick="startOK()">✅ 간호기록 시작</button>
   </div>
 </div>
@@ -123,8 +123,8 @@ main{max-width:520px;margin:0 auto;padding:14px}
   <div id="riskBanner"></div>
 
   <!-- 도관 -->
-  <div class="sec"><div class="sec-h">① 도관 확인</div>
-    <div class="card"><div class="row" id="lines"></div></div>
+  <div class="sec"><div class="sec-h">① 도관 확인 <span style="font-size:11px;color:var(--tx2);text-transform:none">· 있으면 탭 → 배액 상태 차팅</span></div>
+    <div class="card"><div id="lines" style="display:flex;flex-direction:column;gap:8px"></div></div>
   </div>
 
   <!-- 주호소 -->
@@ -214,10 +214,17 @@ main{max-width:520px;margin:0 auto;padding:14px}
 </div>
 
 <script>
-const S={lines:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},pupL:null,pupR:null,light:null,
+const S={lines:{},drain:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},pupL:null,pupR:null,light:null,
   gate:{},dx:{},iv:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,riskDone:false,risk:{}};
 
-const LINES=['Foley','L-tube','PTBD','PTGBD','CVC','흉관'];
+const LINES=[
+ {n:'Foley',d:['Foley catheter 통해 소변배출 잘됨','소변량 감소함','소변량 없음']},
+ {n:'L-tube',d:['배액관 자연배액 유지함','배액량 측정함']},
+ {n:'PTBD',d:['배액관 자연배액 유지함','배액량 측정함','배액관 삽입부위 출혈 있음']},
+ {n:'PTGBD',d:['배액관 자연배액 유지함','배액량 측정함','배액관 삽입부위 출혈 있음']},
+ {n:'PCD',d:['배액관 자연배액 유지함','배액량 측정함']},
+ {n:'흉관',d:['흉관 자연배액 중임','흉관 통한 배액량 증가함','흉관 통한 배액량 감소함']},
+];
 const CC=[['😣','복통'],['❤️','흉통'],['🫁','호흡곤란'],['🤕','두통'],['🌡️','발열'],['🤮','오심구토'],['💩','설사'],['🩹','외상'],['🩸','출혈'],['🧠','어지럼'],['👁️','안과'],['🩹','피부']];
 const FACES=[['😀',0],['🙂',2],['😐',4],['😟',6],['😣',8],['😭',10]];
 const PATT=['쥐어짜듯','찌르듯','둔하게','타는듯'];
@@ -276,7 +283,7 @@ function triggerRisk(why){
 }
 
 function initUI(){
-  document.getElementById('lines').innerHTML=LINES.map(l=>`<div class="opt" onclick="togLine('${l}',this)">${l}</div>`).join('')+`<div class="opt" onclick="this.classList.toggle('neg')">없음</div>`;
+  renderLines();
   document.getElementById('cc').innerHTML=CC.map(([e,n])=>`<div class="opt" style="min-width:74px" onclick="togCC('${n}',this)">${e} ${n}</div>`).join('');
   document.getElementById('faces').innerHTML=FACES.map(([f,n])=>`<div class="face" onclick="setNrs('s',${n},this)">${f}<small>${n}</small></div>`).join('');
   document.getElementById('patt').innerHTML=PATT.map(p=>`<div class="chip" onclick="setNrs('p','${p}',this)">${p}</div>`).join('');
@@ -292,7 +299,15 @@ function initUI(){
   document.getElementById('iv').innerHTML=IVS.map(it=>`<div class="iv" id="${it.id}" onclick="togIv('${it.id}')"><div class="s"><span class="spk">📢</span> "${it.s}"</div><div class="r">기록: ${it.t}</div></div>`).join('');
   render();
 }
-function togLine(l,el){el.classList.toggle('pos');if(el.classList.contains('pos'))S.lines[l]=l;else delete S.lines[l];render();}
+function renderLines(){
+  document.getElementById('lines').innerHTML=LINES.map(l=>{
+    const on=S.lines[l.n];
+    const chips=on?`<div style="font-size:12px;color:var(--tx2);margin:8px 0 5px">💧 배액 상태 (탭)</div><div class="chips">${l.d.map(d=>`<div class="chip ${(S.drain[l.n]||[]).includes(d)?'on':''}" onclick="togDrain('${l.n}',this)" data-d="${d}">${d}</div>`).join('')}</div>`:'';
+    return `<div><div class="opt ${on?'pos':''}" style="max-width:140px" onclick="togLine('${l.n}')">${l.n}${on?' ✓':''}</div>${chips}</div>`;
+  }).join('');
+}
+function togLine(n){if(S.lines[n]){delete S.lines[n];delete S.drain[n];}else S.lines[n]=true;renderLines();render();}
+function togDrain(n,el){const d=el.dataset.d;if(!S.drain[n])S.drain[n]=[];const i=S.drain[n].indexOf(d);if(i<0)S.drain[n].push(d);else S.drain[n].splice(i,1);renderLines();render();}
 function togCC(n,el){el.classList.toggle('pos');const i=S.cc.indexOf(n);if(i<0)S.cc.push(n);else S.cc.splice(i,1);
   document.getElementById('ccSel').textContent=S.cc.length?'선택: '+S.cc.join(' · '):'선택 없음';
   document.getElementById('abdSec').classList.toggle('hide',!S.cc.includes('복통'));render();}
@@ -340,8 +355,7 @@ function buildLines(){
 }
 function render(){
   const L=buildLines();let h='';
-  const ln=Object.keys(S.lines);
-  if(ln.length)h+=`<div class="rl ae"><span class="tg">도관</span>${ln.map(x=>x+' 삽입중').join(' / ')}</div>`;
+  Object.keys(S.lines).forEach(n=>{h+=`<div class="rl ae"><span class="tg">도관</span>${n} 삽입중</div>`;(S.drain[n]||[]).forEach(d=>h+=`<div class="rl ae"><span class="tg">A&E</span>${d}</div>`);});
   if(L.ae.length||L.dx.length||L.pe.length){
     h+='<div style="font-weight:700;margin:4px 0 2px">[복통]</div>';
     L.ae.forEach(x=>h+=`<div class="rl ae"><span class="tg">A&E</span>${x}</div>`);
@@ -362,7 +376,7 @@ function render(){
 }
 function copyNote(){
   const L=buildLines();let t='';
-  const ln=Object.keys(S.lines);if(ln.length)t+='도관· '+ln.map(x=>x+' 삽입중').join(' / ')+'\n';
+  Object.keys(S.lines).forEach(n=>{t+='도관· '+n+' 삽입중\n';(S.drain[n]||[]).forEach(d=>t+='A&E· '+d+'\n');});
   t+='[복통]\n';L.ae.forEach(x=>t+='A&E· '+x+'\n');if(L.note.length)t+='비고· '+L.note.join(' / ')+'\n';
   L.dx.forEach(x=>t+='D· '+x+'\n');L.pe.forEach(x=>t+='P&E· '+x+'\n');
   if(L.fall){t+='[의식/낙상]\n';L.fae.forEach(x=>t+='A&E· '+x+'\n');t+='D· 낙상위험\nP&E· 낙상방지 교육함 / 침대 난간을 올려줌\n';}
