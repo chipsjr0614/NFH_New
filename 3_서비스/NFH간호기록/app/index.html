@@ -72,7 +72,7 @@
 <script>
 const N=window.NFH, U=window.NFHUI;
 const ge=id=>document.getElementById(id);
-let symQueue=[], curEntry=null, picked=[], scrolledBottom=false;
+let curEntry=null, scrolledBottom=false;
 let identityOK=false, gownState={};   // 맞이·확인 상태
 
 const activeScreen=()=>[...document.querySelectorAll('.screen')].find(s=>s.classList.contains('active')).id;
@@ -87,17 +87,40 @@ function goto(name, stepIdx){
   setTimeout(updateGate,0);
 }
 function setNav(html){ ge('nav').innerHTML=html; }
-function enableNext(ok){ const b=ge('nav').querySelector('.btn.prim,.btn.go'); if(b){ b.disabled=!ok; } }
+function enableNext(ok){ const b=ge('nav').querySelector('.btn.prim,.btn.go'); if(b){ b.classList.toggle('locked',!ok); } }
 
 // ── 게이트 ──
 function gateHTML(kind){
   return `<div class="gate">
     <div class="gate-status"></div>
-    ${kind==='assess'?'<div class="gate-jump" onclick="jumpPending()">↓ 미응답 항목으로 이동</div>':''}
+    ${kind==='assess'?'<div class="gate-misslist" style="display:none"></div>':''}
     <label class="gate-chk"><input type="checkbox" class="gate-confirm"> <span class="gate-cklabel"></span></label>
   </div>`;
 }
-function jumpPending(){ const el=document.querySelector('#assess-body .ae-pending'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+// 막힌 이유 판정 (null이면 통과)
+function gateReason(){
+  const screen=activeScreen();
+  const gate=document.querySelector('.screen.active .gate');
+  if(!gate) return null;
+  if(screen==='s-intro' && !identityOK) return '본인(성함·생년월일·팔찌) 확인을 먼저 체크하세요';
+  if(screen==='s-fall' && !U.S.items.find(x=>x.uid==='con-clear'||x.uid==='con-low')) return '의식(명료/저하)을 먼저 선택하세요';
+  const scrollable=document.documentElement.scrollHeight > window.innerHeight+8;
+  if(!(scrolledBottom || !scrollable)) return '맨 아래까지 스크롤해서 모두 확인해 주세요';
+  const chk=gate.querySelector('.gate-confirm');
+  if(chk && !chk.checked) return '"확인했습니다" 체크박스를 켜 주세요';
+  return null;
+}
+function advance(fn){ const r=gateReason(); if(r){ showGateMsg(r); return; } fn(); }
+let _toastT;
+function showGateMsg(msg){
+  let t=ge('gate-toast');
+  if(!t){ t=document.createElement('div'); t.id='gate-toast'; t.className='gate-toast'; document.body.appendChild(t); }
+  t.textContent='⚠️ '+msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'),2600);
+  const gate=document.querySelector('.screen.active .gate');
+  if(gate){ gate.scrollIntoView({behavior:'smooth',block:'center'}); gate.classList.remove('pulse'); void gate.offsetWidth; gate.classList.add('pulse'); }
+}
+function shortAE(t){ let s=t.split('/')[0].trim(); s=s.replace(/\s*(있음|없음|봄|못봄|:)\s*$/,'').trim(); return s||t.split('/')[0].trim(); }
 function updateGate(){
   const screen=activeScreen();
   const gate=document.querySelector('.screen.active .gate');
@@ -116,7 +139,12 @@ function updateGate(){
     gate.querySelector('.gate-status').innerHTML = pending
       ? `사정 응답 <b>${tot-pending}/${tot}</b> · <span class="miss">미응답 ${pending}개</span>`
       : `사정 응답 <b>${tot}/${tot}</b> · <span class="ok">완료 ✓</span>`;
-    const j=gate.querySelector('.gate-jump'); if(j) j.style.display=pending?'inline-block':'none';
+    const ml=gate.querySelector('.gate-misslist');
+    if(ml){
+      if(pending){ ml.style.display='block';
+        ml.innerHTML='안 물어본 항목 (탭하면 이동): '+p.map(it=>`<span class="miss-chip" data-uid="${it.uid}">${N.esc(shortAE(it.text))}</span>`).join('');
+      } else { ml.style.display='none'; ml.innerHTML=''; }
+    }
   } else if(screen==='s-fall'){
     const conscSet=!!U.S.items.find(c=>c.uid==='con-clear'||c.uid==='con-low');
     pending=conscSet?0:1;
@@ -142,6 +170,7 @@ window.addEventListener('scroll', ()=>{
   updateGate();
 }, {passive:true});
 document.addEventListener('change', e=>{ if(e.target.classList.contains('gate-confirm')) updateGate(); });
+document.addEventListener('click', e=>{ const c=e.target.closest('.miss-chip'); if(c){ const el=document.querySelector(`#assess-body [data-ae="${c.dataset.uid}"]`); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); } });
 
 // ── S0 맞이·확인 (신원확인 + 도관 + 환의/귀금속) ──
 const GOWN=['환의(상의) 갈아입힘','환의(하의) 갈아입힘','귀금속 제거함','귀금속 없음/해당없음'];
@@ -192,45 +221,30 @@ function renderIntro(){
   ge('intro-body').innerHTML=introHTML(); bindIntro();
   ge('intro-gate').innerHTML=gateHTML('intro');
   goto('intro',0);
-  setNav(`<button class="btn prim" onclick="introNext()">다음 →</button>`);
+  setNav(`<button class="btn prim" onclick="advance(introNext)">다음 →</button>`);
   U.fire();
 }
 function introNext(){ renderSymptom(); }
 
-// ── S1 주증상 ──
+// ── S1 주증상 (클릭 즉시 해당 사정으로) ──
 function renderSymptom(){
-  ge('symptom-grid').innerHTML=N.SYMS.map(s=>`<div class="opt-btn ${picked.includes(s.id)?'on':''}" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
+  const active=new Set(U.S.selected.map(e=>e._symId).filter(Boolean));
+  ge('symptom-grid').innerHTML=N.SYMS.map(s=>`<div class="opt-btn ${active.has(s.id)?'on':''}" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
   goto('symptom',1);
+  const n=U.S.selected.length;
   setNav(`<button class="btn ghost" onclick="renderIntro()">← 맞이</button>
-    <button class="btn prim" onclick="startQueue()">다음 →</button>`);
+    <button class="btn prim" onclick="advance(goFall)">의식·낙상 →${n?` (주호소 ${n})`:''}</button>`);
 }
 ge('symptom-grid').addEventListener('click',e=>{
   const b=e.target.closest('[data-sym]'); if(!b) return;
-  const id=b.dataset.sym;
-  if(id==='ok'){ picked=picked.includes('ok')?[]:['ok']; }
-  else { picked=picked.filter(x=>x!=='ok'); const i=picked.indexOf(id); i>=0?picked.splice(i,1):picked.push(id); }
-  renderSymptom();
+  const sym=N.SYMS.find(s=>s.id===b.dataset.sym);
+  if(sym.skipToFall){ goFall(); return; }              // 이상 없음 → 의식·낙상
+  if(sym.direct){ openAssess([sym.direct], sym.label, sym.id); return; }
+  if(sym.branch){ renderBranch(sym.branch, sym.label, sym.id); return; }
 });
-function startQueue(){
-  if(!picked.length){ alert('주증상을 선택하세요'); return; }
-  // 이전 주호소 사정만 비우고 도관(맞이·확인) 기록은 보존
-  U.S.selected.length=0;
-  U.S.items=U.S.items.filter(c=>c.section==='도관');
-  U.S.nrs={}; U.fire();
-  if(picked.includes('ok')){ goFall(); return; }
-  symQueue=[...picked]; nextSym();
-}
 
 // ── 분기 → 사정 ──
-function nextSym(){
-  if(!symQueue.length){ goFall(); return; }
-  const sym=N.SYMS.find(s=>s.id===symQueue[0]);
-  if(sym.skipToFall){ symQueue.shift(); return nextSym(); }
-  if(sym.direct){ symQueue.shift(); openAssess([sym.direct], sym.label); return; }
-  if(sym.branch){ renderBranch(sym.branch, sym.label); return; }
-  symQueue.shift(); nextSym();
-}
-function renderBranch(branchId, label){
+function renderBranch(branchId, label, symId){
   const br=N.BRANCHES[branchId];
   ge('branch-body').innerHTML=`<div class="screen-title">${N.esc(label)}</div>
     ${br.hint?`<div class="screen-sub">💬 ${N.esc(br.hint)}</div>`:'<div style="height:8px"></div>'}
@@ -242,21 +256,21 @@ function renderBranch(branchId, label){
     const btn=e.target.closest('[data-bi]'); if(!btn) return;
     ge('br-opts').removeEventListener('click',h);
     const o=br.opts[+btn.dataset.bi];
-    if(o.next) renderBranch(o.next, label);
-    else if(o.key){ symQueue.shift(); openAssess(o.key, label+' · '+o.label); }
+    if(o.next) renderBranch(o.next, label, symId);
+    else if(o.key){ openAssess(o.key, label+' · '+o.label, symId); }
   });
 }
-function openAssess(key, label){
-  curEntry=U.addComplaint(label,[key]) || U.S.selected.find(e=>e.label===label);
+function openAssess(key, label, symId){
+  let entry=U.S.selected.find(e=>e.label===label) || U.addComplaint(label,[key]);
+  if(!entry){ renderSymptom(); return; }
+  entry._symId=symId; curEntry=entry;
   ge('assess-body').innerHTML=U.assessHTML(curEntry)+gateHTML('assess');
   U.bindAssess(ge('assess-body'), curEntry);
   goto('assess',2);
-  const more=symQueue.length>0;
-  setNav(`<button class="btn ghost" onclick="backFromAssess()">← 뒤로</button>
-    <button class="btn prim" onclick="nextSym()">${more?'다음 증상 →':'의식·낙상 →'}</button>`);
+  setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상 (더 추가)</button>
+    <button class="btn go" onclick="advance(goFall)">의식·낙상 →</button>`);
   U.fire();
 }
-function backFromAssess(){ if(curEntry) U.removeComplaint(curEntry.id); U.fire(); renderSymptom(); }
 
 // ── S4 의식/낙상 + 진단 ──
 function goFall(){
@@ -265,7 +279,7 @@ function goFall(){
   renderDxReview();
   goto('fall',3);
   setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>
-    <button class="btn go" onclick="finish()">기록 완성 →</button>`);
+    <button class="btn go" onclick="advance(finish)">기록 완성 →</button>`);
 }
 function renderDxReview(){ ge('dx-review').innerHTML=U.dxHTML(); }
 function finish(){
@@ -293,7 +307,7 @@ U.onChange=()=>{
   updateGate();
 };
 
-function resetAll(){ picked=[]; symQueue=[]; curEntry=null; identityOK=false; gownState={}; U.reset(); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderIntro(); }
+function resetAll(){ curEntry=null; identityOK=false; gownState={}; U.reset(); ge('ppanel').classList.remove('open'); ge('peek').classList.remove('open'); U.fire(); renderIntro(); }
 
 renderIntro(); U.fire();
 </script>

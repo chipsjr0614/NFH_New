@@ -158,7 +158,21 @@ main{max-width:600px;margin:0 auto;padding:14px}
 .gate-chk{display:flex;align-items:center;gap:11px;font-size:14.5px;font-weight:600;color:var(--tx);cursor:pointer;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--card2)}
 .gate-chk.locked{opacity:.5;cursor:not-allowed}
 .gate-chk input{width:22px;height:22px;accent-color:var(--ok);flex:none}
+.gate-chk input:disabled{opacity:.4}
 .btn[disabled]{cursor:not-allowed;opacity:.4}
+.btn.locked{opacity:.4}
+/* 미응답 항목 목록 */
+.gate-misslist{font-size:12.5px;color:var(--tx2);margin-bottom:10px;line-height:2}
+.miss-chip{display:inline-block;background:var(--card2);border:1px solid var(--pos);color:var(--pos);
+  border-radius:14px;padding:3px 10px;margin:2px 5px 2px 0;font-size:12px;font-weight:600;cursor:pointer}
+.miss-chip:hover{background:var(--pos);color:#fff}
+/* 막힌 이유 토스트 */
+.gate-toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%) translateY(16px);z-index:50;
+  background:var(--pos);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:700;
+  box-shadow:0 8px 30px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.22s;max-width:90%;text-align:center}
+.gate-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.gate.pulse{animation:gatepulse .45s ease}
+@keyframes gatepulse{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 
 /* 접이식 라이브 미리보기 */
 .dock{position:fixed;bottom:0;left:0;right:0;z-index:30}
