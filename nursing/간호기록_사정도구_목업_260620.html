@@ -33,7 +33,8 @@ main{max-width:520px;margin:0 auto;padding:14px}
 .bpart.on{background:var(--pos);border-color:var(--pos);color:#fff;font-weight:700}
 .abdo{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:180px}
 /* NRS 얼굴 */
-.faces{display:flex;justify-content:space-between;gap:4px}
+.faces{display:flex;flex-wrap:wrap;gap:4px}
+.face{min-width:40px}
 .face{flex:1;text-align:center;padding:8px 2px;border-radius:10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;font-size:22px}
 .face.on{background:var(--pe);border-color:var(--pe)}
 .face small{display:block;font-size:11px;color:var(--tx2)}.face.on small{color:#1a1a1a;font-weight:700}
@@ -247,7 +248,7 @@ const LINES=[
  {s:'EVD',n:'External Ventricular Drainage',d:['External Ventricular Drainage 삽입부위 oozing 없음','External Ventricular Drainage 삽입부위 oozing 있음','External Ventricular Drainage 삽입부위 통증 없음']},
 ];
 const CC=[['😣','복통'],['❤️','흉통'],['🫁','호흡곤란'],['🤕','두통'],['🌡️','발열'],['🤮','오심구토'],['💩','설사'],['🩹','외상'],['🩸','출혈'],['🧠','어지럼'],['👁️','안과'],['🩹','피부']];
-const FACES=[['😀',0],['🙂',2],['😐',4],['😟',6],['😣',8],['😭',10]];
+const FACES=[...Array(11).keys()].map(n=>[n===0?'😀':n<=2?'🙂':n<=4?'😐':n<=6?'😟':n<=8?'😣':'😭',n]);
 const PATT=['쥐어짜듯','찌르듯','둔하게','타는듯'];
 const ONSET=['방금 전','몇 시간 전','어제','며칠 전'];
 const ASSOC=[
@@ -385,7 +386,9 @@ function buildLines(){
   // 의식/낙상
   const fae=[];
   if(S.consc==='clear')fae.push('의식 명료함');
-  if(S.consc==='low'){if(S.gcs.E&&S.gcs.V&&S.gcs.M)fae.push('Glasgow Coma Scale : '+(S.gcs.E+S.gcs.V+S.gcs.M));fae.push('의식수준 저하됨');
+  if(S.consc==='low'){
+    if(S.gcs.E&&S.gcs.V&&S.gcs.M){const g=S.gcs.E+S.gcs.V+S.gcs.M;fae.push('Glasgow Coma Scale : '+g);fae.push(g===15?'의식 명료함':'의식수준 저하됨');}
+    else fae.push('의식수준 저하됨');
     ORI.forEach(([k,n])=>{if(S.orient[k]!==undefined)fae.push(n+'에 대한 지남력 '+(S.orient[k]?'있음':'없음'));});}
   if(S.guard)fae.push(S.guard);
   const fpe=[]; FALL_EDU.forEach(it=>{if(S.falledu[it.id])fpe.push(it.t);});
