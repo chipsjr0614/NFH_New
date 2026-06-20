@@ -218,15 +218,15 @@ const S={lines:{},drain:{},cc:[],part:null,nrs:{s:null,p:null,o:null},assoc:{},p
   gate:{},dx:{},iv:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,riskDone:false,risk:{}};
 
 const LINES=[
- {s:'Foley',n:'Foley catheter',d:['Foley catheter 통해 소변 배출되고 있음','Foley catheter 유지 중임','Foley catheter 삽입부위로 소변 leakage 있음','소변량 감소함']},
- {s:'L-tube',n:'Levin tube',d:['Levin tube 유지 중임','Levin tube 통해 배액됨','Levin tube 삽입부위 불편감 있음']},
- {s:'PTBD',n:'Percutaneous Transhepatic Biliary Drainage',d:['배액관 자연배액 유지함','배액량 측정함','Percutaneous Transhepatic Biliary Drainage 삽입부위 출혈 없음']},
- {s:'PTGBD',n:'Percutaneous Transhepatic Gallbladder Drainage',d:['배액관 자연배액 유지함','배액량 측정함']},
- {s:'PCD',n:'PCD',d:['배액관 자연배액 유지함','배액량 측정함']},
- {s:'CVC',n:'중심정맥관',d:['중심정맥관 삽입부위 출혈 없음','중심정맥관 막힘']},
- {s:'A-line',n:'arterial line',d:['arterial line site 상태 양호함','arterial line site 출혈 없음','arterial line site oozing 있음']},
- {s:'흉관',n:'흉관',d:['흉관 자연배액 중임','흉관 통한 배액량 증가함','흉관 통한 배액량 감소함']},
- {s:'hemovac',n:'hemovac',d:['hemovac 자연배액 중임','hemovac 막힘','hemovac 삽입부위 leakage 있음']},
+ {s:'Foley',n:'Foley catheter',d:['Foley catheter 통해 소변 배출되고 있음','Foley catheter patency 유지됨','Foley catheter 삽입부위로 소변 leakage 없음','Foley catheter 삽입부위로 소변 leakage 있음','Foley catheter 삽입부위로 출혈 됨']},
+ {s:'L-tube',n:'Levin tube',d:['Levin tube 통해 배액됨','Levin tube patency 유지됨','Levin tube 배액양상 관찰함']},
+ {s:'PTBD',n:'Percutaneous Transhepatic Biliary Drainage',d:['Percutaneous Transhepatic Biliary Drainage 배액양상 관찰함','Percutaneous Transhepatic Biliary Drainage 삽입부위 출혈 없음','Percutaneous Transhepatic Biliary Drainage 삽입부위 출혈 있음','Percutaneous Transhepatic Biliary Drainage 삽입부위 oozing 없음','Percutaneous Transhepatic Biliary Drainage 삽입부위 oozing 있음']},
+ {s:'PTGBD',n:'Percutaneous Transhepatic Gallbladder Drainage',d:['배액관 자연배액 유지함','배액관 삽입부위 출혈 없음','배액관 삽입부위 출혈 있음']},
+ {s:'PCD',n:'PCD',d:['배액관 자연배액 유지함','배액관 삽입부위 출혈 없음','배액관 삽입부위 출혈 있음']},
+ {s:'CVC',n:'중심정맥관',d:['중심정맥관 삽입부위 출혈 없음','중심정맥관 삽입부위 출혈 있음','중심정맥관 삽입부위 oozing 없음','중심정맥관 막힘']},
+ {s:'A-line',n:'arterial line',d:['arterial line 유지 중임','arterial line site 출혈 없음','arterial line site 출혈 있음','arterial line site oozing 없음','arterial line site oozing 있음']},
+ {s:'흉관',n:'흉관',d:['흉관 자연배액 중임','흉관 삽입부위 출혈 없음','흉관 삽입부위 출혈 있음','흉관 통한 배액량 증가함']},
+ {s:'hemovac',n:'hemovac',d:['hemovac 삽입부위 leakage 없음','hemovac 삽입부위 leakage 있음','hemovac 삽입부위 출혈 없음','hemovac 막힘']},
 ];
 const CC=[['😣','복통'],['❤️','흉통'],['🫁','호흡곤란'],['🤕','두통'],['🌡️','발열'],['🤮','오심구토'],['💩','설사'],['🩹','외상'],['🩸','출혈'],['🧠','어지럼'],['👁️','안과'],['🩹','피부']];
 const FACES=[['😀',0],['🙂',2],['😐',4],['😟',6],['😣',8],['😭',10]];
@@ -305,7 +305,7 @@ function initUI(){
 function renderLines(){
   document.getElementById('lines').innerHTML=LINES.map(l=>{
     const on=S.lines[l.n];
-    const chips=on?`<div style="font-size:12px;color:var(--tx2);margin:8px 0 5px">💧 배액 상태 (탭)</div><div class="chips">${l.d.map(d=>`<div class="chip ${(S.drain[l.n]||[]).includes(d)?'on':''}" onclick="togDrain('${l.n}',this)" data-d="${d}">${d}</div>`).join('')}</div>`:'';
+    const chips=on?`<div style="font-size:12px;color:var(--tx2);margin:8px 0 5px">💧 배액·출혈 확인 (탭)</div><div class="chips">${l.d.map(d=>{const lb=d.replace(l.n,'').replace('배액관 ','').trim()||d;return `<div class="chip ${(S.drain[l.n]||[]).includes(d)?'on':''}" onclick="togDrain('${l.n}',this)" data-d="${d}">${lb}</div>`;}).join('')}</div>`:'';
     const sub=l.s!==l.n?`<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.8">${l.n}</div>`:'';
     return `<div><div class="opt ${on?'pos':''}" style="max-width:none;text-align:left" onclick="togLine('${l.n}')"><b>${l.s}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;
   }).join('');
