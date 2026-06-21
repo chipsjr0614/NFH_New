@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>골절·외상 사정 시각화 (임시)</title>
+<style>
+:root{--bg:#0a0e14;--panel:#12181f;--card:#1a212b;--card2:#222b38;--line:#2a3441;--tx:#e6edf3;--tx2:#8b97a7;--pos:#ff4d5e;--ok:#2ecc71;--ae:#4aa8ff;--d:#ff6b6b;--pe:#ffc857;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:250px;font-size:16px;line-height:1.5}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
+header .logo{font-weight:800;font-size:16px}.logo em{color:#f0883e;font-style:normal}
+header .pat{font-size:12px;color:var(--tx2);margin-left:auto}
+main{max-width:520px;margin:0 auto;padding:14px}
+.sec{margin-bottom:18px}.sec-h{font-size:14px;font-weight:800;margin:4px 2px 10px;display:flex;align-items:center;gap:7px}
+.sub{font-size:12px;color:var(--tx2);margin:-4px 2px 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px}
+.q{margin-bottom:10px}.q .qp{font-size:14px;font-weight:600;margin-bottom:7px}
+.blk-t{font-size:12px;color:var(--tx2);font-weight:700;margin:6px 2px 7px}
+.opts{display:flex;gap:7px;flex-wrap:wrap}
+.opt{flex:1;min-width:60px;text-align:center;padding:10px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer}
+.opt.neg{border-color:#5a6878;color:var(--tx);background:#2a3038}.opt.pos{border-color:var(--pos);color:#fff;background:var(--pos)}
+.chip{padding:8px 12px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}.chip.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:10px;color:var(--ae);border:1px solid var(--ae);border-radius:5px;padding:1px 5px;margin-left:6px}
+.dx{display:flex;align-items:center;gap:11px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:13px;margin-bottom:8px;cursor:pointer}
+.dx .rd{width:20px;height:20px;border:2px solid var(--tx2);border-radius:50%;flex:none;position:relative}
+.dx.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dx.on .rd{border-color:var(--d)}.dx.on .rd::after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--d)}
+.dx b{font-size:15px}.dx .rec{margin-left:auto;font-size:10px;color:var(--ok);border:1px solid var(--ok);border-radius:5px;padding:2px 7px}.dx .cue{font-size:11px;color:var(--tx2);display:block;margin-top:2px}
+.iv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:7px;cursor:pointer}.iv.on{border-color:var(--pe);background:rgba(255,200,87,.08)}
+.iv .s{font-size:14px}.iv .s .spk{color:var(--pe);font-weight:800;margin-right:5px}.iv .r{font-size:12px;color:var(--tx2);margin-top:6px}.iv.on .r{color:var(--pe);font-weight:600}
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:240px;display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}.sh-h b{font-size:14px}.sh-h .c{font-size:12px;color:var(--tx2)}
+.sh-h button{margin-left:auto;background:var(--ok);color:#063;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:10px 16px;max-width:520px;margin:0 auto;width:100%;font-size:13.5px;line-height:1.6}
+.rl{margin:1px 0}.rl .tg{font-weight:800;font-size:10px;margin-right:6px;display:inline-block;min-width:26px}
+.rl.ae{color:var(--ae)}.rl.d{color:var(--d)}.rl.pe{color:var(--pe)}.rl.head{color:var(--tx);font-weight:800}.rl.note{color:var(--tx2);font-size:12.5px}
+.empty{color:var(--tx2);font-size:13px}
+.hint{font-size:12px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:9px;padding:9px 11px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<header><div class="logo">NFH <em>골절 · 외상 사정</em></div><div class="pat">임시 시각화 260621</div></header>
+<main>
+  <div class="hint">💡 외상 사정(다 체크) → 진단 <b>1개</b>(SMC 이상이면 말초신경혈관기능장애위험) → 평가 📢. <b>통증은 통증 모듈로 복합 정리</b>(여기 제외). <span style="color:var(--pe)">※ 멘트 초안 — 칩스 검증.</span></div>
+  <div class="sec"><div class="sec-h">① 외상 사정 <span style="font-size:12px;color:var(--tx2);font-weight:400">— 해당하는 것 모두</span></div><div class="card" id="assess"></div></div>
+  <div class="sec"><div class="sec-h">🩺 ② 간호진단 <span style="font-size:12px;color:var(--tx2);font-weight:400">— 1개만 선택</span></div><div class="sub">단서에 따라 <b>추천</b>이 뜹니다.</div><div id="dxlist"></div></div>
+  <div class="sec" id="ivsec" style="display:none"><div class="sec-h">💬 ③ 평가 · 중재 <span style="font-size:12px;color:var(--tx2);font-weight:400">— 📢 말하고 탭하면 기록</span></div><div id="ivlist"></div></div>
+</main>
+<div class="sheet">
+  <div class="sh-h">📋 <b>간호기록 미리보기</b> <span class="c" id="cnt">0줄</span><button onclick="copyNote()">📤 복사</button></div>
+  <div class="sh-b" id="preview"><div class="empty">외상 사정을 시작하세요.</div></div>
+</div>
+<script>
+const ASSESS=[
+  {q:'"부러지거나 골절이 의심되는 곳이 있나요?"', kind:'check', rec:'골절 있음', cue:'신체손상'},
+  {q:'"다친 곳이 붓진 않았어요?"', kind:'toggle', opts:[{l:'있음',rec:'골절부위 edema 있음',pos:true,cue:'신체손상'},{l:'없음',rec:'골절부위 edema 없음'}]},
+  {q:'"저릿하거나 감각이 이상하진 않으세요?"', kind:'toggle', opts:[{l:'있음',rec:'골절부위 tingling sense 있음',pos:true,cue:'신체손상'},{l:'없음',rec:'골절부위 tingling sense 없음'}]},
+  {q:'"긁히거나 까진 상처가 있나요?"', kind:'toggle', opts:[{l:'있음',rec:'찰과상 있음',pos:true,cue:'신체손상'},{l:'없음',rec:'찰과상 없음'}]},
+  {q:'"피부가 찢어지거나 손상된 데가 있나요?"', kind:'toggle', opts:[{l:'있음',rec:'피부 손상 있음',pos:true,cue:'신체손상'},{l:'없음',rec:'피부 손상 없음'}]},
+  {q:'"피가 나는 곳이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'출혈 있음',pos:true,cue:'신체손상'},{l:'없음',rec:'출혈 없음'}]},
+  {q:'신경혈관 종합 (SMC) — 정상이면 체크', nt:'누르면 세부', kind:'check', rec:'sensory, motor, circulation intact 함', smc:true},
+];
+const DXS=[
+  {key:'신체손상', name:'신체손상위험', cueTxt:'골절·상처·출혈', pe:[
+    {say:'"다친 부위를 압박붕대로 감아드릴게요"', rec:'골절부위 압박붕대 감아줌'},
+    {say:'"부기 가라앉게 다친 곳을 올려드릴게요"', rec:'골절부위 올려줌'},
+    {say:'"얼음 찜질 해드릴게요"', rec:'상처부위에 얼음 찜질 적용함'}]},
+  {key:'말초신경혈관', name:'말초신경혈관기능장애위험', cueTxt:'SMC 이상(약함·없음)', pe:[
+    {say:'"감각·움직임·혈색을 자주 확인하겠습니다"', rec:'sensory motor circulation 확인함'}]},
+];
+let state={ae:{}, smc:{s:null,m:null,c:null}, dx:null, pe:{}};
+const ge=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function smcAbnormal(){ return ['s','m','c'].some(k=>state.smc[k]==='약함'||state.smc[k]==='없음'); }
+function cues(){ const s=new Set(); ASSESS.forEach((it,i)=>{ if(it.kind==='check'&&state.ae[i]===true&&it.cue)s.add(it.cue); if(it.kind==='toggle'){const oi=state.ae[i]; if(oi!=null&&it.opts[oi].cue)s.add(it.opts[oi].cue);} }); if(smcAbnormal())s.add('말초신경혈관'); return s; }
+function renderAssess(){
+  ge('assess').innerHTML=ASSESS.map((it,i)=>{
+    const head=`<div class="qp">${esc(it.q)}</div>`;
+    if(it.kind==='check'){const on=state.ae[i]===true; let h=`<div class="q">${head}<div class="opts"><div class="opt ${on?'pos':''}" data-a="${i}" data-k="check" style="flex:0 0 auto;min-width:200px">${on?'✓ ':''}${esc(it.rec)}</div></div></div>`;
+      if(it.smc && on){const O=['양호함','약함','없음','평가불가'];const row=(k,lb)=>`<div class="blk-t">${lb}</div><div class="chips">${O.map(o=>`<div class="chip ${state.smc[k]===o?'on':''}" data-smc="${k}" data-v="${o}">${o}</div>`).join('')}</div>`;
+        h+=`<div style="border-left:3px solid var(--ae);padding-left:11px;margin:4px 0 8px"><div class="blk-t" style="color:var(--ae)">↳ 신경혈관 세부 — S·M·C (비고)</div>`+row('s','Sensory (감각)')+row('m','Motor (운동)')+row('c','Circulation (순환)')+`</div>`;}
+      return h;}
+    return `<div class="q">${head}<div class="opts">${it.opts.map((o,oi)=>{const sel=state.ae[i]===oi,cls=sel?(o.pos?'pos':'neg'):'';return `<div class="opt ${cls}" data-a="${i}" data-k="toggle" data-oi="${oi}">${esc(o.l)}${o.cue&&sel?`<span class="tag">${o.cue==='신체손상'?'신체손상':o.cue}</span>`:''}</div>`;}).join('')}</div></div>`;
+  }).join('');
+}
+function renderDx(){
+  const rec=cues();
+  ge('dxlist').innerHTML=DXS.map(d=>{const on=state.dx===d.key,isRec=rec.has(d.key);
+    return `<div class="dx ${on?'on':''}" data-dx="${d.key}"><div class="rd"></div><div><b>${d.name}</b><span class="cue">단서: ${d.cueTxt}</span></div>${isRec?'<span class="rec">추천</span>':''}</div>`;}).join('');
+  const d=DXS.find(x=>x.key===state.dx);
+  if(d){ ge('ivsec').style.display='block'; ge('ivlist').innerHTML=d.pe.map((p,i)=>`<div class="iv ${state.pe[i]?'on':''}" data-iv="${i}"><div class="s"><span class="spk">📢</span>${esc(p.say)}</div><div class="r">→ ${esc(p.rec)} ${state.pe[i]?'✓ 기록됨':''}</div></div>`).join(''); }
+  else ge('ivsec').style.display='none';
+}
+function render(){
+  const L=[{c:'head',t:'[골절·외상]'}];
+  ASSESS.forEach((it,i)=>{const v=state.ae[i];
+    if(it.kind==='check'&&v===true){ L.push({c:'ae',tg:'A&E',t:it.rec});
+      if(it.smc){const g=[];if(state.smc.s)g.push('Sensory '+state.smc.s);if(state.smc.m)g.push('Motor '+state.smc.m);if(state.smc.c)g.push('Circulation '+state.smc.c); if(g.length)L.push({c:'note',tg:'📌',t:'비고: '+g.join(' / ')});}}
+    if(it.kind==='toggle'&&v!=null) L.push({c:'ae',tg:'A&E',t:it.opts[v].rec});
+  });
+  const d=DXS.find(x=>x.key===state.dx);
+  if(d){ L.push({c:'d',tg:'D',t:d.name}); d.pe.forEach((p,i)=>{if(state.pe[i])L.push({c:'pe',tg:'P&E',t:p.rec});}); }
+  const rec=L.filter(x=>x.c!=='head'); ge('cnt').textContent=rec.length+'줄';
+  ge('preview').innerHTML = rec.length? L.map(x=>x.c==='head'?`<div class="rl head">${esc(x.t)}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg}</span>${esc(x.t)}</div>`).join('') : '<div class="empty">외상 사정을 시작하세요.</div>';
+}
+ge('assess').addEventListener('click',e=>{const sm=e.target.closest('[data-smc]'); if(sm){const k=sm.dataset.smc;state.smc[k]=state.smc[k]===sm.dataset.v?null:sm.dataset.v;renderAssess();renderDx();render();return;}
+  const el=e.target.closest('[data-a]');if(!el)return;const i=+el.dataset.a;
+  if(el.dataset.k==='check') state.ae[i]=state.ae[i]===true?undefined:true;
+  else {const oi=+el.dataset.oi; state.ae[i]=state.ae[i]===oi?undefined:oi;}
+  renderAssess();renderDx();render();});
+ge('dxlist').addEventListener('click',e=>{const el=e.target.closest('[data-dx]');if(!el)return;state.dx=state.dx===el.dataset.dx?null:el.dataset.dx;state.pe={};renderDx();render();});
+ge('ivlist').addEventListener('click',e=>{const el=e.target.closest('[data-iv]');if(!el)return;const i=+el.dataset.iv;state.pe[i]=!state.pe[i];renderDx();render();});
+function copyNote(){alert('복사 데모');}
+renderAssess();renderDx();render();
+</script>
+</body>
+</html>

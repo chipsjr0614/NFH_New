@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>통증 사정 목업 (260621)</title>
+<!-- 데이터 정본: 3_서비스/NFH간호기록/app/nfh_data.js (통증) -->
+<!-- 진술문(rec)은 정본 원문 그대로. 부위·사정도구·강도·빈도·양상·기간은 비고란 메타(정형진술문 아님, 마스터 미존재 확인). -->
+<!-- v3: 통증 '있음' 시 6종 공통입력(부위/사정도구/강도/빈도/양상/기간). 흉부·배 부위 클릭형 복수. -->
+<style>
+:root{
+  --bg:#0a0e14;--panel:#12181f;--card:#1a212b;--card2:#222b38;--line:#2a3441;
+  --tx:#e6edf3;--tx2:#8b97a7;--pos:#ff4d5e;--ok:#2ecc71;
+  --ae:#4aa8ff;--d:#ff6b6b;--pe:#ffc857;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:250px;font-size:16px;line-height:1.5}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
+header .logo{font-weight:800;font-size:16px}.logo em{color:var(--pos);font-style:normal}
+header .pat{font-size:12px;color:var(--tx2);margin-left:auto}
+main{max-width:520px;margin:0 auto;padding:14px}
+.sec{margin-bottom:18px}
+.sec-h{font-size:14px;font-weight:800;margin:4px 2px 10px;display:flex;align-items:center;gap:7px}
+.sec-h .n{background:var(--card2);color:var(--tx2);border:1px solid var(--line);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.sub{font-size:12px;color:var(--tx2);margin:-4px 2px 8px}
+/* 바디맵 부위 */
+.parts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.bpart{background:var(--card2);border:1.5px solid var(--line);border-radius:11px;padding:13px 6px;cursor:pointer;font-size:14px;color:var(--tx2);text-align:center;font-weight:600;position:relative}
+.bpart.on{background:var(--pos);border-color:var(--pos);color:#fff}
+.bpart.on::after{content:'✓';position:absolute;top:3px;right:6px;font-size:11px}
+/* 부위 카드 */
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px}
+.pc-h{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;margin-bottom:10px}
+.pc-h .rm{margin-left:auto;background:var(--card2);border:1px solid var(--line);color:var(--tx2);border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer}
+.blk-t{font-size:12px;color:var(--tx2);font-weight:700;margin:13px 2px 7px;text-transform:uppercase;letter-spacing:.3px}
+.blk-t .req{color:var(--pos);margin-left:4px}
+/* 칩 공통 */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:8px 12px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}
+.chip.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe);font-weight:700}
+.chip.area.on{background:var(--pos);color:#fff;border-color:var(--pos)}
+/* 사정도구 */
+.tools{display:flex;flex-direction:column;gap:6px}
+.tool{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);cursor:pointer}
+.tool.on{border-color:var(--ae);background:rgba(74,168,255,.08)}
+.tool .k{font-weight:800;font-size:13px;min-width:48px;color:var(--tx)}
+.tool.on .k{color:var(--ae)}
+.tool .d{font-size:11.5px;color:var(--tx2)}
+.toolnote{font-size:11px;color:var(--pe);margin-top:4px}
+/* 강도 0~10 */
+.ints{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.ib{padding:9px 0;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;font-weight:700;cursor:pointer;text-align:center;position:relative}
+.ib.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe)}
+.ib.on::after{content:'✓';position:absolute;top:-7px;right:-2px;font-size:11px;color:var(--pe)}
+/* 입력칸 */
+.tin{width:100%;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--tx);font-size:14px;outline:none}
+.tin:focus{border-color:var(--ae)}
+.inline{display:flex;gap:8px;align-items:center}.inline .tin{flex:1}
+.unit{font-size:12px;color:var(--tx2);white-space:nowrap}
+/* 사정 문항 */
+.q{margin-bottom:9px}
+.q .qp{font-size:14px;font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.q .nt{font-size:11px;color:var(--tx2);font-weight:400}
+.opts{display:flex;gap:7px;flex-wrap:wrap}
+.opt{flex:1;min-width:60px;text-align:center;padding:11px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer}
+.opt.neg{border-color:#5a6878;color:var(--tx);background:#2a3038}
+.opt.pos{border-color:var(--pos);color:#fff;background:var(--pos)}
+.vinput{width:100%;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--tx);font-size:14px;outline:none}
+.vinput:focus{border-color:var(--ae)}
+.painwrap{border-top:1px dashed var(--line);margin-top:12px;padding-top:6px}
+/* 진단 */
+.dx{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;cursor:pointer}
+.dx .ck{width:21px;height:21px;border:2px solid var(--d);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.dx.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dx.on .ck{background:var(--d)}
+.dx b{font-size:15px}.dx .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:5px;padding:2px 7px}
+/* 중재 */
+.iv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:7px;cursor:pointer}
+.iv.on{border-color:var(--pe);background:rgba(255,200,87,.07)}
+.iv .s{font-size:14px}.iv .s .spk{color:var(--pe);font-weight:800;margin-right:4px}
+.iv .r{font-size:12px;color:var(--tx2);margin-top:6px}.iv.on .r{color:var(--pe);font-weight:600}
+/* 미리보기 */
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:240px;display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.sh-h b{font-size:14px}.sh-h .c{font-size:12px;color:var(--tx2)}
+.sh-h button{margin-left:auto;background:var(--ok);color:#063;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:10px 16px;max-width:520px;margin:0 auto;width:100%;font-size:13.5px;line-height:1.6}
+.rl{margin:1px 0}.rl .tg{font-weight:800;font-size:10px;margin-right:6px;display:inline-block;min-width:26px}
+.rl.ae{color:var(--ae)}.rl.d{color:var(--d)}.rl.pe{color:var(--pe)}.rl.note{color:var(--tx2);font-size:12.5px}
+.rl.head{color:var(--tx);font-weight:800;margin-top:6px}
+.empty{color:var(--tx2);font-size:13px}
+.hint{font-size:12px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:9px;padding:9px 11px;margin-bottom:12px}
+.hide{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NFH <em>통증 사정</em></div>
+  <div class="pat">목업 260621 v3 · 데모환자</div>
+</header>
+
+<main>
+  <div class="hint">💡 통증 <b>사정 → 간호진단 → 평가</b>. 부위는 <b>여러 곳</b> 선택 가능. 통증 '있음'을 누르면 <b>부위·사정도구·강도·빈도·양상·기간</b>이 펼쳐집니다. (A&amp;E·D·P&amp;E=정본 원문 / 6종=비고란)</div>
+
+  <!-- ① 부위 (복수) -->
+  <div class="sec">
+    <div class="sec-h"><span class="n">1</span>어디가 아프세요? <span style="font-size:12px;color:var(--tx2);font-weight:400">— 부위 (여러 곳 가능)</span></div>
+    <div class="parts" id="parts"></div>
+  </div>
+
+  <div id="cards"></div>
+
+  <div class="sec hide" id="dxSec">
+    <div class="sec-h">🩺 간호진단</div>
+    <div class="sub">통증을 확인하면 <b>급성통증</b>이 자동 추천됩니다 (부위가 여러 곳이어도 진단은 하나).</div>
+    <div class="dx" id="dxAcute"><span class="ck"></span><b>급성통증</b><span class="auto">자동</span></div>
+  </div>
+
+  <div class="sec hide" id="ivSec">
+    <div class="sec-h">💬 평가 · 중재</div>
+    <div class="sub">말할 문장(📢)을 탭하면 P&amp;E 진술문이 기록됩니다.</div>
+    <div id="ivblock"></div>
+  </div>
+</main>
+
+<div class="sheet">
+  <div class="sh-h">📋 <b>간호기록 미리보기</b> <span class="c" id="cnt">0줄</span>
+    <button onclick="copyNote()">📤 복사</button></div>
+  <div class="sh-b" id="preview"><div class="empty">부위를 선택하면 기록이 쌓입니다.</div></div>
+</div>
+
+<script>
+/* ===== 정본 데이터 (nfh_data.js 통증 원문) ===== */
+const SETS = {
+  두통: { ae:[
+    {q:'"어지럽거나 핑 도는 느낌?"', kind:'toggle', opts:[{l:'있음',rec:'dizziness 있음',pos:true},{l:'없음',rec:'dizziness 없음'}]},
+    {q:'동공 크기 확인 (Rt/Lt)', nt:'뇌출혈·뇌경색 감별', kind:'value2', base:'동공크기 :', subs:[{key:'rt',label:'Rt',ph:'예: 3mm'},{key:'lt',label:'Lt',ph:'예: 3mm'}]},
+    {q:'"감각 이상한 부분?"', kind:'toggle', opts:[{l:'있음',rec:'감각이상 있음',pos:true},{l:'없음',rec:'감각이상 없음'}]},
+    {q:'"통증이 있으세요?"', nt:'★ 맨 마지막 · 부위 불문 통일', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+  ]},
+  흉부: { ae:[
+    {q:'"숨이 차거나 답답?"', kind:'toggle', opts:[{l:'있음',rec:'호흡곤란 있음',pos:true},{l:'없음',rec:'호흡곤란 없음'}]},
+    {q:'"통증이 있으세요?"', nt:'★ 맨 마지막 · 부위 불문 통일', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+  ]},
+  복부: { ae:[
+    {q:'"오심·구토?"', kind:'toggle', opts:[{l:'있음',rec:'오심, 구토 있음',pos:true},{l:'없음',rec:'오심, 구토 없음'}]},
+    {q:'"통증이 있으세요?"', nt:'★ 맨 마지막 · 부위 불문 통일', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+  ]},
+  목: { ae:[
+    {q:'경부 강직', nt:'있음 시 정도는 비고', kind:'toggle', opts:[{l:'있음',rec:'경부 강직 있음',pos:true},{l:'없음',rec:'경부 강직 없음'}]},
+    {q:'"통증이 있으세요?"', nt:'★ 맨 마지막 · 부위 불문 통일', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+  ]},
+  허리: { smc:true, ae:[
+    {q:'허리에서 다리로 방사통?', kind:'toggle', opts:[{l:'있음',rec:'허리에서 다리로의 방사통 호소함',pos:true},{l:'없음',rec:'방사통 없음'}]},
+    {q:'신경혈관 종합 (SMC)', nt:'정상이면 체크 → sensory, motor, circulation intact 함 (누르면 아래 세부)', kind:'check', rec:'sensory, motor, circulation intact 함', smc:true},
+    {q:'배뇨장애', nt:'cauda equina red flag', kind:'toggle', opts:[{l:'있음',rec:'배뇨장애 있음',pos:true},{l:'없음',rec:'배뇨장애 없음'}]},
+    {q:'"통증이 있으세요?"', nt:'★ 맨 마지막 · 부위 불문 통일', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+  ]},
+  사지: { smc:true, ae:[
+    {q:'신경혈관 종합 (SMC)', nt:'정상이면 체크 → sensory, motor, circulation intact 함 (누르면 아래 세부)', kind:'check', rec:'sensory, motor, circulation intact 함', smc:true},
+    {q:'"통증이 있으세요?"', nt:'★ 맨 마지막 · 부위 불문 통일', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+  ]},
+};
+const IVS = [
+  {say:'"많이 아프세요? 진통제가 필요하실 만큼 아프신가요?"', rec:'통증을 인정해줌'},
+  {say:'"의사 선생님께 확인받고 필요하시면 진통제 처방받아 드릴게요."', rec:'통증 양상을 확인함'},
+  {say:'"참으실 수 있으면 지켜보시고, 너무 아프시면 바로 말씀해 주세요."', rec:'통증을 관찰하기로 함'},
+];
+/* 사지 선택 시 추가되는 평가 멘트 (칩스 확정) — SMC 확인 차팅 + 설명 */
+const SMC_IV = {say:'사지 신경혈관 상태를 확인합니다 — S(감각)·M(운동)·C(순환)', rec:'Sensory, Motor, Circulation 확인함'};
+function activeIVs(){ return IVS.slice(); }
+const PARTS = [
+  {id:'head', label:'🧠 머리', set:'두통'},
+  {id:'chest', label:'🫀 가슴', set:'흉부', sub:['anterior chest','epigastric site','mediastinal site','substernal site','가슴부위']},
+  {id:'abdo', label:'🫃 배', set:'복부', sub:['LLQ','LUQ','RLQ','RUQ','periumbilical area','전체']},
+  {id:'neck', label:'🧣 목', set:'목'},
+  {id:'back', label:'🔙 허리', set:'허리'},
+  {id:'arm', label:'💪 팔', set:'사지'},
+  {id:'leg', label:'🦵 다리', set:'사지'},
+];
+/* 통증 '있음' 시 공통 6종 입력 — 전부 비고란 메타 (마스터에 정형진술문 없음) */
+const TOOLS = [
+  {k:'NRS', d:'숫자 0~10 · 의사소통 가능 성인'},
+  {k:'FPRS', d:'얼굴 표정 · 소아/노인/언어소통 제한'},
+  {k:'FLACC', d:'행동 관찰 · 영유아/의식저하/비언어'},
+  {k:'NIPS', d:'신생아 · 영아'},
+  {k:'CNPS', d:'비언어 성인(추정) · ⚠️칩스확인필요'},
+];
+const FREQS = ['발작적으로 갑자기','지속적','표현 못함','기타'];
+const PATTERNS = ['뻐근한','날카로운','둔한','욱신욱신·쑤시는','타는 듯한','저리는 듯한','칼로 베인 듯한','표현 못함','기타'];
+
+/* ===== 상태 ===== */
+let picked=[], inst={}, dx=false, iv={};
+const ge=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const partOf=id=>PARTS.find(p=>p.id===id);
+function newInst(){ return {subs:[], freeArea:'', tool:null, intensity:null, freq:null, patterns:[], duration:'', ae:{}, smc:{s:null,m:null,c:null}}; }
+
+function painPos(id){
+  const p=partOf(id), set=SETS[p.set], st=inst[id]; if(!st) return false;
+  return set.ae.some((it,i)=>{
+    if(!it.pain) return false;
+    if(it.kind==='check') return st.ae[i]===true;
+    if(it.kind==='toggle'){const oi=st.ae[i]; return oi!=null && it.opts[oi].pos;}
+    return false;
+  });
+}
+const anyPain=()=>picked.some(painPos);
+
+/* ===== 렌더 ===== */
+function renderParts(){
+  ge('parts').innerHTML=PARTS.map(p=>`<div class="bpart ${picked.includes(p.id)?'on':''}" data-p="${p.id}">${p.label}</div>`).join('');
+}
+function aeHTML(id){
+  const p=partOf(id), set=SETS[p.set], st=inst[id];
+  return set.ae.map((it,i)=>{
+    const head=`<div class="qp">${esc(it.q)} ${it.nt?`<span class="nt">· ${esc(it.nt)}</span>`:''}</div>`;
+    if(it.kind==='check'){const on=st.ae[i]===true;
+      let h=`<div class="q">${head}<div class="opts"><div class="opt ${on?'pos':''}" data-pc="${id}" data-ae="${i}" data-k="check" style="flex:0 0 auto;min-width:200px">${on?'✓ ':''}${esc(it.rec)}</div></div></div>`;
+      if(it.smc && on){ const O=['양호함','약함','없음','평가불가']; const row=(k,lb)=>`<div class="blk-t">${lb}</div><div class="chips">${O.map(o=>`<div class="chip ${st.smc[k]===o?'on':''}" data-pc="${id}" data-smc="${k}" data-v="${o}">${o}</div>`).join('')}</div>`;
+        h+=`<div style="border-left:3px solid var(--ae);padding-left:11px;margin:4px 0 12px"><div class="blk-t" style="color:var(--ae)">↳ 신경혈관 세부 — S·M·C (비고)</div>`+row('s','Sensory (감각)')+row('m','Motor (운동)')+row('c','Circulation (순환)')+`</div>`; }
+      return h;}
+    if(it.kind==='value')
+      return `<div class="q">${head}<input class="vinput" data-pc="${id}" data-ae="${i}" data-k="value" placeholder="${esc(it.ph||'')}" value="${esc(st.ae[i]||'')}"></div>`;
+    if(it.kind==='value2'){
+      const val=(typeof st.ae[i]==='object'&&st.ae[i])?st.ae[i]:{};
+      return `<div class="q">${head}<div class="inline" style="gap:12px">${it.subs.map(s=>`<div class="inline" style="flex:1;gap:6px"><span class="unit">${esc(s.label)}</span><input class="vinput" data-pc="${id}" data-ae="${i}" data-k="value2" data-sub="${s.key}" placeholder="${esc(s.ph)}" value="${esc(val[s.key]||'')}"></div>`).join('')}</div></div>`;
+    }
+    if(it.kind==='pick3')
+      return `<div class="q">${head}<div class="opts">${it.opts.map(o=>`<div class="opt ${st.ae[i]===o?'pos':''}" data-pc="${id}" data-ae="${i}" data-k="pick3" data-v="${o}">${o}</div>`).join('')}</div></div>`;
+    return `<div class="q">${head}<div class="opts">${it.opts.map((o,oi)=>{
+      const sel=st.ae[i]===oi, cls=sel?(o.pos?'pos':'neg'):'';
+      return `<div class="opt ${cls}" data-pc="${id}" data-ae="${i}" data-k="toggle" data-oi="${oi}">${esc(o.l)}</div>`;}).join('')}</div></div>`;
+  }).join('');
+}
+/* 통증 '있음' 시 6종 공통 입력 */
+function painHTML(id){
+  const p=partOf(id), st=inst[id];
+  // 부위: 세부 클릭형(복수) 또는 직접입력
+  let areaUI;
+  if(p.sub){
+    areaUI=`<div class="chips">${p.sub.map(s=>`<div class="chip area ${st.subs.includes(s)?'on':''}" data-pc="${id}" data-area="${esc(s)}">${esc(s)}</div>`).join('')}</div>`;
+  } else {
+    areaUI=`<input class="tin" data-pc="${id}" data-fld="freeArea" placeholder="부위 직접 입력 (예: 좌측 팔꿈치)" value="${esc(st.freeArea)}">`;
+  }
+  const tools=`<div class="tools">${TOOLS.map(t=>`<div class="tool ${st.tool===t.k?'on':''}" data-pc="${id}" data-tool="${t.k}"><span class="k">${t.k}</span><span class="d">${esc(t.d)}</span></div>`).join('')}</div>
+    <div class="toolnote">※ 사정도구 설명은 임상 표준 초안 — 칩스 검증 필요</div>`;
+  const ints=`<div class="ints">${Array.from({length:11},(_,n)=>`<div class="ib ${st.intensity===n?'on':''}" data-pc="${id}" data-int="${n}">${n}</div>`).join('')}</div>`;
+  const freq=`<div class="chips">${FREQS.map(f=>`<div class="chip ${st.freq===f?'on':''}" data-pc="${id}" data-freq="${esc(f)}">${esc(f)}</div>`).join('')}</div>`;
+  const pat=`<div class="chips">${PATTERNS.map(pt=>`<div class="chip ${st.patterns.includes(pt)?'on':''}" data-pc="${id}" data-pat="${esc(pt)}">${esc(pt)}</div>`).join('')}</div>`;
+  const dur=`<div class="inline"><input class="tin" data-pc="${id}" data-fld="duration" inputmode="text" placeholder="예: 2시간 / 3일" value="${esc(st.duration)}"><span class="unit">측정불가 = -1</span></div>`;
+  return `<div class="painwrap">
+    <div class="blk-t">부위 <span class="req">*</span></div>${areaUI}
+    <div class="blk-t">사정도구 <span class="req">*</span></div>${tools}
+    <div class="blk-t">강도 (0~10) <span class="req">*</span></div>${ints}
+    <div class="blk-t">빈도 <span class="req">*</span></div>${freq}
+    <div class="blk-t">양상 <span class="req">*</span> <span style="font-weight:400;text-transform:none">(여러 개 가능)</span></div>${pat}
+    <div class="blk-t">기간 <span class="req">*</span></div>${dur}
+  </div>`;
+}
+function cardHTML(id){
+  const p=partOf(id);
+  return `<div class="pcard" data-card="${id}">
+    <div class="pc-h">${p.label}<button class="rm" data-rm="${id}">✕ 제거</button></div>
+    ${aeHTML(id)}
+    ${painPos(id)?painHTML(id):''}
+  </div>`;
+}
+function renderCards(){
+  ge('cards').innerHTML=picked.map(cardHTML).join('');
+  ge('dxSec').classList.toggle('hide',!anyPain());
+  ge('ivSec').classList.toggle('hide',!anyPain());
+  ge('dxAcute').classList.toggle('on',dx);
+  ge('ivblock').innerHTML=activeIVs().map((v,i)=>`<div class="iv ${iv[i]?'on':''}" data-iv="${i}"><div class="s"><span class="spk">📢</span>${esc(v.say)}</div><div class="r">→ ${esc(v.rec)} ${iv[i]?'✓ 기록됨':''}</div></div>`).join('');
+}
+function renderAll(){ renderParts(); renderCards(); render(); }
+
+/* ===== 이벤트 ===== */
+ge('parts').addEventListener('click',e=>{
+  const b=e.target.closest('[data-p]'); if(!b) return;
+  const id=b.dataset.p;
+  if(picked.includes(id)){ picked=picked.filter(x=>x!==id); delete inst[id]; }
+  else { picked.push(id); inst[id]=newInst(); }
+  if(!anyPain()) dx=false;
+  renderAll();
+});
+ge('cards').addEventListener('click',e=>{
+  const rm=e.target.closest('[data-rm]');
+  if(rm){ const id=rm.dataset.rm; picked=picked.filter(x=>x!==id); delete inst[id]; if(!anyPain())dx=false; renderAll(); return; }
+  const el=e.target.closest('[data-pc]'); if(!el) return;
+  const id=el.dataset.pc, st=inst[id];
+  if(el.dataset.smc!=null){ const k=el.dataset.smc; st.smc[k]=st.smc[k]===el.dataset.v?null:el.dataset.v; renderCards(); render(); return; }
+  if(el.dataset.area!=null){ const v=el.dataset.area; st.subs.includes(v)?st.subs=st.subs.filter(x=>x!==v):st.subs.push(v); renderCards(); render(); return; }
+  if(el.dataset.tool!=null){ st.tool=st.tool===el.dataset.tool?null:el.dataset.tool; renderCards(); render(); return; }
+  if(el.dataset.int!=null){ const n=+el.dataset.int; st.intensity=st.intensity===n?null:n; renderCards(); render(); return; }
+  if(el.dataset.freq!=null){ st.freq=st.freq===el.dataset.freq?null:el.dataset.freq; renderCards(); render(); return; }
+  if(el.dataset.pat!=null){ const v=el.dataset.pat; st.patterns.includes(v)?st.patterns=st.patterns.filter(x=>x!==v):st.patterns.push(v); renderCards(); render(); return; }
+  if(el.dataset.ae!=null && el.dataset.k!=='value' && el.dataset.k!=='value2'){
+    const i=+el.dataset.ae, k=el.dataset.k;
+    if(k==='check') st.ae[i]=st.ae[i]===true?undefined:true;
+    if(k==='toggle'){const oi=+el.dataset.oi; st.ae[i]=st.ae[i]===oi?undefined:oi;}
+    if(k==='pick3'){const v=el.dataset.v; st.ae[i]=st.ae[i]===v?undefined:v;}
+    dx=anyPain(); renderCards(); render(); return;
+  }
+});
+ge('cards').addEventListener('input',e=>{
+  const el=e.target.closest('[data-pc]'); if(!el) return;
+  const st=inst[el.dataset.pc];
+  if(el.dataset.fld){ st[el.dataset.fld]=el.value; render(); return; }
+  if(el.dataset.k==='value'){ st.ae[+el.dataset.ae]=el.value; render(); return; }
+  if(el.dataset.k==='value2'){ const i=+el.dataset.ae; if(typeof st.ae[i]!=='object'||st.ae[i]==null) st.ae[i]={}; st.ae[i][el.dataset.sub]=el.value; render(); }
+});
+ge('ivblock').addEventListener('click',e=>{const el=e.target.closest('[data-iv]');if(!el)return;const i=+el.dataset.iv;iv[i]=!iv[i];renderCards();render();});
+ge('dxAcute').addEventListener('click',()=>{dx=!dx;ge('dxAcute').classList.toggle('on',dx);render();});
+
+/* ===== 미리보기 ===== */
+function buildLines(){
+  const L=[];
+  picked.forEach(id=>{
+    const p=partOf(id), set=SETS[p.set], st=inst[id];
+    const partName=p.label.replace(/^\S+\s/,'');
+    L.push({c:'head',t:`[통증 · ${partName}]`});
+    set.ae.forEach((it,i)=>{
+      const v=st.ae[i];
+      if(it.kind==='check'&&v===true) L.push({c:'ae',tg:'A&E',t:it.rec});
+      if(it.kind==='toggle'&&v!=null) L.push({c:'ae',tg:'A&E',t:it.opts[v].rec});
+      if(it.kind==='pick3'&&v) L.push({c:'ae',tg:'A&E',t:it.base.replace('@',v)});
+      if(it.kind==='value'&&v&&v.trim()) L.push({c:'ae',tg:'A&E',t:it.base+' '+v.trim()});
+      if(it.kind==='value2'&&v&&typeof v==='object'){ const ps=[]; if(v.rt&&v.rt.trim())ps.push('Rt '+v.rt.trim()); if(v.lt&&v.lt.trim())ps.push('Lt '+v.lt.trim()); if(ps.length) L.push({c:'ae',tg:'A&E',t:it.base+' '+ps.join(' / ')}); }
+    });
+    if(painPos(id)){
+      const b=[];
+      if(st.smc){ if(st.smc.s)b.push('Sensory '+st.smc.s); if(st.smc.m)b.push('Motor '+st.smc.m); if(st.smc.c)b.push('Circulation '+st.smc.c); }
+      if(st.subs.length) b.push('부위 '+st.subs.join(', '));
+      if(st.freeArea.trim()) b.push('부위 '+st.freeArea.trim());
+      if(st.tool) b.push('사정도구 '+st.tool);
+      if(st.intensity!=null) b.push('통증강도 '+st.intensity+'점');
+      if(st.freq) b.push('빈도 '+st.freq);
+      if(st.patterns.length) b.push('양상 '+st.patterns.join(', '));
+      if(st.duration.trim()) b.push(st.duration.trim()==='-1'?'기간 측정불가':'기간 '+st.duration.trim());
+      if(b.length) L.push({c:'note',tg:'📌',t:'비고: '+b.join(' / ')});
+    }
+  });
+  if(dx) L.push({c:'d',tg:'D',t:'급성통증'});
+  activeIVs().forEach((v,i)=>{ if(iv[i]) L.push({c:'pe',tg:'P&E',t:v.rec}); });
+  return L;
+}
+function render(){
+  const L=buildLines(), rec=L.filter(x=>x.c!=='head');
+  ge('cnt').textContent=rec.length+'줄';
+  if(!L.length){ ge('preview').innerHTML='<div class="empty">부위를 선택하면 기록이 쌓입니다.</div>'; return; }
+  ge('preview').innerHTML=L.map(x=>x.c==='head'?`<div class="rl head">${esc(x.t)}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg}</span>${esc(x.t)}</div>`).join('');
+}
+function copyNote(){
+  const L=buildLines(); if(L.filter(x=>x.c!=='head').length===0){alert('기록이 비어 있습니다');return;}
+  const txt=L.map(x=>x.c==='head'?x.t:(x.tg.replace('📌','비고')+' · '+x.t)).join('\n');
+  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject())
+    .then(()=>alert('복사됨! EMR에 붙여넣으세요.\n\n'+txt)).catch(()=>prompt('복사:',txt));
+}
+renderAll();
+</script>
+
+<script>
+window.addEventListener('load',()=>{
+  const c=s=>{const el=document.querySelector(s); if(el) el.click();};
+  c('[data-p="back"]');
+  c('[data-pc="back"][data-ae="0"][data-oi="0"]');    // 방사통 있음
+  c('[data-pc="back"][data-ae="1"][data-k="check"]');  // SMC intact 함 → 세부 펼침
+  c('[data-pc="back"][data-smc="s"][data-v="약함"]');
+  c('[data-pc="back"][data-smc="m"][data-v="양호함"]');
+  c('[data-pc="back"][data-smc="c"][data-v="양호함"]');
+  c('[data-pc="back"][data-ae="2"][data-oi="1"]');     // 배뇨장애 없음
+  c('[data-pc="back"][data-ae="3"][data-oi="0"]');     // 통증 있음
+  c('[data-pc="back"][data-tool="NRS"]'); c('[data-pc="back"][data-int="6"]');
+});
+</script>
+</body>
+</html>
