@@ -5,7 +5,8 @@
       "Bash(cd \"/Users/sungkwanchoi/NFH_New\" && rm -f /tmp/nv*.html /tmp/nv*.png 2>/dev/null && echo \"정리 완료\")",
       "Bash(python3 -c 'import re;h=open\\('\\\\''__TRACKED_VAR__'\\\\'',encoding='\\\\''utf-8'\\\\''\\).read\\(\\);m=re.findall\\(r'\\\\''<script>\\(.*?\\)</script>'\\\\'',h,re.S\\);open\\('\\\\''/tmp/n.js'\\\\'','\\\\''w'\\\\''\\).write\\('\\\\''\\\\n'\\\\''.join\\(m\\)\\)')",
       "Bash(node --check /tmp/n.js)",
-      "Bash(awk '{print $5,\"bytes\"}')"
+      "Bash(awk '{print $5,\"bytes\"}')",
+      "Bash(git merge *)"
     ],
     "additionalDirectories": [
       "/tmp"
