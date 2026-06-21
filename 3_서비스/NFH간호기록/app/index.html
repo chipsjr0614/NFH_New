@@ -84,7 +84,7 @@
 <script>
 const N=window.NFH, U=window.NFHUI;
 const ge=id=>document.getElementById(id);
-let curEntry=null, scrolledBottom=false;
+let picked=[], symQueue=[], curEntry=null, scrolledBottom=false;
 let identityOK=false, gownState={};   // 맞이·확인 상태
 
 const activeScreen=()=>[...document.querySelectorAll('.screen')].find(s=>s.classList.contains('active')).id;
@@ -238,25 +238,38 @@ function renderIntro(){
 }
 function introNext(){ renderSymptom(); }
 
-// ── S1 주증상 (클릭 즉시 해당 사정으로) ──
+// ── S1 주증상 (여러 개 선택 → 다음) ──
 function renderSymptom(){
-  const active=new Set(U.S.selected.map(e=>e._symId).filter(Boolean));
-  ge('symptom-grid').innerHTML=N.SYMS.map(s=>`<div class="opt-btn ${active.has(s.id)?'on':''}" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
+  ge('symptom-grid').innerHTML=N.SYMS.map(s=>`<div class="opt-btn ${picked.includes(s.id)?'on':''}" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
   goto('symptom',1);
-  const n=U.S.selected.length;
+  const n=picked.filter(x=>x!=='ok').length;
   setNav(`<button class="btn ghost" onclick="renderIntro()">← 맞이</button>
-    <button class="btn prim" onclick="advance(goFall)">의식·낙상 →${n?` (주호소 ${n})`:''}</button>`);
+    <button class="btn prim" onclick="startQueue()">다음 →${n?` (${n})`:''}</button>`);
 }
 ge('symptom-grid').addEventListener('click',e=>{
   const b=e.target.closest('[data-sym]'); if(!b) return;
-  const sym=N.SYMS.find(s=>s.id===b.dataset.sym);
-  if(sym.skipToFall){ goFall(); return; }              // 이상 없음 → 의식·낙상
-  if(sym.direct){ openAssess([sym.direct], sym.label, sym.id); return; }
-  if(sym.branch){ renderBranch(sym.branch, sym.label, sym.id); return; }
+  const id=b.dataset.sym;
+  if(id==='ok'){ picked=picked.includes('ok')?[]:['ok']; }          // 이상 없음: 단독
+  else { picked=picked.filter(x=>x!=='ok'); const i=picked.indexOf(id); i>=0?picked.splice(i,1):picked.push(id); }
+  renderSymptom();
 });
+function startQueue(){
+  if(!picked.length){ showGateMsg('주증상을 1개 이상 선택하세요'); return; }
+  // 이전 사정만 비우고 도관(맞이·확인) 기록은 보존
+  U.S.selected.length=0; U.S.items=U.S.items.filter(c=>c.section==='도관'); U.S.nrs={}; U.fire();
+  symQueue=[...picked]; nextSym();
+}
 
-// ── 분기 → 사정 ──
-function renderBranch(branchId, label, symId){
+// ── 선택한 주증상들을 차례로 분기/사정 ──
+function nextSym(){
+  if(!symQueue.length){ goFall(); return; }
+  const sym=N.SYMS.find(s=>s.id===symQueue[0]);
+  if(!sym || sym.skipToFall){ symQueue.shift(); return nextSym(); }   // 이상없음 → 낙상
+  if(sym.direct){ symQueue.shift(); openAssess([sym.direct], sym.label); return; }
+  if(sym.branch){ renderBranch(sym.branch, sym.label); return; }      // 분기는 leaf에서 shift
+  symQueue.shift(); nextSym();
+}
+function renderBranch(branchId, label){
   const br=N.BRANCHES[branchId];
   ge('branch-body').innerHTML=`<div class="screen-title">${N.esc(label)}</div>
     ${br.hint?`<div class="screen-sub">💬 ${N.esc(br.hint)}</div>`:'<div style="height:8px"></div>'}
@@ -268,19 +281,19 @@ function renderBranch(branchId, label, symId){
     const btn=e.target.closest('[data-bi]'); if(!btn) return;
     ge('br-opts').removeEventListener('click',h);
     const o=br.opts[+btn.dataset.bi];
-    if(o.next) renderBranch(o.next, label, symId);
-    else if(o.key){ openAssess(o.key, label+' · '+o.label, symId); }
+    if(o.next) renderBranch(o.next, label);
+    else if(o.key){ symQueue.shift(); openAssess(o.key, label+' · '+o.label); }
   });
 }
-function openAssess(key, label, symId){
-  let entry=U.S.selected.find(e=>e.label===label) || U.addComplaint(label,[key]);
-  if(!entry){ renderSymptom(); return; }
-  entry._symId=symId; curEntry=entry;
+function openAssess(key, label){
+  curEntry=U.S.selected.find(e=>e.label===label) || U.addComplaint(label,[key]);
+  if(!curEntry){ nextSym(); return; }
   ge('assess-body').innerHTML=U.assessHTML(curEntry)+gateHTML('assess');
   U.bindAssess(ge('assess-body'), curEntry);
   goto('assess',2);
-  setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상 (더 추가)</button>
-    <button class="btn go" onclick="advance(goFall)">의식·낙상 →</button>`);
+  const more=symQueue.length>0;
+  setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>
+    <button class="btn go" onclick="advance(nextSym)">${more?'다음 증상 →':'의식·낙상 →'}</button>`);
   U.fire();
 }
 
@@ -323,7 +336,7 @@ U.onChange=()=>{
   updateGate();
 };
 
-function resetAll(){ curEntry=null; identityOK=false; gownState={}; U.reset(); ge('overlay').classList.remove('on'); setPanel(false); U.fire(); renderIntro(); }
+function resetAll(){ picked=[]; symQueue=[]; curEntry=null; identityOK=false; gownState={}; U.reset(); ge('overlay').classList.remove('on'); setPanel(false); U.fire(); renderIntro(); }
 
 renderIntro(); U.fire();
 </script>
