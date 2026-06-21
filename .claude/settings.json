@@ -6,7 +6,8 @@
       "Bash(python3 -c 'import re;h=open\\('\\\\''__TRACKED_VAR__'\\\\'',encoding='\\\\''utf-8'\\\\''\\).read\\(\\);m=re.findall\\(r'\\\\''<script>\\(.*?\\)</script>'\\\\'',h,re.S\\);open\\('\\\\''/tmp/n.js'\\\\'','\\\\''w'\\\\''\\).write\\('\\\\''\\\\n'\\\\''.join\\(m\\)\\)')",
       "Bash(node --check /tmp/n.js)",
       "Bash(awk '{print $5,\"bytes\"}')",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(git pull *)"
     ],
     "additionalDirectories": [
       "/tmp"
