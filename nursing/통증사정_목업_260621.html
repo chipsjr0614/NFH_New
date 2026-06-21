@@ -148,7 +148,7 @@ const SETS = {
   두통: { ae:[
       {q:'"두통이 있으세요?"', kind:'check', rec:'두통 있음', pos:true, pain:true},
       {q:'"어지럽거나 핑 도는 느낌이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'dizziness 있음',pos:true},{l:'없음',rec:'dizziness 없음'}]},
-      {q:'동공 크기를 확인하세요 (Rt/Lt)', nt:'두통 시 동공변화 반드시 확인 (뇌출혈·뇌경색 감별)', kind:'value', base:'동공크기 :', ph:'예: Rt 3mm / Lt 3mm'},
+      {q:'동공 크기를 확인하세요', nt:'두통 시 동공변화 반드시 확인 (뇌출혈·뇌경색 감별)', kind:'value2', base:'동공크기 :', subs:[{key:'rt',label:'Rt',ph:'예: 3mm'},{key:'lt',label:'Lt',ph:'예: 3mm'}]},
       {q:'빛 반사를 확인하세요', nt:'prompt / sluggish / hippus', kind:'pick3', base:'빛 반사 확인결과 @ 함', opts:['prompt','sluggish','hippus']},
       {q:'"몸에 감각이 이상한 부분이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'감각이상 있음',pos:true},{l:'없음',rec:'감각이상 없음'}]},
       {q:'"양손으로 꽉 쥐어보세요" — 근력 확인', kind:'toggle', opts:[{l:'강함',rec:'grasp power 강함'},{l:'약함',rec:'grasp power 약함',pos:true}]},
@@ -223,6 +223,10 @@ function aeHTML(id){
       return `<div class="q">${head}<div class="opts"><div class="opt ${on?'pos':''}" data-pc="${id}" data-ae="${i}" data-k="check" style="flex:0 0 auto;min-width:120px">${on?'✓ ':''}${esc(it.rec)}</div></div></div>`;}
     if(it.kind==='value')
       return `<div class="q">${head}<input class="vinput" data-pc="${id}" data-ae="${i}" data-k="value" placeholder="${esc(it.ph||'')}" value="${esc(st.ae[i]||'')}"></div>`;
+    if(it.kind==='value2'){
+      const val=(typeof st.ae[i]==='object'&&st.ae[i])?st.ae[i]:{};
+      return `<div class="q">${head}<div class="inline" style="gap:12px">${it.subs.map(s=>`<div class="inline" style="flex:1;gap:6px"><span class="unit">${esc(s.label)}</span><input class="vinput" data-pc="${id}" data-ae="${i}" data-k="value2" data-sub="${s.key}" placeholder="${esc(s.ph)}" value="${esc(val[s.key]||'')}"></div>`).join('')}</div></div>`;
+    }
     if(it.kind==='pick3')
       return `<div class="q">${head}<div class="opts">${it.opts.map(o=>`<div class="opt ${st.ae[i]===o?'pos':''}" data-pc="${id}" data-ae="${i}" data-k="pick3" data-v="${o}">${o}</div>`).join('')}</div></div>`;
     return `<div class="q">${head}<div class="opts">${it.opts.map((o,oi)=>{
@@ -303,7 +307,8 @@ ge('cards').addEventListener('input',e=>{
   const el=e.target.closest('[data-pc]'); if(!el) return;
   const st=inst[el.dataset.pc];
   if(el.dataset.fld){ st[el.dataset.fld]=el.value; render(); return; }
-  if(el.dataset.k==='value'){ st.ae[+el.dataset.ae]=el.value; render(); }
+  if(el.dataset.k==='value'){ st.ae[+el.dataset.ae]=el.value; render(); return; }
+  if(el.dataset.k==='value2'){ const i=+el.dataset.ae; if(typeof st.ae[i]!=='object'||st.ae[i]==null) st.ae[i]={}; st.ae[i][el.dataset.sub]=el.value; render(); }
 });
 ge('ivblock').addEventListener('click',e=>{const el=e.target.closest('[data-iv]');if(!el)return;const i=+el.dataset.iv;iv[i]=!iv[i];renderCards();render();});
 ge('dxAcute').addEventListener('click',()=>{dx=!dx;ge('dxAcute').classList.toggle('on',dx);render();});
@@ -321,6 +326,7 @@ function buildLines(){
       if(it.kind==='toggle'&&v!=null) L.push({c:'ae',tg:'A&E',t:it.opts[v].rec});
       if(it.kind==='pick3'&&v) L.push({c:'ae',tg:'A&E',t:it.base.replace('@',v)});
       if(it.kind==='value'&&v&&v.trim()) L.push({c:'ae',tg:'A&E',t:it.base+' '+v.trim()});
+      if(it.kind==='value2'&&v&&typeof v==='object'){ const ps=[]; if(v.rt&&v.rt.trim())ps.push('Rt '+v.rt.trim()); if(v.lt&&v.lt.trim())ps.push('Lt '+v.lt.trim()); if(ps.length) L.push({c:'ae',tg:'A&E',t:it.base+' '+ps.join(' / ')}); }
     });
     if(painPos(id)){
       const b=[];
