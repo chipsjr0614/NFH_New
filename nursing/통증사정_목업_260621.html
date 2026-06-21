@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>통증 사정 목업 (260621)</title>
-<!-- 데이터 정본: 3_서비스/NFH간호기록/app/nfh_data.js (통증) · 비고(NRS)는 요구사항정의서 v4 4-4 -->
-<!-- 진술문(rec)은 정본 원문 그대로. UI 라벨만 편의 표기. 임의 생성 금지. -->
-<!-- v2: ① 부위 복수선택  ② 통증 '있음'일 때만 강도·양상 펼침 -->
+<!-- 데이터 정본: 3_서비스/NFH간호기록/app/nfh_data.js (통증) -->
+<!-- 진술문(rec)은 정본 원문 그대로. 부위·사정도구·강도·빈도·양상·기간은 비고란 메타(정형진술문 아님, 마스터 미존재 확인). -->
+<!-- v3: 통증 '있음' 시 6종 공통입력(부위/사정도구/강도/빈도/양상/기간). 흉부·배 부위 클릭형 복수. -->
 <style>
 :root{
   --bg:#0a0e14;--panel:#12181f;--card:#1a212b;--card2:#222b38;--line:#2a3441;
@@ -23,7 +23,6 @@ main{max-width:520px;margin:0 auto;padding:14px}
 .sec-h{font-size:14px;font-weight:800;margin:4px 2px 10px;display:flex;align-items:center;gap:7px}
 .sec-h .n{background:var(--card2);color:var(--tx2);border:1px solid var(--line);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
 .sub{font-size:12px;color:var(--tx2);margin:-4px 2px 8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px}
 /* 바디맵 부위 */
 .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .bpart{background:var(--card2);border:1.5px solid var(--line);border-radius:11px;padding:13px 6px;cursor:pointer;font-size:14px;color:var(--tx2);text-align:center;font-weight:600;position:relative}
@@ -33,21 +32,31 @@ main{max-width:520px;margin:0 auto;padding:14px}
 .pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px}
 .pc-h{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;margin-bottom:10px}
 .pc-h .rm{margin-left:auto;background:var(--card2);border:1px solid var(--line);color:var(--tx2);border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer}
-.subarea{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
-.subchip{padding:7px 11px;border-radius:9px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}
-.subchip.on{background:var(--pos);border-color:var(--pos);color:#fff;font-weight:700}
-.blk-t{font-size:12px;color:var(--tx2);font-weight:700;margin:12px 2px 7px;text-transform:uppercase;letter-spacing:.3px}
-/* NRS 얼굴 */
-.faces{display:flex;flex-wrap:wrap;gap:4px}
-.face{flex:1;min-width:38px;text-align:center;padding:8px 2px;border-radius:10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;font-size:22px}
-.face.on{background:var(--pe);border-color:var(--pe)}
-.face small{display:block;font-size:11px;color:var(--tx2)}.face.on small{color:#1a1a1a;font-weight:800}
-/* 칩 */
+.blk-t{font-size:12px;color:var(--tx2);font-weight:700;margin:13px 2px 7px;text-transform:uppercase;letter-spacing:.3px}
+.blk-t .req{color:var(--pos);margin-left:4px}
+/* 칩 공통 */
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{padding:8px 12px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}
 .chip.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe);font-weight:700}
-.chrow{margin-bottom:10px}.chrow .t{font-size:12px;color:var(--tx2);margin-bottom:6px;font-weight:600}
-.painwrap{border-top:1px dashed var(--line);margin-top:12px;padding-top:10px}
+.chip.area.on{background:var(--pos);color:#fff;border-color:var(--pos)}
+/* 사정도구 */
+.tools{display:flex;flex-direction:column;gap:6px}
+.tool{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);cursor:pointer}
+.tool.on{border-color:var(--ae);background:rgba(74,168,255,.08)}
+.tool .k{font-weight:800;font-size:13px;min-width:48px;color:var(--tx)}
+.tool.on .k{color:var(--ae)}
+.tool .d{font-size:11.5px;color:var(--tx2)}
+.toolnote{font-size:11px;color:var(--pe);margin-top:4px}
+/* 강도 0~10 */
+.ints{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.ib{padding:9px 0;border-radius:8px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;font-weight:700;cursor:pointer;text-align:center;position:relative}
+.ib.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe)}
+.ib.on::after{content:'✓';position:absolute;top:-7px;right:-2px;font-size:11px;color:var(--pe)}
+/* 입력칸 */
+.tin{width:100%;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--tx);font-size:14px;outline:none}
+.tin:focus{border-color:var(--ae)}
+.inline{display:flex;gap:8px;align-items:center}.inline .tin{flex:1}
+.unit{font-size:12px;color:var(--tx2);white-space:nowrap}
 /* 사정 문항 */
 .q{margin-bottom:9px}
 .q .qp{font-size:14px;font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -58,17 +67,18 @@ main{max-width:520px;margin:0 auto;padding:14px}
 .opt.pos{border-color:var(--pos);color:#fff;background:var(--pos)}
 .vinput{width:100%;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--tx);font-size:14px;outline:none}
 .vinput:focus{border-color:var(--ae)}
+.painwrap{border-top:1px dashed var(--line);margin-top:12px;padding-top:6px}
 /* 진단 */
 .dx{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;cursor:pointer}
 .dx .ck{width:21px;height:21px;border:2px solid var(--d);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
 .dx.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dx.on .ck{background:var(--d)}
 .dx b{font-size:15px}.dx .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:5px;padding:2px 7px}
-/* 중재 멘트 */
+/* 중재 */
 .iv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:7px;cursor:pointer}
 .iv.on{border-color:var(--pe);background:rgba(255,200,87,.07)}
 .iv .s{font-size:14px}.iv .s .spk{color:var(--pe);font-weight:800;margin-right:4px}
 .iv .r{font-size:12px;color:var(--tx2);margin-top:6px}.iv.on .r{color:var(--pe);font-weight:600}
-/* 미리보기 시트 */
+/* 미리보기 */
 .sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:240px;display:flex;flex-direction:column}
 .sh-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}
 .sh-h b{font-size:14px}.sh-h .c{font-size:12px;color:var(--tx2)}
@@ -86,11 +96,11 @@ main{max-width:520px;margin:0 auto;padding:14px}
 
 <header>
   <div class="logo">NFH <em>통증 사정</em></div>
-  <div class="pat">목업 260621 v2 · 데모환자</div>
+  <div class="pat">목업 260621 v3 · 데모환자</div>
 </header>
 
 <main>
-  <div class="hint">💡 통증 <b>사정 → 간호진단(급성통증) → 평가·중재</b>. 부위는 <b>여러 곳</b> 선택 가능. 통증 '있음'을 누르면 강도·양상이 펼쳐집니다. (진술문은 정본 원문)</div>
+  <div class="hint">💡 통증 <b>사정 → 간호진단 → 평가</b>. 부위는 <b>여러 곳</b> 선택 가능. 통증 '있음'을 누르면 <b>부위·사정도구·강도·빈도·양상·기간</b>이 펼쳐집니다. (A&amp;E·D·P&amp;E=정본 원문 / 6종=비고란)</div>
 
   <!-- ① 부위 (복수) -->
   <div class="sec">
@@ -98,25 +108,21 @@ main{max-width:520px;margin:0 auto;padding:14px}
     <div class="parts" id="parts"></div>
   </div>
 
-  <!-- 선택 부위별 사정 카드 -->
   <div id="cards"></div>
 
-  <!-- 공통: 진단 -->
   <div class="sec hide" id="dxSec">
     <div class="sec-h">🩺 간호진단</div>
-    <div class="sub">통증을 확인하면 <b>급성통증</b>이 자동 추천됩니다 (부위가 여러 곳이어도 진단은 하나로 묶음).</div>
+    <div class="sub">통증을 확인하면 <b>급성통증</b>이 자동 추천됩니다 (부위가 여러 곳이어도 진단은 하나).</div>
     <div class="dx" id="dxAcute"><span class="ck"></span><b>급성통증</b><span class="auto">자동</span></div>
   </div>
 
-  <!-- 공통: 중재 -->
   <div class="sec hide" id="ivSec">
     <div class="sec-h">💬 평가 · 중재</div>
-    <div class="sub">환자에게 말할 문장(📢)을 탭하면 대응 P&amp;E 진술문이 기록됩니다.</div>
+    <div class="sub">말할 문장(📢)을 탭하면 P&amp;E 진술문이 기록됩니다.</div>
     <div id="ivblock"></div>
   </div>
 </main>
 
-<!-- 실시간 미리보기 -->
 <div class="sheet">
   <div class="sh-h">📋 <b>간호기록 미리보기</b> <span class="c" id="cnt">0줄</span>
     <button onclick="copyNote()">📤 복사</button></div>
@@ -151,7 +157,6 @@ const SETS = {
       {q:'"통증이 있으세요?"', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
       {q:'"몸이 뜨겁거나 열이 나는 것 같으세요?"', kind:'toggle', opts:[{l:'있음',rec:'열감 있음',pos:true},{l:'없음',rec:'열감 없음'}]},
   ]},
-  /* 사지(팔·다리): SMC 분해형 — 진술문 모두 마스터 원문 */
   사지: { ae:[
       {q:'"통증이 있으세요?"', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
       {q:'감각 — 감각(S)', nt:'"이 부위 느낌이 있으세요?"', kind:'toggle', opts:[{l:'정상(있음)',rec:'감각 있음'},{l:'이상(없음)',rec:'감각 없음',pos:true}]},
@@ -168,7 +173,7 @@ const IVS = [
 ];
 const PARTS = [
   {id:'head', label:'🧠 머리', set:'두통'},
-  {id:'chest', label:'🫀 가슴', set:'흉부'},
+  {id:'chest', label:'🫀 가슴', set:'흉부', sub:['anterior chest','epigastric site','mediastinal site','substernal site','가슴부위']},
   {id:'abdo', label:'🫃 배', set:'복부', sub:['상복부','하복부','우하복부','좌하복부']},
   {id:'arm', label:'💪 팔', set:'사지'},
   {id:'leg', label:'🦵 다리', set:'사지'},
@@ -177,18 +182,24 @@ const PARTS = [
   {id:'neck', label:'🧣 목', set:'일반'},
   {id:'groin', label:'🩲 서혜부', set:'일반'},
 ];
-const NRS = [['😀',0],['🙂',2],['😐',4],['😣',6],['😫',8],['😭',10]];
-const CHARS = { 양상:['쥐어짜듯','찌르듯','둔하게','타는듯','콕콕'], 시기:['방금 전','몇 시간 전','어제','며칠 전'], 지속:['지속적으로','간헐적으로','지금은 없음'] };
+/* 통증 '있음' 시 공통 6종 입력 — 전부 비고란 메타 (마스터에 정형진술문 없음) */
+const TOOLS = [
+  {k:'NRS', d:'숫자 0~10 · 의사소통 가능 성인'},
+  {k:'FPRS', d:'얼굴 표정 · 소아/노인/언어소통 제한'},
+  {k:'FLACC', d:'행동 관찰 · 영유아/의식저하/비언어'},
+  {k:'NIPS', d:'신생아 · 영아'},
+  {k:'CNPS', d:'비언어 성인(추정) · ⚠️칩스확인필요'},
+];
+const FREQS = ['발작적으로 갑자기','지속적','표현 못함','기타'];
+const PATTERNS = ['뻐근한','날카로운','둔한','욱신욱신·쑤시는','타는 듯한','저리는 듯한','칼로 베인 듯한','표현 못함','기타'];
 
 /* ===== 상태 ===== */
-let picked=[];          // [partId...]  선택 순서 보존
-let inst={};            // partId -> {sub,nrs,양상,시기,지속,ae:{}}
-let dx=false, iv={};    // 통증 공통 진단·중재
+let picked=[], inst={}, dx=false, iv={};
 const ge=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const partOf=id=>PARTS.find(p=>p.id===id);
+function newInst(){ return {subs:[], freeArea:'', tool:null, intensity:null, freq:null, patterns:[], duration:'', ae:{}}; }
 
-/* 부위별 통증 양성 여부 */
 function painPos(id){
   const p=partOf(id), set=SETS[p.set], st=inst[id]; if(!st) return false;
   return set.ae.some((it,i)=>{
@@ -219,28 +230,41 @@ function aeHTML(id){
       return `<div class="opt ${cls}" data-pc="${id}" data-ae="${i}" data-k="toggle" data-oi="${oi}">${esc(o.l)}</div>`;}).join('')}</div></div>`;
   }).join('');
 }
+/* 통증 '있음' 시 6종 공통 입력 */
 function painHTML(id){
-  const st=inst[id];
-  const faces=NRS.map(([f,v])=>`<div class="face ${st.nrs===v?'on':''}" data-pc="${id}" data-nrs="${v}">${f}<small>${v}</small></div>`).join('');
-  const chars=Object.entries(CHARS).map(([k,arr])=>
-    `<div class="chrow"><div class="t">${k}</div><div class="chips">${arr.map(v=>`<div class="chip ${st[k]===v?'on':''}" data-pc="${id}" data-ch="${k}" data-v="${esc(v)}">${esc(v)}</div>`).join('')}</div></div>`).join('');
+  const p=partOf(id), st=inst[id];
+  // 부위: 세부 클릭형(복수) 또는 직접입력
+  let areaUI;
+  if(p.sub){
+    areaUI=`<div class="chips">${p.sub.map(s=>`<div class="chip area ${st.subs.includes(s)?'on':''}" data-pc="${id}" data-area="${esc(s)}">${esc(s)}</div>`).join('')}</div>`;
+  } else {
+    areaUI=`<input class="tin" data-pc="${id}" data-fld="freeArea" placeholder="부위 직접 입력 (예: 좌측 팔꿈치)" value="${esc(st.freeArea)}">`;
+  }
+  const tools=`<div class="tools">${TOOLS.map(t=>`<div class="tool ${st.tool===t.k?'on':''}" data-pc="${id}" data-tool="${t.k}"><span class="k">${t.k}</span><span class="d">${esc(t.d)}</span></div>`).join('')}</div>
+    <div class="toolnote">※ 사정도구 설명은 임상 표준 초안 — 칩스 검증 필요</div>`;
+  const ints=`<div class="ints">${Array.from({length:11},(_,n)=>`<div class="ib ${st.intensity===n?'on':''}" data-pc="${id}" data-int="${n}">${n}</div>`).join('')}</div>`;
+  const freq=`<div class="chips">${FREQS.map(f=>`<div class="chip ${st.freq===f?'on':''}" data-pc="${id}" data-freq="${esc(f)}">${esc(f)}</div>`).join('')}</div>`;
+  const pat=`<div class="chips">${PATTERNS.map(pt=>`<div class="chip ${st.patterns.includes(pt)?'on':''}" data-pc="${id}" data-pat="${esc(pt)}">${esc(pt)}</div>`).join('')}</div>`;
+  const dur=`<div class="inline"><input class="tin" data-pc="${id}" data-fld="duration" inputmode="text" placeholder="예: 2시간 / 3일" value="${esc(st.duration)}"><span class="unit">측정불가 = -1</span></div>`;
   return `<div class="painwrap">
-    <div class="blk-t">얼마나 아프세요? — NRS (비고)</div><div class="faces">${faces}</div>
-    <div class="blk-t" style="margin-top:12px">어떻게 아프세요? — 양상 (비고)</div>${chars}</div>`;
+    <div class="blk-t">부위 <span class="req">*</span></div>${areaUI}
+    <div class="blk-t">사정도구 <span class="req">*</span></div>${tools}
+    <div class="blk-t">강도 (0~10) <span class="req">*</span></div>${ints}
+    <div class="blk-t">빈도 <span class="req">*</span></div>${freq}
+    <div class="blk-t">양상 <span class="req">*</span> <span style="font-weight:400;text-transform:none">(여러 개 가능)</span></div>${pat}
+    <div class="blk-t">기간 <span class="req">*</span></div>${dur}
+  </div>`;
 }
 function cardHTML(id){
-  const p=partOf(id), st=inst[id];
-  const subUI = p.sub?`<div class="subarea">${p.sub.map(s=>`<div class="subchip ${st.sub===s?'on':''}" data-pc="${id}" data-sub="${s}">${s}</div>`).join('')}</div>`:'';
+  const p=partOf(id);
   return `<div class="pcard" data-card="${id}">
     <div class="pc-h">${p.label}<button class="rm" data-rm="${id}">✕ 제거</button></div>
-    ${subUI}
     ${aeHTML(id)}
     ${painPos(id)?painHTML(id):''}
   </div>`;
 }
 function renderCards(){
   ge('cards').innerHTML=picked.map(cardHTML).join('');
-  const has=picked.length>0;
   ge('dxSec').classList.toggle('hide',!anyPain());
   ge('ivSec').classList.toggle('hide',!anyPain());
   ge('dxAcute').classList.toggle('on',dx);
@@ -253,7 +277,7 @@ ge('parts').addEventListener('click',e=>{
   const b=e.target.closest('[data-p]'); if(!b) return;
   const id=b.dataset.p;
   if(picked.includes(id)){ picked=picked.filter(x=>x!==id); delete inst[id]; }
-  else { picked.push(id); inst[id]={sub:null,nrs:null,양상:null,시기:null,지속:null,ae:{}}; }
+  else { picked.push(id); inst[id]=newInst(); }
   if(!anyPain()) dx=false;
   renderAll();
 });
@@ -262,19 +286,25 @@ ge('cards').addEventListener('click',e=>{
   if(rm){ const id=rm.dataset.rm; picked=picked.filter(x=>x!==id); delete inst[id]; if(!anyPain())dx=false; renderAll(); return; }
   const el=e.target.closest('[data-pc]'); if(!el) return;
   const id=el.dataset.pc, st=inst[id];
-  if(el.dataset.sub!=null){ st.sub=st.sub===el.dataset.sub?null:el.dataset.sub; render(); [...ge('cards').querySelectorAll(`[data-pc="${id}"][data-sub]`)].forEach(x=>x.classList.toggle('on',x.dataset.sub===st.sub)); return; }
-  if(el.dataset.nrs!=null){ st.nrs=+el.dataset.nrs; renderCards(); render(); return; }
-  if(el.dataset.ch){ const k=el.dataset.ch; st[k]=st[k]===el.dataset.v?null:el.dataset.v; renderCards(); render(); return; }
+  if(el.dataset.area!=null){ const v=el.dataset.area; st.subs.includes(v)?st.subs=st.subs.filter(x=>x!==v):st.subs.push(v); renderCards(); render(); return; }
+  if(el.dataset.tool!=null){ st.tool=st.tool===el.dataset.tool?null:el.dataset.tool; renderCards(); render(); return; }
+  if(el.dataset.int!=null){ const n=+el.dataset.int; st.intensity=st.intensity===n?null:n; renderCards(); render(); return; }
+  if(el.dataset.freq!=null){ st.freq=st.freq===el.dataset.freq?null:el.dataset.freq; renderCards(); render(); return; }
+  if(el.dataset.pat!=null){ const v=el.dataset.pat; st.patterns.includes(v)?st.patterns=st.patterns.filter(x=>x!==v):st.patterns.push(v); renderCards(); render(); return; }
   if(el.dataset.ae!=null && el.dataset.k!=='value'){
     const i=+el.dataset.ae, k=el.dataset.k;
     if(k==='check') st.ae[i]=st.ae[i]===true?undefined:true;
     if(k==='toggle'){const oi=+el.dataset.oi; st.ae[i]=st.ae[i]===oi?undefined:oi;}
     if(k==='pick3'){const v=el.dataset.v; st.ae[i]=st.ae[i]===v?undefined:v;}
-    if(anyPain()) dx=true; else dx=false;
-    renderCards(); render(); return;
+    dx=anyPain(); renderCards(); render(); return;
   }
 });
-ge('cards').addEventListener('input',e=>{const el=e.target.closest('[data-k="value"]');if(!el)return;inst[el.dataset.pc].ae[+el.dataset.ae]=el.value;render();});
+ge('cards').addEventListener('input',e=>{
+  const el=e.target.closest('[data-pc]'); if(!el) return;
+  const st=inst[el.dataset.pc];
+  if(el.dataset.fld){ st[el.dataset.fld]=el.value; render(); return; }
+  if(el.dataset.k==='value'){ st.ae[+el.dataset.ae]=el.value; render(); }
+});
 ge('ivblock').addEventListener('click',e=>{const el=e.target.closest('[data-iv]');if(!el)return;const i=+el.dataset.iv;iv[i]=!iv[i];renderCards();render();});
 ge('dxAcute').addEventListener('click',()=>{dx=!dx;ge('dxAcute').classList.toggle('on',dx);render();});
 
@@ -284,8 +314,7 @@ function buildLines(){
   picked.forEach(id=>{
     const p=partOf(id), set=SETS[p.set], st=inst[id];
     const partName=p.label.replace(/^\S+\s/,'');
-    const sub=st.sub?`(${st.sub})`:'';
-    L.push({c:'head',t:`[통증 · ${partName}${sub}]`});
+    L.push({c:'head',t:`[통증 · ${partName}]`});
     set.ae.forEach((it,i)=>{
       const v=st.ae[i];
       if(it.kind==='check'&&v===true) L.push({c:'ae',tg:'A&E',t:it.rec});
@@ -293,12 +322,17 @@ function buildLines(){
       if(it.kind==='pick3'&&v) L.push({c:'ae',tg:'A&E',t:it.base.replace('@',v)});
       if(it.kind==='value'&&v&&v.trim()) L.push({c:'ae',tg:'A&E',t:it.base+' '+v.trim()});
     });
-    const bigo=[];
-    if(st.nrs!=null) bigo.push(`통증강도 ${st.nrs}점`);
-    if(st.양상) bigo.push(`양상 ${st.양상}`);
-    if(st.시기) bigo.push(`발생 ${st.시기}`);
-    if(st.지속) bigo.push(`지속 ${st.지속}`);
-    if(bigo.length) L.push({c:'note',tg:'📌',t:'비고: '+bigo.join(' / ')});
+    if(painPos(id)){
+      const b=[];
+      if(st.subs.length) b.push('부위 '+st.subs.join(', '));
+      if(st.freeArea.trim()) b.push('부위 '+st.freeArea.trim());
+      if(st.tool) b.push('사정도구 '+st.tool);
+      if(st.intensity!=null) b.push('통증강도 '+st.intensity+'점');
+      if(st.freq) b.push('빈도 '+st.freq);
+      if(st.patterns.length) b.push('양상 '+st.patterns.join(', '));
+      if(st.duration.trim()) b.push(st.duration.trim()==='-1'?'기간 측정불가':'기간 '+st.duration.trim());
+      if(b.length) L.push({c:'note',tg:'📌',t:'비고: '+b.join(' / ')});
+    }
   });
   if(dx) L.push({c:'d',tg:'D',t:'급성통증'});
   IVS.forEach((v,i)=>{ if(iv[i]) L.push({c:'pe',tg:'P&E',t:v.rec}); });
