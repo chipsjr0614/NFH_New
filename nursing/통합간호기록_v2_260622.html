@@ -28,7 +28,7 @@ main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{f
 .tool{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1.5px solid var(--line);background:var(--card2);cursor:pointer;margin-bottom:5px}.tool.on{border-color:var(--ae);background:rgba(74,168,255,.08)}.tool .k{font-weight:800;font-size:12.5px;min-width:46px}.tool.on .k{color:var(--ae)}.tool .d{font-size:11px;color:var(--tx2)}
 .pcard{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:9px}.pc-h{font-size:13.5px;font-weight:800;margin-bottom:7px;display:flex;align-items:center}.pc-h .rm{margin-left:auto;font-size:11px;color:var(--tx2);border:1px solid var(--line);border-radius:7px;padding:3px 7px;cursor:pointer}
 .painwrap{border-top:1px dashed var(--line);margin-top:9px;padding-top:4px}
-.dxc{display:flex;align-items:center;gap:9px;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer}.dxc .ck{width:19px;height:19px;border:2px solid var(--d);border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}.dxc.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dxc.on .ck{background:var(--d)}.dxc b{font-size:14px}.dxc .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:5px;padding:1px 6px}
+.dxc{display:flex;align-items:center;gap:9px;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer}.dxc .ck{width:19px;height:19px;border:2px solid var(--d);border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}.dxc.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dxc.on .ck{background:var(--d)}.dxc b{font-size:14px}.dxc .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:5px;padding:1px 6px}.dxc .rec{margin-left:auto;font-size:10px;color:var(--ok);border:1px solid var(--ok);border-radius:5px;padding:1px 6px}
 .iv{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer;font-size:13px}.iv.on{border-color:var(--pe);background:rgba(255,200,87,.08)}.iv .spk{color:var(--pe);font-weight:800;margin-right:4px}.iv .r{font-size:11.5px;color:var(--tx2);margin-top:5px}.iv.on .r{color:var(--pe)}
 .sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:252px;display:flex;flex-direction:column}
 .sh-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}.sh-h b{font-size:14px}.sh-h .c{font-size:12px;color:var(--tx2)}.sh-h button{margin-left:auto;background:var(--ok);color:#063;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
@@ -99,6 +99,10 @@ const TOOLS=[['NRS','숫자 0~10·성인'],['FPRS','얼굴·소아/노인'],['FL
 const FREQS=['발작적으로 갑자기','지속적','표현 못함','기타'],PATTERNS=['뻐근한','날카로운','둔한','욱신·쑤시는','타는 듯한','저리는 듯한','칼로 베인 듯한','표현 못함'];
 const SMCO=['양호함','약함','없음','평가불가'];
 const IVP=[{say:'"많이 아프세요? 진통제 필요하실까요?"',rec:'통증을 인정해줌'},{say:'"통증 양상을 확인하겠습니다"',rec:'통증 양상을 확인함'},{say:'"심해지면 바로 말씀하세요"',rec:'통증을 관찰하기로 함'}];
+/* ===== 일반 모듈 (STEP마다 하나씩 이식) ===== */
+const MODULES={
+ 감염:{label:'🌡️ 열나', ae:[{q:'"열감(몸이 뜨겁다)?"',rec:'열감 있음'},{q:'"오한(chilling)?"',rec:'Chilling 있음'},{q:'"오심·구토?"',rec:'오심, 구토 있음'},{q:'CRP 증가?',rec:'C-Reactive protein 수치 증가함'},{q:'체온 상승?',rec:'체온 상승함'},{q:'체온 하강?',rec:'체온 하강됨'}], dxs:[{name:'감염',cue:3,pe:[{say:'"체온을 측정하겠습니다"',rec:'체온 측정함'},{say:'"감염 여부를 확인하겠습니다"',rec:'감염증상이 있는지 확인함'}]},{name:'감염위험',cue:0,pe:[{say:'"감염 여부를 살펴보겠습니다"',rec:'감염증상이 있는지 확인함'},{say:'"체온을 측정하겠습니다"',rec:'체온 측정함'}]},{name:'고체온',cue:4,pe:[{say:'"미온수로 닦아드릴게요"',rec:'미온수 목욕 시행함'},{say:'"해열제 드릴게요"',rec:'처방에 의해 해열제를 투여함'}]},{name:'저체온',cue:5,pe:[{say:'"따뜻한 환경을 만들어드릴게요"',rec:'따뜻한 환경 제공함'},{say:'"담요를 덮어드릴게요"',rec:'담요를 덮어줌'}]}]},
+};
 /* ===== 도관 렌더 ===== */
 function renderLines(){ge('lines').innerHTML=LINES.map(l=>{const on=F.lines[l.n];const chips=on?`<div class="sub" style="margin:8px 0 5px">💧 배액·출혈 (탭)</div><div class="chips">${l.d.map(d=>{const lb=d.replace(l.n,'').replace('배액관 ','').trim()||d;return `<div class="chip ${(F.drain[l.n]||[]).includes(d)?'on':''}" data-dn="${esc(l.n)}" data-d="${esc(d)}">${esc(lb)}</div>`;}).join('')}</div>`:'';const sub=l.s!==l.n?`<div style="font-size:10px;opacity:.8">${esc(l.n)}</div>`:'';return `<div><div class="opt ${on?'pos':''}" style="text-align:left" data-line="${esc(l.n)}"><b>${esc(l.s)}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;}).join('');}
 ge('lineExp').onclick=()=>{ge('lines').style.display='flex';ge('lineExp').classList.add('pos');ge('lineNone').classList.remove('neg');renderLines();};
@@ -126,8 +130,15 @@ function painCard(k){const s=st[k];
 }
 function newPain(){return {parts:[],inst:{},pe:{}};}
 function newPInst(){return {subs:[],freeArea:'',tool:null,intensity:null,freq:null,patterns:[],duration:'',ae:{},smc:{s:null,m:null,c:null},pain:undefined};}
+/* 일반 모듈 렌더 (사정 A&E → 진단 선택 → 평가 📢) */
+function generalCard(k){const m=MODULES[k],s=st[k];
+ const ae=m.ae.map((it,i)=>`<div class="q"><div class="qp">${esc(it.q)}</div><div class="opts"><div class="opt ${s.ae[i]===true?'pos':''}" data-m="${k}" data-ae="${i}">${s.ae[i]===true?'✓ ':''}${esc(it.rec)}</div><div class="opt ${s.ae[i]===false?'neg':''}" data-m="${k}" data-aeno="${i}">없음</div></div></div>`).join('');
+ const dx=m.dxs.map((d,di)=>{const on=s.dx.includes(di),rec=Array.isArray(d.cue)?d.cue.some(c=>s.ae[c]===true):s.ae[d.cue]===true;return `<div class="dxc ${on?'on':''}" data-m="${k}" data-dx="${di}"><div class="ck">${on?'✓':''}</div><b>${esc(d.name)}</b>${rec?'<span class="rec">추천</span>':''}</div>`;}).join('');
+ let iv='';s.dx.forEach(di=>{const d=m.dxs[di];iv+=d.pe.map((p,pi)=>`<div class="iv ${s.pe[di+'_'+pi]?'on':''}" data-m="${k}" data-iv="${di}_${pi}"><div><span class="spk">📢</span>${esc(p.say)}</div><div class="r">→ ${esc(p.rec)} ${s.pe[di+'_'+pi]?'✓':''}</div></div>`).join('');});
+ return `<div class="mod"><div class="mod-h">${esc(m.label)} 사정</div>${m.note?`<div class="sub" style="color:var(--pe)">${esc(m.note)}</div>`:''}<div class="blk">사정 (A&E)</div>${ae}<div class="blk">간호진단</div>${dx}${s.dx.length?`<div class="blk">평가·중재 (📢)</div>${iv}`:''}</div>`;}
 function renderMods(){ge('mods').innerHTML=picked.map(k=>{
   if(k==='통증')return painCard(k);
+  if(MODULES[k])return generalCard(k);
   return `<div class="mod todo"><div class="mod-h">${esc(CCLABEL[k])} 사정</div><div class="sub" style="color:var(--tx2)">🔧 이 모듈은 다음 단계(STEP)에서 채웁니다.</div></div>`;
  }).join('');}
 ge('cc').onclick=e=>{const b=e.target.closest('[data-cc]');if(!b)return;const k=b.dataset.cc;
@@ -151,6 +162,13 @@ ge('mods').onclick=e=>{
   else if(t.dataset.ppsmc!=null){const id=t.dataset.ppsmc,sk=t.dataset.sk,v=t.dataset.v;s.inst[id].smc[sk]=s.inst[id].smc[sk]===v?null:v;}
   else if(t.dataset.ppiv!=null){s.pe[t.dataset.ppiv]=!s.pe[t.dataset.ppiv];}
   renderMods();render();return;}
+ // 일반 모듈
+ const el=e.target.closest('[data-m]');if(!el)return;const k=el.dataset.m,s=st[k];
+ if(el.dataset.ae!=null){const i=+el.dataset.ae;s.ae[i]=s.ae[i]===true?undefined:true;}
+ else if(el.dataset.aeno!=null){const i=+el.dataset.aeno;s.ae[i]=s.ae[i]===false?undefined:false;}
+ else if(el.dataset.dx!=null){const di=+el.dataset.dx;s.dx.includes(di)?s.dx=s.dx.filter(x=>x!==di):s.dx.push(di);}
+ else if(el.dataset.iv!=null){s.pe[el.dataset.iv]=!s.pe[el.dataset.iv];}
+ renderMods();render();
 };
 ge('mods').oninput=e=>{const el=e.target;if(!picked.includes('통증'))return;const s=st['통증'];
  if(el.dataset.pp2!=null){const id=el.dataset.pp2,i=+el.dataset.i;if(typeof s.inst[id].ae[i]!=='object'||!s.inst[id].ae[i])s.inst[id].ae[i]={};s.inst[id].ae[i][el.dataset.sk]=el.value;render();}
@@ -183,7 +201,10 @@ function render(){const L=[];let n=0;
      if(pb.length){L.push({c:'note',tg:'📌',t:'비고: '+pb.join(' / ')});}}});
    if(s.parts.some(id=>s.inst[id].pain===true)){L.push({c:'d',tg:'D',t:'급성통증'});n++;IVP.forEach((p,i)=>{if(s.pe[i]){L.push({c:'pe',tg:'P&E',t:p.rec});n++;}});}
    return;}
-  /* 일반 모듈은 STEP마다 이식 (현재 placeholder는 차팅 없음) */
+  const m=MODULES[k];if(!m)return; /* placeholder 모듈은 차팅 없음 */
+  const anyAE=m.ae.some((it,i)=>s.ae[i]===true);if(!s.dx.length&&!anyAE)return;
+  L.push({c:'head',t:`[${esc(m.label)}]`});m.ae.forEach((it,i)=>{if(s.ae[i]===true){L.push({c:'ae',tg:'A&E',t:it.rec});n++;}});
+  s.dx.forEach(di=>{L.push({c:'d',tg:'D',t:m.dxs[di].name});n++;m.dxs[di].pe.forEach((p,pi)=>{if(s.pe[di+'_'+pi]){L.push({c:'pe',tg:'P&E',t:p.rec});n++;}});});
  });
  const fae=[];if(F.consc==='clear')fae.push('의식 명료함');else if(F.consc==='low'){if(F.gcs.E&&F.gcs.V&&F.gcs.M){const g=F.gcs.E+F.gcs.V+F.gcs.M;fae.push('Glasgow Coma Scale : '+g);fae.push(g===15?'의식 명료함':'의식수준 저하됨');}else fae.push('의식수준 저하됨');ORI.forEach(([k,nm])=>{if(F.orient[k]!==undefined)fae.push(nm+'에 대한 지남력 '+(F.orient[k]?'있음':'없음'));});}if(F.guard)fae.push(F.guard);
  const fpe=[];FALL_EDU.forEach(it=>{if(F.falledu[it.id])fpe.push(it.t);});
