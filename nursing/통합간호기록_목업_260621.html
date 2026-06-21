@@ -46,6 +46,10 @@ main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{f
  <div class="mchk" id="g1"><span class="ck"></span><div>🧼 손위생 하셨나요?</div></div>
  <div class="mchk" id="g2"><span class="ck"></span><div>🗣️ "성함이 어떻게 되세요?" (개방형)</div></div>
  <div class="mchk" id="g3"><span class="ck"></span><div>🏷️ 팔찌 대조 (이름 + 등록번호)</div></div>
+ <div class="msub" style="margin:13px 0 6px;color:var(--pe)">맞이 안내 (말하며 체크 · 선택)</div>
+ <div class="mchk" id="m1"><span class="ck"></span><div>💍 "귀금속·시계는 빼서 보관해 주세요" <span style="font-size:11px;color:var(--tx2)">→ 귀금속 제거함 ★</span></div></div>
+ <div class="mchk" id="m2"><span class="ck"></span><div>👕 "검사·처치 위해 환자복으로 갈아입으실게요" <span style="font-size:11px;color:var(--tx2)">→ 환의를 갈아 입혀줌</span></div></div>
+ <div class="mchk" id="m3"><span class="ck"></span><div>🚱 "검사가 있을 수 있어 물도 포함해 금식해 주세요" <span style="font-size:11px;color:var(--tx2)">→ 금식 하도록 교육함</span></div></div>
  <input id="pname" placeholder="이름"><input id="pid" placeholder="등록번호 (8자리)" maxlength="8" inputmode="numeric">
  <button class="mgo off" id="gGo">✅ 간호기록 시작</button>
 </div></div>
@@ -110,7 +114,7 @@ const MODULES={
 };
 const ORDER=['통증','감염','출혈','호흡','대사','소화기','비뇨기','이비인후','어지럼','중독','신경심장','골절외상','의식섬망','정신과','안과','피부'];
 let picked=[], st={};
-let F={lines:{},drain:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,falledu:{}};
+let F={lines:{},drain:{},consc:null,gcs:{E:null,V:null,M:null},orient:{},guard:null,falledu:{},intro:null};
 /* 도관 */
 function renderLines(){ge('lines').innerHTML=LINES.map(l=>{const on=F.lines[l.n];const chips=on?`<div class="sub" style="margin:8px 0 5px">💧 배액·출혈 (탭)</div><div class="chips">${l.d.map(d=>{const lb=d.replace(l.n,'').replace('배액관 ','').trim()||d;return `<div class="chip ${(F.drain[l.n]||[]).includes(d)?'on':''}" data-dn="${esc(l.n)}" data-d="${esc(d)}">${esc(lb)}</div>`;}).join('')}</div>`:'';const sub=l.s!==l.n?`<div style="font-size:10px;opacity:.8">${esc(l.n)}</div>`:'';return `<div><div class="opt ${on?'pos':''}" style="text-align:left" data-line="${esc(l.n)}"><b>${esc(l.s)}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;}).join('');}
 ge('lineExp').onclick=()=>{ge('lines').style.display='flex';ge('lineExp').classList.add('pos');ge('lineNone').classList.remove('neg');renderLines();};
@@ -188,6 +192,7 @@ ge('gd2').onclick=()=>{F.guard=F.guard==='보호자 동행하지 않음'?null:'�
 ge('falledu').onclick=e=>{const el=e.target.closest('[data-fe]');if(!el)return;F.falledu[el.dataset.fe]=!F.falledu[el.dataset.fe];renderFalledu();render();};
 /* 차팅 */
 function render(){const L=[];let n=0;
+ if(F.intro&&(F.intro.m1||F.intro.m2||F.intro.m3)){L.push({c:'fixhead',t:'[맞이·확인]'});if(F.intro.m1){L.push({c:'ae',tg:'A&E',t:'귀금속 제거함 ★'});n++;}if(F.intro.m2){L.push({c:'pe',tg:'P&E',t:'환의를 갈아 입혀줌'});n++;}if(F.intro.m3){L.push({c:'pe',tg:'P&E',t:'금식 하도록 교육함'});n++;}}
  Object.keys(F.lines).forEach(nm=>{(F.drain[nm]||[]).forEach(d=>{const pe=isInterv(d);L.push({c:pe?'pe':'line',tg:pe?'P&E':'도관',t:d});n++;});});
  picked.forEach(k=>{const m=MODULES[k],s=st[k];
   if(m.pain){let any=false;s.parts.forEach(pid=>{const p=PARTS.find(x=>x.id===pid),set=PSETS[p.set],ins=s.inst[pid];const seg=[];
@@ -213,8 +218,8 @@ function render(){const L=[];let n=0;
 function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('사정을 시작')){alert('비어 있음');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨!')).catch(()=>prompt('복사:',t));}
 /* 환자 확인 */
 function gval(){const ok=['g1','g2','g3'].every(i=>ge(i).classList.contains('on'))&&ge('pname').value.trim()&&ge('pid').value.trim();ge('gGo').className='mgo '+(ok?'ok':'off');}
-['g1','g2','g3'].forEach(i=>ge(i).addEventListener('click',()=>{const on=!ge(i).classList.contains('on');ge(i).classList.toggle('on',on);ge(i).querySelector('.ck').textContent=on?'✓':'';gval();}));
+['g1','g2','g3','m1','m2','m3'].forEach(i=>ge(i).addEventListener('click',()=>{const on=!ge(i).classList.contains('on');ge(i).classList.toggle('on',on);ge(i).querySelector('.ck').textContent=on?'✓':'';gval();}));
 ['pname','pid'].forEach(i=>ge(i).addEventListener('input',gval));
-ge('gGo').addEventListener('click',()=>{if(ge('gGo').classList.contains('off'))return;ge('startGate').classList.remove('on');ge('app').style.display='block';ge('patInfo').textContent=ge('pname').value.trim()+' · '+ge('pid').value.trim();});
+ge('gGo').addEventListener('click',()=>{if(ge('gGo').classList.contains('off'))return;F.intro={m1:ge('m1').classList.contains('on'),m2:ge('m2').classList.contains('on'),m3:ge('m3').classList.contains('on')};ge('startGate').classList.remove('on');ge('app').style.display='block';ge('patInfo').textContent=ge('pname').value.trim()+' · '+ge('pid').value.trim();render();});
 renderCC();renderFalledu();render();
 </script></body></html>
