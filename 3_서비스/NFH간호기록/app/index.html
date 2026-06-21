@@ -1,0 +1,345 @@
+<!-- doc-status: status=canonical ssot_for=UI version=v5 updated=2026-06-21 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFH 간호기록</title>
+<link rel="stylesheet" href="nfh_style.css">
+<style>main{padding-bottom:160px}</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <div class="logo">NFH <em>간호기록</em></div>
+    <span class="badge" id="stepbadge">1 / 5</span>
+    <button onclick="resetAll()">🏠 처음</button>
+  </div>
+  <div class="progress" id="prog">
+    <div class="pstep on"></div><div class="pstep"></div><div class="pstep"></div><div class="pstep"></div><div class="pstep"></div>
+  </div>
+</header>
+
+<main>
+  <!-- S0 맞이·확인 (신원·도관·환의/귀금속) -->
+  <div id="s-intro" class="screen active">
+    <div class="hint">💡 환자 곁에 도착해 <b>맞이·사전확인</b>을 한 번에. 신원 확인은 안전의 첫 단추예요.</div>
+    <div class="screen-title">① 맞이 · 확인</div>
+    <div class="screen-sub">신원 확인 → 라인·튜브 → 환의·귀금속</div>
+    <div id="intro-body"></div>
+    <div id="intro-gate"></div>
+  </div>
+
+  <!-- S1 주증상 -->
+  <div id="s-symptom" class="screen">
+    <div class="hint">💡 한 번에 한 덩어리씩 진행합니다. 주증상을 고르고 <b>다음</b>을 누르면, 증상마다 사정 화면이 차례로 나와요.</div>
+    <div class="screen-title">② 주증상</div>
+    <div class="screen-sub">해당하는 증상을 모두 고르세요 (여러 개 가능)</div>
+    <div class="sym-grid" id="symptom-grid"></div>
+  </div>
+
+  <!-- S2 분기 -->
+  <div id="s-branch" class="screen"><div id="branch-body"></div></div>
+
+  <!-- S3 사정 (주호소별) -->
+  <div id="s-assess" class="screen"><div id="assess-body"></div></div>
+
+  <!-- S4 의식/낙상 + 진단 검토 -->
+  <div id="s-fall" class="screen">
+    <div class="screen-title">의식 / 낙상 · 기록 검토</div>
+    <div class="screen-sub">마지막으로 의식·낙상을 확인하고, 진단을 검토하세요.</div>
+    <div id="fall-body"></div>
+    <div id="dx-review"></div>
+    <div id="fall-gate"></div>
+  </div>
+</main>
+
+<!-- 미리보기 펼침 시 배경 어둡게 -->
+<div class="scrim" id="scrim" onclick="setPanel(false)"></div>
+
+<!-- 하단 도크: 접이식 미리보기 + 네비 -->
+<div class="dock">
+  <div class="preview-panel" id="ppanel"><div class="inner" id="preview"></div></div>
+  <div class="peek" id="peek" onclick="togglePanel()">
+    <span class="pk-ico">📋</span>
+    <span>간호기록 <b id="pk-cnt">0</b>줄</span>
+    <span class="pk-last" id="pk-last">탭한 결과가 여기에 쌓여요</span>
+    <span class="pk-tw">▲</span>
+    <button class="pk-copy" onclick="event.stopPropagation();copyNote()">복사</button>
+  </div>
+  <div class="navbar"><div class="inner" id="nav"></div></div>
+</div>
+
+<!-- 완성: 전체 기록 모달 -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closePopup()">
+  <div class="popup">
+    <div class="popup-h"><div class="popup-title">✅ 간호기록 완성</div><button onclick="closePopup()">✕ 닫기</button></div>
+    <div class="popup-body" id="popup-body"></div>
+    <div class="popup-foot"><button class="btn go" style="flex:1" onclick="copyNote()">📤 EMR용 복사</button></div>
+  </div>
+</div>
+
+<script src="nfh_data.js"></script>
+<script src="nfh_core.js"></script>
+<script src="nfh_ui.js"></script>
+<script>
+const N=window.NFH, U=window.NFHUI;
+const ge=id=>document.getElementById(id);
+let picked=[], symQueue=[], curEntry=null, scrolledBottom=false;
+let identityOK=false, gownState={};   // 맞이·확인 상태
+
+const activeScreen=()=>[...document.querySelectorAll('.screen')].find(s=>s.classList.contains('active')).id;
+function goto(name, stepIdx){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  ge('s-'+name).classList.add('active');
+  window.scrollTo(0,0); scrolledBottom=false;
+  if(stepIdx!=null){
+    ge('stepbadge').textContent=(stepIdx+1)+' / 5';
+    [...ge('prog').children].forEach((d,i)=>{ d.className='pstep'+(i<stepIdx?' done':i===stepIdx?' on':''); });
+  }
+  setTimeout(updateGate,0);
+}
+function setNav(html){ ge('nav').innerHTML=html; }
+function enableNext(ok){ const b=ge('nav').querySelector('.btn.prim,.btn.go'); if(b){ b.classList.toggle('locked',!ok); } }
+
+// ── 게이트 ──
+function gateHTML(kind){
+  return `<div class="gate">
+    <div class="gate-status"></div>
+    ${kind==='assess'?'<div class="gate-misslist" style="display:none"></div>':''}
+    <label class="gate-chk"><input type="checkbox" class="gate-confirm"> <span class="gate-cklabel"></span></label>
+  </div>`;
+}
+// 막힌 이유 판정 (null이면 통과)
+function gateReason(){
+  const screen=activeScreen();
+  const gate=document.querySelector('.screen.active .gate');
+  if(!gate) return null;
+  if(screen==='s-intro' && !identityOK) return '본인(성함·생년월일·팔찌) 확인을 먼저 체크하세요';
+  if(screen==='s-fall' && !U.S.items.find(x=>x.uid==='con-clear'||x.uid==='con-low')) return '의식(명료/저하)을 먼저 선택하세요';
+  const scrollable=document.documentElement.scrollHeight > window.innerHeight+8;
+  if(!(scrolledBottom || !scrollable)) return '맨 아래까지 스크롤해서 모두 확인해 주세요';
+  const chk=gate.querySelector('.gate-confirm');
+  if(chk && !chk.checked) return '"확인했습니다" 체크박스를 켜 주세요';
+  return null;
+}
+function advance(fn){ const r=gateReason(); if(r){ showGateMsg(r); return; } fn(); }
+let _toastT;
+function showGateMsg(msg){
+  let t=ge('gate-toast');
+  if(!t){ t=document.createElement('div'); t.id='gate-toast'; t.className='gate-toast'; document.body.appendChild(t); }
+  t.textContent='⚠️ '+msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT=setTimeout(()=>t.classList.remove('show'),2600);
+  const gate=document.querySelector('.screen.active .gate');
+  if(gate){ gate.scrollIntoView({behavior:'smooth',block:'center'}); gate.classList.remove('pulse'); void gate.offsetWidth; gate.classList.add('pulse'); }
+}
+function shortAE(t){ let s=t.split('/')[0].trim(); s=s.replace(/\s*(있음|없음|봄|못봄|:)\s*$/,'').trim(); return s||t.split('/')[0].trim(); }
+function updateGate(){
+  const screen=activeScreen();
+  const gate=document.querySelector('.screen.active .gate');
+  if(!gate){ enableNext(true); return; }
+  const scrollable=document.documentElement.scrollHeight > window.innerHeight+8;
+  const atBottom = scrolledBottom || !scrollable;
+  const chk=gate.querySelector('.gate-confirm'), chkWrap=gate.querySelector('.gate-chk');
+  chk.disabled=!atBottom; chkWrap.classList.toggle('locked',!atBottom);
+  let pending=0;
+  if(screen==='s-assess' && curEntry){
+    const p=U.pendingAE(curEntry), tot=curEntry.collected.aeItems.length; pending=p.length;
+    curEntry.collected.aeItems.forEach(it=>{
+      const el=document.querySelector(`#assess-body [data-ae="${it.uid}"]`);
+      if(el) el.classList.toggle('ae-pending', p.includes(it));
+    });
+    gate.querySelector('.gate-status').innerHTML = pending
+      ? `사정 응답 <b>${tot-pending}/${tot}</b> · <span class="miss">미응답 ${pending}개</span>`
+      : `사정 응답 <b>${tot}/${tot}</b> · <span class="ok">완료 ✓</span>`;
+    const ml=gate.querySelector('.gate-misslist');
+    if(ml){
+      if(pending){ ml.style.display='block';
+        ml.innerHTML='안 물어본 항목 (탭하면 이동): '+p.map(it=>`<span class="miss-chip" data-uid="${it.uid}">${N.esc(shortAE(it.text))}</span>`).join('');
+      } else { ml.style.display='none'; ml.innerHTML=''; }
+    }
+  } else if(screen==='s-fall'){
+    const conscSet=!!U.S.items.find(c=>c.uid==='con-clear'||c.uid==='con-low');
+    pending=conscSet?0:1;
+    gate.querySelector('.gate-status').innerHTML = conscSet
+      ? `의식 확인 <span class="ok">완료 ✓</span> · 낙상위험 자동 포함`
+      : `<span class="miss">⚠️ 의식(명료/저하)을 먼저 선택하세요</span>`;
+  } else if(screen==='s-intro'){
+    pending=identityOK?0:1;
+    gate.querySelector('.gate-status').innerHTML = identityOK
+      ? `신원확인 <span class="ok">완료 ✓</span>`
+      : `<span class="miss">⚠️ 본인 확인을 먼저 체크하세요</span>`;
+  }
+  const strict = (screen==='s-fall' || screen==='s-intro'); // 필수항목 있어야 통과
+  const showMiss = (screen==='s-assess' && pending);
+  gate.querySelector('.gate-cklabel').textContent = !atBottom
+    ? '↓ 맨 아래까지 보면 확인할 수 있어요'
+    : (showMiss ? `미응답 ${pending}개를 확인했고 넘어갑니다` : '모두 확인했습니다');
+  const baseOk = atBottom && chk.checked;
+  enableNext(strict ? (baseOk && pending===0) : baseOk);
+}
+window.addEventListener('scroll', ()=>{
+  if(window.innerHeight+window.scrollY >= document.documentElement.scrollHeight-90) scrolledBottom=true;
+  updateGate();
+}, {passive:true});
+document.addEventListener('change', e=>{ if(e.target.classList.contains('gate-confirm')) updateGate(); });
+document.addEventListener('click', e=>{ const c=e.target.closest('.miss-chip'); if(c){ const el=document.querySelector(`#assess-body [data-ae="${c.dataset.uid}"]`); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); } });
+
+// ── S0 맞이·확인 (신원확인 + 도관 + 환의/귀금속) ──
+const GOWN=['환의(상의) 갈아입힘','환의(하의) 갈아입힘','귀금속 제거함','귀금속 없음/해당없음'];
+function introHTML(){
+  const catChecked=i=>!!U.S.items.find(c=>c.uid==='cat'+i);
+  const etc=(U.S.items.find(c=>c.uid==='cat-etc')||{}).text||'';
+  return `
+  <div class="sec sec-ae"><div class="sec-h">🤝 신원확인 (대본)</div>
+    <div class="iv" style="cursor:default">
+      <div class="script"><span class="spk">📢</span> "안녕하세요~ 〇〇〇님 맞으세요? 확인을 위해 성함이랑 생년월일 말씀해 주시겠어요?"</div>
+      <div class="rec">🪪 팔찌(환자정보)와 대조 · 초진(KTAS) 주호소와 <b style="color:var(--pos)">다르면 ⚠️ 환자 재확인</b></div></div>
+    <div class="chk-item ${identityOK?'on':''}" data-idchk><div class="chk-box">${identityOK?'✓':''}</div>
+      <div style="flex:1"><div class="chk-text">본인(성함·생년월일·팔찌) 확인함</div>
+      <div class="note-tag">※ 신원확인 자체의 기록 진술문은 미확정 — <b>칩스확인필요</b> (현재 기록 미포함)</div></div></div>
+  </div>
+  <div class="sec sec-ae"><div class="sec-h">🔌 라인 · 튜브 (도관)</div>
+    <div class="note-tag" style="margin-bottom:8px">타 병원에서 달고 올 수 있음. 있으면 체크 → 기록에 남음. <b>[마스터 대조 필요]</b></div>
+    <div id="cat-list">${N.CATS.map((c,i)=>`<div class="chk-item ${catChecked(i)?'on':''}" data-cat="${i}"><div class="chk-box">${catChecked(i)?'✓':''}</div><div style="flex:1"><div class="chk-text">${N.esc(c)}</div></div></div>`).join('')}</div>
+    <input class="txt-input" id="cat-etc" placeholder="기타 직접 입력 (예: L-tube 삽입중)" value="${N.esc(etc)}">
+  </div>
+  <div class="sec sec-ae"><div class="sec-h">👕 환의 · 귀금속</div>
+    <div class="note-tag" style="margin-bottom:8px">교체·제거 체크리스트(누락 방지용). <b>기록 진술문은 칩스확인필요 → 현재 기록 미포함.</b></div>
+    ${GOWN.map((g,i)=>`<div class="chk-item ${gownState[i]?'on':''}" data-gown="${i}"><div class="chk-box">${gownState[i]?'✓':''}</div><div style="flex:1"><div class="chk-text">${N.esc(g)}</div></div></div>`).join('')}
+  </div>`;
+}
+function bindIntro(){
+  const body=ge('intro-body');
+  body.querySelector('[data-idchk]').addEventListener('click',function(){
+    identityOK=!identityOK; this.classList.toggle('on',identityOK); this.querySelector('.chk-box').textContent=identityOK?'✓':''; updateGate();
+  });
+  body.querySelectorAll('[data-cat]').forEach(row=>row.addEventListener('click',()=>{
+    const i=row.dataset.cat, on=!row.classList.contains('on');
+    row.classList.toggle('on',on); row.querySelector('.chk-box').textContent=on?'✓':'';
+    U.S.items=U.S.items.filter(c=>c.uid!=='cat'+i);
+    if(on) U.S.items.push({uid:'cat'+i, text:N.CATS[i], section:'도관', symLabel:'침습적 도관'});
+    U.fire();
+  }));
+  body.querySelector('#cat-etc').addEventListener('blur',function(){
+    const v=this.value.trim(); U.S.items=U.S.items.filter(c=>c.uid!=='cat-etc');
+    if(v) U.S.items.push({uid:'cat-etc', text:v, section:'도관', symLabel:'침습적 도관'}); U.fire();
+  });
+  body.querySelectorAll('[data-gown]').forEach(row=>row.addEventListener('click',()=>{
+    const i=row.dataset.gown; gownState[i]=!gownState[i];
+    row.classList.toggle('on',gownState[i]); row.querySelector('.chk-box').textContent=gownState[i]?'✓':'';
+  }));
+}
+function renderIntro(){
+  ge('intro-body').innerHTML=introHTML(); bindIntro();
+  ge('intro-gate').innerHTML=gateHTML('intro');
+  goto('intro',0);
+  setNav(`<button class="btn prim" onclick="advance(introNext)">다음 →</button>`);
+  U.fire();
+}
+function introNext(){ renderSymptom(); }
+
+// ── S1 주증상 (여러 개 선택 → 다음) ──
+function renderSymptom(){
+  ge('symptom-grid').innerHTML=N.SYMS.map(s=>`<div class="opt-btn ${picked.includes(s.id)?'on':''}" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
+  goto('symptom',1);
+  const n=picked.filter(x=>x!=='ok').length;
+  setNav(`<button class="btn ghost" onclick="renderIntro()">← 맞이</button>
+    <button class="btn prim" onclick="startQueue()">다음 →${n?` (${n})`:''}</button>`);
+}
+ge('symptom-grid').addEventListener('click',e=>{
+  const b=e.target.closest('[data-sym]'); if(!b) return;
+  const id=b.dataset.sym;
+  if(id==='ok'){ picked=picked.includes('ok')?[]:['ok']; }          // 이상 없음: 단독
+  else { picked=picked.filter(x=>x!=='ok'); const i=picked.indexOf(id); i>=0?picked.splice(i,1):picked.push(id); }
+  renderSymptom();
+});
+function startQueue(){
+  if(!picked.length){ showGateMsg('주증상을 1개 이상 선택하세요'); return; }
+  // 이전 사정만 비우고 도관(맞이·확인) 기록은 보존
+  U.S.selected.length=0; U.S.items=U.S.items.filter(c=>c.section==='도관'); U.S.nrs={}; U.fire();
+  symQueue=[...picked]; nextSym();
+}
+
+// ── 선택한 주증상들을 차례로 분기/사정 ──
+function nextSym(){
+  if(!symQueue.length){ goFall(); return; }
+  const sym=N.SYMS.find(s=>s.id===symQueue[0]);
+  if(!sym || sym.skipToFall){ symQueue.shift(); return nextSym(); }   // 이상없음 → 낙상
+  if(sym.direct){ symQueue.shift(); openAssess([sym.direct], sym.label); return; }
+  if(sym.branch){ renderBranch(sym.branch, sym.label); return; }      // 분기는 leaf에서 shift
+  symQueue.shift(); nextSym();
+}
+function renderBranch(branchId, label){
+  const br=N.BRANCHES[branchId];
+  ge('branch-body').innerHTML=`<div class="screen-title">${N.esc(label)}</div>
+    ${br.hint?`<div class="screen-sub">💬 ${N.esc(br.hint)}</div>`:'<div style="height:8px"></div>'}
+    <div class="q"><div class="q-prompt">${N.esc(br.q)}</div>
+    <div class="opt-grid c1" id="br-opts">${br.opts.map((o,i)=>`<div class="opt-btn" data-bi="${i}">${N.esc(o.label)}</div>`).join('')}</div></div>`;
+  goto('branch',1);
+  setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>`);
+  ge('br-opts').addEventListener('click', function h(e){
+    const btn=e.target.closest('[data-bi]'); if(!btn) return;
+    ge('br-opts').removeEventListener('click',h);
+    const o=br.opts[+btn.dataset.bi];
+    if(o.next) renderBranch(o.next, label);
+    else if(o.key){ symQueue.shift(); openAssess(o.key, label+' · '+o.label); }
+  });
+}
+function openAssess(key, label){
+  curEntry=U.S.selected.find(e=>e.label===label) || U.addComplaint(label,[key]);
+  if(!curEntry){ nextSym(); return; }
+  ge('assess-body').innerHTML=U.assessHTML(curEntry)+gateHTML('assess');
+  U.bindAssess(ge('assess-body'), curEntry);
+  goto('assess',2);
+  const more=symQueue.length>0;
+  setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>
+    <button class="btn go" onclick="advance(nextSym)">${more?'다음 증상 →':'의식·낙상 →'}</button>`);
+  U.fire();
+}
+
+// ── S4 의식/낙상 + 진단 ──
+function goFall(){
+  ge('fall-body').innerHTML=U.fallHTML(); U.bindFall(ge('fall-body'));
+  ge('fall-gate').innerHTML=gateHTML('fall');
+  renderDxReview();
+  goto('fall',3);
+  setNav(`<button class="btn ghost" onclick="renderSymptom()">← 주증상</button>
+    <button class="btn go" onclick="advance(finish)">기록 완성 →</button>`);
+}
+function renderDxReview(){ ge('dx-review').innerHTML=U.dxHTML(); }
+function finish(){
+  ge('popup-body').innerHTML=U.previewHTML();
+  ge('overlay').classList.add('on');
+  ge('stepbadge').textContent='5 / 5';
+  [...ge('prog').children].forEach((d,i)=>d.className='pstep'+(i<4?' done':' on'));
+}
+function closePopup(){ ge('overlay').classList.remove('on'); }
+
+// ── 도크: 접이식 미리보기 ──
+function setPanel(open){ ge('ppanel').classList.toggle('open',open); ge('peek').classList.toggle('open',open); ge('scrim').classList.toggle('on',open); }
+function openPanel(){ setPanel(true); }
+function togglePanel(){ setPanel(!ge('ppanel').classList.contains('open')); }
+function copyNote(){
+  const t=U.recordText(); if(!t){ alert('기록이 비어 있습니다'); return; }
+  navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));
+}
+
+// 변경 시: 미리보기·진단·게이트 갱신
+U.onChange=()=>{
+  ge('preview').innerHTML=U.previewHTML();
+  const n=U.count(); ge('pk-cnt').textContent=n;
+  const items=U.previewHTML(); // 마지막 줄 요약
+  const lines=[...new DOMParser().parseFromString(U.previewHTML(),'text/html').querySelectorAll('.rl')];
+  ge('pk-last').textContent = lines.length? lines[lines.length-1].textContent : '탭한 결과가 여기에 쌓여요';
+  if(activeScreen()==='s-fall') renderDxReview();
+  if(ge('overlay').classList.contains('on')) ge('popup-body').innerHTML=U.previewHTML();
+  updateGate();
+};
+
+function resetAll(){ picked=[]; symQueue=[]; curEntry=null; identityOK=false; gownState={}; U.reset(); ge('overlay').classList.remove('on'); setPanel(false); U.fire(); renderIntro(); }
+
+renderIntro(); U.fire();
+</script>
+</body>
+</html>

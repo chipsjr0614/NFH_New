@@ -1,0 +1,120 @@
+<!-- doc-status: status=superseded ssot_for=레이아웃B updated=2026-06-20 superseded_by=A_단계형_260620.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFH 간호기록 — B 한화면 (레이아웃 테스트)</title>
+<link rel="stylesheet" href="nfh_style_260620.css">
+<style>body{padding-bottom:250px}</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <div class="logo">NFH <em>간호기록</em> · B 한화면</div>
+    <span class="badge">한 화면 스크롤</span>
+    <button onclick="resetAll()">🏠 처음</button>
+  </div>
+</header>
+
+<main>
+  <div class="hint">💡 <b>주증상을 고르면 아래로 사정·중재가 펼쳐집니다.</b> 탭하면 곧 기록 — <b style="color:var(--pos)">양성(있음)만 빨갛게</b>. 화면을 안 떠나고 한눈에, 아래 미리보기가 실시간으로 쌓여요.</div>
+
+  <!-- 주증상 -->
+  <div class="sec">
+    <div class="sec-h" style="background:rgba(74,168,255,.15);color:var(--ae)">① 주증상 (여러 개 선택 가능)</div>
+    <div class="sym-grid" id="symbar"></div>
+    <div id="picker"></div>
+    <div id="chips" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+
+  <!-- 사정/중재 (주호소별 스택) -->
+  <div id="sections"></div>
+  <!-- 진단 -->
+  <div id="dxbox"></div>
+  <!-- 의식/낙상 -->
+  <div id="fallbox"></div>
+</main>
+
+<!-- 실시간 미리보기 -->
+<div class="sheet">
+  <div class="sheet-h"><b>📋 간호기록 미리보기</b><span class="cnt" id="cnt"></span>
+    <button onclick="copyNote()">📤 복사</button></div>
+  <div class="sheet-body" id="preview"><div class="empty2">탭하면 여기에 정형 간호기록이 쌓입니다.</div></div>
+</div>
+
+<script src="nfh_core_260620.js"></script>
+<script src="nfh_ui_260620.js"></script>
+<script>
+const N=window.NFH, U=window.NFHUI;
+const ge=id=>document.getElementById(id);
+
+let pickingSymId=null;
+function renderSymbar(){
+  ge('symbar').innerHTML = N.SYMS.map(s=>`<div class="opt-btn" data-sym="${s.id}"><span class="ico">${s.icon}</span>${s.label}</div>`).join('');
+}
+// 어느 주증상에서 온 주호소가 있는지 / 지금 분기 고르는 중인지 → 버튼 활성화 표시
+function refreshSymState(){
+  const active=new Set(U.S.selected.map(e=>e._symId).filter(Boolean));
+  if(pickingSymId) active.add(pickingSymId);
+  ge('symbar').querySelectorAll('[data-sym]').forEach(b=>b.classList.toggle('on', active.has(b.dataset.sym)));
+}
+function clearPicker(){ pickingSymId=null; ge('picker').innerHTML=''; refreshSymState(); }
+ge('symbar').addEventListener('click', e=>{
+  const b=e.target.closest('[data-sym]'); if(!b) return;
+  const sym=N.SYMS.find(s=>s.id===b.dataset.sym);
+  if(sym.skipToFall){ clearPicker(); return; } // 이상없음: 낙상만
+  if(sym.direct){ addLeaf([sym.direct], sym.label, sym.id); pickingSymId=null; ge('picker').innerHTML=''; return; }
+  if(sym.branch){ pickingSymId=sym.id; openPicker(sym.branch, sym.label, sym.id); refreshSymState(); }
+});
+
+// 분기 인라인 리졸버
+function openPicker(branchId, label, symId){
+  const br=N.BRANCHES[branchId];
+  ge('picker').innerHTML = `<div class="q" style="margin-top:10px;border-color:var(--ae)">
+    <div class="q-prompt">💬 ${N.esc(br.q)}</div>
+    <div class="opt-grid c1">${br.opts.map((o,i)=>`<div class="opt-btn" data-bi="${i}">${N.esc(o.label)}</div>`).join('')}</div>
+    <button class="allnorm" style="margin-top:8px" onclick="clearPicker()">취소</button></div>`;
+  ge('picker').querySelectorAll('[data-bi]').forEach(btn=>btn.addEventListener('click',()=>{
+    const o=br.opts[+btn.dataset.bi];
+    if(o.next) openPicker(o.next, label, symId);
+    else if(o.key){ addLeaf(o.key, label+' · '+o.label, symId); pickingSymId=null; ge('picker').innerHTML=''; }
+  }));
+}
+function addLeaf(key, label, symId){
+  const entry=U.addComplaint(label, [key]);
+  if(!entry){ alert('이미 추가된 주호소입니다'); return; }
+  entry._symId = symId;
+  const tmp=document.createElement('div'); tmp.innerHTML=U.assessHTML(entry);
+  ge('sections').appendChild(tmp.firstElementChild);
+  U.bindAssess(ge('sections'), entry);
+  renderChips(); refreshSymState(); U.fire();
+}
+function renderChips(){
+  ge('chips').innerHTML = U.S.selected.map(e=>`<span class="badge" style="cursor:pointer" data-rm="${e.id}">${N.esc(e.label)} ✕</span>`).join('');
+  ge('chips').querySelectorAll('[data-rm]').forEach(c=>c.addEventListener('click',()=>{
+    const id=c.dataset.rm; const sec=ge('sections').querySelector(`[data-entry="${id}"]`); if(sec) sec.remove();
+    U.removeComplaint(id); renderChips(); refreshSymState(); U.fire();
+  }));
+}
+
+// 의식/낙상 — 1회 렌더 후 고정 (입력 포커스 보존)
+function renderFallOnce(){ ge('fallbox').innerHTML=U.fallHTML(); U.bindFall(ge('fallbox')); }
+
+// 변경 시: 진단·미리보기만 갱신
+U.onChange = ()=>{
+  ge('dxbox').innerHTML = U.dxHTML();
+  ge('preview').innerHTML = U.previewHTML();
+  const n=U.count(); ge('cnt').textContent = n?`${n}줄`:'';
+};
+
+function copyNote(){
+  const t=U.recordText(); if(!t){ alert('기록이 비어 있습니다'); return; }
+  navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));
+}
+function resetAll(){ pickingSymId=null; U.reset(); ge('sections').innerHTML=''; ge('picker').innerHTML=''; renderChips(); refreshSymState(); renderFallOnce(); U.fire(); }
+
+renderSymbar(); renderFallOnce(); U.fire();
+</script>
+</body>
+</html>
