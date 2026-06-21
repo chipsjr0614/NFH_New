@@ -157,13 +157,12 @@ const SETS = {
       {q:'"통증이 있으세요?"', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
       {q:'"몸이 뜨겁거나 열이 나는 것 같으세요?"', kind:'toggle', opts:[{l:'있음',rec:'열감 있음',pos:true},{l:'없음',rec:'열감 없음'}]},
   ]},
+  /* 사지(팔·다리) SMC — ⚠️ 칩스 확정 표현 (마스터 무시, 칩스 지시 2026-06-21). 추후 마스터 정식반영 대상 */
   사지: { ae:[
       {q:'"통증이 있으세요?"', kind:'toggle', pain:true, opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
-      {q:'감각 — 감각(S)', nt:'"이 부위 느낌이 있으세요?"', kind:'toggle', opts:[{l:'정상(있음)',rec:'감각 있음'},{l:'이상(없음)',rec:'감각 없음',pos:true}]},
-      {q:'운동·근력 — 운동(M)', nt:'"손가락/발가락 움직여 보세요"', kind:'toggle', opts:[{l:'정상',rec:'motor response 있음'},{l:'저하/없음',rec:'motor response 없음',pos:true}]},
-      {q:'말초 맥박 — 순환(C)', nt:'결손맥박 여부', kind:'toggle', opts:[{l:'정상',rec:'결손맥박 없음'},{l:'이상',rec:'결손맥박 있음',pos:true}]},
-      {q:'말단 색 — 순환(C)', nt:'청색증 여부', kind:'toggle', opts:[{l:'정상',rec:'말단 청색증 없음'},{l:'청색증',rec:'말단 청색증 있음',pos:true}]},
-      {q:'말초 부종 — 순환(C)', kind:'check', rec:'말초 부종 확인함'},
+      {q:'Sensory (감각)', nt:'S = 감각 · 느낌', kind:'toggle', opts:[{l:'양호함',rec:'Sensory 양호함'},{l:'약함',rec:'Sensory 약함',pos:true},{l:'없음',rec:'Sensory 없음',pos:true},{l:'평가불가',rec:'Sensory 평가불가'}]},
+      {q:'Motor (운동)', nt:'M = 운동 · 움직임/근력', kind:'toggle', opts:[{l:'양호함',rec:'Motor 양호함'},{l:'약함',rec:'Motor 약함',pos:true},{l:'없음',rec:'Motor 없음',pos:true},{l:'평가불가',rec:'Motor 평가불가'}]},
+      {q:'Circulation (순환)', nt:'C = 순환 · 말초 혈류/맥박/색', kind:'toggle', opts:[{l:'양호함',rec:'Circulation 양호함'},{l:'약함',rec:'Circulation 약함',pos:true},{l:'없음',rec:'Circulation 없음',pos:true},{l:'평가불가',rec:'Circulation 평가불가'}]},
   ]},
 };
 const IVS = [
@@ -171,6 +170,9 @@ const IVS = [
   {say:'"의사 선생님께 확인받고 필요하시면 진통제 처방받아 드릴게요."', rec:'통증 양상을 확인함'},
   {say:'"참으실 수 있으면 지켜보시고, 너무 아프시면 바로 말씀해 주세요."', rec:'통증을 관찰하기로 함'},
 ];
+/* 사지 선택 시 추가되는 평가 멘트 (칩스 확정) — SMC 확인 차팅 + 설명 */
+const SMC_IV = {say:'사지 신경혈관 상태를 확인합니다 — S(감각)·M(운동)·C(순환)', rec:'Sensory, Motor, Circulation 확인함'};
+function activeIVs(){ const l=IVS.slice(); if(picked.some(id=>partOf(id) && partOf(id).set==='사지')) l.push(SMC_IV); return l; }
 const PARTS = [
   {id:'head', label:'🧠 머리', set:'두통'},
   {id:'chest', label:'🫀 가슴', set:'흉부', sub:['anterior chest','epigastric site','mediastinal site','substernal site','가슴부위']},
@@ -272,7 +274,7 @@ function renderCards(){
   ge('dxSec').classList.toggle('hide',!anyPain());
   ge('ivSec').classList.toggle('hide',!anyPain());
   ge('dxAcute').classList.toggle('on',dx);
-  ge('ivblock').innerHTML=IVS.map((v,i)=>`<div class="iv ${iv[i]?'on':''}" data-iv="${i}"><div class="s"><span class="spk">📢</span>${esc(v.say)}</div><div class="r">→ ${esc(v.rec)} ${iv[i]?'✓ 기록됨':''}</div></div>`).join('');
+  ge('ivblock').innerHTML=activeIVs().map((v,i)=>`<div class="iv ${iv[i]?'on':''}" data-iv="${i}"><div class="s"><span class="spk">📢</span>${esc(v.say)}</div><div class="r">→ ${esc(v.rec)} ${iv[i]?'✓ 기록됨':''}</div></div>`).join('');
 }
 function renderAll(){ renderParts(); renderCards(); render(); }
 
@@ -341,7 +343,7 @@ function buildLines(){
     }
   });
   if(dx) L.push({c:'d',tg:'D',t:'급성통증'});
-  IVS.forEach((v,i)=>{ if(iv[i]) L.push({c:'pe',tg:'P&E',t:v.rec}); });
+  activeIVs().forEach((v,i)=>{ if(iv[i]) L.push({c:'pe',tg:'P&E',t:v.rec}); });
   return L;
 }
 function render(){
