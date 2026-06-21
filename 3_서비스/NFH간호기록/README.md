@@ -42,7 +42,8 @@
 - [ ] 핸드오프 전 `app/`을 단일 HTML로 합본
 
 ## 구성
-- `app/` — **정본 앱.** `index.html` + `nfh_core.js`(데이터·로직)·`nfh_ui.js`(렌더)·`nfh_style.css`. 단계형+누락게이트+접이식 미리보기. (합본 전까지 4파일)
+- `app/` — **정본 앱.** `index.html` + `nfh_data.js`(엑셀 빌드 산출물·데이터)·`nfh_core.js`(로직)·`nfh_ui.js`(렌더)·`nfh_style.css`. 단계형+누락게이트+접이식 미리보기. (합본 전까지 5파일)
+- `data/` — **데이터 관리(엑셀→빌드).** `간호기록_원본_*.xlsx`(칩스 편집) → `build_nfh.py` → `app/nfh_data.js`. 상세 [`data/README_260621.md`](data/README_260621.md)
 - `간호기록_요구사항정의서.md` — 요구사항 SSOT (**현재 v4**, 기능명세서·v4 목업 반영)
 - `간호기록_기능명세서_260613.md` — 단계별 입출력·동작 명세
 - `mockups/` — 구 UI 시안(전부 superseded). `AB_레이아웃테스트_260620/`(A 단계형=app 출처, B 한화면=참고), `v4_차팅흐름_260618.html`, `사정_플로우_UI.html`(보조). `v1~v3`·`사정앱_prototype`는 `mockups/_archive/`

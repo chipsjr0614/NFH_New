@@ -57,23 +57,26 @@ function assessHTML(entry){
 
   // A&E 문항
   c.aeItems.forEach(item=>{
-    const q = getQ(item.text);
+    const q = item.q || getQ(item.text);                 // 엑셀 질문문구 우선, 없으면 자동
     const note = item.note ? `<div class="note-tag">📌 ${esc(item.note)}</div>` : '';
-    if(isSlash(item.text)){
+    const req = item.required ? '<span class="wb">필수</span>' : '';   // 엑셀 필수=Y
+    const warn = item.required ? ' warn' : '';
+    const fmt = item.format || (isSlash(item.text)?'토글':isInput(item.text)?'값입력':'체크'); // 엑셀 입력형식 우선
+    if(fmt==='토글'){
       const parts = getSlashParts(item.text);
       const cur = (S.items.find(x=>x.uid===item.uid)||{}).text;
-      h += `<div class="q" data-ae="${item.uid}" data-slash="${item.uid}">
-        <div class="q-prompt">💬 ${esc(q)}</div>
+      h += `<div class="q${warn}" data-ae="${item.uid}" data-slash="${item.uid}">
+        <div class="q-prompt">💬 ${esc(q)}${req}</div>
         <div class="opts">${parts.map(p=>{
           const on = cur===p; const pos = posOf(p);
           const cls = on ? (pos? 'sel-pos':'sel-neg') : '';
           return `<div class="opt ${cls}" data-st="${esc(p)}">${esc(p)}</div>`;
         }).join('')}</div>${note}</div>`;
-    } else if(isInput(item.text)){
+    } else if(fmt==='값입력'){
       const cur = (S.items.find(x=>x.uid===item.uid)||{}).text || '';
       const val = cur.startsWith(item.text) ? cur.slice(item.text.length).trim() : '';
-      h += `<div class="q" data-ae="${item.uid}">
-        <div class="q-prompt">💬 ${esc(q)}</div>
+      h += `<div class="q${warn}" data-ae="${item.uid}">
+        <div class="q-prompt">💬 ${esc(q)}${req}</div>
         <div class="note-tag" style="margin-top:0;margin-bottom:4px;">${esc(item.text)}</div>
         <input class="txt-input" data-inp="${item.uid}" data-ib="${esc(item.text)}" placeholder="직접 입력" value="${esc(val)}">
         ${note}</div>`;
@@ -81,7 +84,7 @@ function assessHTML(entry){
       const on = !!S.items.find(x=>x.uid===item.uid);
       h += `<div class="chk-item ${on?'on':''}" data-ae="${item.uid}" data-chk="${item.uid}" data-ct="${esc(item.text)}">
         <div class="chk-box">${on?'✓':''}</div>
-        <div style="flex:1"><div class="q-prompt" style="margin-bottom:5px">💬 ${esc(q)}</div>
+        <div style="flex:1"><div class="q-prompt" style="margin-bottom:5px">💬 ${esc(q)}${req}</div>
         <div class="rec-line"><span class="rectag">기록</span><span>${esc(item.text)}</span></div>${note}</div></div>`;
     }
   });
