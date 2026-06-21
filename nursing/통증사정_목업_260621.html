@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>통증 사정 목업 (260621)</title>
+<!-- 데이터 정본: 3_서비스/NFH간호기록/app/nfh_data.js (통증) · 비고(NRS)는 요구사항정의서 v4 4-4 -->
+<!-- 진술문(rec)은 정본 원문 그대로. UI 라벨만 편의 표기. 임의 생성 금지. -->
+<style>
+:root{
+  --bg:#0a0e14;--panel:#12181f;--card:#1a212b;--card2:#222b38;--line:#2a3441;
+  --tx:#e6edf3;--tx2:#8b97a7;--pos:#ff4d5e;--ok:#2ecc71;
+  --ae:#4aa8ff;--d:#ff6b6b;--pe:#ffc857;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:250px;font-size:16px;line-height:1.5}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
+header .logo{font-weight:800;font-size:16px}.logo em{color:var(--pos);font-style:normal}
+header .pat{font-size:12px;color:var(--tx2);margin-left:auto}
+main{max-width:520px;margin:0 auto;padding:14px}
+.sec{margin-bottom:18px}
+.sec-h{font-size:14px;font-weight:800;margin:4px 2px 10px;display:flex;align-items:center;gap:7px}
+.sec-h .n{background:var(--card2);color:var(--tx2);border:1px solid var(--line);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.sub{font-size:12px;color:var(--tx2);margin:-4px 2px 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px}
+/* 바디맵 부위 */
+.parts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.bpart{background:var(--card2);border:1.5px solid var(--line);border-radius:11px;padding:13px 6px;cursor:pointer;font-size:14px;color:var(--tx2);text-align:center;font-weight:600}
+.bpart.on{background:var(--pos);border-color:var(--pos);color:#fff}
+.subarea{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.subchip{padding:8px 12px;border-radius:9px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}
+.subchip.on{background:var(--pos);border-color:var(--pos);color:#fff;font-weight:700}
+/* NRS 얼굴 */
+.faces{display:flex;flex-wrap:wrap;gap:4px}
+.face{flex:1;min-width:38px;text-align:center;padding:8px 2px;border-radius:10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;font-size:22px}
+.face.on{background:var(--pe);border-color:var(--pe)}
+.face small{display:block;font-size:11px;color:var(--tx2)}.face.on small{color:#1a1a1a;font-weight:800}
+/* 칩 (양상/시기/지속) */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:8px 12px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:13px;cursor:pointer}
+.chip.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe);font-weight:700}
+.chrow{margin-bottom:10px}.chrow .t{font-size:12px;color:var(--tx2);margin-bottom:6px;font-weight:600}
+/* 사정 문항 */
+.q{margin-bottom:9px}
+.q .qp{font-size:14px;font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.q .nt{font-size:11px;color:var(--tx2);font-weight:400}
+.opts{display:flex;gap:7px;flex-wrap:wrap}
+.opt{flex:1;min-width:60px;text-align:center;padding:11px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer}
+.opt.neg{border-color:#5a6878;color:var(--tx);background:#2a3038}
+.opt.pos{border-color:var(--pos);color:#fff;background:var(--pos)}
+.vinput{width:100%;background:var(--card2);border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;color:var(--tx);font-size:14px;outline:none}
+.vinput:focus{border-color:var(--ae)}
+/* 진단 */
+.dx{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px;cursor:pointer}
+.dx .ck{width:21px;height:21px;border:2px solid var(--d);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.dx.on{border-color:var(--d);background:rgba(255,107,107,.08)}.dx.on .ck{background:var(--d)}
+.dx b{font-size:15px}.dx .auto{margin-left:auto;font-size:10px;color:var(--d);border:1px solid var(--d);border-radius:5px;padding:2px 7px}
+/* 중재 멘트 */
+.iv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:7px;cursor:pointer}
+.iv.on{border-color:var(--pe);background:rgba(255,200,87,.07)}
+.iv .s{font-size:14px}.iv .s .spk{color:var(--pe);font-weight:800;margin-right:4px}
+.iv .r{font-size:12px;color:var(--tx2);margin-top:6px}.iv.on .r{color:var(--pe);font-weight:600}
+/* 미리보기 시트 */
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:240px;display:flex;flex-direction:column}
+.sh-h{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.sh-h b{font-size:14px}.sh-h .c{font-size:12px;color:var(--tx2)}
+.sh-h button{margin-left:auto;background:var(--ok);color:#063;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:10px 16px;max-width:520px;margin:0 auto;width:100%;font-size:13.5px;line-height:1.6}
+.rl{margin:1px 0}.rl .tg{font-weight:800;font-size:10px;margin-right:6px;display:inline-block;min-width:26px}
+.rl.ae{color:var(--ae)}.rl.d{color:var(--d)}.rl.pe{color:var(--pe)}.rl.note{color:var(--tx2);font-size:12.5px}
+.rl.head{color:var(--tx);font-weight:800;margin-top:6px}
+.empty{color:var(--tx2);font-size:13px}
+.hint{font-size:12px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:9px;padding:9px 11px;margin-bottom:12px}
+.hide{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NFH <em>통증 사정</em></div>
+  <div class="pat">목업 260621 · 데모환자</div>
+</header>
+
+<main>
+  <div class="hint">💡 목업: 통증 <b>사정 → 간호진단(급성통증) → 평가·중재</b>를 한 화면에서. 탭하면 아래 미리보기에 정형 간호기록이 쌓입니다. (진술문은 정본 원문)</div>
+
+  <!-- ① 부위 -->
+  <div class="sec">
+    <div class="sec-h"><span class="n">1</span>어디가 아프세요? <span style="font-size:12px;color:var(--tx2);font-weight:400">— 부위</span></div>
+    <div class="parts" id="parts"></div>
+    <div class="subarea hide" id="subarea"></div>
+  </div>
+
+  <!-- 부위 선택 후 펼쳐지는 본문 -->
+  <div id="painbody" class="hide">
+
+    <!-- ② NRS -->
+    <div class="sec">
+      <div class="sec-h"><span class="n">2</span>얼마나 아프세요? <span style="font-size:12px;color:var(--tx2);font-weight:400">— NRS 0~10 (비고)</span></div>
+      <div class="card"><div class="faces" id="faces"></div></div>
+    </div>
+
+    <!-- ③ 양상/시기/지속 -->
+    <div class="sec">
+      <div class="sec-h"><span class="n">3</span>어떻게 아프세요? <span style="font-size:12px;color:var(--tx2);font-weight:400">— 양상 (비고)</span></div>
+      <div class="card" id="charblock"></div>
+    </div>
+
+    <!-- ④ 사정 (정본 A&E) -->
+    <div class="sec">
+      <div class="sec-h"><span class="n">4</span>동반 사정 <span style="font-size:12px;color:var(--tx2);font-weight:400">— 정형 진술문(A&amp;E)</span></div>
+      <div class="card" id="aeblock"></div>
+    </div>
+
+    <!-- 간호진단 -->
+    <div class="sec">
+      <div class="sec-h">🩺 간호진단</div>
+      <div class="sub">통증을 확인하면 <b>급성통증</b>이 자동 추천됩니다.</div>
+      <div class="dx" id="dxAcute"><span class="ck"></span><b>급성통증</b><span class="auto">자동</span></div>
+    </div>
+
+    <!-- 평가·중재 -->
+    <div class="sec">
+      <div class="sec-h">💬 평가 · 중재</div>
+      <div class="sub">환자에게 말할 문장(📢)을 탭하면 대응 P&amp;E 진술문이 기록됩니다.</div>
+      <div id="ivblock"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- 실시간 미리보기 -->
+<div class="sheet">
+  <div class="sh-h">📋 <b>간호기록 미리보기</b> <span class="c" id="cnt">0줄</span>
+    <button onclick="copyNote()">📤 복사</button></div>
+  <div class="sh-b" id="preview"><div class="empty">부위를 선택하면 기록이 쌓입니다.</div></div>
+</div>
+
+<script>
+/* ===== 정본 데이터 (nfh_data.js 통증 원문) =====
+   rec = 기록될 정형 진술문(원문). pos=양성(빨강). 라벨은 UI 편의. */
+const SETS = {
+  복부: {
+    label:'배', ae:[
+      {q:'"배가 아프세요?"', kind:'check', rec:'복부 통증 있음', pos:true},
+      {q:'"오심이나 구토가 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'오심, 구토 있음',pos:true},{l:'없음',rec:'오심, 구토 없음'}]},
+      {q:'"복부가 불편하신가요?"', kind:'toggle', opts:[{l:'있음',rec:'복부 불편감 있음',pos:true},{l:'없음',rec:'복부 불편감 없음'}]},
+      {q:'"대변은 보셨나요?"', nt:'ileus 의심 시', kind:'toggle', opts:[{l:'봄',rec:'대변 봄'},{l:'못봄',rec:'대변 못봄',pos:true}]},
+      {q:'"설사하셨나요?"', nt:'ileus 의심 시', kind:'toggle', opts:[{l:'있음',rec:'설사 있음',pos:true},{l:'없음',rec:'설사 없음'}]},
+      {q:'"방귀는 나오나요?"', nt:'ileus 의심 시', kind:'toggle', opts:[{l:'나옴',rec:'gas out 있음'},{l:'안 나옴',rec:'gas out 없음',pos:true}]},
+    ]
+  },
+  흉부: {
+    label:'가슴', ae:[
+      {q:'"가슴이 아프세요?"', kind:'check', rec:'흉부 통증 있음', pos:true},
+      {q:'"숨이 차거나 답답하신가요?"', kind:'toggle', opts:[{l:'있음',rec:'호흡곤란 있음',pos:true},{l:'없음',rec:'호흡곤란 없음'}]},
+      {q:'"어지럽거나 핑 도는 느낌이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'dizziness 있음',pos:true},{l:'없음',rec:'dizziness 없음'}]},
+    ]
+  },
+  두통: {
+    label:'머리', ae:[
+      {q:'"두통이 있으세요?"', kind:'check', rec:'두통 있음', pos:true},
+      {q:'"어지럽거나 핑 도는 느낌이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'dizziness 있음',pos:true},{l:'없음',rec:'dizziness 없음'}]},
+      {q:'동공 크기를 확인하세요 (Rt/Lt)', nt:'두통 시 동공변화 반드시 확인 (뇌출혈·뇌경색 감별)', kind:'value', base:'동공크기 :', ph:'예: Rt 3mm / Lt 3mm'},
+      {q:'빛 반사를 확인하세요', nt:'prompt / sluggish / hippus', kind:'pick3', base:'빛 반사 확인결과 @ 함', opts:['prompt','sluggish','hippus']},
+      {q:'"몸에 감각이 이상한 부분이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'감각이상 있음',pos:true},{l:'없음',rec:'감각이상 없음'}]},
+      {q:'"양손으로 꽉 쥐어보세요" — 근력 확인', kind:'toggle', opts:[{l:'강함',rec:'grasp power 강함'},{l:'약함',rec:'grasp power 약함',pos:true}]},
+    ]
+  },
+  일반: {
+    label:'그 외 부위', ae:[
+      {q:'"통증이 있으세요?"', kind:'toggle', opts:[{l:'있음',rec:'통증 있음',pos:true},{l:'없음',rec:'통증 없음'}]},
+      {q:'"몸이 뜨겁거나 열이 나는 것 같으세요?"', kind:'toggle', opts:[{l:'있음',rec:'열감 있음',pos:true},{l:'없음',rec:'열감 없음'}]},
+    ]
+  },
+};
+/* P&E 중재 멘트 (요구사항정의서 v4 5-2, 원문 P&E) */
+const IVS = [
+  {say:'"많이 아프세요? 진통제가 필요하실 만큼 아프신가요?"', rec:'통증을 인정해줌'},
+  {say:'"의사 선생님께 확인받고 필요하시면 진통제 처방받아 드릴게요."', rec:'통증 양상을 확인함'},
+  {say:'"참으실 수 있으면 지켜보시고, 너무 아프시면 바로 말씀해 주세요."', rec:'통증을 관찰하기로 함'},
+];
+const PARTS = [
+  {id:'head', label:'🧠 머리', set:'두통'},
+  {id:'chest', label:'🫀 가슴', set:'흉부'},
+  {id:'abdo', label:'🫃 배', set:'복부', sub:['상복부','하복부','우하복부','좌하복부']},
+  {id:'arm', label:'💪 팔', set:'일반'},
+  {id:'leg', label:'🦵 다리', set:'일반'},
+  {id:'back', label:'🔙 등', set:'일반'},
+  {id:'hip', label:'🍑 엉덩이', set:'일반'},
+  {id:'neck', label:'🧣 목', set:'일반'},
+  {id:'groin', label:'🩲 서혜부', set:'일반'},
+];
+const NRS = [['😀',0],['🙂',2],['😐',4],['😣',6],['😫',8],['😭',10]];
+const CHARS = {
+  양상:['쥐어짜듯','찌르듯','둔하게','타는듯','콕콕'],
+  시기:['방금 전','몇 시간 전','어제','며칠 전'],
+  지속:['지속적으로','간헐적으로','지금은 없음'],
+};
+
+/* ===== 상태 ===== */
+let S = { partId:null, partLabel:'', set:null, sub:null,
+          nrs:null, 양상:null, 시기:null, 지속:null,
+          ae:{}, dx:false, iv:{} };
+const ge = id=>document.getElementById(id);
+const esc = s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ===== 부위 ===== */
+function renderParts(){
+  ge('parts').innerHTML = PARTS.map(p=>`<div class="bpart ${S.partId===p.id?'on':''}" data-p="${p.id}">${p.label}</div>`).join('');
+}
+ge('parts').addEventListener('click',e=>{
+  const b=e.target.closest('[data-p]'); if(!b) return;
+  const p=PARTS.find(x=>x.id===b.dataset.p);
+  // 부위 바꾸면 사정 초기화 (세트가 달라짐)
+  S={ partId:p.id, partLabel:p.label.replace(/^\S+\s/,''), set:p.set, sub:null,
+      nrs:null, 양상:null, 시기:null, 지속:null, ae:{}, dx:false, iv:{} };
+  renderParts();
+  // 세부부위(배만)
+  const sa=ge('subarea');
+  if(p.sub){ sa.classList.remove('hide');
+    sa.innerHTML='<div style="width:100%;font-size:12px;color:var(--tx2);margin-bottom:2px">세부 부위 (비고)</div>'+
+      p.sub.map(s=>`<div class="subchip" data-sub="${s}">${s}</div>`).join('');
+  } else { sa.classList.add('hide'); sa.innerHTML=''; }
+  ge('painbody').classList.remove('hide');
+  renderBody(); render();
+});
+ge('subarea').addEventListener('click',e=>{
+  const c=e.target.closest('[data-sub]'); if(!c) return;
+  S.sub = S.sub===c.dataset.sub ? null : c.dataset.sub;
+  [...ge('subarea').querySelectorAll('.subchip')].forEach(x=>x.classList.toggle('on',x.dataset.sub===S.sub));
+  render();
+});
+
+/* ===== 본문 렌더 ===== */
+function renderBody(){
+  // NRS
+  ge('faces').innerHTML = NRS.map(([f,v])=>`<div class="face ${S.nrs===v?'on':''}" data-nrs="${v}">${f}<small>${v}</small></div>`).join('');
+  // 양상/시기/지속
+  ge('charblock').innerHTML = Object.entries(CHARS).map(([k,arr])=>
+    `<div class="chrow"><div class="t">${k}</div><div class="chips">${arr.map(v=>`<div class="chip ${S[k]===v?'on':''}" data-ch="${k}" data-v="${esc(v)}">${esc(v)}</div>`).join('')}</div></div>`).join('');
+  // A&E
+  const set=SETS[S.set];
+  ge('aeblock').innerHTML = set.ae.map((it,i)=>{
+    const head=`<div class="qp">${esc(it.q)} ${it.nt?`<span class="nt">· ${esc(it.nt)}</span>`:''}</div>`;
+    if(it.kind==='check'){
+      const on=S.ae[i]===true;
+      return `<div class="q">${head}<div class="opts"><div class="opt ${on?'pos':''}" data-ae="${i}" data-k="check" style="flex:0 0 auto;min-width:120px">${on?'✓ ':''}${esc(it.rec)}</div></div></div>`;
+    }
+    if(it.kind==='value'){
+      return `<div class="q">${head}<input class="vinput" data-ae="${i}" data-k="value" placeholder="${esc(it.ph||'')}" value="${esc(S.ae[i]||'')}"></div>`;
+    }
+    if(it.kind==='pick3'){
+      return `<div class="q">${head}<div class="opts">${it.opts.map(o=>`<div class="opt ${S.ae[i]===o?'pos':''}" data-ae="${i}" data-k="pick3" data-v="${o}">${o}</div>`).join('')}</div></div>`;
+    }
+    // toggle
+    return `<div class="q">${head}<div class="opts">${it.opts.map((o,oi)=>{
+      const sel=S.ae[i]===oi; const cls=sel?(o.pos?'pos':'neg'):'';
+      return `<div class="opt ${cls}" data-ae="${i}" data-k="toggle" data-oi="${oi}">${esc(o.l)}</div>`;
+    }).join('')}</div></div>`;
+  }).join('');
+  // 중재
+  ge('ivblock').innerHTML = IVS.map((iv,i)=>`<div class="iv ${S.iv[i]?'on':''}" data-iv="${i}"><div class="s"><span class="spk">📢</span>${esc(iv.say)}</div><div class="r">→ ${esc(iv.rec)} ${S.iv[i]?'✓ 기록됨':''}</div></div>`).join('');
+  ge('dxAcute').classList.toggle('on',S.dx);
+}
+
+/* ===== 이벤트 ===== */
+ge('faces').addEventListener('click',e=>{const f=e.target.closest('[data-nrs]');if(!f)return;S.nrs=+f.dataset.nrs;renderBody();render();});
+ge('charblock').addEventListener('click',e=>{const c=e.target.closest('[data-ch]');if(!c)return;const k=c.dataset.ch,v=c.dataset.v;S[k]=S[k]===v?null:v;renderBody();render();});
+ge('aeblock').addEventListener('click',e=>{
+  const el=e.target.closest('[data-ae]'); if(!el||el.dataset.k==='value') return;
+  const i=+el.dataset.ae, k=el.dataset.k;
+  if(k==='check') S.ae[i]=S.ae[i]===true?undefined:true;
+  if(k==='toggle'){const oi=+el.dataset.oi; S.ae[i]=S.ae[i]===oi?undefined:oi;}
+  if(k==='pick3'){const v=el.dataset.v; S.ae[i]=S.ae[i]===v?undefined:v;}
+  autoDx(); renderBody(); render();
+});
+ge('aeblock').addEventListener('input',e=>{const el=e.target.closest('[data-k="value"]');if(!el)return;S.ae[+el.dataset.ae]=el.value;render();});
+ge('ivblock').addEventListener('click',e=>{const el=e.target.closest('[data-iv]');if(!el)return;const i=+el.dataset.iv;S.iv[i]=!S.iv[i];renderBody();render();});
+ge('dxAcute').addEventListener('click',()=>{S.dx=!S.dx;renderBody();render();});
+
+/* 통증 양성 사정이 하나라도 있으면 급성통증 자동 ON */
+function autoDx(){
+  const set=SETS[S.set]; let painPos=false;
+  set.ae.forEach((it,i)=>{
+    if(it.kind==='check' && S.ae[i]===true && it.pos) painPos=true;
+    if(it.kind==='toggle'){const oi=S.ae[i]; if(oi!=null && it.opts[oi] && it.opts[oi].pos && /통증/.test(it.opts[oi].rec)) painPos=true;}
+  });
+  // '통증 있음' 계열 + 부위 자체가 통증 주호소이므로, 통증 체크/통증있음 토글 시 자동
+  if(painPos) S.dx=true;
+}
+
+/* ===== 미리보기 ===== */
+function buildLines(){
+  if(!S.set) return [];
+  const set=SETS[S.set]; const L=[];
+  const sub = S.sub?`(${S.sub})`:'';
+  L.push({c:'head', t:`[통증 · ${S.partLabel}${sub}]`});
+  // A&E
+  set.ae.forEach((it,i)=>{
+    const v=S.ae[i];
+    if(it.kind==='check' && v===true) L.push({c:'ae',tg:'A&E',t:it.rec});
+    if(it.kind==='toggle' && v!=null) L.push({c:'ae',tg:'A&E',t:it.opts[v].rec});
+    if(it.kind==='pick3' && v) L.push({c:'ae',tg:'A&E',t:it.base.replace('@',v)});
+    if(it.kind==='value' && v && v.trim()) L.push({c:'ae',tg:'A&E',t:it.base+' '+v.trim()});
+  });
+  // 비고 (NRS·부위세부·양상·시기·지속)
+  const bigo=[];
+  if(S.nrs!=null) bigo.push(`통증강도 ${S.nrs}점`);
+  if(S.sub) bigo.push(`부위 ${S.sub}`);
+  if(S.양상) bigo.push(`양상 ${S.양상}`);
+  if(S.시기) bigo.push(`발생 ${S.시기}`);
+  if(S.지속) bigo.push(`지속 ${S.지속}`);
+  if(bigo.length) L.push({c:'note',tg:'📌',t:'비고: '+bigo.join(' / ')});
+  // D
+  if(S.dx) L.push({c:'d',tg:'D',t:'급성통증'});
+  // P&E
+  IVS.forEach((iv,i)=>{ if(S.iv[i]) L.push({c:'pe',tg:'P&E',t:iv.rec}); });
+  return L;
+}
+function render(){
+  const L=buildLines();
+  const recLines=L.filter(x=>x.c!=='head');
+  ge('cnt').textContent=recLines.length+'줄';
+  if(!L.length){ ge('preview').innerHTML='<div class="empty">부위를 선택하면 기록이 쌓입니다.</div>'; return; }
+  ge('preview').innerHTML=L.map(x=>x.c==='head'
+    ? `<div class="rl head">${esc(x.t)}</div>`
+    : `<div class="rl ${x.c}"><span class="tg">${x.tg}</span>${esc(x.t)}</div>`).join('');
+}
+function copyNote(){
+  const L=buildLines(); if(L.filter(x=>x.c!=='head').length===0){alert('기록이 비어 있습니다');return;}
+  const txt=L.map(x=>x.c==='head'?x.t:(x.tg.replace(/[📌]/,'비고')+' · '+x.t)).join('\n');
+  (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject())
+    .then(()=>alert('복사됨! EMR에 붙여넣으세요.\n\n'+txt))
+    .catch(()=>prompt('복사:',txt));
+}
+
+renderParts(); render();
+</script>
+</body>
+</html>
