@@ -32,9 +32,23 @@ main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{f
 .sh-b{overflow-y:auto;padding:10px 16px;max-width:520px;margin:0 auto;width:100%;font-size:13px;line-height:1.55}.rl{margin:1px 0}.rl .tg{font-weight:800;font-size:10px;margin-right:5px;display:inline-block;min-width:30px}.rl.ae{color:var(--ae)}.rl.d{color:var(--d)}.rl.pe{color:var(--pe)}.rl.line{color:var(--tx2)}.rl.note{color:var(--tx2);font-size:12px}.rl.head{color:var(--tx);font-weight:800;margin-top:7px}.rl.fixhead{color:var(--pe)}.empty{color:var(--tx2);font-size:13px}
 .hint{font-size:12px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:9px;padding:9px 11px;margin-bottom:12px}
 .gsum{font-size:13px;font-weight:700;margin:8px 0;color:var(--ae)}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px}.modal.on{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;max-width:420px;width:100%}.mbox h3{margin:0 0 4px;font-size:18px}.mbox .msub{font-size:12px;color:var(--tx2);margin-bottom:14px}
+.mchk{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer}.mchk .ck{width:23px;height:23px;border:2px solid var(--tx2);border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}.mchk.on{border-color:var(--ok)}.mchk.on .ck{background:var(--ok);border-color:var(--ok)}
+.mbox input{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:var(--tx);font-size:15px;margin-bottom:8px;outline:none}.mbox input:focus{border-color:var(--ae)}
+.mgo{width:100%;padding:13px;border:none;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px}.mgo.ok{background:var(--ok);color:#063}.mgo.off{background:var(--card2);color:var(--tx2);cursor:not-allowed}
 </style></head><body>
-<header><div class="logo">NFH <em>통합 간호기록</em></div><div class="pat">목업 260621 · 완성본</div></header>
-<main>
+<div class="modal on" id="startGate"><div class="mbox">
+ <h3>🛡️ 시작 전 — 환자 확인</h3><div class="msub">맞이 시 안전의 첫 단추. 셋 다 확인하고 신원을 입력하세요.</div>
+ <div class="mchk" id="g1"><span class="ck"></span><div>🧼 손위생 하셨나요?</div></div>
+ <div class="mchk" id="g2"><span class="ck"></span><div>🗣️ "성함이 어떻게 되세요?" (개방형으로 확인)</div></div>
+ <div class="mchk" id="g3"><span class="ck"></span><div>🏷️ 팔찌 대조 (이름 + 등록번호) · KTAS 주호소와 다르면 ⚠️ 재확인</div></div>
+ <input id="pname" placeholder="이름">
+ <input id="pid" placeholder="등록번호 (8자리)" maxlength="8" inputmode="numeric">
+ <button class="mgo off" id="gGo">✅ 간호기록 시작</button>
+</div></div>
+<header><div class="logo">NFH <em>통합 간호기록</em></div><div class="pat" id="patInfo">완성본</div></header>
+<main id="app" style="display:none">
 <div class="hint">💡 ⓪ 도관 확인 → ① 주호소 여러 개 클릭 → 사정·진단·평가 → 🔒 의식/낙상(항상). 전부 <b>탭</b>. EMR 복사로 차팅.</div>
 
 <div class="sec"><div class="sec-h">⓪ 도관 확인 <span style="font-size:12px;color:var(--tx2);font-weight:400">— 맞이 시</span></div>
@@ -177,5 +191,10 @@ function render(){const L=[];let n=0;
  ge('preview').innerHTML=n?L.map(x=>x.c==='head'?`<div class="rl head">${esc(x.t)}</div>`:x.c==='fixhead'?`<div class="rl head fixhead">${esc(x.t)}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg}</span>${esc(x.t)}</div>`).join(''):'<div class="empty">사정을 시작하세요.</div>';
 }
 function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('사정을 시작')){alert('기록이 비어 있습니다');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨! EMR에 붙여넣으세요.')).catch(()=>prompt('복사:',t));}
+/* 환자 확인 게이트 */
+function gval(){const ok=['g1','g2','g3'].every(i=>ge(i).classList.contains('on'))&&ge('pname').value.trim()&&ge('pid').value.trim();ge('gGo').className='mgo '+(ok?'ok':'off');}
+['g1','g2','g3'].forEach(i=>ge(i).addEventListener('click',()=>{const on=!ge(i).classList.contains('on');ge(i).classList.toggle('on',on);ge(i).querySelector('.ck').textContent=on?'✓':'';gval();}));
+['pname','pid'].forEach(i=>ge(i).addEventListener('input',gval));
+ge('gGo').addEventListener('click',()=>{if(ge('gGo').classList.contains('off'))return;ge('startGate').classList.remove('on');ge('app').style.display='block';ge('patInfo').textContent=ge('pname').value.trim()+' · '+ge('pid').value.trim();});
 renderCC();renderFalledu();render();
 </script></body></html>
