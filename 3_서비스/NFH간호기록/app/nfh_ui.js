@@ -104,7 +104,7 @@ function assessHTML(entry){
 
   // 환자설명 (말하며 체크) → P&E 자동 연동
   if(c.eduScripts.length){
-    h += `<div class="sec-h" style="margin-top:6px;background:rgba(255,200,87,.12);color:var(--pe)">📢 환자 설명 — 말하며 체크</div>`;
+    h += `<div class="sec-h" style="margin-top:24px;background:rgba(255,200,87,.12);color:var(--pe)">📢 환자 설명 — 말하며 체크</div>`;
     c.eduScripts.forEach(s=>{
       const on = !!S.items.find(x=>x.text===s.pe && x.symLabel===entry.label);
       h += `<div class="iv ${on?'on':''}" data-edu="${esc(s.pe)}">
@@ -115,7 +115,7 @@ function assessHTML(entry){
 
   // P&E
   if(c.peItems.length){
-    h += `<div class="sec-h" style="margin-top:6px;background:rgba(255,200,87,.12);color:var(--pe)">🟡 계획·중재 【P&amp;E】</div>`;
+    h += `<div class="sec-h" style="margin-top:24px;background:rgba(255,200,87,.12);color:var(--pe)">🟡 계획·중재 【P&amp;E】</div>`;
     c.peItems.forEach(item=>{
       const on = !!S.items.find(x=>x.uid===item.uid);
       const note = item.note ? `<div class="note-tag" style="margin-top:2px">📌 ${esc(item.note)}</div>`:'';
@@ -245,7 +245,7 @@ function fallHTML(){
     <div class="opt ${has('guard-y')?'sel-neg':''}" data-guard="y">상주</div>
     <div class="opt ${has('guard-n')?'sel-neg':''}" data-guard="n">없음</div></div></div>`;
   // 낙상교육
-  h+=`<div class="sec-h" style="margin-top:6px;background:rgba(255,200,87,.12);color:var(--pe)">📢 낙상 교육 — 말하며 체크</div>`;
+  h+=`<div class="sec-h" style="margin-top:24px;background:rgba(255,200,87,.12);color:var(--pe)">📢 낙상 교육 — 말하며 체크</div>`;
   N.EDU_ITEMS.forEach(e=>{
     const on = e.records.every(r=>!!S.items.find(c=>c.uid==='fall_'+r));
     h+=`<div class="iv ${on?'on':''}" data-fedu="${e.id}">
