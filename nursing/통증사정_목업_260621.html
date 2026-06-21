@@ -295,7 +295,7 @@ ge('cards').addEventListener('click',e=>{
   if(el.dataset.int!=null){ const n=+el.dataset.int; st.intensity=st.intensity===n?null:n; renderCards(); render(); return; }
   if(el.dataset.freq!=null){ st.freq=st.freq===el.dataset.freq?null:el.dataset.freq; renderCards(); render(); return; }
   if(el.dataset.pat!=null){ const v=el.dataset.pat; st.patterns.includes(v)?st.patterns=st.patterns.filter(x=>x!==v):st.patterns.push(v); renderCards(); render(); return; }
-  if(el.dataset.ae!=null && el.dataset.k!=='value'){
+  if(el.dataset.ae!=null && el.dataset.k!=='value' && el.dataset.k!=='value2'){
     const i=+el.dataset.ae, k=el.dataset.k;
     if(k==='check') st.ae[i]=st.ae[i]===true?undefined:true;
     if(k==='toggle'){const oi=+el.dataset.oi; st.ae[i]=st.ae[i]===oi?undefined:oi;}
