@@ -55,10 +55,8 @@ main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{f
  <div class="mchk" id="g1"><span class="ck"></span><div>🧼 손위생 하셨나요?</div></div>
  <div class="mchk" id="g2"><span class="ck"></span><div>🗣️ "성함이 어떻게 되세요?" (개방형)</div></div>
  <div class="mchk" id="g3"><span class="ck"></span><div>🏷️ 팔찌 대조 (이름 + 등록번호)</div></div>
- <div class="msub" style="margin:14px 0 7px;color:var(--pe)">📢 맞이 교육 안내 <span style="color:var(--tx2)">— 말로 안내하며 체크 · 간호기록엔 남지 않음</span></div>
- <div class="mchk" id="m1"><span class="ck"></span><div>💍 "귀금속·시계는 빼서 보관해 주세요"</div></div>
- <div class="mchk" id="m2"><span class="ck"></span><div>👕 "검사·처치 위해 환자복으로 갈아입으실게요"</div></div>
- <div class="mchk" id="m3"><span class="ck"></span><div>🚱 "검사가 있을 수 있어 물도 포함해 금식해 주세요"</div></div>
+ <div class="msub" style="margin:14px 0 7px;color:var(--pe)">📢 맞이 교육 안내 <span style="color:var(--tx2)">— 한 번에 안내 · 간호기록엔 남지 않음</span></div>
+ <div class="mchk" id="medu"><span class="ck"></span><div>📢 환자에게 한 번에 안내했어요<br><span style="font-size:13px;color:var(--tx2)">"💍 귀금속·시계 빼서 보관, 👕 환자복으로 갈아입기, 🚱 <b>검사를 위해 금식</b>하세요"</span></div></div>
  <input id="pname" placeholder="이름"><input id="pid" placeholder="등록번호 (8자리)" maxlength="8" inputmode="numeric">
  <button class="mgo off" id="gGo">✅ 간호기록 시작</button>
 </div></div>
@@ -259,8 +257,8 @@ function render(){const L=[];let n=0;
 function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('사정을 시작')){alert('비어 있음');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨!')).catch(()=>prompt('복사:',t));}
 /* ===== 환자 확인 게이트 ===== */
 function gval(){const ok=['g1','g2','g3'].every(i=>ge(i).classList.contains('on'))&&ge('pname').value.trim()&&ge('pid').value.trim();ge('gGo').className='mgo '+(ok?'ok':'off');}
-['g1','g2','g3','m1','m2','m3'].forEach(i=>ge(i).addEventListener('click',()=>{const on=!ge(i).classList.contains('on');ge(i).classList.toggle('on',on);ge(i).querySelector('.ck').textContent=on?'✓':'';gval();}));
+['g1','g2','g3','medu'].forEach(i=>ge(i).addEventListener('click',()=>{const on=!ge(i).classList.contains('on');ge(i).classList.toggle('on',on);ge(i).querySelector('.ck').textContent=on?'✓':'';gval();}));
 ['pname','pid'].forEach(i=>ge(i).addEventListener('input',gval));
-ge('gGo').addEventListener('click',()=>{if(ge('gGo').classList.contains('off'))return;F.intro={m1:ge('m1').classList.contains('on'),m2:ge('m2').classList.contains('on'),m3:ge('m3').classList.contains('on')};ge('startGate').classList.remove('on');ge('app').style.display='block';ge('patInfo').textContent=ge('pname').value.trim()+' · '+ge('pid').value.trim();render();});
+ge('gGo').addEventListener('click',()=>{if(ge('gGo').classList.contains('off'))return;ge('startGate').classList.remove('on');ge('app').style.display='block';ge('patInfo').textContent=ge('pname').value.trim()+' · '+ge('pid').value.trim();render();});
 renderCC();renderFalledu();render();
 </script></body></html>
