@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호기록 표준로직 (프로토타입)</title>
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--card:#fff;--card2:#eef2f7;--line:#d2d9e2;--tx:#16202e;--tx2:#5a6878;--pos:#e23b4c;--ok:#16a34a;--ae:#1f6fd6;--d:#d63a4d;--pe:#b07a06;--warn:#d9480f;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.5;padding-bottom:230px}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:13px 18px;font-weight:800;font-size:17px}header em{color:var(--ok);font-style:normal}
+main{max-width:860px;margin:0 auto;padding:14px 18px}
+.sec-h{font-size:16px;font-weight:800;margin:18px 2px 10px}
+.gh{font-size:13px;font-weight:800;color:var(--tx2);margin:14px 2px 8px}
+.cc{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.ccb{background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:15px 6px;cursor:pointer;font-size:15px;color:var(--tx2);text-align:center;font-weight:700}.ccb.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.q{margin-bottom:10px}.q .qp{font-size:15.5px;font-weight:600;margin-bottom:6px}
+.opts{display:flex;gap:8px}.opt{flex:1;text-align:center;padding:13px;border-radius:11px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:16px;font-weight:700;cursor:pointer}.opt.pos{background:var(--pos);border-color:var(--pos);color:#fff}.opt.neg{background:#d7dee6;border-color:#94a2b2;color:var(--tx)}
+.dxc{background:var(--card);border:1.5px solid var(--d);border-left:5px solid var(--d);border-radius:13px;padding:14px 15px;margin-bottom:11px}
+.dxc.warn{border-color:var(--warn);border-left-color:var(--warn)}
+.dxc .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.dxc .rank{font-size:13px;font-weight:800;color:#fff;background:var(--d);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex:none}.dxc.warn .rank{background:var(--warn)}
+.dxc .top b{font-size:17px;color:var(--d)}.dxc.warn .top b{color:var(--warn)}
+.dxc .rf{font-size:11px;color:#fff;background:var(--warn);border-radius:6px;padding:3px 8px;font-weight:800}
+.dxc .rm{margin-left:auto;font-size:13px;color:var(--tx2);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;background:var(--card2)}
+.dxc .why{font-size:13.5px;color:var(--tx2);margin:7px 0 3px}.dxc .why b2{color:var(--ae);font-weight:700}
+.dxc .pel{font-size:12px;font-weight:800;color:var(--pe);margin:11px 0 6px}
+.pe{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);margin-bottom:6px;cursor:pointer;font-size:14.5px}.pe.on{border-color:var(--pe);background:rgba(176,122,6,.09);font-weight:600}.pe .ck{width:20px;height:20px;border:2px solid var(--pe);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}.pe.on .ck{background:var(--pe)}
+.readd{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}.rchip{font-size:13px;color:var(--tx2);border:1px dashed var(--line);border-radius:16px;padding:7px 12px;cursor:pointer;background:var(--card)}
+.none{font-size:14px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:13px}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:40vh;display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+.sh-h{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--line)}.sh-h b{font-size:15px}.sh-h button{margin-left:auto;background:var(--ok);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:12px 18px;max-width:860px;margin:0 auto;width:100%;font-size:15.5px;line-height:1.7}
+.rl{margin:2px 0}.rl .tg{font-weight:800;font-size:11px;margin-right:7px;display:inline-block;min-width:34px}.rl.ae{color:var(--ae)}.rl.d{color:var(--d);font-weight:700}.rl.pe{color:var(--pe)}.rl.head{color:var(--tx);font-weight:800;margin-top:10px;font-size:16px}.rl.warn{color:var(--warn)}.empty{color:var(--tx2)}
+.hint{font-size:13px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-bottom:6px}
+</style></head><body>
+<header>NFH <em>간호기록</em> — 표준로직 (프로토타입)</header>
+<main id="main">
+<div class="hint">💡 <b>① 어디가 불편한지 고르면 → ② 그 증상만 사정 → ③ 진단이 우선순위 2개로</b> 자동(통증·감염 가중 · ⚠️위험신호는 최우선). 아래 진단별 정리.</div>
+<div class="sec-h">① 어디가 불편해서 오셨어요? <span style="font-size:13px;color:var(--tx2);font-weight:500">— 여러 개</span></div>
+<div class="cc" id="cc"></div>
+<div id="aWrap"></div>
+<div id="dWrap"></div>
+</main>
+<div class="sheet"><div class="sh-h">📋 <b>간호기록 (진단별 정리)</b> <span id="cnt" style="font-size:13px;color:var(--tx2)"></span><button onclick="copyNote()">📤 EMR 복사</button></div><div class="sh-b" id="preview"><div class="empty">주호소를 고르세요.</div></div></div>
+<script>
+const ge=id=>document.getElementById(id);
+const CC=[['pain','😣 통증',3],['fever','🌡️ 열·감염',3],['chest','❤️ 흉통·심장',2],['dizzy','💫 어지럼',1],['bp','🩺 혈압',1],['resp','🫁 호흡',2]];
+const CCL=Object.fromEntries(CC.map(c=>[c[0],c[1]]));
+const ASSESS={
+ pain:[{id:'p_yes',q:'"통증이 있으세요?"',rec:'통증 있음',no:'통증 없음'},{id:'p_sev',q:'🩺 통증 강도 심함(7점↑)',rec:'심한 통증 호소함'}],
+ fever:[{id:'fever',q:'"열이 나거나 몸이 뜨거우세요?"',rec:'열감 있음',no:'열감 없음'},{id:'crp',q:'🩺 CRP 증가',rec:'C-reactive protein 수치 증가함'}],
+ chest:[{id:'c_disc',q:'"가슴이 답답하거나 조이듯 아프세요?"',rec:'흉부 불편감 있음',no:'흉부 불편감 없음'},{id:'sweat',q:'"식은땀이 나세요?"',rec:'식은땀 있음',no:'식은땀 없음'},{id:'pulse',q:'🩺 맥박 불규칙(촉지)',rec:'불규칙 맥박 촉지됨'}],
+ dizzy:[{id:'dizzy',q:'"어지러우세요?"',rec:'dizziness 있음',no:'dizziness 없음'},{id:'weak',q:'"한쪽 팔다리에 힘이 빠지세요?"',rec:'grasp power 약함',no:'grasp power 강함'}],
+ bp:[{id:'bpup',q:'🩺 혈압 상승됨',rec:'혈압 상승됨'},{id:'bpdn',q:'🩺 혈압 저하됨',rec:'혈압 저하됨'}],
+ resp:[{id:'dysp',q:'"숨이 차거나 답답하세요?"',rec:'호흡곤란 있음',no:'호흡곤란 없음'},{id:'cyan',q:'🩺 입술 청색증',rec:'입술 청색증 있음'}],
+};
+const DXS=[
+ {name:'급성통증',cc:'pain',cue:['p_yes','p_sev'],w:3,pe:['통증을 인정해줌','통증 양상을 확인함']},
+ {name:'감염',cc:'fever',cue:['fever','crp'],w:3,pe:['체온 측정함','감염 증상이 있는지 확인함']},
+ {name:'조직관류저하:심폐계',cc:'chest',cue:['c_disc','pulse'],red:['c_disc','sweat'],rfl:'심근경색 의심',w:2,pe:['흉부 통증이 있는지 확인함','EKG monitor 시작함','심전도 변화를 확인함']},
+ {name:'조직관류저하:뇌',cc:'dizzy',cue:['dizzy','weak'],red:['weak'],rfl:'뇌졸중 의심',w:1,pe:['신경학적 증상이 있는지 확인함','사지 근력 평가함']},
+ {name:'고혈압',cc:'bp',cue:['bpup'],w:1,pe:['혈압 측정함','혈압약 투여']},
+ {name:'저혈압',cc:'bp',cue:['bpdn'],w:1,pe:['혈압 측정함','체위성 저혈압 증상이 있는지 확인함']},
+ {name:'비효율적호흡양상',cc:'resp',cue:['dysp'],w:2,pe:['반좌위 취해줌','산소포화도 monitor함']},
+ {name:'가스교환장애',cc:'resp',cue:['cyan'],red:['cyan'],rfl:'저산소 위험',w:2,pe:['산소흡입 시작함','산소포화도 monitor함']},
+];
+let st={cc:new Set(), a:{}, dxOff:new Set(), peOff:new Set()};
+const recOf=id=>{for(const k in ASSESS){const f=ASSESS[k].find(x=>x.id===id);if(f)return f.rec;}return id;};
+function isRed(d){return d.red && d.red.every(c=>st.a[c]===true);}
+function score(d){if(!st.cc.has(d.cc))return -1;let s=d.cue.filter(c=>st.a[c]===true).length*d.w;if(isRed(d))s+=1000;return s;}
+function topDx(){return DXS.filter(d=>score(d)>0 && !st.dxOff.has(d.name)).sort((a,b)=>score(b)-score(a)).slice(0,2);}
+function cueRecs(d){return d.cue.filter(c=>st.a[c]===true).map(recOf);}
+
+function renderCC(){ge('cc').innerHTML=CC.map(([k,l])=>`<div class="ccb ${st.cc.has(k)?'on':''}" data-cc="${k}">${l}</div>`).join('');}
+function renderAssess(){if(!st.cc.size){ge('aWrap').innerHTML='';return;}
+ let html='<div class="sec-h">② 사정 <span style="font-size:13px;color:var(--tx2);font-weight:500">— 고른 증상만</span></div>';
+ [...st.cc].forEach(k=>{html+=`<div class="gh">${CCL[k]}</div>`+ASSESS[k].map(a=>{
+  const v=st.a[a.id];const noBtn=a.no?`<div class="opt ${v===false?'neg':''}" data-a="${a.id}" data-v="0">없음</div>`:'';
+  const yes=a.q[0]==='🩺'?'확인됨':'있음';
+  return `<div class="q"><div class="qp">${a.q}</div><div class="opts"><div class="opt ${v===true?'pos':''}" data-a="${a.id}" data-v="1">${yes}</div>${noBtn}</div></div>`;
+ }).join('');});
+ ge('aWrap').innerHTML=html;
+}
+function renderDx(){if(!st.cc.size){ge('dWrap').innerHTML='';return;}
+ const top=topDx();
+ let html='<div class="sec-h">③ 진단 · 평가 <span style="font-size:13px;color:var(--tx2);font-weight:500">— 우선순위 2개 자동 (⚠️ 위험신호 최우선)</span></div>';
+ if(!top.length)html+='<div class="none">사정을 하면 진단이 우선순위로 떠요.</div>';
+ top.forEach((d,idx)=>{const red=isRed(d);const recs=cueRecs(d);
+  const pes=d.pe.map((p,i)=>{const key=d.name+'_'+i,on=!st.peOff.has(key);return `<div class="pe ${on?'on':''}" data-pe="${key}"><div class="ck">${on?'✓':''}</div>${p}</div>`;}).join('');
+  html+=`<div class="dxc ${red?'warn':''}"><div class="top"><span class="rank">${idx+1}</span><b>${d.name}</b>${red?`<span class="rf">⚠️ ${d.rfl}</span>`:''}<span class="rm" data-rmdx="${d.name}">✕ 빼기</span></div><div class="why">근거: <b2>${recs.join(' · ')}</b2></div><div class="pel">평가·중재 (자동 체크 · 안 한 건 빼기)</div>${pes}</div>`;
+ });
+ const dropped=DXS.filter(d=>score(d)>0 && st.dxOff.has(d.name));
+ if(dropped.length)html+=`<div class="readd">${dropped.map(d=>`<div class="rchip" data-readd="${d.name}">+ ${d.name} 다시</div>`).join('')}</div>`;
+ ge('dWrap').innerHTML=html;
+}
+ge('cc').onclick=e=>{const b=e.target.closest('[data-cc]');if(!b)return;const k=b.dataset.cc;st.cc.has(k)?st.cc.delete(k):st.cc.add(k);render();};
+ge('aWrap').onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const id=a.dataset.a,v=a.dataset.v==='1';st.a[id]=st.a[id]===v?undefined:v;render();};
+ge('dWrap').onclick=e=>{
+ const rm=e.target.closest('[data-rmdx]');if(rm){st.dxOff.add(rm.dataset.rmdx);render();return;}
+ const ra=e.target.closest('[data-readd]');if(ra){st.dxOff.delete(ra.dataset.readd);render();return;}
+ const p=e.target.closest('[data-pe]');if(p){const key=p.dataset.pe;st.peOff.has(key)?st.peOff.delete(key):st.peOff.add(key);render();return;}
+};
+function render(){renderCC();renderAssess();renderDx();
+ const L=[];let n=0;const top=topDx();
+ top.forEach(d=>{const red=isRed(d);
+  L.push({c:red?'warn':'head',t:'['+d.name+']'+(red?' ⚠️'+d.rfl:'')});
+  cueRecs(d).forEach(r=>{L.push({c:'ae',tg:'A&E',t:r});n++;});
+  L.push({c:'d',tg:'D',t:d.name});n++;
+  d.pe.forEach((p,i)=>{if(!st.peOff.has(d.name+'_'+i)){L.push({c:'pe',tg:'P&E',t:p});n++;}});
+ });
+ ge('cnt').textContent=n+'줄';
+ ge('preview').innerHTML=L.length?L.map(x=>(x.c==='head'||x.c==='warn')?`<div class="rl ${x.c==='warn'?'head warn':'head'}">${x.t}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg||''}</span>${x.t}</div>`).join(''):'<div class="empty">주호소를 고르세요.</div>';
+}
+function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('고르세요')){alert('비어 있음');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨!')).catch(()=>prompt('복사:',t));}
+render();
+</script></body></html>
