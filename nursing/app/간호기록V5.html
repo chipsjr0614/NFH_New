@@ -88,11 +88,16 @@ ge('dWrap').onclick=e=>{
 };
 function render(){renderCC();renderAssess();renderDx();
  const L=[];let n=0;const top=topDx();
- top.forEach(d=>{const red=isRed(d);
-  L.push({c:red?'warn':'head',t:'['+d.name+']'+(red?' ⚠️'+d.rfl:'')});
-  cueRecs(d).forEach(r=>{L.push({c:'ae',tg:'A&E',t:r});n++;});
-  L.push({c:'d',tg:'D',t:d.name});n++;
-  d.pe.forEach((p,i)=>{if(!st.peOff.has(d.name+'_'+i)){L.push({c:'pe',tg:'P&E',t:p});n++;}});
+ // 주호소별로: 사정한 것 전부(있음·없음) → 진단 → 평가
+ [...st.cc].forEach(cc=>{
+  const aR=ASSESS[cc].filter(a=>st.a[a.id]!==undefined).map(a=>st.a[a.id]===true?a.rec:(a.no||null)).filter(Boolean);
+  const dxs=top.filter(d=>d.cc===cc);
+  if(!aR.length && !dxs.length)return;
+  const red=dxs.some(isRed);
+  L.push({c:red?'warn':'head',t:'['+CCL[cc]+']'+(red?' ⚠️':'')});
+  aR.forEach(r=>{L.push({c:'ae',tg:'A&E',t:r});n++;});
+  dxs.forEach(d=>{L.push({c:'d',tg:'D',t:d.name+(isRed(d)?' ⚠️ '+d.rfl:'')});n++;
+   d.pe.forEach((p,i)=>{if(!st.peOff.has(d.name+'_'+i)){L.push({c:'pe',tg:'P&E',t:p});n++;}});});
  });
  ge('cnt').textContent=n+'줄';
  ge('preview').innerHTML=L.length?L.map(x=>(x.c==='head'||x.c==='warn')?`<div class="rl ${x.c==='warn'?'head warn':'head'}">${x.t}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg||''}</span>${x.t}</div>`).join(''):'<div class="empty">주호소를 고르세요.</div>';
