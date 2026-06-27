@@ -262,7 +262,7 @@ function render(){const L=[];let n=0;
 }
 function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('사정을 시작')){alert('비어 있음');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨!')).catch(()=>prompt('복사:',t));}
 /* ===== 환자 확인 게이트 ===== */
-function gval(){const ok=['g1','g2','g3'].every(i=>ge(i).classList.contains('on'))&&ge('pname').value.trim()&&ge('pid').value.trim();ge('gGo').className='mgo '+(ok?'ok':'off');}
+function gval(){const ok=['g1','g2','g3'].every(i=>ge(i).classList.contains('on'))&&ge('pname').value.trim()&&/^\d{8}$/.test(ge('pid').value.trim());ge('gGo').className='mgo '+(ok?'ok':'off');}
 ['g1','g2','g3','medu'].forEach(i=>ge(i).addEventListener('click',()=>{const on=!ge(i).classList.contains('on');ge(i).classList.toggle('on',on);ge(i).querySelector('.ck').textContent=on?'✓':'';gval();}));
 ['pname','pid'].forEach(i=>ge(i).addEventListener('input',gval));
 ge('gGo').addEventListener('click',()=>{if(ge('gGo').classList.contains('off'))return;ge('startGate').classList.remove('on');ge('app').style.display='block';ge('patInfo').textContent=ge('pname').value.trim()+' · '+ge('pid').value.trim();render();});
