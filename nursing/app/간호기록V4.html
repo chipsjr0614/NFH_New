@@ -55,7 +55,7 @@ main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{f
  .sh-b{font-size:18px;max-width:900px}.sh-b .rl.head{font-size:18px}
  .mbox{max-width:600px}
 }
-</style></head><body>
+</style></head><body class="light">
 <div class="modal on" id="startGate"><div class="mbox">
  <h3>🛡️ 시작 전 — 환자 확인</h3><div class="msub">맞이 시 안전의 첫 단추. 셋 다 확인하고 신원을 입력하세요.</div>
  <div class="mchk" id="g1"><span class="ck"></span><div>🧼 손위생 하셨나요?</div></div>
@@ -66,7 +66,7 @@ main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{f
  <input id="pname" placeholder="이름"><input id="pid" placeholder="등록번호 (8자리)" maxlength="8" inputmode="numeric">
  <button class="mgo off" id="gGo">✅ 간호기록 시작</button>
 </div></div>
-<header><div class="logo">NFH <em>통합 간호기록</em></div><div class="pat" id="patInfo">완성본</div><button id="themeBtn" onclick="document.body.classList.toggle('light');this.textContent=document.body.classList.contains('light')?'🌙 다크':'☀️ 라이트'" style="background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px">☀️ 라이트</button><button id="newPt" onclick="if(confirm('새 환자로 초기화할까요? 현재 기록은 사라집니다.'))location.reload()" style="background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px">🔄 새 환자</button></header>
+<header><div class="logo">NFH <em>통합 간호기록</em></div><div class="pat" id="patInfo">완성본</div><button id="themeBtn" onclick="document.body.classList.toggle('light');this.textContent=document.body.classList.contains('light')?'🌙 다크':'☀️ 라이트'" style="background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px">🌙 다크</button><button id="newPt" onclick="if(confirm('새 환자로 초기화할까요? 현재 기록은 사라집니다.'))location.reload()" style="background:var(--card2);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px">🔄 새 환자</button></header>
 <main id="app" style="display:none">
 <div class="hint">💡 <b>STEP0 골격</b> — ⓪도관 → ①주호소(버튼) → 🔒의식/낙상 흐름만. 각 주호소 모듈은 STEP1부터 하나씩 채웁니다.</div>
 <div class="sec"><div class="sec-h">⓪ 도관 확인</div><div class="card"><div class="row"><div class="opt neg" id="lineNone">도관 없음</div><div class="opt" id="lineExp">＋ 도관 있음</div></div><div id="lines" class="linesbox"></div></div></div>
@@ -136,7 +136,7 @@ const MODULES={
  심장:{label:'❤️ 심장', ae:[{q:'"숨이 차거나 답답하세요?"',rec:'호흡곤란 있음',recNo:'호흡곤란 없음'},{q:'"가슴이 답답하거나 불편하세요?"',rec:'흉부 불편감 있음',recNo:'흉부 불편감 없음'},{q:'"식은땀이 나세요?"',rec:'식은땀 있음',recNo:'식은땀 없음'},{q:'맥박이 불규칙한가요?',rec:'불규칙 맥박 촉지됨'}], dxs:[{name:'조직관류저하:심폐계',cue:[1,3],pe:[{say:'"가슴 통증이 있는지 확인하겠습니다"',rec:'흉부 통증이 있는지 확인함'},{say:'"심전도를 모니터링하겠습니다"',rec:'EKG monitor 시작함'},{say:'"심전도 변화를 확인하겠습니다"',rec:'심전도 변화를 확인함'}]}], note:'심근경색 의심 — 흉통은 통증 모듈로'},
 };
 /* ===== 도관 렌더 ===== */
-function renderLines(){ge('lines').innerHTML=LINES.map(l=>{const on=F.lines[l.n];const chips=on?`<div class="sub" style="margin:8px 0 5px">💧 배액·출혈 (탭)</div><div class="chips">${l.d.map(d=>{const lb=d.replace(l.n,'').replace('배액관 ','').trim()||d;return `<div class="chip ${(F.drain[l.n]||[]).includes(d)?'on':''}" data-dn="${esc(l.n)}" data-d="${esc(d)}">${esc(lb)}</div>`;}).join('')}</div>`:'';const sub=l.s!==l.n?`<div style="font-size:10px;opacity:.8">${esc(l.n)}</div>`:'';return `<div><div class="opt ${on?'pos':''}" style="text-align:left" data-line="${esc(l.n)}"><b>${esc(l.s)}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;}).join('');}
+function renderLines(){ge('lines').innerHTML=LINES.map(l=>{const on=F.lines[l.n];const chips=on?`<div class="sub" style="margin:8px 0 5px">💧 배액·출혈 (탭)</div><div class="chips">${l.d.map(d=>{const lb=d.replace(l.n,'').replace('배액관 ','').trim()||d;return `<div class="chip ${(F.drain[l.n]||[]).includes(d)?'on':''}" data-dn="${esc(l.n)}" data-d="${esc(d)}">${esc(lb)}</div>`;}).join('')}</div>`:'';const sub=l.s!==l.n?`<div style="font-size:13px;opacity:.85;margin-top:2px">${esc(l.n)}</div>`:'';return `<div><div class="opt ${on?'pos':''}" style="text-align:left;font-size:17px;padding:15px 14px" data-line="${esc(l.n)}"><b>${esc(l.s)}</b>${on?' ✓':''}${sub}</div>${chips}</div>`;}).join('');}
 ge('lineExp').onclick=()=>{ge('lines').classList.add('open');ge('lineExp').classList.add('pos');ge('lineNone').classList.remove('neg');renderLines();};
 ge('lineNone').onclick=()=>{ge('lines').classList.remove('open');ge('lineNone').classList.add('neg');ge('lineExp').classList.remove('pos');F.lines={};F.drain={};render();};
 ge('lines').onclick=e=>{const ln=e.target.closest('[data-line]');if(ln){const n=ln.dataset.line;if(F.lines[n]){delete F.lines[n];delete F.drain[n];}else{F.lines[n]=true;F.drain[n]=[LINES.find(x=>x.n===n).d[0]];}renderLines();render();return;}const ch=e.target.closest('[data-dn]');if(ch){const n=ch.dataset.dn,d=ch.dataset.d;if(!F.drain[n])F.drain[n]=[];const i=F.drain[n].indexOf(d);i<0?F.drain[n].push(d):F.drain[n].splice(i,1);renderLines();render();}};
