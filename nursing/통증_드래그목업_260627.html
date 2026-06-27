@@ -15,6 +15,7 @@ main{max-width:760px;margin:0 auto;padding:16px 18px}
 .btn{background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:16px 6px;cursor:pointer;font-size:15px;color:var(--tx2);text-align:center;font-weight:700}.btn.on{background:var(--pos);border-color:var(--pos);color:#fff}
 .opts{display:flex;gap:8px}.opt{flex:1;text-align:center;padding:14px;border-radius:11px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:16px;font-weight:600;cursor:pointer}.opt.pos{background:var(--pos);border-color:var(--pos);color:#fff}.opt.neg{background:#2a3038;border-color:#5a6878;color:var(--tx)}
 .ints{display:grid;grid-template-columns:repeat(11,1fr);gap:4px}.ib{padding:13px 0;border-radius:9px;border:1px solid var(--line);background:var(--card2);color:var(--tx2);font-size:15px;font-weight:700;cursor:pointer;text-align:center}.ib.on{background:var(--pe);color:#1a1a1a;border-color:var(--pe)}
+.faces{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.fb{padding:11px 2px;border-radius:12px;border:1.5px solid var(--line);background:var(--card2);cursor:pointer;text-align:center}.fb.on{border-color:var(--pe);background:rgba(255,200,87,.15)}.fb .fe{font-size:32px;line-height:1.1}.fb .fn{font-size:13px;color:var(--tx2);margin-top:3px}.fb.on .fn{color:var(--pe);font-weight:700}
 .hint{font-size:13px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-bottom:14px}
 
 /* ===== 드래그로 크기 조절되는 하단 간호기록 ===== */
@@ -41,6 +42,7 @@ main{max-width:760px;margin:0 auto;padding:16px 18px}
 <script>
 const ge=id=>document.getElementById(id);
 const PARTS=[['head','🧠 머리'],['chest','🫀 가슴'],['abdo','🫃 배'],['arm','💪 팔'],['leg','🦵 다리']];
+const FACES=[['😀',0],['🙂',2],['😐',4],['😣',6],['😫',8],['😭',10]]; /* Wong-Baker FPRS */
 let st={part:null,partLabel:'',pain:null,intensity:null};
 
 ge('parts').innerHTML=PARTS.map(([k,l])=>`<div class="btn" data-p="${k}" data-l="${l}">${l}</div>`).join('');
@@ -51,7 +53,10 @@ function renderParts(){[...ge('parts').children].forEach(c=>c.classList.toggle('
 function renderPainUI(){
  if(!st.part){ge('painUI').innerHTML='';return;}
  let h=`<div class="blk">"${st.partLabel.replace(/^\S+\s/,'')}에 통증이 있으세요?"</div><div class="opts"><div class="opt ${st.pain===true?'pos':''}" data-pain="1">있음</div><div class="opt ${st.pain===false?'neg':''}" data-pain="0">없음</div></div>`;
- if(st.pain===true){h+=`<div class="blk">통증 강도 (0~10)</div><div class="ints">${Array.from({length:11},(_,n)=>`<div class="ib ${st.intensity===n?'on':''}" data-int="${n}">${n}</div>`).join('')}</div>`;}
+ if(st.pain===true){
+  h+=`<div class="blk">😀 표정 통증척도 (Faces · FPRS)</div><div class="faces">${FACES.map(([f,v])=>`<div class="fb ${st.intensity===v?'on':''}" data-int="${v}"><div class="fe">${f}</div><div class="fn">${v}</div></div>`).join('')}</div>`;
+  h+=`<div class="blk">🔢 통증 강도 (0~10 · NRS)</div><div class="ints">${Array.from({length:11},(_,n)=>`<div class="ib ${st.intensity===n?'on':''}" data-int="${n}">${n}</div>`).join('')}</div>`;
+ }
  ge('painUI').innerHTML=h;
 }
 ge('painUI').onclick=e=>{const p=e.target.closest('[data-pain]');if(p){st.pain=p.dataset.pain==='1';if(!st.pain)st.intensity=null;renderPainUI();render();return;}
