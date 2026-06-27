@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호기록 3단계 프로토콜 (프로토타입)</title>
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--card:#fff;--card2:#eef2f7;--line:#d2d9e2;--tx:#16202e;--tx2:#5a6878;--pos:#e23b4c;--ok:#16a34a;--ae:#1f6fd6;--d:#d63a4d;--pe:#b07a06;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.5;padding-bottom:240px}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:13px 18px;font-weight:800;font-size:17px}header em{color:var(--ok);font-style:normal}
+main{max-width:860px;margin:0 auto;padding:16px 18px}
+/* 스텝 인디케이터 */
+.steps{display:flex;gap:8px;margin:6px 0 18px}
+.stp{flex:1;text-align:center;padding:12px 6px;border-radius:12px;background:var(--card2);border:1.5px solid var(--line);font-weight:700;color:var(--tx2);font-size:15px;cursor:pointer}
+.stp.on{background:var(--ae);border-color:var(--ae);color:#fff}.stp.done{border-color:var(--ok);color:var(--ok)}
+.gh{font-size:13px;font-weight:800;color:var(--tx2);margin:18px 2px 9px;letter-spacing:.3px}
+.q{margin-bottom:11px}.q .qp{font-size:15.5px;font-weight:600;margin-bottom:7px}
+.opts{display:flex;gap:8px}.opt{flex:1;text-align:center;padding:14px;border-radius:11px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:16px;font-weight:700;cursor:pointer}.opt.pos{background:var(--pos);border-color:var(--pos);color:#fff}.opt.neg{background:#d7dee6;border-color:#94a2b2;color:var(--tx)}
+.dx{display:flex;align-items:flex-start;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:15px;margin-bottom:10px;cursor:pointer}.dx.on{border-color:var(--d);background:rgba(214,58,77,.06)}.dx.dim{opacity:.5}
+.dx .ck{width:24px;height:24px;border:2px solid var(--d);border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;margin-top:1px}.dx.on .ck{background:var(--d)}
+.dx b{font-size:16.5px}.dx .rec{font-size:10px;color:var(--ok);border:1px solid var(--ok);border-radius:6px;padding:2px 7px;margin-left:8px;font-weight:800}
+.dx .why{font-size:13.5px;color:var(--tx2);margin-top:5px}.dx .why b2{color:var(--ae);font-weight:700}
+.pe{display:flex;align-items:center;gap:11px;background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:7px;cursor:pointer;font-size:15px}.pe.on{border-color:var(--pe);background:rgba(176,122,6,.08);font-weight:600}.pe .ck{width:21px;height:21px;border:2px solid var(--pe);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}.pe.on .ck{background:var(--pe)}
+.peg{font-size:14px;font-weight:800;color:var(--d);margin:14px 2px 8px}
+.nav{display:flex;gap:10px;margin-top:20px}.nav button{flex:1;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}.nav .prev{background:var(--card2);color:var(--tx2);border:1px solid var(--line)}.nav .next{background:var(--ae);color:#fff}
+/* 미리보기 */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:42vh;display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+.sh-h{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--line)}.sh-h b{font-size:15px}.sh-h button{margin-left:auto;background:var(--ok);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:12px 18px;max-width:860px;margin:0 auto;width:100%;font-size:15.5px;line-height:1.7}
+.rl{margin:2px 0}.rl .tg{font-weight:800;font-size:11px;margin-right:7px;display:inline-block;min-width:34px}.rl.ae{color:var(--ae)}.rl.d{color:var(--d);font-weight:700}.rl.pe{color:var(--pe)}.rl.head{color:var(--tx);font-weight:800;margin-top:10px;font-size:16px}.empty{color:var(--tx2)}
+.hint{font-size:13px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-bottom:14px}
+</style></head><body>
+<header>NFH <em>간호기록</em> — 3단계 프로토콜 (프로토타입)</header>
+<main id="main">
+<div class="hint">💡 <b>① 사정 한 번에 → ② 진단(근거가 옆에) → ③ 평가</b> 순서로 진행하면, 아래에 <b>진단별 [사정-진단-평가] 묶음</b>으로 정리됩니다.</div>
+<div class="steps" id="steps"></div>
+<div id="body"></div>
+<div class="nav" id="nav"></div>
+</main>
+<div class="sheet"><div class="sh-h">📋 <b>간호기록 (진단별 정리)</b> <span id="cnt" style="font-size:13px;color:var(--tx2)"></span><button onclick="copyNote()">📤 EMR 복사</button></div><div class="sh-b" id="preview"><div class="empty">① 사정부터 시작하세요.</div></div></div>
+<script>
+const ge=id=>document.getElementById(id);
+/* ── 데이터 (진술문=마스터 원문 / 진단 cue=근거 사정) ── */
+const ASSESS=[
+ {id:'fever',g:'🌡️ 열·감염',q:'"열이 나거나 몸이 뜨거우세요?"',rec:'열감 있음',no:'열감 없음'},
+ {id:'crp',g:'🌡️ 열·감염',q:'🩺 CRP 증가',rec:'C-reactive protein 수치 증가함'},
+ {id:'temp',g:'🌡️ 열·감염',q:'🩺 체온 상승',rec:'체온 상승함'},
+ {id:'chest',g:'❤️ 심폐·순환',q:'"가슴이 답답하거나 불편하세요?"',rec:'흉부 불편감 있음',no:'흉부 불편감 없음'},
+ {id:'dyspnea',g:'❤️ 심폐·순환',q:'"숨이 차거나 답답하세요?"',rec:'호흡곤란 있음',no:'호흡곤란 없음'},
+ {id:'pulse',g:'❤️ 심폐·순환',q:'🩺 맥박 불규칙(촉지)',rec:'불규칙 맥박 촉지됨'},
+ {id:'bpup',g:'🩺 혈압',q:'🩺 혈압 상승됨(고혈압)',rec:'혈압 상승됨'},
+ {id:'bpdn',g:'🩺 혈압',q:'🩺 혈압 저하됨(저혈압)',rec:'혈압 저하됨'},
+ {id:'dizzy',g:'🧠 신경',q:'"어지러우세요?"',rec:'dizziness 있음',no:'dizziness 없음'},
+ {id:'weak',g:'🧠 신경',q:'"한쪽 팔다리에 힘이 빠지세요?"',rec:'grasp power 약함',no:'grasp power 강함'},
+];
+const DXS=[
+ {name:'감염',cue:['fever','crp'],pe:['체온 측정함','감염 증상이 있는지 확인함']},
+ {name:'고체온',cue:['temp'],pe:['미온수 목욕 시행함','처방에 의해 해열제를 투여함']},
+ {name:'조직관류저하:심폐계',cue:['chest','pulse'],pe:['흉부 통증이 있는지 확인함','EKG monitor 시작함','심전도 변화를 확인함']},
+ {name:'비효율적호흡양상',cue:['dyspnea'],pe:['반좌위 취해줌','산소포화도 monitor함']},
+ {name:'고혈압',cue:['bpup'],pe:['혈압 측정함','Non Invasive BP monitor 시작함','혈압약 투여']},
+ {name:'저혈압',cue:['bpdn'],pe:['혈압 측정함','체위성 저혈압 증상이 있는지 확인함','안전간호를 제공함']},
+ {name:'조직관류저하:뇌',cue:['dizzy','weak'],pe:['신경학적 증상이 있는지 확인함','사지 근력 평가함']},
+];
+let step=1, st={assess:{}, dx:[], pe:{}};
+const STEPL=[['1','사정'],['2','진단'],['3','평가·중재']];
+
+function renderSteps(){ge('steps').innerHTML=STEPL.map(([n,l])=>{const i=+n;const cls=i===step?'on':(i<step?'done':'');return `<div class="stp ${cls}" data-s="${i}">${i<step?'✓':n}. ${l}</div>`;}).join('');}
+ge('steps').onclick=e=>{const b=e.target.closest('[data-s]');if(b){step=+b.dataset.s;render();}};
+
+function cueRecs(dx){return dx.cue.filter(c=>st.assess[c]===true).map(c=>ASSESS.find(a=>a.id===c).rec);}
+
+function renderBody(){const B=ge('body');
+ if(step===1){ // 사정
+  let groups=[...new Set(ASSESS.map(a=>a.g))];
+  B.innerHTML=groups.map(g=>`<div class="gh">${g}</div>`+ASSESS.filter(a=>a.g===g).map(a=>{
+   const v=st.assess[a.id];const noBtn=a.no?`<div class="opt ${v===false?'neg':''}" data-a="${a.id}" data-v="0">없음</div>`:'';
+   return `<div class="q"><div class="qp">${a.q}</div><div class="opts"><div class="opt ${v===true?'pos':''}" data-a="${a.id}" data-v="1">${a.id.match(/crp|temp|pulse|bp/)?'확인됨':'있음'}</div>${noBtn}</div></div>`;
+  }).join('')).join('');
+ } else if(step===2){ // 진단 (근거 옆)
+  B.innerHTML='<div class="gh">사정 근거에 맞는 진단을 고르세요 — ⭐는 근거가 잡힌 추천</div>'+DXS.map(d=>{
+   const recs=cueRecs(d);const rec=recs.length>0;const on=st.dx.includes(d.name);
+   const why=rec?`근거: <b2>${recs.join(' · ')}</b2>`:'<span style="opacity:.6">아직 근거 사정 없음</span>';
+   return `<div class="dx ${on?'on':''} ${rec?'':'dim'}" data-dx="${d.name}"><div class="ck">${on?'✓':''}</div><div><b>${d.name}</b>${rec?'<span class="rec">⭐추천</span>':''}<div class="why">${why}</div></div></div>`;
+  }).join('');
+ } else { // 평가
+  if(!st.dx.length){B.innerHTML='<div class="hint">② 진단을 먼저 고르세요.</div>';return;}
+  B.innerHTML=st.dx.map(nm=>{const d=DXS.find(x=>x.name===nm);
+   return `<div class="peg">D · ${nm}</div>`+d.pe.map((p,i)=>{const k=nm+'_'+i;return `<div class="pe ${st.pe[k]?'on':''}" data-pe="${k}"><div class="ck">${st.pe[k]?'✓':''}</div>${p}</div>`;}).join('');
+  }).join('');
+ }
+}
+ge('body').onclick=e=>{
+ const a=e.target.closest('[data-a]');if(a){const id=a.dataset.a,v=a.dataset.v==='1';st.assess[id]=st.assess[id]===v?undefined:v;render();return;}
+ const d=e.target.closest('[data-dx]');if(d){const nm=d.dataset.dx;st.dx.includes(nm)?st.dx=st.dx.filter(x=>x!==nm):st.dx.push(nm);render();return;}
+ const p=e.target.closest('[data-pe]');if(p){const k=p.dataset.pe;st.pe[k]=!st.pe[k];render();return;}
+};
+function renderNav(){ge('nav').innerHTML=`${step>1?'<button class="prev" onclick="step--;render()">← 이전</button>':''}${step<3?'<button class="next" onclick="autoRecommend();step++;render()">다음 →</button>':'<button class="next" onclick="done()">✅ 완료</button>'}`;}
+function done(){alert('완료! 아래 정리를 EMR에 복사하세요.');}
+function autoRecommend(){ // 사정→진단 넘어갈 때 추천 진단 자동 체크
+ if(step===1){DXS.forEach(d=>{if(cueRecs(d).length>0 && !st.dx.includes(d.name))st.dx.push(d.name);});}
+}
+/* 진단별 정리 출력 */
+function render(){renderSteps();renderBody();renderNav();
+ const L=[];let n=0;
+ st.dx.forEach(nm=>{const d=DXS.find(x=>x.name===nm);const recs=cueRecs(d);
+  L.push({c:'head',t:'['+nm+']'});
+  recs.forEach(r=>{L.push({c:'ae',tg:'A&E',t:r});n++;});
+  L.push({c:'d',tg:'D',t:nm});n++;
+  d.pe.forEach((p,i)=>{if(st.pe[nm+'_'+i]){L.push({c:'pe',tg:'P&E',t:p});n++;}});
+ });
+ // 진단 안 걸렸지만 양성인 사정 (참고)
+ const used=new Set(st.dx.flatMap(nm=>DXS.find(x=>x.name===nm).cue));
+ const extra=ASSESS.filter(a=>st.assess[a.id]===true && !used.has(a.id));
+ if(extra.length){L.push({c:'head',t:'[기타 사정]'});extra.forEach(a=>{L.push({c:'ae',tg:'A&E',t:a.rec});n++;});}
+ ge('cnt').textContent=n+'줄';
+ ge('preview').innerHTML=L.length?L.map(x=>x.c==='head'?`<div class="rl head">${x.t}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg||''}</span>${x.t}</div>`).join(''):'<div class="empty">① 사정부터 시작하세요.</div>';
+}
+function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('시작하세요')){alert('비어 있음');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨!')).catch(()=>prompt('복사:',t));}
+render();
+</script></body></html>
