@@ -59,12 +59,12 @@ function cueRecs(d){return d.cue.filter(c=>st.a[c]===true).map(recOf);}
 
 function renderCC(){ge('cc').innerHTML=CC.map(([k,l])=>`<div class="ccb ${st.cc.has(k)?'on':''}" data-cc="${k}">${l}</div>`).join('');}
 function renderAssess(){if(!st.cc.size){ge('aWrap').innerHTML='';return;}
- let html='<div class="sec-h">② 사정 <span style="font-size:13px;color:var(--tx2);font-weight:500">— 고른 증상만</span></div>';
- [...st.cc].forEach(k=>{html+=`<div class="gh">${CCL[k]}</div>`+ASSESS[k].map(a=>{
-  const v=st.a[a.id];const noBtn=a.no?`<div class="opt ${v===false?'neg':''}" data-a="${a.id}" data-v="0">없음</div>`:'';
-  const yes=a.q[0]==='🩺'?'확인됨':'있음';
-  return `<div class="q"><div class="qp">${a.q}</div><div class="opts"><div class="opt ${v===true?'pos':''}" data-a="${a.id}" data-v="1">${yes}</div>${noBtn}</div></div>`;
- }).join('');});
+ let html='<div class="sec-h">② 사정 <span style="font-size:13px;color:var(--tx2);font-weight:500">— 탭하면 있음(빨강)→없음(회색)→해제</span></div>';
+ [...st.cc].forEach(k=>{html+=`<div class="gh">${CCL[k]}</div><div class="achips">`+ASSESS[k].map(a=>{
+  const v=st.a[a.id];const cls=v===true?'yes':(v===false?'no':'');
+  const lab=a.rec.replace(/ 있음$/,'').replace(/^🩺 /,'').replace(/ 수치 증가함$/,'↑').replace(/ 촉지됨$/,'');
+  return `<div class="achip ${cls}" data-a="${a.id}">${v===true?'✓ ':v===false?'✕ ':''}${lab}</div>`;
+ }).join('')+'</div>';});
  ge('aWrap').innerHTML=html;
 }
 function renderDx(){if(!st.cc.size){ge('dWrap').innerHTML='';return;}
