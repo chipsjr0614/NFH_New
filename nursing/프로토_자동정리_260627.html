@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>간호기록 자동정리 (프로토타입)</title>
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--card:#fff;--card2:#eef2f7;--line:#d2d9e2;--tx:#16202e;--tx2:#5a6878;--pos:#e23b4c;--ok:#16a34a;--ae:#1f6fd6;--d:#d63a4d;--pe:#b07a06;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.5;padding-bottom:230px}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:13px 18px;font-weight:800;font-size:17px}header em{color:var(--ok);font-style:normal}
+main{max-width:860px;margin:0 auto;padding:14px 18px}
+.sec-h{font-size:16px;font-weight:800;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
+.gh{font-size:13px;font-weight:800;color:var(--tx2);margin:15px 2px 8px}
+.q{margin-bottom:10px}.q .qp{font-size:15.5px;font-weight:600;margin-bottom:6px}
+.opts{display:flex;gap:8px}.opt{flex:1;text-align:center;padding:13px;border-radius:11px;border:1.5px solid var(--line);background:var(--card2);color:var(--tx2);font-size:16px;font-weight:700;cursor:pointer}.opt.pos{background:var(--pos);border-color:var(--pos);color:#fff}.opt.neg{background:#d7dee6;border-color:#94a2b2;color:var(--tx)}
+/* 진단(자동) 카드 */
+.dxc{background:var(--card);border:1.5px solid var(--d);border-left:5px solid var(--d);border-radius:13px;padding:14px 15px;margin-bottom:11px}
+.dxc .top{display:flex;align-items:center;gap:9px}.dxc .top b{font-size:17px;color:var(--d)}.dxc .auto{font-size:10px;color:#fff;background:var(--d);border-radius:6px;padding:2px 8px;font-weight:800}
+.dxc .rm{margin-left:auto;font-size:13px;color:var(--tx2);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;background:var(--card2)}
+.dxc .why{font-size:13.5px;color:var(--tx2);margin:7px 0 3px}.dxc .why b2{color:var(--ae);font-weight:700}
+.dxc .pel{font-size:12px;font-weight:800;color:var(--pe);margin:11px 0 6px}
+.pe{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);margin-bottom:6px;cursor:pointer;font-size:14.5px}.pe.on{border-color:var(--pe);background:rgba(176,122,6,.09);font-weight:600}.pe .ck{width:20px;height:20px;border:2px solid var(--pe);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}.pe.on .ck{background:var(--pe)}
+.readd{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}.rchip{font-size:13px;color:var(--tx2);border:1px dashed var(--line);border-radius:16px;padding:7px 12px;cursor:pointer;background:var(--card)}
+.none{font-size:14px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:13px}
+/* 미리보기 */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--panel);border-top:2px solid var(--line);max-height:40vh;display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+.sh-h{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--line)}.sh-h b{font-size:15px}.sh-h button{margin-left:auto;background:var(--ok);color:#fff;border:none;border-radius:9px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer}
+.sh-b{overflow-y:auto;padding:12px 18px;max-width:860px;margin:0 auto;width:100%;font-size:15.5px;line-height:1.7}
+.rl{margin:2px 0}.rl .tg{font-weight:800;font-size:11px;margin-right:7px;display:inline-block;min-width:34px}.rl.ae{color:var(--ae)}.rl.d{color:var(--d);font-weight:700}.rl.pe{color:var(--pe)}.rl.head{color:var(--tx);font-weight:800;margin-top:10px;font-size:16px}.empty{color:var(--tx2)}
+.hint{font-size:13px;color:var(--tx2);background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:11px 13px;margin-bottom:6px}
+</style></head><body>
+<header>NFH <em>간호기록</em> — 자동정리 (프로토타입)</header>
+<main id="main">
+<div class="hint">💡 <b>사정만 탭하세요.</b> 진단은 <b>알아서 켜지고</b>(틀리면 빼기), 평가도 자동 체크됩니다. 아래에 <b>진단별로 자동 정리</b>됩니다.</div>
+<div class="sec-h">🔎 사정 <span style="font-size:13px;color:var(--tx2);font-weight:500">— 해당하는 것만 탭</span></div>
+<div id="assess"></div>
+<div class="sec-h">🩺 진단 · 평가 <span style="font-size:13px;color:var(--tx2);font-weight:500">— 사정에 따라 자동</span></div>
+<div id="dxbox"></div>
+</main>
+<div class="sheet"><div class="sh-h">📋 <b>간호기록 (진단별 자동정리)</b> <span id="cnt" style="font-size:13px;color:var(--tx2)"></span><button onclick="copyNote()">📤 EMR 복사</button></div><div class="sh-b" id="preview"><div class="empty">사정을 시작하세요.</div></div></div>
+<script>
+const ge=id=>document.getElementById(id);
+const ASSESS=[
+ {id:'fever',g:'🌡️ 열·감염',q:'"열이 나거나 몸이 뜨거우세요?"',rec:'열감 있음',no:'열감 없음'},
+ {id:'crp',g:'🌡️ 열·감염',q:'🩺 CRP 증가',rec:'C-reactive protein 수치 증가함'},
+ {id:'chest',g:'❤️ 심폐·순환',q:'"가슴이 답답하거나 불편하세요?"',rec:'흉부 불편감 있음',no:'흉부 불편감 없음'},
+ {id:'dyspnea',g:'❤️ 심폐·순환',q:'"숨이 차거나 답답하세요?"',rec:'호흡곤란 있음',no:'호흡곤란 없음'},
+ {id:'pulse',g:'❤️ 심폐·순환',q:'🩺 맥박 불규칙(촉지)',rec:'불규칙 맥박 촉지됨'},
+ {id:'bpup',g:'🩺 혈압',q:'🩺 혈압 상승됨',rec:'혈압 상승됨'},
+ {id:'bpdn',g:'🩺 혈압',q:'🩺 혈압 저하됨',rec:'혈압 저하됨'},
+ {id:'dizzy',g:'🧠 신경',q:'"어지러우세요?"',rec:'dizziness 있음',no:'dizziness 없음'},
+ {id:'weak',g:'🧠 신경',q:'"한쪽 팔다리에 힘이 빠지세요?"',rec:'grasp power 약함',no:'grasp power 강함'},
+];
+const DXS=[
+ {name:'감염',cue:['fever','crp'],pe:['체온 측정함','감염 증상이 있는지 확인함']},
+ {name:'조직관류저하:심폐계',cue:['chest','pulse'],pe:['흉부 통증이 있는지 확인함','EKG monitor 시작함','심전도 변화를 확인함']},
+ {name:'비효율적호흡양상',cue:['dyspnea'],pe:['반좌위 취해줌','산소포화도 monitor함']},
+ {name:'고혈압',cue:['bpup'],pe:['혈압 측정함','Non Invasive BP monitor 시작함','혈압약 투여']},
+ {name:'저혈압',cue:['bpdn'],pe:['혈압 측정함','체위성 저혈압 증상이 있는지 확인함','안전간호를 제공함']},
+ {name:'조직관류저하:뇌',cue:['dizzy','weak'],pe:['신경학적 증상이 있는지 확인함','사지 근력 평가함']},
+];
+let st={assess:{}, dxOff:new Set(), peOff:new Set()};
+function cueRecs(d){return d.cue.filter(c=>st.assess[c]===true).map(c=>ASSESS.find(a=>a.id===c).rec);}
+function triggered(d){return d.cue.some(c=>st.assess[c]===true);}            // 근거 잡힘
+function activeDx(){return DXS.filter(d=>triggered(d) && !st.dxOff.has(d.name));} // 자동 켜진 진단
+
+function renderAssess(){let gs=[...new Set(ASSESS.map(a=>a.g))];
+ ge('assess').innerHTML=gs.map(g=>`<div class="gh">${g}</div>`+ASSESS.filter(a=>a.g===g).map(a=>{
+  const v=st.assess[a.id];const noBtn=a.no?`<div class="opt ${v===false?'neg':''}" data-a="${a.id}" data-v="0">없음</div>`:'';
+  const yes=a.id.match(/crp|pulse|bp/)?'확인됨':'있음';
+  return `<div class="q"><div class="qp">${a.q}</div><div class="opts"><div class="opt ${v===true?'pos':''}" data-a="${a.id}" data-v="1">${yes}</div>${noBtn}</div></div>`;
+ }).join('')).join('');
+}
+function renderDx(){const act=activeDx();
+ let html=act.map(d=>{
+  const recs=cueRecs(d);
+  const pes=d.pe.map((p,i)=>{const k=d.name+'_'+i,on=!st.peOff.has(k);return `<div class="pe ${on?'on':''}" data-pe="${k}"><div class="ck">${on?'✓':''}</div>${p}</div>`;}).join('');
+  return `<div class="dxc"><div class="top"><span class="auto">자동</span><b>${d.name}</b><span class="rm" data-rmdx="${d.name}">✕ 이 진단 빼기</span></div><div class="why">근거: <b2>${recs.join(' · ')}</b2></div><div class="pel">평가·중재 (자동 체크 · 안 한 건 탭해서 빼기)</div>${pes}</div>`;
+ }).join('');
+ // 뺀 진단 다시 추가
+ const dropped=DXS.filter(d=>triggered(d) && st.dxOff.has(d.name));
+ if(dropped.length)html+=`<div class="readd">${dropped.map(d=>`<div class="rchip" data-readd="${d.name}">+ ${d.name} 다시 추가</div>`).join('')}</div>`;
+ if(!act.length && !dropped.length)html='<div class="none">사정을 하면 진단이 자동으로 떠요.</div>';
+ ge('dxbox').innerHTML=html;
+}
+ge('assess').onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;const id=a.dataset.a,v=a.dataset.v==='1';st.assess[id]=st.assess[id]===v?undefined:v;render();};
+ge('dxbox').onclick=e=>{
+ const rm=e.target.closest('[data-rmdx]');if(rm){st.dxOff.add(rm.dataset.rmdx);render();return;}
+ const ra=e.target.closest('[data-readd]');if(ra){st.dxOff.delete(ra.dataset.readd);render();return;}
+ const p=e.target.closest('[data-pe]');if(p){const k=p.dataset.pe;st.peOff.has(k)?st.peOff.delete(k):st.peOff.add(k);render();return;}
+};
+function render(){renderAssess();renderDx();
+ const L=[];let n=0;const act=activeDx();
+ act.forEach(d=>{const recs=cueRecs(d);
+  L.push({c:'head',t:'['+d.name+']'});
+  recs.forEach(r=>{L.push({c:'ae',tg:'A&E',t:r});n++;});
+  L.push({c:'d',tg:'D',t:d.name});n++;
+  d.pe.forEach((p,i)=>{if(!st.peOff.has(d.name+'_'+i)){L.push({c:'pe',tg:'P&E',t:p});n++;}});
+ });
+ // 진단에 안 쓰인 양성 사정(참고)
+ const used=new Set(act.flatMap(d=>d.cue));
+ const extra=ASSESS.filter(a=>st.assess[a.id]===true && !used.has(a.id));
+ if(extra.length){L.push({c:'head',t:'[기타 사정]'});extra.forEach(a=>{L.push({c:'ae',tg:'A&E',t:a.rec});n++;});}
+ ge('cnt').textContent=n+'줄';
+ ge('preview').innerHTML=L.length?L.map(x=>x.c==='head'?`<div class="rl head">${x.t}</div>`:`<div class="rl ${x.c}"><span class="tg">${x.tg||''}</span>${x.t}</div>`).join(''):'<div class="empty">사정을 시작하세요.</div>';
+}
+function copyNote(){const t=ge('preview').innerText;if(!t||t.includes('시작하세요')){alert('비어 있음');return;}navigator.clipboard?.writeText(t).then(()=>alert('복사됨!')).catch(()=>prompt('복사:',t));}
+render();
+</script></body></html>
