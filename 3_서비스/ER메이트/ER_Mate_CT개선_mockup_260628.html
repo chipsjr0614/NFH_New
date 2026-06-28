@@ -25,6 +25,13 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
   font-weight:800;font-size:15.5px;cursor:pointer;color:var(--tx2);transition:.15s}
 .btab .d{font-size:11px;font-weight:500;margin-top:3px;opacity:.85}
 .btab.on{border-color:var(--blue);background:var(--blueL);color:var(--blue)}
+/* 진정 추가 토글 */
+.sedrow{display:flex;align-items:center;gap:9px;margin:-4px 2px 14px;padding:12px 14px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;font-size:14.5px;color:var(--tx2)}
+.sedrow.on{border-color:var(--why);background:var(--whyL);color:var(--why)}
+.sedrow .sw{width:42px;height:24px;border-radius:14px;background:var(--line);position:relative;transition:.15s;flex:0 0 42px}
+.sedrow.on .sw{background:var(--why)}
+.sedrow .sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.sedrow.on .sw::after{left:21px}
 /* 진행 */
 .prog{display:flex;align-items:center;gap:10px;margin:4px 2px 14px}
 .pbar{flex:1;height:9px;background:var(--line);border-radius:6px;overflow:hidden}
@@ -71,6 +78,7 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
 
   <div class="ptabs" id="ptabs"></div>
   <div class="branch" id="branch"></div>
+  <div class="sedrow" id="sedrow" onclick="toggleSed()" style="display:none"><div class="sw"></div><div>💤 진정(Sedation) — 진정제 사용 시 항목·차팅 추가</div></div>
   <div class="prog"><div class="pbar"><div class="pfill" id="pf"></div></div><div class="ptx" id="pt">0/0</div></div>
   <div id="list"></div>
   <div class="gate" id="gate">🔒 필수항목 남음</div>
@@ -106,13 +114,13 @@ const PROCS={
   chart:{send:{both:['검사실 보냄','검진 위해 이송함'],contrast:['금식 확인함']},
          back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],contrast:['조영제 부작용이 있는지 관찰함 ★']}}
  },
- mri:{name:'MRI',tag:'준비물형 · MRI',ic:'🧲',
-  branches:[{id:'sed',l:'💤 진정(Sedation)',d:'진정제 사용 — 호흡·모니터 필요'},{id:'nosed',l:'😊 비진정',d:'진정 없음 — 금속 제거 위주'}],
+ mri:{name:'MRI',tag:'준비물형 · MRI',ic:'🧲',sedation:true,
+  branches:[{id:'contrast',l:'💉 조영 MRI',d:'조영제 사용 — IV·GFR 확인'},{id:'non',l:'⚪ 비조영 MRI',d:'조영제 없음 — 금속 제거 위주'}],
   items:[
    {ic:'🧲',sec:'준비사항',br:'both',w:true,badge:'⚠️ 금속 제거',t:'금속물질(안경, 보청기, 틀니, ECG lead, SPO2 sensor, 뇌심부자극기, pacemaker 등) 제거된 지 직접 확인 및 질문.',why:'MRI는 매우 강한 자석을 써요. 몸에 금속이 있으면 끌려가거나 열이 나 화상·영상 왜곡 위험이 있어 반드시 직접 확인·질문해요.'},
-   {ic:'📝',sec:'준비사항',br:'both',t:'MRI 동의서 준비(조영제 사용시)',why:'조영제를 쓰는 경우 부작용 가능성을 설명하고 동의를 받아요. (비조영이면 불필요)'},
-   {ic:'💉',sec:'준비사항',br:'both',badge:'20G↑ · 손목 위',t:'20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)',why:'조영제를 빠르게 자동 주입하기 위해 굵은(20G↑) 바늘을 손목 위에 잡아요. (비조영이면 불필요)'},
-   {ic:'🫘',sec:'준비사항',br:'both',badge:'GFR 60↑',t:'GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)',why:'조영제는 콩팥으로 빠져나가요. 신장 기능이 나쁘면 조영제 신독성 위험이 있어 확인해요.'},
+   {ic:'📝',sec:'준비사항',br:'both',t:'MRI 검사 동의서 준비',why:'MRI 검사 자체에 동의서가 필요해요(조영 여부와 무관). 조영제를 쓰면 조영제 동의도 함께 받아요.'},
+   {ic:'💉',sec:'준비사항',br:'contrast',badge:'20G↑ · 손목 위',t:'20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)',why:'조영제를 빠르게 자동 주입하기 위해 굵은(20G↑) 바늘을 손목 위에 잡아요. 비조영이면 불필요해요.'},
+   {ic:'🫘',sec:'준비사항',br:'contrast',badge:'GFR 60↑',t:'GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)',why:'조영제는 콩팥으로 빠져나가요. 신장 기능이 나쁘면 조영제 신독성 위험이 있어 확인해요.'},
    {ic:'😴',sec:'준비사항',br:'sed',t:'Sedation 시: midazolam #1 출발 시 IVS 준비물: O2, mask/nasal, ambu, O2 line, fitting mask',why:'진정 중 호흡이 억제될 수 있어 산소·앰부 등 응급 호흡 장비를 미리 준비해요.'},
    {ic:'🩺',sec:'준비사항',br:'sed',t:'Sedation tl 이송모니터 + 의료진 동반',why:'진정된 환자는 이송 중에도 활력징후·산소포화도 감시와 의료진 동반이 필요해요.'},
    {ic:'🫁',sec:'검사 후',br:'sed',t:'Sedation 후 의식/호흡 확인',why:'진정에서 깨어나는 동안 의식과 호흡이 정상으로 돌아오는지 확인해요.'},
@@ -122,17 +130,19 @@ const PROCS={
          back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],sed:['의식상태 사정함','산소포화도 monitor 중임']}}
  }
 };
-let curProc='ct', branch='contrast';
+let curProc='ct', branch='contrast', sedOn=false;
 const checks={}, chartOn={send:false,back:false};
 
-function setProc(p){curProc=p;branch=PROCS[p].branches[0].id;
+function setProc(p){curProc=p;branch=PROCS[p].branches[0].id;sedOn=false;
   for(const k in checks)delete checks[k];chartOn.send=false;chartOn.back=false;
   document.getElementById('cbSend').classList.remove('on');document.getElementById('cbBack').classList.remove('on');
   renderAll();}
 function setBranch(b){branch=b;renderAll();}
+function toggleSed(){sedOn=!sedOn;renderAll();}
 function tog(i){checks[i]=!checks[i];render();}
 function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
-function curItems(){return PROCS[curProc].items.map((it,i)=>({it,i})).filter(o=>o.it.br==='both'||o.it.br===branch);}
+function curItems(){return PROCS[curProc].items.map((it,i)=>({it,i})).filter(o=>{
+  const b=o.it.br;if(b==='both')return true;if(b==='sed')return sedOn;return b===branch;});}
 
 function renderTabs(){
   document.getElementById('ptabs').innerHTML=Object.keys(PROCS).map(k=>
@@ -141,6 +151,8 @@ function renderTabs(){
   document.getElementById('hdIc').textContent=P.ic;document.getElementById('hdT').textContent=P.name;document.getElementById('hdS').textContent=P.tag+' — 개선 mockup';
   document.getElementById('branch').innerHTML=P.branches.map(b=>
     `<div class="btab ${b.id===branch?'on':''}" onclick="setBranch('${b.id}')">${b.l}<div class="d">${b.d}</div></div>`).join('');
+  const sr=document.getElementById('sedrow');
+  if(P.sedation){sr.style.display='flex';sr.classList.toggle('on',sedOn);}else sr.style.display='none';
 }
 function render(){
   const vis=curItems();let html='',curSec='';
@@ -175,7 +187,7 @@ function toggleChart(k){chartOn[k]=!chartOn[k];
 function renderChart(){
   const C=PROCS[curProc].chart;const lines=[];
   ['send','back'].forEach(k=>{if(chartOn[k]){const c=C[k];
-    const arr=[...c.both,...(c[branch]||[])];
+    const arr=[...c.both,...(branch==='contrast'?(c.contrast||[]):[]),...(sedOn?(c.sed||[]):[])];
     lines.push('['+(k==='send'?'검사실 보냄':'검사실에서 돌아옴')+']');arr.forEach(x=>lines.push(' · '+x));lines.push('');}});
   document.getElementById('chartTx').value=lines.join('\n').trim();
 }
