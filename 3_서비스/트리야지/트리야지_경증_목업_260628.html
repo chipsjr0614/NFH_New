@@ -86,6 +86,15 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .abuse-item small{display:block;font-size:12px;color:var(--mute);margin-top:2px;line-height:1.4;}
 .abuse-notice{font-size:12px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:9px 11px;margin-top:8px;}
 
+/* 최종 확인 모달 */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:20px;max-width:380px;width:100%;}
+.modal-t{font-size:18px;font-weight:800;margin-bottom:14px;}
+.modal .fl{font-size:13px;color:var(--mute);margin-bottom:4px;}
+.iso-banner{background:var(--k1bg);border:1px solid var(--k1bd);border-radius:var(--rs);padding:14px;margin-bottom:16px;color:#fca5a5;font-weight:800;font-size:16px;text-align:center;line-height:1.6;}
+.iso-banner small{font-weight:500;font-size:13px;}
+
 /* questions */
 .q{margin-bottom:13px;}
 .q:last-child{margin-bottom:0;}
@@ -156,6 +165,29 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     </div>
 
     <div class="card">
+      <div class="lbl">초기 간호정보 (안전·배경)</div>
+      <div class="q"><div class="qt">임신</div><div class="opts" id="pregOpts"></div></div>
+      <div class="q"><div class="qt">조영제 알러지</div><div class="opts" id="contrastOpts"></div></div>
+      <div class="q"><div class="qt">흡연</div><div class="opts" id="smkOpts"></div></div>
+      <div class="q"><div class="qt">약물 알러지 / 복용약물</div>
+        <div class="onset-row">
+          <input class="onset-inp" id="drugAl" placeholder="약물 알러지" oninput="render()" style="font-size:15px;text-align:left">
+          <input class="onset-inp" id="curMed" placeholder="복용약물" oninput="render()" style="font-size:15px;text-align:left">
+        </div>
+      </div>
+      <div class="q" style="margin-bottom:0"><div class="qt">여행력</div>
+        <div class="opts" id="trvOpts"></div>
+        <div id="trvDetail" style="display:none;margin-top:8px">
+          <div class="onset-row">
+            <input type="date" class="onset-date" id="trvGo" onchange="render()" title="출발일">
+            <input class="onset-inp" id="trvDur" placeholder="기간(일)" oninput="render()" style="font-size:15px">
+          </div>
+          <input class="onset-inp" id="trvPlace" placeholder="장소 (예: 동남아)" oninput="render()" style="margin-top:8px;text-align:left;font-size:15px;width:100%">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="lbl">활력징후 V/S</div>
       <div class="vs-grid">
         <div class="vs-cell"><div class="fl">BP</div><input class="vs-num" id="vsBP" placeholder="110/70" oninput="render()"></div>
@@ -208,6 +240,8 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="pt" id="pvMotive">—</div>
       <div class="pl" style="margin-top:13px">📝 현재호소 (HIS 칸 2)</div>
       <div class="pt" id="pvPresent">—</div>
+      <div class="pl" style="margin-top:13px">🧾 배경정보</div>
+      <div class="pt" id="pvBg">없음</div>
       <div class="pl" style="margin-top:13px">⚠️ 특이사항</div>
       <div class="pt" id="pvNote">없음</div>
     </div>
@@ -232,10 +266,22 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
   <div id="foot">
     <button class="bk">← 이전</button>
-    <button class="nx">기록 생성 →</button>
+    <button class="nx" onclick="openFinal()">기록 생성 →</button>
   </div>
 
   <div class="note">⚠️ 설계 검토용 목업입니다 · 임상 문구·기준은 칩스 검증 전 초안</div>
+
+  <!-- 최종 확인 모달 -->
+  <div class="modal-bg" id="finalModal">
+    <div class="modal">
+      <div class="iso-banner" id="isoBanner" style="display:none">🚨 1구역(감염 격리)으로 안내하세요<br><small id="isoWhy"></small></div>
+      <div class="modal-t">최종 확인 · 기록 생성</div>
+      <div class="fg"><div class="fl">환자 이름</div><input class="onset-inp" id="fName" placeholder="이름" style="font-size:16px;text-align:left;width:100%"></div>
+      <div class="fg" style="margin-top:9px"><div class="fl">주치의</div><input class="onset-inp" id="fDoc" placeholder="주치의" style="font-size:16px;text-align:left;width:100%"></div>
+      <button class="nx" style="width:100%;margin-top:14px" onclick="closeFinal()">확인 완료</button>
+      <button class="bk" style="width:100%;flex:none;margin-top:8px" onclick="closeFinal()">닫기</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -364,12 +410,16 @@ let onsetTime='';
 let onsetDaysAgo=null;
 let age='';
 let abuseChecked=new Set();
+let smoking='';
+let travelStatus='';
+let pregnancy='';
+let contrast='';
 
 function renderCCRow(){
   document.getElementById('ccRow').innerHTML=Object.keys(CC).map(c=>
     `<div class="cc-chip ${c===curCC?'sel':''}" onclick="pickCC('${c}')">${c}</div>`).join('');
 }
-function pickCC(c){curCC=c;ans={};syms=[];document.getElementById('nrs').value=0;setNRS(0);hideEsc();renderCCRow();renderQ();renderOnsetDays();renderAbuse();render();}
+function pickCC(c){curCC=c;ans={};syms=[];document.getElementById('nrs').value=0;setNRS(0);hideEsc();renderCCRow();renderQ();renderOnsetDays();renderAbuse();renderPreg();renderContrast();renderSmk();renderTrv();render();}
 
 function renderQ(){
   document.getElementById('ccName').textContent=curCC;
@@ -500,6 +550,69 @@ function renderAbuse(){
 }
 function toggleAbuse(nm){abuseChecked.has(nm)?abuseChecked.delete(nm):abuseChecked.add(nm);renderAbuse();render();}
 
+// ── 초기 간호정보 (임신·조영제·흡연·여행력) ──
+function renderPreg(){
+  const L=['해당없음','없음','가능성','임신중'];
+  document.getElementById('pregOpts').innerHTML=L.map(v=>`<div class="opt ${pregnancy===v?'sel':''}" onclick="setPreg('${v}')">${v}</div>`).join('');
+}
+function setPreg(v){pregnancy=(pregnancy===v?'':v);renderPreg();render();}
+function renderContrast(){
+  const L=['없음','있음'];
+  document.getElementById('contrastOpts').innerHTML=L.map(v=>`<div class="opt ${contrast===v?(v==='있음'?'sel-r':'sel'):''}" onclick="setContrast('${v}')">${v}${v==='있음'?' ⚠️':''}</div>`).join('');
+}
+function setContrast(v){contrast=(contrast===v?'':v);renderContrast();render();}
+function renderSmk(){
+  const L=['비흡연','현재 흡연','과거(금연)'];
+  document.getElementById('smkOpts').innerHTML=L.map(v=>`<div class="opt ${smoking===v?'sel':''}" onclick="setSmk('${v}')">${v}</div>`).join('');
+}
+function setSmk(v){smoking=(smoking===v?'':v);renderSmk();render();}
+function renderTrv(){
+  const L=['없음','있음'];
+  document.getElementById('trvOpts').innerHTML=L.map(v=>`<div class="opt ${travelStatus===v?'sel':''}" onclick="setTrvStatus('${v}')">${v}</div>`).join('');
+  document.getElementById('trvDetail').style.display=travelStatus==='있음'?'block':'none';
+}
+function setTrvStatus(v){travelStatus=(travelStatus===v?'':v);renderTrv();render();}
+function bgLine(){
+  let bg=[];
+  if(pregnancy)bg.push('임신 '+pregnancy);
+  if(contrast)bg.push('조영제알러지 '+contrast);
+  if(smoking)bg.push(smoking);
+  const da=document.getElementById('drugAl').value.trim();
+  const cm=document.getElementById('curMed').value.trim();
+  if(da)bg.push('약물알러지 '+da);
+  if(cm)bg.push('복용약물 '+cm);
+  if(travelStatus==='없음')bg.push('여행력 없음');
+  else if(travelStatus==='있음'){
+    const go=document.getElementById('trvGo').value;
+    const dur=document.getElementById('trvDur').value;
+    const place=document.getElementById('trvPlace').value;
+    let parts=[];
+    if(go)parts.push(go+'부터');
+    if(dur)parts.push(dur+'일간');
+    if(place)parts.push(place);
+    bg.push('여행력 '+(parts.length?parts.join(' '):'있음'));
+  }
+  return bg.length?bg.join(' / '):'없음';
+}
+
+// ── 1구역(감염 격리) 안내 판정 + 최종 확인 모달 ──
+function isolationReason(){
+  let r=[];
+  if(travelStatus==='있음')r.push('여행력');
+  const bt=parseFloat(document.getElementById('vsBT').value);
+  if((!isNaN(bt)&&bt>=38)||ans.fever==='있음')r.push('발열');
+  if(curCC==='인후통'||ans.dysp==='있음')r.push('호흡기 증상');
+  return r;
+}
+function openFinal(){
+  const r=isolationReason();
+  const b=document.getElementById('isoBanner');
+  if(r.length){b.style.display='block';document.getElementById('isoWhy').textContent=r.join('·')+' → 감염 격리 필요';}
+  else b.style.display='none';
+  document.getElementById('finalModal').classList.add('show');
+}
+function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
+
 // ── KTAS 자동 추천 ──
 const KN={1:'즉시소생',2:'응급',3:'긴급',4:'준응급',5:'비응급'};
 function vnum(id){const v=document.getElementById(id).value;return v===''?NaN:parseFloat(v);}
@@ -550,6 +663,7 @@ function render(){
   const lead=onset?`상기 환자 ${onset} ${verb} `:'상기 환자 ';
   const present=`${lead}${r.pre}${r.noun}${r.post||''}${parens}${ro(r.noun)} 내원함.`;
   document.getElementById('pvPresent').textContent=present;
+  document.getElementById('pvBg').textContent=bgLine();
   const note=abuseChecked.size?`$ 학대 의심: ${[...abuseChecked].join(', ')}`:'없음';
   document.getElementById('pvNote').textContent=note;
   renderKTAS();
@@ -582,7 +696,7 @@ function backLight(){
   showEsc(CC[curCC].q.find(x=>x.esc && ans[x.id]===x.esc)?.why||'');
 }
 
-renderCCRow();renderQ();renderOnsetDays();renderAbuse();render();
+renderCCRow();renderQ();renderOnsetDays();renderAbuse();renderPreg();renderContrast();renderSmk();renderTrv();render();
 </script>
 </body>
 </html>
