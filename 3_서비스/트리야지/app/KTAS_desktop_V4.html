@@ -179,7 +179,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="card">
         <div class="lbl">환자 정보</div>
         <div class="row2">
-          <div><div class="fl">환자번호</div><input class="fi" id="pidInp" placeholder="100-000000" oninput="S.pid=this.value"></div>
+          <div><div class="fl">환자번호 (8자리)</div><input class="fi" id="pidInp" inputmode="numeric" maxlength="8" placeholder="12345678" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8);S.pid=this.value;var f=document.getElementById('fPid');if(f)f.value=this.value"></div>
           <div><div class="fl">이름</div><input class="fi" id="nameInp" placeholder="홍○○" oninput="S.pname=this.value"></div>
         </div>
         <div class="q" style="margin-top:10px"><div class="qt">성별</div><div class="opts" id="sexOpts"></div></div>
@@ -243,6 +243,16 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <button class="allnorm" onclick="abcdAllNormal()">✓ ABCD 모두 정상</button>
       </div>
 
+      <button class="allnorm" id="traumaBtn" style="border-style:solid;border-color:var(--k2bd);background:var(--k2bg);color:#fdba74;margin-bottom:11px" onclick="toggleTrauma()">🩹 외상 사정 추가 +</button>
+      <div class="card" id="traumaCard" style="display:none;border-color:var(--k2bd)">
+        <div class="lbl">🩹 외상 사정</div>
+        <div class="q"><div class="qt">손상 부위(복수)</div><div class="opts" id="trAreaOpts"></div></div>
+        <div class="q"><div class="qt">출혈</div><div class="opts" id="trBleedOpts"></div></div>
+        <div class="q"><div class="qt">개방창(상처)</div><div class="opts" id="trWoundOpts"></div></div>
+        <div class="q"><div class="qt">SMC (말초 감각·운동·순환)</div><div class="opts" id="trSMCOpts"></div></div>
+        <div class="q" style="margin-bottom:0"><div class="qt">의식 소실</div><div class="opts" id="trLOCOpts"></div></div>
+      </div>
+
       <div class="banner ok" id="riskBanner">
         <div class="bt" id="riskTt">🟢 안정</div>
         <div class="bs" id="riskSs">이상 항목 선택 시 자동 평가</div>
@@ -267,15 +277,16 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="sub" id="s3sub">활력징후 입력</div>
       <div class="card">
         <div class="lbl">활력징후</div>
+        <div class="q" style="margin-bottom:12px"><div class="qt">🩺 혈압 측정 금지 팔 <span style="font-size:11px;color:var(--mute);font-weight:400">(유방절제·투석혈관·정맥주사 등)</span></div><div class="opts" id="bpArmOpts"></div></div>
         <div class="vsg">
-          <div><div class="fl">BP</div><input class="vsn" id="vsBP" placeholder="110/70" oninput="render()"></div>
+          <div><div class="fl">SBP</div><input class="vsn" id="vsSBP" type="number" inputmode="decimal" placeholder="110" oninput="render()"></div>
+          <div><div class="fl">DBP</div><input class="vsn" id="vsDBP" type="number" inputmode="decimal" placeholder="70" oninput="render()"></div>
           <div><div class="fl">HR</div><input class="vsn" id="vsHR" placeholder="80" oninput="render()"></div>
           <div><div class="fl">RR</div><input class="vsn" id="vsRR" placeholder="20" oninput="render()"></div>
           <div><div class="fl">BT</div><input class="vsn" id="vsBT" placeholder="36.5" oninput="render()"></div>
           <div><div class="fl">SpO2</div><input class="vsn" id="vsSpO2" placeholder="98" oninput="render()"></div>
           <div><div class="fl">O2</div><input class="vsn" id="vsO2" placeholder="RA" oninput="render()"></div>
         </div>
-        <div class="q" style="margin-top:12px;margin-bottom:0"><div class="qt">🩺 혈압 측정 금지 팔 <span style="font-size:11px;color:var(--mute);font-weight:400">(유방절제·투석혈관·정맥주사 등)</span></div><div class="opts" id="bpArmOpts"></div></div>
       </div>
       <div class="card">
         <div class="lbl">발생 시점 (온셋)</div>
@@ -352,6 +363,17 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     </div>
   </div>
 
+  <!-- 혈당 측정 모달 -->
+  <div class="modal-bg" id="bstModal">
+    <div class="modal">
+      <div class="modal-t">🩸 혈당 측정하세요</div>
+      <div class="alert-card" id="bstWhy">의식 저하 확인됨. 혈당을 측정하고 입력하세요.</div>
+      <input class="fi" id="bstInp" type="number" inputmode="decimal" placeholder="mg/dL" style="font-size:22px;text-align:center;font-weight:700">
+      <button class="mbtn blue" onclick="saveBST()">입력 완료</button>
+      <button class="mbtn gray" onclick="skipBST()">건너뛰기 →</button>
+    </div>
+  </div>
+
   <!-- 최종 확인 모달 -->
   <div class="modal-bg" id="finalModal">
     <div class="modal">
@@ -359,7 +381,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="modal-t">최종 확인 · 기록 생성</div>
       <div class="row2">
         <div><div class="fl">환자 이름</div><input class="fi" id="fName" oninput="S.pname=this.value;fmValidate()"></div>
-        <div><div class="fl">등록번호</div><input class="fi" id="fPid" oninput="S.pid=this.value;fmValidate()"></div>
+        <div><div class="fl">등록번호 (8자리)</div><input class="fi" id="fPid" inputmode="numeric" maxlength="8" placeholder="12345678" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8);S.pid=this.value;var p=document.getElementById('pidInp');if(p)p.value=this.value;fmValidate()"></div>
       </div>
       <div style="margin-top:9px"><div class="fl">주치의</div><input class="fi" id="fDoc" oninput="S.doctor=this.value"></div>
       <div style="height:8px"></div>
@@ -379,7 +401,7 @@ const S={age:'',sex:'',date:'',arr:'',reg:'',route:'119 구급대',preg:'',contr
   pedW:'',pedT:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),traumaOn:false,trArea:new Set(),trBleed:'',trWound:'',trSMC:'',trLOC:'',
   gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', track:'mild', ans:{}, nrs:0,
   onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], abuse:new Set(),
-  ktas:'', pname:'', pid:'', doctor:''};
+  ktas:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false};
 let cur=1;
 const KN={1:'즉시소생',2:'응급',3:'긴급',4:'준응급',5:'비응급'};
 
@@ -419,7 +441,7 @@ const CC={
       {id:'nausea',t:'오심/구토',role:'assoc',type:'yn',label:'오심·구토'}],
    rf:['편측 위약감','언어장애','안면마비','복시','보행 불가']},
  '신경학적 이상':{track:'crit',noun:'신경학적 이상',color:'cb',icon:'🧠',alert:['CVA 의심 — Stroke 프로토콜','Stroke Team 연락 / Last Known Well 확인 / CT / 혈압·혈당'],
-   q:[{id:'lkw',t:'Last Known Well',role:'info',rec:'LKW',type:'text',ph:'예) 14:30'},
+   q:[{id:'lkw',t:'Last Known Well (마지막 정상 시각)',role:'info',rec:'LKW',type:'datetime'},
       {id:'side',t:'편측성',role:'pre',suf:'',o:['우측','좌측','양측','모름']},
       {id:'face',t:'안면 마비',role:'assoc',type:'yn',label:'안면마비',esc:'FAST 양성'},
       {id:'weak',t:'편측 위약감',role:'assoc',type:'yn',label:'편측위약감'},
@@ -568,6 +590,37 @@ function setTime(k){const t=nowHM();S[k]=t;document.getElementById(k+'Val').text
 const ROUTES=[['🚶 도보','도보'],['🚗 자가용','자가용'],['♿ 휠체어','휠체어'],['🏥 전원','전원(타병원)'],['🚐 129 사설','사설구급차(129)'],['🚑 119 구급','119 구급대'],['🚁 헬기 ⚠️','헬기']];
 function renderRoute(){document.getElementById('routeGrid').innerHTML=ROUTES.map(([lbl,v])=>{const sel=S.route===v;const cls=sel?((v.includes('119')||v==='헬기')?'sel-g':'sel'):'';return `<div class="rbtn ${cls}" onclick="pickRoute('${v}')">${lbl}</div>`;}).join('');}
 function pickRoute(v){S.route=v;renderRoute();}
+// 소아 평가
+function isPed(){const a=(S.age||'').trim();if(!a)return false;if(/개월|주|일/.test(a))return true;const n=parseInt(a,10);return !isNaN(n)&&n<15;}
+function patRender(){
+  const mk=(id,key,arr,danger)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=arr.map(v=>{const sel=S[key]===v;const cls=sel?(danger.includes(v)?'sel-r':'sel'):'';return `<div class="opt ${cls}" onclick="pickPat('${key}','${id}','${v}')">${v}</div>`;}).join('');};
+  mk('patAppOpts','patApp',['정상','이상'],['이상']);
+  mk('patWobOpts','patWob',['정상','이상'],['이상']);
+  mk('patCirOpts','patCir',['정상','이상'],['이상']);
+  const risks=['3개월미만 발열','열성경련','탈수','처짐/수유거부'];
+  const el=document.getElementById('pedRiskOpts');if(el)el.innerHTML=risks.map(r=>`<div class="opt ${S.pedRisk.has(r)?'sel-r':''}" onclick="togglePedRisk('${r}')">${r}</div>`).join('');
+}
+function pickPat(key,id,v){S[key]=(S[key]===v?'':v);patRender();render();}
+function togglePedRisk(r){S.pedRisk.has(r)?S.pedRisk.delete(r):S.pedRisk.add(r);patRender();render();}
+function renderPeds(){const c=document.getElementById('pedCard');if(!c)return;if(!isPed()){c.style.display='none';return;}c.style.display='';patRender();}
+function pedSummary(){if(!isPed())return '';let p=[];if(S.pedW)p.push('체중 '+S.pedW+'kg');if(S.pedT)p.push('체온 '+S.pedT+'℃');const pat=[];if(S.patApp==='이상')pat.push('외관');if(S.patWob==='이상')pat.push('호흡노력');if(S.patCir==='이상')pat.push('순환');if(pat.length)p.push('PAT이상('+pat.join('·')+')');if(S.pedRisk.size)p.push('소아위험 '+[...S.pedRisk].join('·'));return p.length?'소아 '+p.join(' / '):'';}
+// 외상 사정
+function renderTrauma(){
+  const c=document.getElementById('traumaCard');if(!c)return;
+  document.getElementById('traumaBtn').textContent=S.traumaOn?'🩹 외상 사정 닫기 −':'🩹 외상 사정 추가 +';
+  c.style.display=S.traumaOn?'':'none';if(!S.traumaOn)return;
+  const areas=['두부','경부','흉부','복부','골반','척추','상지','하지','안면'];
+  document.getElementById('trAreaOpts').innerHTML=areas.map(a=>`<div class="opt ${S.trArea.has(a)?'sel-r':''}" onclick="toggleTrArea('${a}')">${a}</div>`).join('');
+  const mk=(id,key,arr,danger)=>document.getElementById(id).innerHTML=arr.map(v=>{const sel=S[key]===v;const cls=sel?(danger.includes(v)?'sel-r':'sel'):'';return `<div class="opt ${cls}" onclick="pickTr('${key}','${id}','${v}')">${v}</div>`;}).join('');
+  mk('trBleedOpts','trBleed',['없음','있음'],['있음']);
+  mk('trWoundOpts','trWound',['없음','있음'],['있음']);
+  mk('trSMCOpts','trSMC',['정상','이상'],['이상']);
+  mk('trLOCOpts','trLOC',['없음','있음'],['있음']);
+}
+function toggleTrauma(){S.traumaOn=!S.traumaOn;renderTrauma();renderAbuse();render();}
+function toggleTrArea(a){S.trArea.has(a)?S.trArea.delete(a):S.trArea.add(a);renderTrauma();render();}
+function pickTr(key,id,v){S[key]=(S[key]===v?'':v);renderTrauma();render();}
+function traumaSummary(){if(!S.traumaOn)return '';let t=[];if(S.trArea.size)t.push('부위 '+[...S.trArea].join('·'));if(S.trBleed==='있음')t.push('출혈');if(S.trWound==='있음')t.push('개방창');if(S.trSMC==='이상')t.push('SMC이상');if(S.trLOC==='있음')t.push('의식소실');return t.length?'외상사정 '+t.join('·'):'';}
 
 // ══════════ 첫인상 / ABCD ══════════
 const GI=[['색','color',['정상','창백','청색증','홍조'],['청색증']],['발한','sweat',['없음','식은땀'],['식은땀']],
@@ -580,7 +633,11 @@ function renderGI(){
     return `<div class="gi"><div class="gl">${nm}</div><div class="pills">${pl}</div></div>`;
   }).join('');
 }
-function setGI(k,v,c){S.gi[k]=v;renderGI();renderTrack();}
+function setGI(k,v,c){S.gi[k]=v;renderGI();renderTrack();if(k==='consc'&&v==='반응 저하')openBST('반응 저하 확인됨.');}
+// 혈당 팝업
+function openBST(why){document.getElementById('bstWhy').textContent=why+' 혈당을 측정하고 입력하거나 건너뛰세요.';document.getElementById('bstInp').value=S.bst||'';document.getElementById('bstModal').classList.add('show');setTimeout(()=>{var i=document.getElementById('bstInp');if(i)i.focus();},50);}
+function saveBST(){S.bst=document.getElementById('bstInp').value;S.bstSkip=false;document.getElementById('bstModal').classList.remove('show');render();}
+function skipBST(){S.bst='';S.bstSkip=true;document.getElementById('bstModal').classList.remove('show');render();}
 function giAllNormal(){GI.forEach(([nm,k,opts])=>S.gi[k]=opts[0]);renderGI();renderTrack();}
 const ABCD=[['A','말을 할 수 있나요?'],['B','스스로 숨을 쉬나요?'],['C','맥박·쇼크 징후?'],['D','의식이 있나요?']];
 function renderABCD(){
@@ -590,7 +647,7 @@ function renderABCD(){
       <button class="pill ${S.abcd[k]==='bad'?'bad':''}" onclick="setAB('${k}','bad')">이상</button></div></div>`;
   }).join('');
 }
-function setAB(k,v){S.abcd[k]=v;renderABCD();renderTrack();}
+function setAB(k,v){S.abcd[k]=v;renderABCD();renderTrack();if(k==='D'&&v==='bad')openBST('의식 저하 확인됨.');}
 function abcdAllNormal(){ABCD.forEach(([k])=>S.abcd[k]='ok');renderABCD();renderTrack();}
 
 function renderTrack(){
@@ -621,6 +678,7 @@ function pickCC(name){
   document.getElementById('ccOther').value='';
   renderCCGrid();
   if(d&&d.alert)showAlert(d.alert[0],d.alert[1]);
+  if(name==='어지럼증'||name==='실신/의식변화')openBST(name+' 호소 환자.');
 }
 function setOtherCC(v){if(v.trim()){S.cc=v.trim();S.track='mild';S.ans={};document.querySelectorAll('.cc').forEach(c=>c.classList.remove('sel'));}}
 function showAlert(t,body){document.getElementById('alertT').textContent='⚠️ '+t;document.getElementById('alertBody').innerHTML=body;document.getElementById('alertModal').classList.add('show');}
@@ -659,6 +717,7 @@ function renderDetail(){
 }
 function buildQ(q){
   if(q.type==='text'){return `<div class="q"><div class="qt">${q.t}</div><input class="fi" value="${S.ans[q.id]||''}" placeholder="${q.ph||''}" oninput="S.ans['${q.id}']=this.value;render()"></div>`;}
+  if(q.type==='datetime'){const val=S.ans[q.id]||'';const ps=val.split(' ');return `<div class="q"><div class="qt">${q.t}</div><div class="orow"><input type="date" class="odate" id="dt_${q.id}" value="${ps[0]||''}" onchange="setDT('${q.id}')"><input class="oinp" id="tm_${q.id}" value="${ps[1]||''}" placeholder="--:--" maxlength="5" oninput="setDT('${q.id}')"></div></div>`;}
   let opts;
   if(q.type==='yn')opts=['있음','없음'];else opts=q.o;
   const cells=opts.map(o=>{const sel=S.ans[q.id]===o;const danger=(q.esc&&o==='있음')||(q.esc2&&o===q.esc2)||(q.esc&&q.type!=='yn'&&o===q.esc);
@@ -673,12 +732,12 @@ function pickQ(id,v){S.ans[id]=(S.ans[id]===v?'':v);
   renderDetail();render();
 }
 function toggleRF(f){if(S.redFlags.includes(f))S.redFlags=S.redFlags.filter(x=>x!==f);else S.redFlags.push(f);renderDetail();render();}
+function setDT(id){const d=(document.getElementById('dt_'+id)||{}).value||'';const t=(document.getElementById('tm_'+id)||{}).value||'';S.ans[id]=[d,t].filter(Boolean).join(' ');render();}
 
 // ══════════ KTAS 자동 ══════════
 function vnum(id){const v=document.getElementById(id)?document.getElementById(id).value:'';return v===''?NaN:parseFloat(v);}
 function calcKTAS(){
-  const mods=[];const bp=(document.getElementById('vsBP')||{}).value||'';
-  const sbp=bp.includes('/')?parseFloat(bp.split('/')[0]):parseFloat(bp);
+  const mods=[];const sbp=vnum('vsSBP');
   const hr=vnum('vsHR'),rr=vnum('vsRR'),bt=vnum('vsBT'),spo2=vnum('vsSpO2');
   if(!isNaN(spo2)){if(spo2<90)mods.push({t:`SpO2 ${spo2}%`,l:'crit'});else if(spo2<94)mods.push({t:`SpO2 ${spo2}%`,l:'high'});}
   if(!isNaN(sbp)){if(sbp<90)mods.push({t:`SBP ${sbp} 쇼크`,l:'crit'});else if(sbp<=100)mods.push({t:`SBP ${sbp} 경계`,l:'mid'});else if(sbp>=180)mods.push({t:`SBP ${sbp}`,l:'mid'});}
@@ -688,6 +747,10 @@ function calcKTAS(){
   if(S.nrs>=7)mods.push({t:`NRS ${S.nrs}/10`,l:'high'});else if(S.nrs>=4)mods.push({t:`NRS ${S.nrs}/10`,l:'mid'});
   if(Object.values(S.abcd).some(v=>v==='bad'))mods.push({t:'ABCD 이상',l:'crit'});
   if(S.redFlags.length)mods.push({t:`Red Flag ${S.redFlags.length}개`,l:'high'});
+  if(S.patApp==='이상'||S.patWob==='이상'||S.patCir==='이상')mods.push({t:'소아 PAT 이상',l:'high'});
+  if(S.pedRisk.size)mods.push({t:'소아 위험신호',l:'high'});
+  if(S.traumaOn&&(S.trSMC==='이상'||S.trLOC==='있음'))mods.push({t:'외상 위험(SMC/의식소실)',l:'high'});
+  if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)){if(b<70)mods.push({t:`저혈당 BST ${b}`,l:'high'});else if(b>300)mods.push({t:`고혈당 BST ${b}`,l:'mid'});}}
   // 위급 주호소
   if(CC[S.cc]&&CC[S.cc].track==='crit')mods.push({t:S.cc+' (초응급)',l:'high'});
   let level=4;
@@ -707,7 +770,7 @@ const A_CHILD=[['발달단계 불일치','발달상 불가능한 손상(못 걷�
 const A_ELDER=[['양상 손상','설명 안 되는 손상, 결박·담금 자국'],['방임 단서','탈수·영양불량·욕창·심한 위생불량'],['약 관리 안 됨','처방약 미사용 누적 등'],['보호자 두려움','보호자에 위축·두려운 태도'],['경제적 착취','보호자가 비용 거부 등']];
 function ageNum(){const a=parseInt(S.age,10);return isNaN(a)?null:a;}
 function renderAbuse(){
-  const a=ageNum();const ped=(a!==null&&a<15)||(CC[S.cc]&&CC[S.cc].ped);const elder=a!==null&&a>=65;const trauma=S.cc==='외상'||S.cc==='소아 외상';
+  const a=ageNum();const ped=(a!==null&&a<15)||isPed()||(CC[S.cc]&&CC[S.cc].ped);const elder=a!==null&&a>=65;const trauma=S.cc==='외상'||S.cc==='소아 외상'||S.traumaOn;
   const card=document.getElementById('abuseCard');if(!card)return;
   if(!(ped||elder||trauma)){S.abuse.clear();card.style.display='none';return;}
   card.style.display='';
@@ -756,13 +819,15 @@ function bgLine(){
   const da=(document.getElementById('drugAl')||{}).value||'';const cm=(document.getElementById('curMed')||{}).value||'';
   bg.push('약물알러지 '+(da.trim()||'없음'));bg.push('복용약물 '+(cm.trim()||'없음'));
   if(S.smoking)bg.push(S.smoking);
-  if(S.bpArm&&S.bpArm!=='없음')bg.push('혈압측정금지 '+S.bpArm);
+  {const ps=pedSummary();if(ps)bg.push(ps);}
+  {const ts=traumaSummary();if(ts)bg.push(ts);}
+  if(S.bst&&!S.bstSkip)bg.push('BST '+S.bst+' mg/dL');
   if(S.travel==='없음')bg.push('여행력 없음');
   else if(S.travel==='있음'){const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push(go+'부터');if(dur)p.push(dur+'일간');if(place)p.push(place);bg.push('여행력 '+(p.length?p.join(' '):'있음'));}
   return bg.join(' / ');
 }
 function pmhxText(){return S.pmhx.length?S.pmhx.join(' '):'없음';}
-function vsText(){const g=id=>(document.getElementById(id)||{}).value||'';return `BP ${g('vsBP')||'__'} / HR ${g('vsHR')||'__'} / RR ${g('vsRR')||'__'} / BT ${g('vsBT')||'__'}℃ / SpO2 ${g('vsSpO2')||'__'}% (${g('vsO2')||'RA'})`;}
+function vsText(){const g=id=>(document.getElementById(id)||{}).value||'';return `BP ${g('vsSBP')||'__'}/${g('vsDBP')||'__'} / HR ${g('vsHR')||'__'} / RR ${g('vsRR')||'__'} / BT ${g('vsBT')||'__'}℃ / SpO2 ${g('vsSpO2')||'__'}% (${g('vsO2')||'RA'})`;}
 function fullNote(){
   const n=buildNarrative();
   const pmhx=pmhxText();
@@ -772,7 +837,11 @@ function fullNote(){
   t+=`[현재호소] ${head}, ${n.present}\n`;
   t+=`[배경정보] ${bgLine()}\n`;
   t+=`[V/S] ${vsText()}`;
-  if(S.abuse.size)t+=`\n[특이사항] $ 학대 의심: ${[...S.abuse].join(', ')}`;
+  let spec=[];
+  if(S.bpArm&&S.bpArm!=='없음')spec.push('⚠ 혈압측정금지: '+S.bpArm);
+  if(isolationReason().length)spec.push('1구역 안내: '+isolationReason().join('·'));
+  if(S.abuse.size)spec.push('$ 학대 의심: '+[...S.abuse].join(', '));
+  if(spec.length)t+=`\n[특이사항] ${spec.join(' / ')}`;
   if(S.ktas)t+=`\n[KTAS] ${S.ktas} (${KN[S.ktas]})`;
   return t;
 }
@@ -809,13 +878,16 @@ function copyExcel(){
   bgH.push('약물알러지 '+(esc(da)||'없음'));bgP.push('약물알러지 '+(da||'없음'));
   bgH.push('복용약물 '+(esc(cm)||'없음'));bgP.push('복용약물 '+(cm||'없음'));
   if(S.smoking){bgH.push(S.smoking);bgP.push(S.smoking);}
-  if(S.bpArm&&S.bpArm!=='없음'){const t='혈압측정금지 '+S.bpArm;bgH.push(RED(t));bgP.push(t);}
+  {const ps=pedSummary();if(ps){bgH.push(esc(ps));bgP.push(ps);}}
+  {const ts=traumaSummary();if(ts){bgH.push(RED(esc(ts)));bgP.push(ts);}}
+  if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);const t='BST '+S.bst+' mg/dL';const risk=!isNaN(b)&&(b<70||b>300);bgH.push(risk?RED(t):t);bgP.push(t);}
   {const tt=travelText();const t='여행력 '+tt;bgH.push(S.travel==='있음'?RED(esc(t)):esc(t));bgP.push(t);}
   // 내원동기 셀
   const motiveH=['- '+bgH.join(' / '),'- 과거력 : '+esc(pmhxText()),'- 내원동기 : '+esc(n.motive),'- 현재호소 : '+esc(n.present)].join('<br>');
   const motiveP=['배경: '+bgP.join(' / '),'과거력: '+pmhxText(),'내원동기: '+n.motive,'현재호소: '+n.present].join(' | ');
   // 특이사항 셀 (1구역·학대 = 빨강)
   const iso=isolationReason();let specH=[],specP=[];
+  if(S.bpArm&&S.bpArm!=='없음'){specH.push(RED('⚠ 혈압측정금지: '+S.bpArm));specP.push('혈압측정금지: '+S.bpArm);}
   if(iso.length){specH.push(RED('1구역 안내: '+iso.join('·')));specP.push('1구역 안내: '+iso.join('·'));}
   if(S.abuse.size){specH.push(RED('학대 의심: '+[...S.abuse].join(', ')));specP.push('학대 의심: '+[...S.abuse].join(', '));}
   const specHtml=specH.length?specH.join('<br>'):'없음';
@@ -860,7 +932,7 @@ function goNext(){
 
 // init
 S.date=today();document.getElementById('dateDisp').textContent=S.date;
-renderInfoChips();renderRoute();renderGI();renderABCD();renderTrack();go(1);
+renderInfoChips();renderRoute();renderGI();renderABCD();renderTrack();renderPeds();renderTrauma();go(1);
 </script>
 </body>
 </html>
