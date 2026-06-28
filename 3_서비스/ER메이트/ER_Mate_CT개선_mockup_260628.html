@@ -52,6 +52,16 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
   font-weight:800;font-size:16px;background:#eef1f6;color:var(--tx2);border:2px dashed var(--line)}
 .gate.ok{background:var(--greenL);color:var(--green);border:2px solid var(--green)}
 .hide{display:none}
+/* 간호기록 차팅 */
+.chart{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:15px}
+.chd{font-weight:800;font-size:15.5px;margin-bottom:4px;color:var(--tx)}
+.chsub{font-size:12.5px;color:var(--tx2);margin-bottom:12px}
+.cbtns{display:flex;gap:8px;margin-bottom:12px}
+.cbtn{flex:1;padding:14px 8px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:800;font-size:15px;cursor:pointer;color:var(--tx2);transition:.15s}
+.cbtn.on{border-color:var(--green);background:var(--greenL);color:var(--green)}
+#chartTx{width:100%;min-height:130px;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;resize:vertical;background:#fafbfd;color:var(--tx)}
+.copy{margin-top:10px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;cursor:pointer}
+.copy:active{opacity:.85}
 </style>
 </head>
 <body>
@@ -71,6 +81,18 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
   <div id="list"></div>
 
   <div class="gate" id="gate">🔒 필수항목 남음</div>
+
+  <!-- 간호기록 차팅 -->
+  <div class="chart">
+    <div class="chd">📋 간호기록 — 검사 이송 차팅</div>
+    <div class="chsub">버튼을 누르면 해당 시점 차팅 문구가 생성됩니다 (마스터 원문 · ★는 칩스 검증)</div>
+    <div class="cbtns">
+      <button class="cbtn" id="cbSend" onclick="toggleChart('send')">📤 검사실 보냄</button>
+      <button class="cbtn" id="cbBack" onclick="toggleChart('back')">📥 검사실에서 돌아옴</button>
+    </div>
+    <textarea id="chartTx" readonly placeholder="위 버튼을 누르면 차팅 문구가 여기에 생성됩니다."></textarea>
+    <button class="copy" onclick="copyChart()">📋 EMR 복사</button>
+  </div>
 </div>
 
 <script>
@@ -98,7 +120,26 @@ const ITEMS=[
 let branch='contrast';
 const checks={};
 function setBranch(b){branch=b;document.getElementById('bC').classList.toggle('on',b==='contrast');
-  document.getElementById('bN').classList.toggle('on',b==='non');render();}
+  document.getElementById('bN').classList.toggle('on',b==='non');render();renderChart();}
+// 간호기록 차팅 (마스터 원문 · ★=칩스 검증)
+const CHART={
+  send:{lab:'검사실 보냄', both:['검사실 보냄','검진 위해 이송함'], contrast:['금식 확인함']},
+  back:{lab:'검사실에서 돌아옴', both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'], contrast:['조영제 부작용이 있는지 관찰함 ★']}
+};
+const chartOn={send:false,back:false};
+function toggleChart(k){chartOn[k]=!chartOn[k];
+  document.getElementById(k==='send'?'cbSend':'cbBack').classList.toggle('on',chartOn[k]);renderChart();}
+function renderChart(){
+  const lines=[];
+  ['send','back'].forEach(k=>{if(chartOn[k]){const c=CHART[k];
+    const arr=[...c.both,...(branch==='contrast'?c.contrast:[])];
+    lines.push('['+c.lab+']');arr.forEach(x=>lines.push(' · '+x));lines.push('');}});
+  document.getElementById('chartTx').value=lines.join('\n').trim();
+}
+function copyChart(){const t=document.getElementById('chartTx');
+  if(!t.value){alert('먼저 보냄/돌아옴 버튼을 눌러주세요');return;}
+  t.select();document.execCommand('copy');
+  const b=event.target;const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1200);}
 function visible(){return ITEMS.map((it,i)=>({it,i})).filter(o=>o.it.br==='both'||o.it.br===branch);}
 function tog(i){checks[i]=!checks[i];render();}
 function toggleWhy(i){const e=document.getElementById('why'+i);e.classList.toggle('open');}

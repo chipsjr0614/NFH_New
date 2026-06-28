@@ -138,6 +138,12 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .modal-t{font-size:18px;font-weight:800;margin-bottom:14px;}
 .iso-banner{background:var(--k1bg);border:1px solid var(--k1bd);border-radius:var(--rs);padding:14px;margin-bottom:16px;color:#fca5a5;font-weight:800;font-size:16px;text-align:center;line-height:1.6;}
 .iso-banner small{font-weight:500;font-size:13px;}
+.fmchk{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:7px;cursor:pointer;background:var(--surf2);}
+.fmchk .fmbox{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--dim);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;margin-top:1px;}
+.fmchk.on{border-color:var(--k4);} .fmchk.on .fmbox{background:var(--k4);border-color:var(--k4);}
+.fmchk.on .fmbox::after{content:"✓";}
+.fmchk b{font-size:15px;display:block;} .fmchk small{display:block;font-size:12px;color:var(--mute);margin-top:3px;line-height:1.4;}
+.fmwarn{font-size:13px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:9px 11px;margin:4px 0 10px;}
 .alert-card{font-size:14px;color:#cbd5e1;line-height:1.7;margin-bottom:16px;}
 .alert-card li{margin-left:18px;margin-top:3px;}
 .mbtn{width:100%;padding:13px;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;margin-top:8px;}
@@ -178,8 +184,20 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         </div>
         <div class="q" style="margin-top:10px"><div class="qt">성별</div><div class="opts" id="sexOpts"></div></div>
         <div class="q" style="margin-bottom:0"><div class="qt">나이 <span style="font-size:11px;color:var(--mute);font-weight:400">(소아 &lt;15 · 노인 ≥65 자동)</span></div>
-          <input class="fi" id="ageInp" placeholder="나이 입력 (예: 45 / 7세 / 18개월 / 72)" oninput="S.age=this.value;renderTrack()">
+          <input class="fi" id="ageInp" placeholder="나이 입력 (예: 45 / 7세 / 18개월 / 72)" oninput="S.age=this.value;renderTrack();renderPeds()">
         </div>
+      </div>
+
+      <div class="card" id="pedCard" style="display:none;border-color:var(--k3bd)">
+        <div class="lbl">👶 소아 평가 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mute)">· 나이 어리면 자동</span></div>
+        <div class="row2">
+          <div><div class="fl">체중(kg)</div><input class="fi" id="pedW" inputmode="decimal" placeholder="예) 11" oninput="S.pedW=this.value;render()"></div>
+          <div><div class="fl">체온(℃)</div><input class="fi" id="pedT" inputmode="decimal" placeholder="예) 38.5" oninput="S.pedT=this.value;render()"></div>
+        </div>
+        <div class="q" style="margin-top:9px"><div class="qt">PAT — 외관</div><div class="opts" id="patAppOpts"></div></div>
+        <div class="q"><div class="qt">PAT — 호흡노력</div><div class="opts" id="patWobOpts"></div></div>
+        <div class="q"><div class="qt">PAT — 순환</div><div class="opts" id="patCirOpts"></div></div>
+        <div class="q" style="margin-bottom:0"><div class="qt">소아 위험신호</div><div class="opts" id="pedRiskOpts"></div></div>
       </div>
 
       <div class="card">
@@ -257,6 +275,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
           <div><div class="fl">SpO2</div><input class="vsn" id="vsSpO2" placeholder="98" oninput="render()"></div>
           <div><div class="fl">O2</div><input class="vsn" id="vsO2" placeholder="RA" oninput="render()"></div>
         </div>
+        <div class="q" style="margin-top:12px;margin-bottom:0"><div class="qt">🩺 혈압 측정 금지 팔 <span style="font-size:11px;color:var(--mute);font-weight:400">(유방절제·투석혈관·정맥주사 등)</span></div><div class="opts" id="bpArmOpts"></div></div>
       </div>
       <div class="card">
         <div class="lbl">발생 시점 (온셋)</div>
@@ -339,11 +358,16 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="iso-banner" id="isoBanner" style="display:none">🚨 1구역(감염 격리)으로 안내하세요<br><small id="isoWhy"></small></div>
       <div class="modal-t">최종 확인 · 기록 생성</div>
       <div class="row2">
-        <div><div class="fl">환자 이름</div><input class="fi" id="fName" oninput="S.pname=this.value"></div>
-        <div><div class="fl">등록번호</div><input class="fi" id="fPid" oninput="S.pid=this.value"></div>
+        <div><div class="fl">환자 이름</div><input class="fi" id="fName" oninput="S.pname=this.value;fmValidate()"></div>
+        <div><div class="fl">등록번호</div><input class="fi" id="fPid" oninput="S.pid=this.value;fmValidate()"></div>
       </div>
       <div style="margin-top:9px"><div class="fl">주치의</div><input class="fi" id="fDoc" oninput="S.doctor=this.value"></div>
-      <button class="mbtn blue" onclick="copyExcel()">📋 엑셀 한 줄 복사</button>
+      <div style="height:8px"></div>
+      <div class="fmchk" id="fmC1" onclick="fmToggle('fmC1')"><span class="fmbox"></span><div><b>🏷️ 이름 팔찌 확인</b></div></div>
+      <div class="fmchk" id="fmC2" onclick="fmToggle('fmC2')"><span class="fmbox"></span><div><b>🦮 낙상방지 교육</b><small>침대에서 떨어지지 않게 조심, 어지러우면 말씀해주세요</small></div></div>
+      <div class="fmchk" id="fmC3" onclick="fmToggle('fmC3')"><span class="fmbox"></span><div><b>🚱 금식 교육</b><small>검사 위해 확인될 때까지 물 포함 금식</small></div></div>
+      <div class="fmwarn" id="fmWarn">이름·등록번호 입력 + 3가지 확인을 완료하세요.</div>
+      <button class="mbtn blue" id="fmGo" disabled onclick="copyExcel()">✅ 확인 완료 → 엑셀 복사</button>
       <button class="mbtn gray" onclick="closeFinal()">닫기</button>
     </div>
   </div>
@@ -351,7 +375,8 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <script>
 // ══════════ STATE ══════════
-const S={age:'',sex:'',date:'',arr:'',reg:'',route:'119 구급대',preg:'',contrast:'',smoking:'',travel:'',
+const S={age:'',sex:'',date:'',arr:'',reg:'',route:'119 구급대',preg:'',contrast:'',smoking:'',travel:'',bpArm:'',
+  pedW:'',pedT:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),traumaOn:false,trArea:new Set(),trBleed:'',trWound:'',trSMC:'',trLOC:'',
   gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', track:'mild', ans:{}, nrs:0,
   onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], abuse:new Set(),
   ktas:'', pname:'', pid:'', doctor:''};
@@ -533,6 +558,7 @@ function renderInfoChips(){
   mk('contrastOpts',['없음','있음'],'contrast',['있음']);
   mk('smkOpts',['비흡연','현재 흡연','과거(금연)'],'smoking');
   mk('trvOpts',['없음','있음'],'travel');
+  mk('bpArmOpts',['없음','좌측 금지','우측 금지','양측 주의'],'bpArm',['좌측 금지','우측 금지','양측 주의']);
   const pr=document.getElementById('pregRow');if(pr)pr.style.display=(S.sex==='여')?'':'none';
 }
 // 날짜·시간·경로
@@ -730,6 +756,7 @@ function bgLine(){
   const da=(document.getElementById('drugAl')||{}).value||'';const cm=(document.getElementById('curMed')||{}).value||'';
   bg.push('약물알러지 '+(da.trim()||'없음'));bg.push('복용약물 '+(cm.trim()||'없음'));
   if(S.smoking)bg.push(S.smoking);
+  if(S.bpArm&&S.bpArm!=='없음')bg.push('혈압측정금지 '+S.bpArm);
   if(S.travel==='없음')bg.push('여행력 없음');
   else if(S.travel==='있음'){const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push(go+'부터');if(dur)p.push(dur+'일간');if(place)p.push(place);bg.push('여행력 '+(p.length?p.join(' '):'있음'));}
   return bg.join(' / ');
@@ -755,7 +782,17 @@ function isolationReason(){let r=[];if(S.travel==='있음')r.push('여행력');c
 function openFinal(){document.getElementById('fName').value=S.pname;document.getElementById('fPid').value=S.pid;document.getElementById('fDoc').value=S.doctor;
   const r=isolationReason();const b=document.getElementById('isoBanner');
   if(r.length){b.style.display='block';document.getElementById('isoWhy').textContent=r.join('·')+' → 감염 격리 필요';}else b.style.display='none';
+  ['fmC1','fmC2','fmC3'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  fmValidate();
   document.getElementById('finalModal').classList.add('show');}
+function fmToggle(id){document.getElementById(id).classList.toggle('on');fmValidate();}
+function fmValidate(){
+  const nm=(S.pname||'').trim(),pid=(S.pid||'').trim();
+  const ck=['fmC1','fmC2','fmC3'].every(id=>document.getElementById(id).classList.contains('on'));
+  const ok=nm&&pid&&ck;
+  document.getElementById('fmGo').disabled=!ok;
+  document.getElementById('fmWarn').style.display=ok?'none':'block';
+}
 function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function travelText(){if(S.travel!=='있음')return (S.travel||'없음');const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push(go+'부터');if(dur)p.push(dur+'일간');if(place)p.push(place);return p.length?p.join(' '):'있음';}
@@ -772,10 +809,11 @@ function copyExcel(){
   bgH.push('약물알러지 '+(esc(da)||'없음'));bgP.push('약물알러지 '+(da||'없음'));
   bgH.push('복용약물 '+(esc(cm)||'없음'));bgP.push('복용약물 '+(cm||'없음'));
   if(S.smoking){bgH.push(S.smoking);bgP.push(S.smoking);}
+  if(S.bpArm&&S.bpArm!=='없음'){const t='혈압측정금지 '+S.bpArm;bgH.push(RED(t));bgP.push(t);}
   {const tt=travelText();const t='여행력 '+tt;bgH.push(S.travel==='있음'?RED(esc(t)):esc(t));bgP.push(t);}
   // 내원동기 셀
   const motiveH=['- '+bgH.join(' / '),'- 과거력 : '+esc(pmhxText()),'- 내원동기 : '+esc(n.motive),'- 현재호소 : '+esc(n.present)].join('<br>');
-  const motiveP=['- '+bgP.join(' / '),'- 과거력 : '+pmhxText(),'- 내원동기 : '+n.motive,'- 현재호소 : '+n.present].join('\n');
+  const motiveP=['배경: '+bgP.join(' / '),'과거력: '+pmhxText(),'내원동기: '+n.motive,'현재호소: '+n.present].join(' | ');
   // 특이사항 셀 (1구역·학대 = 빨강)
   const iso=isolationReason();let specH=[],specP=[];
   if(iso.length){specH.push(RED('1구역 안내: '+iso.join('·')));specP.push('1구역 안내: '+iso.join('·'));}
@@ -785,8 +823,8 @@ function copyExcel(){
   const sexAge=(S.sex||'-')+' / '+(S.age||'-');
   // 칸 순서: 날짜·내원·접수·환자번호·이름·[성별/나이]·경로·KTAS내원·KTAS변경·V/S·내원동기·특이사항·주치의
   const htmlCells=[S.date,S.arr,S.reg,esc(S.pid),esc(S.pname),sexAge,S.route,S.ktas||'','',vsText(),motiveH,specHtml,esc(S.doctor)];
-  const html='<table><tr>'+htmlCells.map(c=>`<td style="vertical-align:top;mso-number-format:'\\@'">${c}</td>`).join('')+'</tr></table>';
-  const plainCells=[S.date,S.arr,S.reg,S.pid,S.pname,sexAge,S.route,S.ktas||'','',vsText(),'"'+motiveP.replace(/"/g,'""')+'"',specPlain,S.doctor];
+  const html='<table><tr>'+htmlCells.map(c=>`<td style="mso-data-placement:same-cell;vertical-align:top;mso-number-format:'\\@'">${c}</td>`).join('')+'</tr></table>';
+  const plainCells=[S.date,S.arr,S.reg,S.pid,S.pname,sexAge,S.route,S.ktas||'','',vsText(),motiveP,specPlain,S.doctor];
   const plain=plainCells.join('\t');
   const done=()=>alert('엑셀 복사 완료.\n셀에 붙여넣기 하세요.'+(iso.length?'\n\n⚠️ 1구역 안내: '+iso.join('·'):''));
   if(navigator.clipboard&&window.ClipboardItem){
