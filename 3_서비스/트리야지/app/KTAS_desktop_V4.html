@@ -757,12 +757,41 @@ function openFinal(){document.getElementById('fName').value=S.pname;document.get
   if(r.length){b.style.display='block';document.getElementById('isoWhy').textContent=r.join('·')+' → 감염 격리 필요';}else b.style.display='none';
   document.getElementById('finalModal').classList.add('show');}
 function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function travelText(){if(S.travel!=='있음')return (S.travel||'없음');const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push(go+'부터');if(dur)p.push(dur+'일간');if(place)p.push(place);return p.length?p.join(' '):'있음';}
+// V3 칸 순서 유지 + 이름 뒤 [성별/나이] 한 칸 추가. 위험항목(임신·조영제·여행력·1구역·학대)은 빨강(HTML 복사).
 function copyExcel(){
   const n=buildNarrative();
-  const cell=`"- 과거력 : ${pmhxText()}\n- 내원동기 : ${n.motive}\n- 현재호소 : ${n.present}\n- 배경 : ${bgLine()}"`.replace(/\t/g,' ');
-  const iso=isolationReason().length?('1구역: '+isolationReason().join('·')):'';
-  const fields=[S.date,S.arr,S.reg,S.pid,S.pname,S.sex,S.age,S.route,S.ktas||'',vsText(),cell,iso,S.doctor];
-  navigator.clipboard.writeText(fields.join('\t')).then(()=>alert('엑셀 복사 완료.\n셀에 붙여넣기 하세요.'+(iso?'\n\n⚠️ '+iso:'')));
+  const da=((document.getElementById('drugAl')||{}).value||'').trim();
+  const cm=((document.getElementById('curMed')||{}).value||'').trim();
+  const RED=t=>`<span style="color:#cc0000;font-weight:bold">${t}</span>`;
+  // 배경 줄
+  let bgH=[],bgP=[];
+  if(S.preg){const t='임신 '+S.preg;const risk=(S.preg==='가능성'||S.preg==='임신중');bgH.push(risk?RED(t):t);bgP.push(t);}
+  {const t='조영제알러지 '+(S.contrast||'없음');bgH.push(S.contrast==='있음'?RED(t):t);bgP.push(t);}
+  bgH.push('약물알러지 '+(esc(da)||'없음'));bgP.push('약물알러지 '+(da||'없음'));
+  bgH.push('복용약물 '+(esc(cm)||'없음'));bgP.push('복용약물 '+(cm||'없음'));
+  if(S.smoking){bgH.push(S.smoking);bgP.push(S.smoking);}
+  {const tt=travelText();const t='여행력 '+tt;bgH.push(S.travel==='있음'?RED(esc(t)):esc(t));bgP.push(t);}
+  // 내원동기 셀
+  const motiveH=['- '+bgH.join(' / '),'- 과거력 : '+esc(pmhxText()),'- 내원동기 : '+esc(n.motive),'- 현재호소 : '+esc(n.present)].join('<br>');
+  const motiveP=['- '+bgP.join(' / '),'- 과거력 : '+pmhxText(),'- 내원동기 : '+n.motive,'- 현재호소 : '+n.present].join('\n');
+  // 특이사항 셀 (1구역·학대 = 빨강)
+  const iso=isolationReason();let specH=[],specP=[];
+  if(iso.length){specH.push(RED('1구역 안내: '+iso.join('·')));specP.push('1구역 안내: '+iso.join('·'));}
+  if(S.abuse.size){specH.push(RED('학대 의심: '+[...S.abuse].join(', ')));specP.push('학대 의심: '+[...S.abuse].join(', '));}
+  const specHtml=specH.length?specH.join('<br>'):'없음';
+  const specPlain=specP.length?specP.join(' / '):'없음';
+  const sexAge=(S.sex||'-')+' / '+(S.age||'-');
+  // 칸 순서: 날짜·내원·접수·환자번호·이름·[성별/나이]·경로·KTAS내원·KTAS변경·V/S·내원동기·특이사항·주치의
+  const htmlCells=[S.date,S.arr,S.reg,esc(S.pid),esc(S.pname),sexAge,S.route,S.ktas||'','',vsText(),motiveH,specHtml,esc(S.doctor)];
+  const html='<table><tr>'+htmlCells.map(c=>`<td style="vertical-align:top;mso-number-format:'\\@'">${c}</td>`).join('')+'</tr></table>';
+  const plainCells=[S.date,S.arr,S.reg,S.pid,S.pname,sexAge,S.route,S.ktas||'','',vsText(),'"'+motiveP.replace(/"/g,'""')+'"',specPlain,S.doctor];
+  const plain=plainCells.join('\t');
+  const done=()=>alert('엑셀 복사 완료.\n셀에 붙여넣기 하세요.'+(iso.length?'\n\n⚠️ 1구역 안내: '+iso.join('·'):''));
+  if(navigator.clipboard&&window.ClipboardItem){
+    navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done,()=>navigator.clipboard.writeText(plain).then(done));
+  }else{navigator.clipboard.writeText(plain).then(done);}
 }
 function copyNote(){const t=document.getElementById('outNote').value;navigator.clipboard.writeText(t).then(()=>alert('간호기록 복사 완료.'));}
 
