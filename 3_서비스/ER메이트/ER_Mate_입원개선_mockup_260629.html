@@ -59,11 +59,6 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
   <div class="hd"><span style="font-size:26px">🏥</span><div><h1>입원</h1><div class="sub">필수업무 · 절차형 — 개선 mockup</div></div></div>
   <div class="note">💡 <b>mockup 시안</b> — 단계 문구는 엑셀 원문, 간호기록은 마스터 원문입니다. <b>옴니셀·약 반납 세부와 ★ 표시 문구는 칩스 확정이 필요</b>합니다(마스터에 없는 실무 내용).</div>
 
-  <div class="branch">
-    <div class="btab on" id="bWard" onclick="setBranch('ward')">🛏️ 일반 병실<div class="d">병동으로 인계</div></div>
-    <div class="btab" id="bIcu" onclick="setBranch('icu')">🏥 중환자실<div class="d">중환자실로 인계</div></div>
-  </div>
-
   <div class="hint">📋 절차형 — 위에서 아래로 순서대로 진행하세요. 번호를 누르면 완료 체크됩니다.</div>
   <div class="prog"><div class="pbar"><div class="pfill" id="pf"></div></div><div class="ptx" id="pt">0/9</div></div>
   <div id="list"></div>
@@ -84,7 +79,7 @@ const STEPS=[
  {ic:'🛏️',title:'병실배정',detail:'원무 문의하기',why:'원무과에 연락해 실제 배정된 병실을 확인해요.'},
  {ic:'📄',title:'입원수속 안내',detail:'보호자에게 입원지시라벨 출력 및 병실 호수 안내→응급원무수납안내',why:'보호자가 수속·수납을 진행할 수 있도록 입원라벨과 병실 호수를 안내해요.'},
  {ic:'💊',title:'약 반납 확인',detail:'남은약 반납처리(환자 원래 가지고 있는약은 인계, 응급실 처방하고 남은 경구 주사, 수액은 반납)',why:'약품 분실·오투약을 막기 위해 지참약은 병동에 인계하고, 응급실에서 처방한 잔여약은 반납해요.',
-   subs:['옴니셀(Omnicell)에서 불출한 마약·향정신성약 미사용분 반납 확인','환자 지참약 → 병동 인계 / 응급실 처방 잔여(경구·주사·수액) → 약국 반납']},
+   subs:['옴니셀에서 꺼내 쓴 약, 모두 처방 입력했는지 확인 (비품 사용 후 미처방 방지)','약품 청구·수가 적용 누락 없는지 확인','미사용·잔여 약 반납 / 환자 지참약은 병동 인계']},
  {ic:'📝',title:'전과전동기록지',detail:'인계 전 기록하기',why:'병동 인계 전에 전과전동기록지를 미리 작성해 둬요.'},
  {ic:'🤝',title:'인계',detail:'검체·pen insulin 등 함께인계. 수혈남으면 병동알리기',why:'검체·인슐린 등 빠뜨리지 않고 병동에 인계하고, 남은 수혈이 있으면 병동에 미리 알려요.'},
  {ic:'🩺',title:'응급실퇴실간호기록',detail:'처치(빠지거나 중복된건 없는지)·검사(접수 안된 검사나 시행 안되거 없는지)·오더(사인 안하거나 놓친거 없는지)  재확인후 작성',why:'처치·검사·오더 누락이나 중복이 없는지 마지막으로 점검하고 퇴실간호기록을 작성해요.'},
@@ -92,13 +87,9 @@ const STEPS=[
  {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 케이블·이름표정리',why:'다음 환자를 위해 침상·케이블·이름표를 정리해요.'},
 ];
 // 입원 간호기록 차팅 (마스터 원문 · ★=칩스 검증)
-const CHART={both:['응급실 퇴실 결정 주치의를 확인함','응급실 퇴실 및 입원 간호단위 확인함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함'],
-  ward:['병동으로 인계 후 보냄 ★'], icu:['중환자실 보냄']};
-let branch='ward';
+const CHART=['응급실 퇴실 결정 주치의를 확인함','응급실 퇴실 및 입원 간호단위 확인함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함','인계 후 환자 보냄'];
 const checks={}, subChecks={};
 let chartOn=false;
-function setBranch(b){branch=b;document.getElementById('bWard').classList.toggle('on',b==='ward');
-  document.getElementById('bIcu').classList.toggle('on',b==='icu');if(chartOn)renderChart();}
 function tog(i){checks[i]=!checks[i];render();}
 function togSub(i,j){const k=i+'_'+j;subChecks[k]=!subChecks[k];render();}
 function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
@@ -126,8 +117,7 @@ function render(){
 function toggleChart(){chartOn=!chartOn;document.getElementById('cbGen').classList.toggle('on',chartOn);renderChart();}
 function renderChart(){
   if(!chartOn){document.getElementById('chartTx').value='';return;}
-  const arr=[...CHART.both,...CHART[branch]];
-  document.getElementById('chartTx').value='[입원 · 응급실 퇴실]\n'+arr.map(x=>' · '+x).join('\n');
+  document.getElementById('chartTx').value='[입원 · 응급실 퇴실]\n'+CHART.map(x=>' · '+x).join('\n');
 }
 function copyChart(){const t=document.getElementById('chartTx');
   if(!t.value){alert('먼저 간호기록 생성 버튼을 눌러주세요');return;}

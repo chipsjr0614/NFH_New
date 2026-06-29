@@ -421,7 +421,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <script>
 // ══════════ STATE ══════════
-const S={age:'',sex:'',date:'',arr:'',reg:'',route:'119 구급대',preg:'',contrast:'',smoking:'',travel:'',bpArm:'',
+const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',smoking:'',travel:'',bpArm:'',
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),traumaOn:false,trArea:new Set(),trBleed:'',trWound:'',trSMC:'',trLOC:'',
   gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', track:'mild', ans:{}, nrs:0,
   onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
@@ -516,7 +516,7 @@ const CC={
       {id:'taImpact',t:'충격 정도',role:'assoc',lblPre:'',showIf:{id:'mech',in:['교통사고']},o:['저속','고속(40km/h↑)','차량서 튕겨나감','전복','20분↑ 구조']},
       {id:'place',t:'발생 장소 (구체적)',type:'text',role:'assoc',lblPre:'',ph:'예) 지하철 계단 / 자택 거실 / 직장'},
       {id:'trDetail',t:'손상 상세 (직접 입력)',type:'text',role:'assoc',lblPre:'',ph:'예) 차량서 튕겨나옴·약 40km/h / 오토바이 단독 전도'},
-      {id:'area',t:'주 손상 부위 (복수 선택)',role:'count',multi:true,wrap:1,cols:3,o:['두부','경추','흉부','복부','골반','척추','상지','하지','안면']},
+      {id:'area',t:'주 손상 부위 (복수 선택)',role:'assoc',multi:true,sufx:'손상',cols:3,o:['두부','경추','흉부','복부','골반','척추','상지','하지','안면']},
       {id:'loc',t:'의식 소실',role:'assoc',type:'yn',label:'의식소실',esc:'외상+의식소실 → 두부손상'},
       {id:'bleed',t:'출혈',role:'assoc',type:'yn',label:'출혈'},
       {id:'bleedSite',t:'출혈 부위 (복수 선택)',role:'assoc',multi:true,lblPre:'출혈부위',showIf:{id:'bleed',in:['있음']},cols:3,o:['두부','안면','코','구강','흉부','복부','상지','하지','기타']}],
@@ -526,7 +526,7 @@ const CC={
       {id:'hi',t:'낙상 높이',role:'assoc',lblPre:'높이',showIf:{id:'mech',in:['낙상']},o:['낮음','본인 키 이하','고에너지(영아0.9m·소아1.5m↑)'],esc2:'고에너지(영아0.9m·소아1.5m↑)'},
       {id:'place',t:'발생 장소 (구체적)',type:'text',role:'assoc',lblPre:'',ph:'예) 침대 / 계단 / 놀이터'},
       {id:'trDetail',t:'손상 상세 (직접 입력)',type:'text',role:'assoc',lblPre:'',ph:'예) 침대에서 떨어짐·약 50cm'},
-      {id:'area',t:'주 손상 부위 (복수 선택)',role:'count',multi:true,wrap:1,cols:3,o:['두부','안면','경부','흉부','복부','상지','하지']},
+      {id:'area',t:'주 손상 부위 (복수 선택)',role:'assoc',multi:true,sufx:'손상',cols:3,o:['두부','안면','경부','흉부','복부','상지','하지']},
       {id:'loc',t:'의식 소실',role:'assoc',type:'yn',label:'의식소실',esc:'소아 두부외상 의심'},
       {id:'vomit',t:'구토',role:'assoc',type:'yn',label:'구토'}],
    rf:['의식 변화','반복 구토(2회+)','외상 후 경련','고에너지 손상','비정상 행동','두피 혈종(영아)','두개골 골절 의심','다발성 외상']},
@@ -852,13 +852,19 @@ function buildNarrative(){
     else if(q.role==='count'){post+=q.wrap?`(${v})`:' '+v;}
     else if(q.role==='assoc'){
       if(q.type==='yn'){if(v==='있음')assoc.push((q.label||q.t)+' 있음');}
-      else{if(!(q.skip&&q.skip.includes(v)))assoc.push(q.lblPre!==undefined?(q.lblPre?q.lblPre+' '+v:v):(q.t+' '+v));}
+      else if(!(q.skip&&q.skip.includes(v))){
+        let txt;
+        if(q.sufx)txt=v+' '+q.sufx;
+        else if(q.lblPre!==undefined)txt=q.lblPre?q.lblPre+' '+v:v;
+        else txt=q.t+' '+v;
+        assoc.push(txt);
+      }
     } else if(q.role==='info'&&q.rec){recTail.push(q.rec+' '+v);}
   });
   if(S.nrs>0)assoc.push('NRS '+S.nrs+'/10');
   const parens=assoc.length?`(${assoc.join(', ')})`:'';
   const onset=onsetPhrase();const verb=(cc.verb!==undefined)?cc.verb:'시작한';
-  const lead=onset?`상기 환자 ${onset}${verb?' '+verb:''} `:'상기 환자 ';
+  const lead=onset?`${onset}${verb?' '+verb:''} `:'';
   let present=`${lead}${pre}${cc.noun}${post}${parens}${ro(cc.noun)} 내원함.`;
   if(recTail.length)present+=' '+recTail.join(', ')+'.';
   if(S.redFlags.length)present+=' [위험징후: '+S.redFlags.join(', ')+']';
@@ -1003,6 +1009,7 @@ function go(n){
 }
 function goBack(){if(cur>1)go(cur-1);}
 function goNext(){
+  if(cur===1&&!S.route){alert('내원 경로를 선택하세요.');return;}
   if(cur===2&&!S.cc){alert('주호소를 선택하세요.');return;}
   if(cur<5)go(cur+1);
 }
