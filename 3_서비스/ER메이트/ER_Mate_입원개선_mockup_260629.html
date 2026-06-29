@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ER Mate · 입원 mockup</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--line:#e1e6ee;--tx:#1d2733;--tx2:#6b7789;
+  --blue:#2563eb;--blueL:#eef4ff;--green:#16a34a;--greenL:#e9f9ef;--warn:#dc2626;--warnL:#fdecec;
+  --star:#b45309;--starL:#fef3c7;--why:#7c3aed;--whyL:#f3edff;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.hd{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+.hd h1{font-size:22px;margin:0}.hd .sub{color:var(--tx2);font-size:13px}
+.note{background:#fff8e1;border:1px solid #f3e0a0;border-radius:10px;padding:10px 13px;font-size:13px;color:#7a5d00;margin-bottom:14px}
+/* 분기 */
+.branch{display:flex;gap:8px;margin-bottom:14px}
+.btab{flex:1;text-align:center;padding:14px;border-radius:13px;border:2px solid var(--line);background:var(--card);font-weight:800;font-size:16px;cursor:pointer;color:var(--tx2);transition:.15s}
+.btab .d{font-size:11.5px;font-weight:500;margin-top:3px;opacity:.85}
+.btab.on{border-color:var(--blue);background:var(--blueL);color:var(--blue)}
+.prog{display:flex;align-items:center;gap:10px;margin:4px 2px 14px}
+.pbar{flex:1;height:9px;background:var(--line);border-radius:6px;overflow:hidden}
+.pfill{height:100%;background:var(--green);width:0;transition:.25s}
+.ptx{font-size:13px;color:var(--tx2);font-weight:700;min-width:36px;text-align:right}
+.hint{background:var(--blueL);border-radius:10px;padding:10px 13px;font-size:13px;color:#1e40af;margin-bottom:12px}
+/* 절차 타임라인 */
+.fl{display:flex;gap:12px;position:relative}
+.fl::before{content:'';position:absolute;left:18px;top:6px;bottom:-6px;width:2px;background:var(--line)}
+.fl:last-child::before{display:none}
+.num{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:var(--tx2);cursor:pointer;z-index:1}
+.fl.done .num{background:var(--green);border-color:var(--green);color:#fff}
+.ln{flex:1;min-width:0;background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+.fl.done .ln{background:var(--greenL);border-color:#bfe6cc}
+.ft{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;cursor:pointer}
+.ft .ic{font-size:20px}
+.fd{font-size:13.5px;color:var(--tx2);margin-top:5px;line-height:1.55}
+.subs{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+.sub{display:flex;align-items:flex-start;gap:8px;background:var(--starL);border:1px solid #f0d488;border-radius:9px;padding:9px 11px;font-size:13.5px;color:var(--star);cursor:pointer}
+.sub .sck{flex:0 0 18px;width:18px;height:18px;border-radius:5px;border:2px solid #d6a93e;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:1px}
+.sub.on{background:#fde9a8}.sub.on .sck{background:var(--star);border-color:var(--star)}
+.whyb{margin-top:8px;background:var(--whyL);color:var(--why);font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;cursor:pointer;border:none}
+.why{display:none;margin-top:8px;padding:10px 12px;background:var(--whyL);border-radius:9px;font-size:13.5px;color:#4b2a86;border-left:3px solid var(--why)}
+.why.open{display:block}
+.star{background:var(--starL);color:var(--star);font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:4px}
+/* 간호기록 */
+.chart{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:15px}
+.chd{font-weight:800;font-size:15.5px;margin-bottom:4px}
+.chsub{font-size:12.5px;color:var(--tx2);margin-bottom:12px}
+.cbtn{width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:800;font-size:15px;cursor:pointer;color:var(--tx2);margin-bottom:12px}
+.cbtn.on{border-color:var(--green);background:var(--greenL);color:var(--green)}
+#chartTx{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;resize:vertical;background:#fafbfd;color:var(--tx)}
+.copy{margin-top:10px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd"><span style="font-size:26px">🏥</span><div><h1>입원</h1><div class="sub">필수업무 · 절차형 — 개선 mockup</div></div></div>
+  <div class="note">💡 <b>mockup 시안</b> — 단계 문구는 엑셀 원문, 간호기록은 마스터 원문입니다. <b>옴니셀·약 반납 세부와 ★ 표시 문구는 칩스 확정이 필요</b>합니다(마스터에 없는 실무 내용).</div>
+
+  <div class="branch">
+    <div class="btab on" id="bWard" onclick="setBranch('ward')">🛏️ 일반 병실<div class="d">병동으로 인계</div></div>
+    <div class="btab" id="bIcu" onclick="setBranch('icu')">🏥 중환자실<div class="d">중환자실로 인계</div></div>
+  </div>
+
+  <div class="hint">📋 절차형 — 위에서 아래로 순서대로 진행하세요. 번호를 누르면 완료 체크됩니다.</div>
+  <div class="prog"><div class="pbar"><div class="pfill" id="pf"></div></div><div class="ptx" id="pt">0/9</div></div>
+  <div id="list"></div>
+
+  <div class="chart">
+    <div class="chd">📋 입원 간호기록 — 응급실 퇴실</div>
+    <div class="chsub">버튼을 누르면 차팅 문구가 생성됩니다 (마스터 원문 · ★는 칩스 검증)</div>
+    <button class="cbtn" id="cbGen" onclick="toggleChart()">📥 입원(응급실 퇴실) 간호기록 생성</button>
+    <textarea id="chartTx" readonly placeholder="버튼을 누르면 차팅 문구가 생성됩니다."></textarea>
+    <button class="copy" onclick="copyChart()">📋 EMR 복사</button>
+  </div>
+</div>
+
+<script>
+// 단계: title/detail=엑셀 원문, ic=아이콘, why=교육설명, subs=칩스확정 추가항목(★)
+const STEPS=[
+ {ic:'📋',title:'입원지시 확인',detail:'담당 주치의에게 입원 여부 확인 및 병실/중환자실 갈지 확인',why:'오입원·잘못된 병실 배정을 막기 위해 주치의에게 입원 여부와 병실 종류를 직접 확인해요.'},
+ {ic:'🛏️',title:'병실배정',detail:'원무 문의하기',why:'원무과에 연락해 실제 배정된 병실을 확인해요.'},
+ {ic:'📄',title:'입원수속 안내',detail:'보호자에게 입원지시라벨 출력 및 병실 호수 안내→응급원무수납안내',why:'보호자가 수속·수납을 진행할 수 있도록 입원라벨과 병실 호수를 안내해요.'},
+ {ic:'💊',title:'약 반납 확인',detail:'남은약 반납처리(환자 원래 가지고 있는약은 인계, 응급실 처방하고 남은 경구 주사, 수액은 반납)',why:'약품 분실·오투약을 막기 위해 지참약은 병동에 인계하고, 응급실에서 처방한 잔여약은 반납해요.',
+   subs:['옴니셀(Omnicell)에서 불출한 마약·향정신성약 미사용분 반납 확인','환자 지참약 → 병동 인계 / 응급실 처방 잔여(경구·주사·수액) → 약국 반납']},
+ {ic:'📝',title:'전과전동기록지',detail:'인계 전 기록하기',why:'병동 인계 전에 전과전동기록지를 미리 작성해 둬요.'},
+ {ic:'🤝',title:'인계',detail:'검체·pen insulin 등 함께인계. 수혈남으면 병동알리기',why:'검체·인슐린 등 빠뜨리지 않고 병동에 인계하고, 남은 수혈이 있으면 병동에 미리 알려요.'},
+ {ic:'🩺',title:'응급실퇴실간호기록',detail:'처치(빠지거나 중복된건 없는지)·검사(접수 안된 검사나 시행 안되거 없는지)·오더(사인 안하거나 놓친거 없는지)  재확인후 작성',why:'처치·검사·오더 누락이나 중복이 없는지 마지막으로 점검하고 퇴실간호기록을 작성해요.'},
+ {ic:'🚑',title:'환자이송',detail:'환자 이송하기',why:'배정된 병실 또는 중환자실로 환자를 안전하게 이송해요.'},
+ {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 케이블·이름표정리',why:'다음 환자를 위해 침상·케이블·이름표를 정리해요.'},
+];
+// 입원 간호기록 차팅 (마스터 원문 · ★=칩스 검증)
+const CHART={both:['응급실 퇴실 결정 주치의를 확인함','응급실 퇴실 및 입원 간호단위 확인함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함'],
+  ward:['병동으로 인계 후 보냄 ★'], icu:['중환자실 보냄']};
+let branch='ward';
+const checks={}, subChecks={};
+let chartOn=false;
+function setBranch(b){branch=b;document.getElementById('bWard').classList.toggle('on',b==='ward');
+  document.getElementById('bIcu').classList.toggle('on',b==='icu');if(chartOn)renderChart();}
+function tog(i){checks[i]=!checks[i];render();}
+function togSub(i,j){const k=i+'_'+j;subChecks[k]=!subChecks[k];render();}
+function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
+function render(){
+  let html='';
+  STEPS.forEach((s,i)=>{
+    const on=checks[i];
+    const subs=s.subs?`<div class="subs">${s.subs.map((t,j)=>{const sk=subChecks[i+'_'+j];
+      return `<div class="sub ${sk?'on':''}" onclick="togSub(${i},${j})"><div class="sck">${sk?'✓':''}</div><div>${t} <span class="star">★ 칩스확정</span></div></div>`;}).join('')}</div>`:'';
+    html+=`<div class="fl ${on?'done':''}">
+      <div class="num" onclick="tog(${i})">${on?'✓':i+1}</div>
+      <div class="ln">
+        <div class="ft" onclick="tog(${i})"><span class="ic">${s.ic}</span>${s.title}</div>
+        <div class="fd">${s.detail}</div>
+        ${subs}
+        <button class="whyb" onclick="toggleWhy(${i})">💡 왜?</button>
+        <div class="why" id="why${i}">${s.why}</div>
+      </div></div>`;
+  });
+  document.getElementById('list').innerHTML=html;
+  const done=STEPS.filter((s,i)=>checks[i]).length;
+  document.getElementById('pf').style.width=(done/STEPS.length*100)+'%';
+  document.getElementById('pt').textContent=done+'/'+STEPS.length;
+}
+function toggleChart(){chartOn=!chartOn;document.getElementById('cbGen').classList.toggle('on',chartOn);renderChart();}
+function renderChart(){
+  if(!chartOn){document.getElementById('chartTx').value='';return;}
+  const arr=[...CHART.both,...CHART[branch]];
+  document.getElementById('chartTx').value='[입원 · 응급실 퇴실]\n'+arr.map(x=>' · '+x).join('\n');
+}
+function copyChart(){const t=document.getElementById('chartTx');
+  if(!t.value){alert('먼저 간호기록 생성 버튼을 눌러주세요');return;}
+  t.select();document.execCommand('copy');const b=event.target;const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1200);}
+render();
+</script>
+</body>
+</html>

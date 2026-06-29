@@ -17,6 +17,13 @@
   --k5:#3b82f6;--k5bg:#05101c;--k5bd:#1e3a5f;
   --r:12px;--rs:8px;
 }
+[data-theme=light]{
+  --bg:#eef1f6;--surf:#ffffff;--surf2:#f1f4f8;--brd:#d4dae3;
+  --txt:#1a2230;--mute:#475569;--dim:#9aa6b4;
+  --k1bg:#fde8ea;--k2bg:#fdeede;--k3bg:#fcf6dc;--k4bg:#e3f7ea;--k5bg:#e6f0fd;
+}
+.tb{background:var(--surf2);border:1px solid var(--brd);border-radius:8px;color:var(--txt);font-size:18px;padding:5px 9px;cursor:pointer;font-family:inherit;line-height:1;}
+.tb:active{opacity:.6;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;font-size:17px;line-height:1.5;}
 #app{max-width:620px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
@@ -36,13 +43,15 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .fl{font-size:13px;color:var(--mute);margin-bottom:4px;}
 .fi{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;color:var(--txt);font-size:16px;font-family:inherit;outline:none;}
 .fi:focus{border-color:#3b82f6;}
+.fi::placeholder,.oinp::placeholder,.vsn::placeholder{color:var(--dim);}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .q{margin-bottom:13px;}.q:last-child{margin-bottom:0;}
-.qt{font-size:15px;font-weight:600;color:#cbd5e1;margin-bottom:7px;}
+.qt{font-size:15px;font-weight:600;color:var(--txt);margin-bottom:7px;}
 .opts{display:flex;gap:6px;flex-wrap:wrap;}
 .opt{flex:1;min-width:62px;padding:10px 8px;border-radius:var(--rs);border:1px solid var(--brd);background:var(--surf2);color:var(--mute);font-size:14px;text-align:center;cursor:pointer;font-family:inherit;}
 .opt.sel{border-color:#3b82f6;background:#0e2744;color:#93c5fd;font-weight:700;}
 .opt.sel-r{border-color:var(--k1bd);background:var(--k1bg);color:#fca5a5;font-weight:700;}
+.opt.msel{border-color:var(--k4bd);background:var(--k4bg);color:#86efac;font-weight:700;}
 .allnorm{width:100%;padding:11px;border-radius:var(--rs);border:1px dashed var(--k4bd);background:var(--k4bg);color:#86efac;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;}
 .dispbox{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:11px 8px;color:var(--k3);font-size:13px;font-weight:600;text-align:center;}
 .tapbox{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:11px 8px;color:var(--dim);font-size:15px;text-align:center;cursor:pointer;font-weight:600;}
@@ -73,11 +82,14 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .ccgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
 .cc{padding:13px 5px;border-radius:var(--r);text-align:center;border:1px solid var(--brd);background:var(--surf);cursor:pointer;font-family:inherit;}
 .cc .ci{font-size:24px;display:block;margin-bottom:4px;}
-.cc .ct{font-size:12px;color:var(--mute);}
-.cc.sel{outline:2px solid #fff;outline-offset:2px;}
+.cc .ct{font-size:12px;color:var(--txt);font-weight:600;}
+.cc.sel{outline:3px solid #2563eb;outline-offset:2px;box-shadow:0 0 0 4px rgba(37,99,235,.25);}
+.cc.sel .ct{font-weight:800;}
 .cc.cr{border-color:var(--k1bd);background:var(--k1bg);} .cc.co{border-color:var(--k2bd);background:var(--k2bg);}
 .cc.cy{border-color:var(--k3bd);background:var(--k3bg);} .cc.cg{border-color:var(--k4bd);background:var(--k4bg);}
 .cc.cb{border-color:var(--k5bd);background:var(--k5bg);} .cc.cp{border-color:#7e22ce;background:#1a0730;}
+[data-theme=light] .cc.cp{border-color:#a855f7;background:#f3e8ff;}
+[data-theme=light] .cc.cp .ct{color:#7e22ce;}
 /* V/S */
 .vsg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .vsn{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:9px;color:var(--txt);font-size:16px;font-weight:600;text-align:center;font-family:'Courier New',monospace;outline:none;}
@@ -113,6 +125,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 /* tags */
 .tagrow{display:flex;gap:6px;}
 .tag{background:#1a2e0e;border:1px solid var(--k4bd);color:#86efac;padding:5px 11px;border-radius:20px;font-size:13px;cursor:pointer;}
+.tag.surg{background:#1c1805;border-color:var(--k3bd);color:#fde047;}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 /* abuse */
 .abuse-card{border-color:var(--k1bd);}
@@ -124,7 +137,11 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .aitem b{font-size:14px;display:block;color:var(--txt);} .aitem small{display:block;font-size:12px;color:var(--mute);margin-top:2px;}
 .anotice{font-size:12px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:9px 11px;margin-top:8px;}
 /* output */
-.outta{width:100%;background:#050e09;border:1px solid var(--k4bd);border-radius:var(--r);padding:13px;font-family:'Courier New',monospace;font-size:13px;color:#4ade80;line-height:1.8;resize:vertical;min-height:150px;outline:none;}
+.outta{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--r);padding:13px;font-family:inherit;font-size:14px;color:var(--txt);line-height:1.8;resize:vertical;min-height:170px;outline:none;}
+.outta:focus{border-color:#3b82f6;}
+.notewarn{background:var(--k1bg);border:1px solid var(--k1bd);border-radius:var(--rs);padding:11px 13px;margin-bottom:9px;}
+.notewarn .nwh{font-size:12px;color:#dc2626;font-weight:800;margin-bottom:5px;}
+.notewarn .nwi{color:#cc0000;font-weight:700;font-size:14px;line-height:1.6;}
 .cbtn{width:100%;padding:13px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;margin-top:8px;}
 .cbtn.g{background:linear-gradient(135deg,#16a34a,#15803d);} .cbtn.b{background:linear-gradient(135deg,#1d4ed8,#2563eb);}
 /* footer */
@@ -144,19 +161,25 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .fmchk.on .fmbox::after{content:"✓";}
 .fmchk b{font-size:15px;display:block;} .fmchk small{display:block;font-size:12px;color:var(--mute);margin-top:3px;line-height:1.4;}
 .fmwarn{font-size:13px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:9px 11px;margin:4px 0 10px;}
-.alert-card{font-size:14px;color:#cbd5e1;line-height:1.7;margin-bottom:16px;}
+.alert-card{font-size:14px;color:var(--txt);line-height:1.7;margin-bottom:16px;}
 .alert-card li{margin-left:18px;margin-top:3px;}
 .mbtn{width:100%;padding:13px;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;margin-top:8px;}
 .mbtn.blue{background:#1d4ed8;} .mbtn.gray{background:var(--surf2);color:var(--mute);border:1px solid var(--brd);}
 .note{font-size:11px;color:var(--mute);text-align:center;padding:8px 16px;}
 </style>
 </head>
-<body>
+<body data-theme="light">
 <div id="app">
   <div id="top">
     <div class="tr">
-      <div class="nm">NFH <em>ER</em> TRIAGE <span style="font-size:12px;color:var(--mute)">V4</span></div>
-      <div class="step" id="stepLbl">1 / 5</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="tb" onclick="resetAll()" title="처음으로">🏠</button>
+        <div class="nm">NFH <em>ER</em> TRIAGE <span style="font-size:12px;color:var(--mute)">V4</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="tb" id="thBtn" onclick="toggleTheme()" title="테마 전환">☀️</button>
+        <div class="step" id="stepLbl">1 / 5</div>
+      </div>
     </div>
     <div class="bar"><div class="fill" id="fill" style="width:20%"></div></div>
   </div>
@@ -184,13 +207,14 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         </div>
         <div class="q" style="margin-top:10px"><div class="qt">성별</div><div class="opts" id="sexOpts"></div></div>
         <div class="q" style="margin-bottom:0"><div class="qt">나이 <span style="font-size:11px;color:var(--mute);font-weight:400">(소아 &lt;15 · 노인 ≥65 자동)</span></div>
-          <input class="fi" id="ageInp" placeholder="나이 입력 (예: 45 / 7세 / 18개월 / 72)" oninput="S.age=this.value;renderTrack();renderPeds()">
+          <input class="fi" id="ageInp" placeholder="나이 입력 (예: 45 / 7세 / 18개월 / 72)" oninput="S.age=this.value;renderTrack();renderPeds();renderAbuse()">
         </div>
       </div>
 
       <div class="card" id="pedCard" style="display:none;border-color:var(--k3bd)">
         <div class="lbl">👶 소아 평가 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mute)">· 나이 어리면 자동</span></div>
-        <div class="row2">
+        <div class="vsg">
+          <div><div class="fl">키(cm)</div><input class="fi" id="pedH" inputmode="decimal" placeholder="예) 85" oninput="S.pedH=this.value;render()"></div>
           <div><div class="fl">체중(kg)</div><input class="fi" id="pedW" inputmode="decimal" placeholder="예) 11" oninput="S.pedW=this.value;render()"></div>
           <div><div class="fl">체온(℃)</div><input class="fi" id="pedT" inputmode="decimal" placeholder="예) 38.5" oninput="S.pedT=this.value;render()"></div>
         </div>
@@ -203,6 +227,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="card">
         <div class="lbl">안전 · 배경 정보</div>
         <div class="q" id="pregRow"><div class="qt">🤰 임신 <span style="font-size:11px;color:var(--mute);font-weight:400">(여성)</span></div><div class="opts" id="pregOpts"></div></div>
+        <div class="q" id="lmpRow"><div class="qt">🩸 LMP <span style="font-size:11px;color:var(--mute);font-weight:400">(마지막 월경 시작일)</span></div><input type="date" class="odate" id="lmpInp" style="width:100%" onchange="S.lmp=this.value;render()"></div>
         <div class="q"><div class="qt">💉 조영제 알러지</div><div class="opts" id="contrastOpts"></div></div>
         <div class="q"><div class="qt">🚬 흡연</div><div class="opts" id="smkOpts"></div></div>
         <div class="q"><div class="qt">💊 약물 알러지 / 복용약물</div>
@@ -214,11 +239,11 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div class="q" style="margin-bottom:0"><div class="qt">✈️ 여행력</div>
           <div class="opts" id="trvOpts"></div>
           <div id="trvDetail" style="display:none;margin-top:8px">
-            <div class="orow">
-              <input type="date" class="odate" id="trvGo" onchange="render()" title="출발일">
-              <input class="oinp" style="font-size:15px" id="trvDur" placeholder="기간(일)" oninput="render()">
+            <div class="row2">
+              <div><div class="fl">여행 시작일</div><input type="date" class="odate" style="width:100%" id="trvGo" onchange="render()"></div>
+              <div><div class="fl">기간(일)</div><input class="oinp" style="font-size:15px;width:100%" id="trvDur" inputmode="numeric" placeholder="예) 10" oninput="render()"></div>
             </div>
-            <input class="oinp" style="text-align:left;font-size:15px;width:100%;margin-top:8px" id="trvPlace" placeholder="장소 (예: 동남아)" oninput="render()">
+            <div style="margin-top:8px"><div class="fl">장소 (구체적으로)</div><input class="oinp" style="text-align:left;font-size:15px;width:100%" id="trvPlace" placeholder="예) 태국 / 영국 / 베트남" oninput="render()"></div>
           </div>
         </div>
       </div>
@@ -243,15 +268,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <button class="allnorm" onclick="abcdAllNormal()">✓ ABCD 모두 정상</button>
       </div>
 
-      <button class="allnorm" id="traumaBtn" style="border-style:solid;border-color:var(--k2bd);background:var(--k2bg);color:#fdba74;margin-bottom:11px" onclick="toggleTrauma()">🩹 외상 사정 추가 +</button>
-      <div class="card" id="traumaCard" style="display:none;border-color:var(--k2bd)">
-        <div class="lbl">🩹 외상 사정</div>
-        <div class="q"><div class="qt">손상 부위(복수)</div><div class="opts" id="trAreaOpts"></div></div>
-        <div class="q"><div class="qt">출혈</div><div class="opts" id="trBleedOpts"></div></div>
-        <div class="q"><div class="qt">개방창(상처)</div><div class="opts" id="trWoundOpts"></div></div>
-        <div class="q"><div class="qt">SMC (말초 감각·운동·순환)</div><div class="opts" id="trSMCOpts"></div></div>
-        <div class="q" style="margin-bottom:0"><div class="qt">의식 소실</div><div class="opts" id="trLOCOpts"></div></div>
-      </div>
+      <div id="abuseBadge1" style="display:none;background:var(--k2bg);border:1px solid var(--k2bd);color:#fdba74;border-radius:var(--rs);padding:10px 13px;font-size:13px;margin-bottom:11px">⚠️ <b id="abuseBadgeTxt">학대 선별 권고</b> · 기록 단계에서 사정합니다</div>
 
       <div class="banner ok" id="riskBanner">
         <div class="bt" id="riskTt">🟢 안정</div>
@@ -273,8 +290,8 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
     <!-- ===== S3 V/S · 발생시점 ===== -->
     <div class="screen" id="s3">
-      <div class="sec">V/S · 발생시점</div>
-      <div class="sub" id="s3sub">활력징후 입력</div>
+      <div class="sec">V/S 측정</div>
+      <div class="sub" id="s3sub">활력징후 입력 (주호소 직후 일찍 측정)</div>
       <div class="card">
         <div class="lbl">활력징후</div>
         <div class="q" style="margin-bottom:12px"><div class="qt">🩺 혈압 측정 금지 팔 <span style="font-size:11px;color:var(--mute);font-weight:400">(유방절제·투석혈관·정맥주사 등)</span></div><div class="opts" id="bpArmOpts"></div></div>
@@ -288,15 +305,6 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
           <div><div class="fl">O2</div><input class="vsn" id="vsO2" placeholder="RA" oninput="render()"></div>
         </div>
       </div>
-      <div class="card">
-        <div class="lbl">발생 시점 (온셋)</div>
-        <div id="onsetDays"></div>
-        <div class="orow" style="margin-top:8px">
-          <input type="date" class="odate" id="onsetDate" onchange="setOnsetDate(this.value)">
-          <input class="oinp" id="onsetInp" placeholder="--:-- 시각" maxlength="5" oninput="S.onsetTime=this.value;render()">
-          <button class="onow" onclick="onsetNow()">🕐 지금</button>
-        </div>
-      </div>
     </div>
 
     <!-- ===== S4 세부질문·Red Flag·KTAS ===== -->
@@ -304,6 +312,15 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="sec" id="s4title">세부 질문</div>
       <div class="sub" id="s4sub">해당 항목 탭</div>
       <div class="ktas" id="ktasBox"></div>
+      <div class="card">
+        <div class="lbl">발생 시점 (온셋)</div>
+        <div id="onsetDays"></div>
+        <div class="orow" style="margin-top:8px">
+          <input type="date" class="odate" id="onsetDate" onchange="setOnsetDate(this.value)">
+          <input class="oinp" id="onsetInp" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="onsetTimeInput(this)">
+          <button class="onow" onclick="onsetNow()">🕐 지금</button>
+        </div>
+      </div>
       <div class="card"><div class="lbl">통증/불편 NRS</div>
         <div class="nrsv" id="nrsv">0</div>
         <input type="range" class="nrssl" min="0" max="10" value="0" id="nrs" oninput="setNRS(this.value)">
@@ -322,8 +339,13 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div class="lbl">과거력 (# 태그)</div>
         <div class="tagrow"><input class="fi" id="pmhxInp" placeholder="진단명 입력 후 +" onkeydown="if(event.key==='Enter')addPmhx()"><button class="onow" onclick="addPmhx()">+ 추가</button></div>
         <div class="tags" id="pmhxTags"></div>
+        <div style="height:1px;background:var(--brd);margin:13px 0"></div>
+        <div class="lbl">수술력 (s/p)</div>
+        <div class="tagrow"><input class="fi" id="surgInp" placeholder="수술명 입력 후 +" onkeydown="if(event.key==='Enter')addSurg()"><button class="onow" style="border-color:var(--k3bd);background:var(--k3bg);color:#fde047" onclick="addSurg()">+ 추가</button></div>
+        <div class="tags" id="surgTags"></div>
       </div>
 
+      <button class="allnorm" id="abuseBtn" style="border-style:solid;border-color:var(--k1bd);background:var(--k1bg);color:#fca5a5;margin-bottom:11px" onclick="toggleAbuseOpen()">🚨 학대 의심 사정 열기 +</button>
       <div class="card abuse-card" id="abuseCard" style="display:none">
         <div class="lbl" style="color:#fca5a5">⚠️ 학대 의심 스크리닝 <span id="abuseWhy" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
         <div id="abuseList"></div>
@@ -340,8 +362,10 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       </div>
 
       <div class="card">
-        <div class="lbl">간호기록 (자동 — 수정 가능)</div>
-        <textarea class="outta" id="outNote"></textarea>
+        <div class="lbl">간호기록 (자동 — 직접 수정·추가 가능)</div>
+        <div id="noteWarn" style="display:none"></div>
+        <textarea class="outta" id="outNote" oninput="S.noteEdited=true"></textarea>
+        <button class="cbtn" style="background:var(--surf2);border:1px solid var(--brd);color:var(--mute)" onclick="regenNote()">🔄 자동 문장 다시 생성 (수정 내용 초기화)</button>
         <button class="cbtn g" onclick="copyNote()">📋 간호기록 복사</button>
         <button class="cbtn b" onclick="openFinal()">📊 기록 생성 → 최종확인</button>
       </div>
@@ -398,12 +422,14 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 <script>
 // ══════════ STATE ══════════
 const S={age:'',sex:'',date:'',arr:'',reg:'',route:'119 구급대',preg:'',contrast:'',smoking:'',travel:'',bpArm:'',
-  pedW:'',pedT:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),traumaOn:false,trArea:new Set(),trBleed:'',trWound:'',trSMC:'',trLOC:'',
+  pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),traumaOn:false,trArea:new Set(),trBleed:'',trWound:'',trSMC:'',trLOC:'',
   gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', track:'mild', ans:{}, nrs:0,
-  onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], abuse:new Set(),
-  ktas:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false};
+  onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
+  ktas:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false, abuseOpen:false, noteEdited:false};
 let cur=1;
 const KN={1:'즉시소생',2:'응급',3:'긴급',4:'준응급',5:'비응급'};
+function resetAll(){if(confirm('처음으로 돌아갑니다. 입력 내용이 사라집니다.'))location.reload();}
+function toggleTheme(){const l=document.body.getAttribute('data-theme')==='light';document.body.setAttribute('data-theme',l?'':'light');const b=document.getElementById('thBtn');if(b)b.textContent=l?'🌙':'☀️';}
 
 // ══════════ 주호소 데이터 (track: crit/severe/mild) ══════════
 // 역할: pre(앞 수식)·count·assoc(동반)·info / yn 동반은 label
@@ -483,15 +509,24 @@ const CC={
       {id:'sym',t:'주요 증상',role:'assoc',cols:1,o:['두드러기','혈관부종','구역/구토','복통','호흡곤란'],esc2:'호흡곤란'}],
    rf:['호흡곤란·Stridor','혈압저하','의식저하','전신 두드러기+복통']},
  '외상':{track:'severe',noun:'외상',color:'cg',icon:'🩹',verb:'발생한',
-   q:[{id:'mech',t:'손상 기전',role:'pre',o:['낙상','교통사고','타박','자상·관통','기타']},
-      {id:'area',t:'손상 부위',role:'count',wrap:1,cols:3,o:['두부','경추','흉부','복부','골반','척추','상지','하지','안면']},
+   q:[{id:'mech',t:'손상 기전',role:'pre',o:['낙상','교통사고','부딪힘','타박','자상·관통','기타']},
+      {id:'fallHeight',t:'낙상 높이',role:'assoc',lblPre:'높이',showIf:{id:'mech',in:['낙상']},o:['주저앉음','본인 키 이하','본인 키 이상','1m↑/계단']},
+      {id:'fallType',t:'낙상 양상',role:'assoc',lblPre:'',showIf:{id:'mech',in:['낙상']},o:['미끄러짐','걸려 넘어짐','실신성','어지러움']},
+      {id:'taType',t:'교통사고 유형',role:'assoc',lblPre:'',showIf:{id:'mech',in:['교통사고']},o:['운전자','동승자','보행자','오토바이','자전거']},
+      {id:'taImpact',t:'충격 정도',role:'assoc',lblPre:'',showIf:{id:'mech',in:['교통사고']},o:['저속','고속(40km/h↑)','차량서 튕겨나감','전복','20분↑ 구조']},
+      {id:'place',t:'발생 장소 (구체적)',type:'text',role:'assoc',lblPre:'',ph:'예) 지하철 계단 / 자택 거실 / 직장'},
+      {id:'trDetail',t:'손상 상세 (직접 입력)',type:'text',role:'assoc',lblPre:'',ph:'예) 차량서 튕겨나옴·약 40km/h / 오토바이 단독 전도'},
+      {id:'area',t:'주 손상 부위 (복수 선택)',role:'count',multi:true,wrap:1,cols:3,o:['두부','경추','흉부','복부','골반','척추','상지','하지','안면']},
       {id:'loc',t:'의식 소실',role:'assoc',type:'yn',label:'의식소실',esc:'외상+의식소실 → 두부손상'},
-      {id:'bleed',t:'출혈',role:'assoc',type:'yn',label:'출혈'}],
+      {id:'bleed',t:'출혈',role:'assoc',type:'yn',label:'출혈'},
+      {id:'bleedSite',t:'출혈 부위 (복수 선택)',role:'assoc',multi:true,lblPre:'출혈부위',showIf:{id:'bleed',in:['있음']},cols:3,o:['두부','안면','코','구강','흉부','복부','상지','하지','기타']}],
    rf:['의식저하','혈압저하','다발성 외상','두부 외상 의심','척추 손상 의심','관통상']},
  '소아 외상':{track:'severe',noun:'외상',color:'cg',icon:'👶',verb:'발생한',ped:1,
    q:[{id:'mech',t:'손상 기전',role:'pre',o:['낙상','교통사고','끼임·눌림','타박','기타']},
-      {id:'hi',t:'낙상 높이',role:'assoc',lblPre:'',skip:['해당없음','낮음'],o:['해당없음','낮음','고에너지'],esc2:'고에너지'},
-      {id:'area',t:'손상 부위',role:'count',wrap:1,cols:3,o:['두부','안면','경부','흉부','복부','상지','하지']},
+      {id:'hi',t:'낙상 높이',role:'assoc',lblPre:'높이',showIf:{id:'mech',in:['낙상']},o:['낮음','본인 키 이하','고에너지(영아0.9m·소아1.5m↑)'],esc2:'고에너지(영아0.9m·소아1.5m↑)'},
+      {id:'place',t:'발생 장소 (구체적)',type:'text',role:'assoc',lblPre:'',ph:'예) 침대 / 계단 / 놀이터'},
+      {id:'trDetail',t:'손상 상세 (직접 입력)',type:'text',role:'assoc',lblPre:'',ph:'예) 침대에서 떨어짐·약 50cm'},
+      {id:'area',t:'주 손상 부위 (복수 선택)',role:'count',multi:true,wrap:1,cols:3,o:['두부','안면','경부','흉부','복부','상지','하지']},
       {id:'loc',t:'의식 소실',role:'assoc',type:'yn',label:'의식소실',esc:'소아 두부외상 의심'},
       {id:'vomit',t:'구토',role:'assoc',type:'yn',label:'구토'}],
    rf:['의식 변화','반복 구토(2회+)','외상 후 경련','고에너지 손상','비정상 행동','두피 혈종(영아)','두개골 골절 의심','다발성 외상']},
@@ -581,7 +616,9 @@ function renderInfoChips(){
   mk('smkOpts',['비흡연','현재 흡연','과거(금연)'],'smoking');
   mk('trvOpts',['없음','있음'],'travel');
   mk('bpArmOpts',['없음','좌측 금지','우측 금지','양측 주의'],'bpArm',['좌측 금지','우측 금지','양측 주의']);
-  const pr=document.getElementById('pregRow');if(pr)pr.style.display=(S.sex==='여')?'':'none';
+  const fem=(S.sex==='여');
+  const pr=document.getElementById('pregRow');if(pr)pr.style.display=fem?'':'none';
+  const lr=document.getElementById('lmpRow');if(lr)lr.style.display=fem?'':'none';
 }
 // 날짜·시간·경로
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -603,7 +640,7 @@ function patRender(){
 function pickPat(key,id,v){S[key]=(S[key]===v?'':v);patRender();render();}
 function togglePedRisk(r){S.pedRisk.has(r)?S.pedRisk.delete(r):S.pedRisk.add(r);patRender();render();}
 function renderPeds(){const c=document.getElementById('pedCard');if(!c)return;if(!isPed()){c.style.display='none';return;}c.style.display='';patRender();}
-function pedSummary(){if(!isPed())return '';let p=[];if(S.pedW)p.push('체중 '+S.pedW+'kg');if(S.pedT)p.push('체온 '+S.pedT+'℃');const pat=[];if(S.patApp==='이상')pat.push('외관');if(S.patWob==='이상')pat.push('호흡노력');if(S.patCir==='이상')pat.push('순환');if(pat.length)p.push('PAT이상('+pat.join('·')+')');if(S.pedRisk.size)p.push('소아위험 '+[...S.pedRisk].join('·'));return p.length?'소아 '+p.join(' / '):'';}
+function pedSummary(){if(!isPed())return '';let p=[];if(S.pedH)p.push('키 '+S.pedH+'cm');if(S.pedW)p.push('체중 '+S.pedW+'kg');if(S.pedT)p.push('체온 '+S.pedT+'℃');const pat=[];if(S.patApp==='이상')pat.push('외관');if(S.patWob==='이상')pat.push('호흡노력');if(S.patCir==='이상')pat.push('순환');if(pat.length)p.push('PAT이상('+pat.join('·')+')');if(S.pedRisk.size)p.push('소아위험 '+[...S.pedRisk].join('·'));return p.length?'소아 '+p.join(' / '):'';}
 // 외상 사정
 function renderTrauma(){
   const c=document.getElementById('traumaCard');if(!c)return;
@@ -692,6 +729,7 @@ function renderOnsetDays(){
 function setOnsetDays(v){S.onsetDaysAgo=v;const d=new Date();d.setDate(d.getDate()-v);document.getElementById('onsetDate').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderOnsetDays();render();}
 function setOnsetDate(val){if(!val){S.onsetDaysAgo=null;renderOnsetDays();render();return;}const t=new Date();t.setHours(0,0,0,0);const od=new Date(val+'T00:00:00');S.onsetDaysAgo=Math.round((t-od)/86400000);renderOnsetDays();render();}
 function onsetNow(){const d=new Date();const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');S.onsetTime=t;document.getElementById('onsetInp').value=t;render();}
+function onsetTimeInput(el){let v=el.value.replace(/[^0-9]/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+':'+v.slice(2);el.value=v;S.onsetTime=v;render();}
 function onsetPhrase(){const t=S.onsetTime?S.onsetTime+'경':'';if(S.onsetDaysAgo===null&&!t)return '';const dayTxt=S.onsetDaysAgo===null?'':(S.onsetDaysAgo===0?'금일':S.onsetDaysAgo+'일 전');const p=[dayTxt,t].filter(Boolean).join(' ');return p?p+'부터':'';}
 
 // ══════════ 세부질문 ══════════
@@ -705,9 +743,9 @@ function renderDetail(){
   document.getElementById('s4title').textContent=(S.cc||'주호소')+' — 세부';
   document.getElementById('s4sub').textContent=({crit:'🔴 위급 트랙',severe:'🟠 중증 트랙',mild:'🟢 경증 트랙'})[S.track]||'';
   if(!cc){document.getElementById('qBox').innerHTML='<div style="color:var(--mute);font-size:13px">직접 입력 주호소 — 세부질문 없음</div>';document.getElementById('rfCard').style.display='none';renderKTAS();return;}
-  // 질문: 경증이면 핵심(앞 3개)만
-  let qs=cc.q;
-  if(S.track==='mild')qs=cc.q.slice(0,3);
+  // 질문: 조건부(showIf) 필터 후, 경증이면 핵심(앞 3개)만
+  let qs=cc.q.filter(qVisible);
+  if(S.track==='mild')qs=qs.slice(0,3);
   document.getElementById('qBox').innerHTML=qs.map(q=>buildQ(q)).join('');
   // red flag (경증은 숨김)
   const rfCard=document.getElementById('rfCard');
@@ -715,8 +753,10 @@ function renderDetail(){
   else{rfCard.style.display='';document.getElementById('rfList').innerHTML=cc.rf.map((f,i)=>`<div class="rf ${S.redFlags.includes(f)?'on':''}" onclick="toggleRF('${f.replace(/'/g,"")}')"><span class="rfb">${S.redFlags.includes(f)?'✓':''}</span><span class="rt">${f}</span></div>`).join('');}
   renderKTAS();
 }
+function qVisible(q){return !q.showIf||(q.showIf.in||[]).includes(S.ans[q.showIf.id]);}
 function buildQ(q){
   if(q.type==='text'){return `<div class="q"><div class="qt">${q.t}</div><input class="fi" value="${S.ans[q.id]||''}" placeholder="${q.ph||''}" oninput="S.ans['${q.id}']=this.value;render()"></div>`;}
+  if(q.multi){const arr=Array.isArray(S.ans[q.id])?S.ans[q.id]:[];const cells=q.o.map(o=>`<div class="opt ${arr.includes(o)?'msel':''}" onclick="pickMulti('${q.id}','${o}')">${o}</div>`).join('');return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;}
   if(q.type==='datetime'){const val=S.ans[q.id]||'';const ps=val.split(' ');return `<div class="q"><div class="qt">${q.t}</div><div class="orow"><input type="date" class="odate" id="dt_${q.id}" value="${ps[0]||''}" onchange="setDT('${q.id}')"><input class="oinp" id="tm_${q.id}" value="${ps[1]||''}" placeholder="--:--" maxlength="5" oninput="setDT('${q.id}')"></div></div>`;}
   let opts;
   if(q.type==='yn')opts=['있음','없음'];else opts=q.o;
@@ -724,6 +764,7 @@ function buildQ(q){
     return `<div class="opt ${sel?(danger?'sel-r':'sel'):''}" onclick="pickQ('${q.id}','${o}')">${o}</div>`;}).join('');
   return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;
 }
+function pickMulti(id,v){let a=Array.isArray(S.ans[id])?S.ans[id].slice():[];const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);S.ans[id]=a;renderDetail();render();}
 function pickQ(id,v){S.ans[id]=(S.ans[id]===v?'':v);
   const cc=CC[S.cc];const q=cc.q.find(x=>x.id===id);
   // esc → 경증이면 중증 승격
@@ -771,20 +812,30 @@ const A_ELDER=[['양상 손상','설명 안 되는 손상, 결박·담금 자국
 function ageNum(){const a=parseInt(S.age,10);return isNaN(a)?null:a;}
 function renderAbuse(){
   const a=ageNum();const ped=(a!==null&&a<15)||isPed()||(CC[S.cc]&&CC[S.cc].ped);const elder=a!==null&&a>=65;const trauma=S.cc==='외상'||S.cc==='소아 외상'||S.traumaOn;
+  // 첫 페이지: 소아·노인이면 선별 권고 배지만
+  const badge=document.getElementById('abuseBadge1');
+  if(badge){const rec=ped||elder;badge.style.display=rec?'':'none';if(rec){const t=document.getElementById('abuseBadgeTxt');if(t)t.textContent=(ped?'소아':'노인')+' — 학대 선별 권고';}}
+  // 마지막 기록 페이지: 실제 체크리스트 (소아·노인·외상 자동 / 수동 토글)
+  const show=S.abuseOpen||ped||elder||trauma;
+  const btn=document.getElementById('abuseBtn');if(btn)btn.textContent=show?'🚨 학대 의심 사정 (열림)':'🚨 학대 의심 사정 열기 +';
   const card=document.getElementById('abuseCard');if(!card)return;
-  if(!(ped||elder||trauma)){S.abuse.clear();card.style.display='none';return;}
+  if(!show){if(!S.abuseOpen)S.abuse.clear();card.style.display='none';return;}
   card.style.display='';
-  let why=[];if(ped)why.push('소아');if(elder)why.push('노인');if(trauma)why.push('외상');
-  document.getElementById('abuseWhy').textContent='('+why.join('·')+' 자동 노출)';
+  let why=[];if(ped)why.push('소아');if(elder)why.push('노인');if(trauma)why.push('외상');if(S.abuseOpen&&!why.length)why.push('수동');
+  document.getElementById('abuseWhy').textContent='('+why.join('·')+' 노출)';
   let groups=[['공통',A_COMMON]];if(ped)groups.push(['아동',A_CHILD]);if(elder)groups.push(['노인',A_ELDER]);
   document.getElementById('abuseList').innerHTML=groups.map(([title,items])=>`<div class="agrp">${title}</div>`+items.map(([nm,help])=>`<div class="aitem ${S.abuse.has(nm)?'on':''}" onclick="toggleAbuse('${nm}')"><span class="abx">${S.abuse.has(nm)?'✓':''}</span><div><b>${nm}</b><small>${help}</small></div></div>`).join('')).join('');
 }
 function toggleAbuse(nm){S.abuse.has(nm)?S.abuse.delete(nm):S.abuse.add(nm);renderAbuse();render();}
+function toggleAbuseOpen(){S.abuseOpen=!S.abuseOpen;renderAbuse();render();}
 
 // ══════════ 과거력 ══════════
 function addPmhx(){const i=document.getElementById('pmhxInp');const v=i.value.trim();if(!v)return;S.pmhx.push('#'+v.replace(/^#/,''));i.value='';renderPmhx();render();}
 function renderPmhx(){document.getElementById('pmhxTags').innerHTML=S.pmhx.map((p,k)=>`<span class="tag" onclick="rmPmhx(${k})">${p} ✕</span>`).join('');}
 function rmPmhx(k){S.pmhx.splice(k,1);renderPmhx();render();}
+function addSurg(){const i=document.getElementById('surgInp');const v=i.value.trim();if(!v)return;S.surg.push('s/p '+v);i.value='';renderSurg();render();}
+function renderSurg(){const e=document.getElementById('surgTags');if(e)e.innerHTML=S.surg.map((p,k)=>`<span class="tag surg" onclick="rmSurg(${k})">${p} ✕</span>`).join('');}
+function rmSurg(k){S.surg.splice(k,1);renderSurg();render();}
 function setKtas(v,el){document.querySelectorAll('#ktasRow .kb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.ktas=v;render();}
 
 // ══════════ 받침 ══════════
@@ -795,7 +846,8 @@ function buildNarrative(){
   const cc=CC[S.cc];
   if(!cc)return {motive:S.cc||'',present:''};
   let pre='',post='',assoc=[],recTail=[];
-  cc.q.forEach(q=>{const v=S.ans[q.id];if(v===undefined||v===''||v===null)return;
+  cc.q.forEach(q=>{if(!qVisible(q))return;let v=S.ans[q.id];if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;
+    if(Array.isArray(v))v=v.join('·');
     if(q.role==='pre'){pre+=v+(q.suf?' '+q.suf:'')+' ';}
     else if(q.role==='count'){post+=q.wrap?`(${v})`:' '+v;}
     else if(q.role==='assoc'){
@@ -814,31 +866,38 @@ function buildNarrative(){
 }
 function bgLine(){
   let bg=[];
-  if(S.preg&&S.preg!=='해당없음'&&S.preg!=='없음')bg.push('임신 '+S.preg);else if(S.preg)bg.push('임신 '+S.preg);
+  if(S.preg){let pt='임신 '+S.preg;if(S.lmp)pt+=' (LMP '+S.lmp+')';bg.push(pt);}
   bg.push('조영제알러지 '+(S.contrast||'없음'));
   const da=(document.getElementById('drugAl')||{}).value||'';const cm=(document.getElementById('curMed')||{}).value||'';
   bg.push('약물알러지 '+(da.trim()||'없음'));bg.push('복용약물 '+(cm.trim()||'없음'));
   if(S.smoking)bg.push(S.smoking);
   {const ps=pedSummary();if(ps)bg.push(ps);}
   {const ts=traumaSummary();if(ts)bg.push(ts);}
-  if(S.bst&&!S.bstSkip)bg.push('BST '+S.bst+' mg/dL');
   if(S.travel==='없음')bg.push('여행력 없음');
   else if(S.travel==='있음'){const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push(go+'부터');if(dur)p.push(dur+'일간');if(place)p.push(place);bg.push('여행력 '+(p.length?p.join(' '):'있음'));}
   return bg.join(' / ');
 }
-function pmhxText(){return S.pmhx.length?S.pmhx.join(' '):'없음';}
-function vsText(){const g=id=>(document.getElementById(id)||{}).value||'';return `BP ${g('vsSBP')||'__'}/${g('vsDBP')||'__'} / HR ${g('vsHR')||'__'} / RR ${g('vsRR')||'__'} / BT ${g('vsBT')||'__'}℃ / SpO2 ${g('vsSpO2')||'__'}% (${g('vsO2')||'RA'})`;}
+function pmhxText(){const p=S.pmhx.join(' '),s=S.surg.join(' / ');const both=[p,s].filter(x=>x).join(' / ');return both||'없음';}
+function bpArmNote(){
+  if(!S.bpArm||S.bpArm==='없음')return '';
+  const map={'좌측 금지':'$ 좌측 팔 혈압측정 금지 — 우측 팔 또는 하지(다리)에서 측정',
+             '우측 금지':'$ 우측 팔 혈압측정 금지 — 좌측 팔 또는 하지(다리)에서 측정',
+             '양측 주의':'$ 양측 팔 혈압측정 주의 — 하지(다리)에서 측정 고려'};
+  return map[S.bpArm]||('$ '+S.bpArm+' 혈압측정 금지');
+}
+function vsText(){const g=id=>(document.getElementById(id)||{}).value||'';let s=`BP ${g('vsSBP')||'__'}/${g('vsDBP')||'__'} / HR ${g('vsHR')||'__'} / RR ${g('vsRR')||'__'} / BT ${g('vsBT')||'__'}℃ / SpO2 ${g('vsSpO2')||'__'}% (${g('vsO2')||'RA'})`;if(S.bst&&!S.bstSkip)s+=` / BST ${S.bst} mg/dL`;return s;}
 function fullNote(){
   const n=buildNarrative();
   const pmhx=pmhxText();
   const head=(pmhx==='없음'?'특이 과거력 없는 환자':pmhx+' 과거력 있는 환자');
   let t=`[환자] ${S.pname||'-'} ${S.pid?'('+S.pid+') ':''}· ${S.sex||'-'} · ${S.age||'-'}세 · ${S.date} ${S.arr||''}\n`;
+  t+=`[배경정보] ${bgLine()}\n`;
   t+=`[내원동기] ${n.motive||'-'} (${S.route} 내원)\n`;
   t+=`[현재호소] ${head}, ${n.present}\n`;
-  t+=`[배경정보] ${bgLine()}\n`;
   t+=`[V/S] ${vsText()}`;
   let spec=[];
-  if(S.bpArm&&S.bpArm!=='없음')spec.push('⚠ 혈압측정금지: '+S.bpArm);
+  {const bn=bpArmNote();if(bn)spec.push(bn);}
+  if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))spec.push('$ '+(b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   if(isolationReason().length)spec.push('1구역 안내: '+isolationReason().join('·'));
   if(S.abuse.size)spec.push('$ 학대 의심: '+[...S.abuse].join(', '));
   if(spec.length)t+=`\n[특이사항] ${spec.join(' / ')}`;
@@ -864,7 +923,7 @@ function fmValidate(){
 }
 function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function travelText(){if(S.travel!=='있음')return (S.travel||'없음');const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push(go+'부터');if(dur)p.push(dur+'일간');if(place)p.push(place);return p.length?p.join(' '):'있음';}
+function travelText(){if(S.travel!=='있음')return (S.travel||'없음');const go=(document.getElementById('trvGo')||{}).value||'';const dur=(document.getElementById('trvDur')||{}).value||'';const place=(document.getElementById('trvPlace')||{}).value||'';let p=[];if(go)p.push('시작일 '+go);if(dur)p.push(dur+'일간');if(place)p.push(place);return p.length?p.join(', '):'있음';}
 // V3 칸 순서 유지 + 이름 뒤 [성별/나이] 한 칸 추가. 위험항목(임신·조영제·여행력·1구역·학대)은 빨강(HTML 복사).
 function copyExcel(){
   const n=buildNarrative();
@@ -873,21 +932,21 @@ function copyExcel(){
   const RED=t=>`<span style="color:#cc0000;font-weight:bold">${t}</span>`;
   // 배경 줄
   let bgH=[],bgP=[];
-  if(S.preg){const t='임신 '+S.preg;const risk=(S.preg==='가능성'||S.preg==='임신중');bgH.push(risk?RED(t):t);bgP.push(t);}
+  if(S.preg){let t='임신 '+S.preg;if(S.lmp)t+=' (LMP '+S.lmp+')';const risk=(S.preg==='가능성'||S.preg==='임신중');bgH.push(risk?RED(t):t);bgP.push(t);}
   {const t='조영제알러지 '+(S.contrast||'없음');bgH.push(S.contrast==='있음'?RED(t):t);bgP.push(t);}
   bgH.push('약물알러지 '+(esc(da)||'없음'));bgP.push('약물알러지 '+(da||'없음'));
   bgH.push('복용약물 '+(esc(cm)||'없음'));bgP.push('복용약물 '+(cm||'없음'));
   if(S.smoking){bgH.push(S.smoking);bgP.push(S.smoking);}
   {const ps=pedSummary();if(ps){bgH.push(esc(ps));bgP.push(ps);}}
   {const ts=traumaSummary();if(ts){bgH.push(RED(esc(ts)));bgP.push(ts);}}
-  if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);const t='BST '+S.bst+' mg/dL';const risk=!isNaN(b)&&(b<70||b>300);bgH.push(risk?RED(t):t);bgP.push(t);}
   {const tt=travelText();const t='여행력 '+tt;bgH.push(S.travel==='있음'?RED(esc(t)):esc(t));bgP.push(t);}
   // 내원동기 셀
   const motiveH=['- '+bgH.join(' / '),'- 과거력 : '+esc(pmhxText()),'- 내원동기 : '+esc(n.motive),'- 현재호소 : '+esc(n.present)].join('<br>');
   const motiveP=['배경: '+bgP.join(' / '),'과거력: '+pmhxText(),'내원동기: '+n.motive,'현재호소: '+n.present].join(' | ');
   // 특이사항 셀 (1구역·학대 = 빨강)
   const iso=isolationReason();let specH=[],specP=[];
-  if(S.bpArm&&S.bpArm!=='없음'){specH.push(RED('⚠ 혈압측정금지: '+S.bpArm));specP.push('혈압측정금지: '+S.bpArm);}
+  {const bn=bpArmNote();if(bn){specH.push(RED(bn));specP.push(bn);}}
+  if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300)){const t='$ '+(b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL';specH.push(RED(t));specP.push(t);}}
   if(iso.length){specH.push(RED('1구역 안내: '+iso.join('·')));specP.push('1구역 안내: '+iso.join('·'));}
   if(S.abuse.size){specH.push(RED('학대 의심: '+[...S.abuse].join(', ')));specP.push('학대 의심: '+[...S.abuse].join(', '));}
   const specHtml=specH.length?specH.join('<br>'):'없음';
@@ -906,10 +965,29 @@ function copyExcel(){
 function copyNote(){const t=document.getElementById('outNote').value;navigator.clipboard.writeText(t).then(()=>alert('간호기록 복사 완료.'));}
 
 // ══════════ 렌더 / 네비 ══════════
+function warnItems(){
+  let w=[];
+  const bn=bpArmNote();if(bn)w.push(bn.replace(/^\$ /,''));
+  if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))w.push((b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
+  if(isolationReason().length)w.push('1구역(감염격리) 안내: '+isolationReason().join('·'));
+  if(S.abuse.size)w.push('학대 의심: '+[...S.abuse].join(', '));
+  if(S.contrast==='있음')w.push('조영제 알러지 있음');
+  if(S.preg==='가능성'||S.preg==='임신중')w.push('임신 '+S.preg+(S.lmp?' (LMP '+S.lmp+')':''));
+  if(S.travel==='있음')w.push('여행력 있음');
+  return w;
+}
+function renderWarnBox(){
+  const el=document.getElementById('noteWarn');if(!el)return;
+  const w=warnItems();
+  if(!w.length){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='';el.className='notewarn';
+  el.innerHTML='<div class="nwh">⚠️ 주의 — 반드시 확인</div>'+w.map(x=>`<div class="nwi">• ${x}</div>`).join('');
+}
 function render(){
-  if(cur===5){document.getElementById('outNote').value=fullNote();renderAbuse();}
+  if(cur===5){if(!S.noteEdited)document.getElementById('outNote').value=fullNote();renderAbuse();renderWarnBox();}
   if(cur===4)renderKTAS();
 }
+function regenNote(){S.noteEdited=false;document.getElementById('outNote').value=fullNote();}
 function go(n){
   cur=n;document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById('s'+n).classList.add('on');
@@ -919,9 +997,8 @@ function go(n){
   document.getElementById('nextBtn').textContent=n===5?'완료':(n===4?'기록 →':'다음 →');
   document.getElementById('nextBtn').style.display=n===5?'none':'';
   if(n===2)renderCCGrid();
-  if(n===3)renderOnsetDays();
-  if(n===4)renderDetail();
-  if(n===5){renderPmhx();render();}
+  if(n===4){renderOnsetDays();renderDetail();}
+  if(n===5){renderPmhx();renderSurg();render();}
   window.scrollTo(0,0);
 }
 function goBack(){if(cur>1)go(cur-1);}
@@ -932,7 +1009,7 @@ function goNext(){
 
 // init
 S.date=today();document.getElementById('dateDisp').textContent=S.date;
-renderInfoChips();renderRoute();renderGI();renderABCD();renderTrack();renderPeds();renderTrauma();go(1);
+renderInfoChips();renderRoute();renderGI();renderABCD();renderTrack();renderPeds();renderAbuse();go(1);
 </script>
 </body>
 </html>
