@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>NFH ER Mate v5</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--line:#e4e9f0;--tx:#1d2733;--tx2:#768393;
+  --blue:#2563eb;--blueL:#eef4ff;--green:#16a34a;--greenL:#e9f9ef;--warn:#dc2626;--warnL:#fdecec;
+  --star:#b45309;--starL:#fef3c7;--why:#7c3aed;--whyL:#f3edff;--badge:#0e7490;--badgeL:#e0f5fa;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.5}
+.wrap{max-width:780px;margin:0 auto;padding:16px 16px 40px}
+/* 헤더 */
+.top{display:flex;align-items:center;gap:10px;padding:4px 2px 14px}
+.back{width:38px;height:38px;border-radius:11px;border:1.5px solid var(--line);background:var(--card);font-size:18px;cursor:pointer;display:none;align-items:center;justify-content:center;flex:0 0 38px}
+.top h1{font-size:21px;margin:0;flex:1}
+.top .brand{color:var(--blue)}
+.top .vtag{font-size:12px;color:var(--tx2);font-weight:500}
+/* 검색 */
+.search{display:flex;align-items:center;gap:9px;background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:18px}
+.search input{border:none;outline:none;font-size:16px;flex:1;background:transparent;color:var(--tx)}
+/* 그리드 */
+.gtitle{font-size:14px;font-weight:800;color:var(--tx2);margin:6px 2px 10px;letter-spacing:.3px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.gcard{background:var(--card);border:1.5px solid var(--line);border-radius:15px;padding:16px 6px;text-align:center;cursor:pointer;transition:.13s}
+.gcard:active{transform:scale(.96)}
+.gcard .em{font-size:30px;line-height:1.1}
+.gcard .nm{font-size:13.5px;font-weight:700;margin-top:7px}
+.gcard.add{border-style:dashed;color:var(--tx2)}
+.gcard.add .em{opacity:.5}
+@media(max-width:520px){.grid{grid-template-columns:repeat(3,1fr)}}
+/* 검색결과 */
+.sres{background:var(--card);border:1.5px solid var(--line);border-radius:13px;overflow:hidden;margin-bottom:20px}
+.sres .r{display:flex;align-items:center;gap:11px;padding:14px 15px;cursor:pointer;border-bottom:1px solid var(--line);font-size:15.5px;font-weight:600}
+.sres .r:last-child{border-bottom:none}
+.sres .r .em{font-size:21px}.sres .r .cat{margin-left:auto;font-size:12px;color:var(--tx2);font-weight:500}
+/* 분기 */
+.branch{display:flex;gap:8px;margin-bottom:14px}
+.btab{flex:1;text-align:center;padding:13px;border-radius:13px;border:2px solid var(--line);background:var(--card);font-weight:800;font-size:15.5px;cursor:pointer;color:var(--tx2);transition:.15s}
+.btab .d{font-size:11px;font-weight:500;margin-top:3px;opacity:.85}
+.btab.on{border-color:var(--blue);background:var(--blueL);color:var(--blue)}
+.sedrow{display:flex;align-items:center;gap:9px;margin:-4px 2px 14px;padding:12px 14px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;font-size:14.5px;color:var(--tx2)}
+.sedrow.on{border-color:var(--why);background:var(--whyL);color:var(--why)}
+.sedrow .sw{width:42px;height:24px;border-radius:14px;background:var(--line);position:relative;transition:.15s;flex:0 0 42px}
+.sedrow.on .sw{background:var(--why)}
+.sedrow .sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.sedrow.on .sw::after{left:21px}
+/* 진행 */
+.prog{display:flex;align-items:center;gap:10px;margin:4px 2px 14px}
+.pbar{flex:1;height:9px;background:var(--line);border-radius:6px;overflow:hidden}
+.pfill{height:100%;background:var(--green);width:0;transition:.25s}
+.ptx{font-size:13px;color:var(--tx2);font-weight:700;min-width:36px;text-align:right}
+.hint{background:var(--blueL);border-radius:10px;padding:10px 13px;font-size:13px;color:#1e40af;margin-bottom:12px}
+/* prep 항목 */
+.sec{margin:16px 0 7px;font-size:13px;font-weight:800;color:var(--blue);letter-spacing:.3px}
+.it{background:var(--card);border:1.5px solid var(--line);border-radius:13px;margin-bottom:9px;overflow:hidden;transition:.15s}
+.it.warn{border-color:#f3c0c0}.it.done{background:var(--greenL);border-color:#bfe6cc}
+.irow{display:flex;align-items:flex-start;gap:11px;padding:13px 14px;cursor:pointer}
+.ck{flex:0 0 24px;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;margin-top:1px}
+.it.done .ck{background:var(--green);border-color:var(--green)}
+.ic{flex:0 0 26px;font-size:22px;text-align:center;margin-top:-1px}
+.bd{flex:1;min-width:0}
+.tx{font-size:15.5px;font-weight:600}.it.warn .tx{color:#a01818}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;align-items:center}
+.badge{background:var(--badgeL);color:var(--badge);font-size:12px;font-weight:800;padding:3px 9px;border-radius:8px}
+.req{background:var(--warnL);color:var(--warn);font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:8px}
+.whyb{background:var(--whyL);color:var(--why);font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;cursor:pointer;border:none}
+.why{display:none;margin:0 14px 13px 51px;padding:11px 13px;background:var(--whyL);border-radius:10px;font-size:13.5px;color:#4b2a86;border-left:3px solid var(--why)}
+.why.open{display:block}
+.gate{position:sticky;bottom:10px;margin-top:14px;padding:16px;border-radius:14px;text-align:center;font-weight:800;font-size:16px;background:#eef1f6;color:var(--tx2);border:2px dashed var(--line)}
+.gate.ok{background:var(--greenL);color:var(--green);border:2px solid var(--green)}
+/* flow 타임라인 */
+.fl{display:flex;gap:12px;position:relative}
+.fl::before{content:'';position:absolute;left:18px;top:6px;bottom:-6px;width:2px;background:var(--line)}
+.fl:last-child::before{display:none}
+.num{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--tx2);cursor:pointer;z-index:1}
+.fl.done .num{background:var(--green);border-color:var(--green);color:#fff}
+.fl.warn .num{border-color:var(--warn);color:var(--warn)}.fl.warn.done .num{background:var(--warn);border-color:var(--warn);color:#fff}
+.ln{flex:1;min-width:0;background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+.fl.done .ln{background:var(--greenL);border-color:#bfe6cc}.fl.warn .ln{border-color:#f3c0c0}
+.ft{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap}
+.ft .ic2{font-size:20px}
+.fd{font-size:13.5px;color:var(--tx2);margin-top:5px;line-height:1.55}
+.subs{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+.sub{display:flex;align-items:flex-start;gap:8px;background:var(--starL);border:1px solid #f0d488;border-radius:9px;padding:9px 11px;font-size:13.5px;color:var(--star);cursor:pointer}
+.sub .sck{flex:0 0 18px;width:18px;height:18px;border-radius:5px;border:2px solid #d6a93e;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:1px}
+.sub.on{background:#fde9a8}.sub.on .sck{background:var(--star);border-color:var(--star)}
+.flwhy{margin-top:8px}
+.star{background:var(--starL);color:var(--star);font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:4px}
+/* 차팅 */
+.chart{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:15px}
+.chd{font-weight:800;font-size:15.5px;margin-bottom:4px}
+.chsub{font-size:12.5px;color:var(--tx2);margin-bottom:12px}
+.cbtns{display:flex;gap:8px;margin-bottom:12px}
+.cbtn{flex:1;padding:14px 8px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:800;font-size:14.5px;cursor:pointer;color:var(--tx2);transition:.15s}
+.cbtn.on{border-color:var(--green);background:var(--greenL);color:var(--green)}
+#chartTx{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;resize:vertical;background:#fafbfd;color:var(--tx)}
+.copy{margin-top:10px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;cursor:pointer}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="back" id="back" onclick="goHome()">←</button>
+    <h1 id="ttl"><span class="brand">NFH</span> ER Mate <span class="sub">v5</span></h1>
+  </div>
+  <div id="app"></div>
+</div>
+
+<script>
+/* ===== 데이터 (문구=엑셀 원문 · 차팅=마스터 원문 · ★=칩스확정) ===== */
+const EXAMS=[
+ {id:'ct',name:'CT 조영제',tag:'CT(변경중)',ic:'🩻',kind:'prep',
+  branches:[{id:'contrast',l:'💉 조영 CT',d:'조영제 사용'},{id:'non',l:'⚪ 비조영 CT',d:'조영제 없음'}],
+  items:[
+   {ic:'📝',sec:'준비사항',br:'contrast',t:'CT동의서 준비(조영제 사용시)',why:'조영제는 드물게 알러지·신장 부작용이 있어 검사 전 설명하고 동의를 받아요.'},
+   {ic:'👕',sec:'준비사항',br:'both',t:'환의(아래 속옷만 입힌다)로 갈아입기 + 귀금속(귀걸이 목걸이 등) 제거 - 영상 방해될 수 있음',why:'금속은 CT 영상에 줄무늬 인공물을 만들어 판독을 방해해요.'},
+   {ic:'🫘',sec:'준비사항',br:'contrast',w:true,badge:'GFR 60↑',t:'GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)',why:'조영제는 콩팥으로 빠져나가요. 신장 기능이 나쁘면(60 미만) 조영제 신독성 위험이 있어요.'},
+   {ic:'💉',sec:'준비사항',br:'contrast',badge:'20G↑ · 손목 위',t:'20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)',why:'조영제를 빠르게 자동 주입하기 때문에 굵은(20G↑) 바늘을 손목 위에 잡아요.'},
+   {ic:'💊',sec:'준비사항',br:'contrast',badge:'Avil 30min · 스테로이드 1hr',t:'조영제 알러지 시 전처치: Avil 다 들어간 후 30min, 스테로이드는 1hr 후 촬영',why:'알러지 예방을 위해 항히스타민·스테로이드를 미리 투여하고 약효 시간을 두고 촬영해요.'},
+   {ic:'📞',sec:'준비사항',br:'contrast',t:'전처치 시작 전 CT실 전화해서 투약 시간 확인',why:'전처치 약효 시간에 맞춰 촬영 타이밍을 조율해요.'},
+   {ic:'🖥️',sec:'검사 후',br:'both',t:'15분 후 영상병동뷰어 영상 올라왔는지 확인',why:'촬영 누락·재촬영 필요 여부를 빠르게 확인해요.'},
+   {ic:'❤️',sec:'주의사항',br:'contrast',badge:'HR>70 → betaloc',t:'CT Heart angio+3D: TNI 확인 & HR>70 → betaloc 후 30분 f/u',why:'심장 CT는 심박이 빠르면 흔들려요. 베타차단제로 심박을 낮춰요.'},
+   {ic:'🚑',sec:'이송 부서',br:'both',t:'응급CT (☏)',why:'CT 촬영은 응급CT실로 이송해요.'},
+  ],
+  chart:{send:{both:['검사실 보냄','검진 위해 이송함'],contrast:['금식 확인함']},
+         back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],contrast:['조영제 부작용이 있는지 관찰함 ★']}}},
+ {id:'mri',name:'MRI',tag:'MRI',ic:'🧲',kind:'prep',sedation:true,
+  branches:[{id:'contrast',l:'💉 조영 MRI',d:'조영제 사용 — IV·GFR'},{id:'non',l:'⚪ 비조영 MRI',d:'조영제 없음 — 금속 제거'}],
+  items:[
+   {ic:'🧲',sec:'준비사항',br:'both',w:true,badge:'⚠️ 금속 제거',t:'금속물질(안경, 보청기, 틀니, ECG lead, SPO2 sensor, 뇌심부자극기, pacemaker 등) 제거된 지 직접 확인 및 질문.',why:'MRI는 강한 자석을 써요. 금속이 있으면 끌려가거나 화상·영상왜곡 위험이 있어 반드시 확인해요.'},
+   {ic:'📝',sec:'준비사항',br:'both',t:'MRI 검사 동의서 준비',why:'MRI 검사 자체에 동의서가 필요해요(조영 여부와 무관).'},
+   {ic:'💉',sec:'준비사항',br:'contrast',badge:'20G↑ · 손목 위',t:'20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)',why:'조영제 자동주입용 — 비조영이면 불필요해요.'},
+   {ic:'🫘',sec:'준비사항',br:'contrast',badge:'GFR 60↑',t:'GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)',why:'조영제는 콩팥으로 빠져나가요. 신장 기능이 나쁘면 신독성 위험이 있어요.'},
+   {ic:'😴',sec:'준비사항',br:'sed',t:'Sedation 시: midazolam #1 출발 시 IVS 준비물: O2, mask/nasal, ambu, O2 line, fitting mask',why:'진정 중 호흡 억제에 대비해 산소·앰부 등 응급 호흡 장비를 준비해요.'},
+   {ic:'🩺',sec:'준비사항',br:'sed',t:'Sedation tl 이송모니터 + 의료진 동반',why:'진정 환자는 이송 중에도 감시·의료진 동반이 필요해요.'},
+   {ic:'🫁',sec:'검사 후',br:'sed',t:'Sedation 후 의식/호흡 확인',why:'진정에서 깨는 동안 의식·호흡 회복을 확인해요.'},
+   {ic:'🚑',sec:'이송 부서',br:'both',t:'응급 MRI (☏)',why:'MRI 촬영은 응급MRI실로 이송해요.'},
+  ],
+  chart:{send:{both:['검사실 보냄','검진 위해 이송함','금속물 제거 교육함'],sed:['처방에 의해 Midazolam 을 투여함','산소포화도 monitor 하면서 보냄']},
+         back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],sed:['의식상태 사정함','산소포화도 monitor 중임']}}},
+];
+const TASKS=[
+ {id:'admit',name:'입원',ic:'🏥',kind:'flow',
+  steps:[
+   {ic:'📋',title:'입원지시 확인',detail:'담당 주치의에게 입원 여부 확인 및 병실/중환자실 갈지 확인',why:'오입원·잘못된 병실 배정을 막기 위해 주치의에게 직접 확인해요.'},
+   {ic:'🛏️',title:'병실배정',detail:'원무 문의하기',why:'원무과에 연락해 실제 배정된 병실을 확인해요.'},
+   {ic:'📄',title:'입원수속 안내',detail:'보호자에게 입원지시라벨 출력 및 병실 호수 안내→응급원무수납안내',why:'보호자가 수속·수납을 진행하도록 라벨과 병실을 안내해요.'},
+   {ic:'💊',title:'약 반납 확인',detail:'남은약 반납처리(환자 원래 가지고 있는약은 인계, 응급실 처방하고 남은 경구 주사, 수액은 반납)',why:'약품 분실·오투약을 막기 위해 지참약은 인계, 잔여약은 반납해요.',
+     subs:['옴니셀에서 꺼내 쓴 약, 모두 처방 입력했는지 확인 (비품 사용 후 미처방 방지)','약품 청구·수가 적용 누락 없는지 확인','미사용·잔여 약 반납 / 환자 지참약은 병동 인계']},
+   {ic:'📝',title:'전과전동기록지',detail:'인계 전 기록하기',why:'병동 인계 전에 전과전동기록지를 작성해 둬요.'},
+   {ic:'🤝',title:'인계',detail:'검체·pen insulin 등 함께인계. 수혈남으면 병동알리기',why:'검체·인슐린 등 빠짐없이 인계하고, 남은 수혈은 병동에 미리 알려요.'},
+   {ic:'🩺',title:'응급실퇴실간호기록',detail:'처치(빠지거나 중복된건 없는지)·검사(접수 안된 검사나 시행 안되거 없는지)·오더(사인 안하거나 놓친거 없는지)  재확인후 작성',why:'처치·검사·오더 누락을 마지막으로 점검하고 퇴실간호기록을 작성해요.'},
+   {ic:'🚑',title:'환자이송',detail:'환자 이송하기',why:'배정된 병실/중환자실로 안전하게 이송해요.'},
+   {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 케이블·이름표정리',why:'다음 환자를 위해 침상·케이블·이름표를 정리해요.'},
+  ],
+  chart:['응급실 퇴실 결정 주치의를 확인함','응급실 퇴실 및 입원 간호단위 확인함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함','인계 후 환자 보냄']},
+ {id:'discharge',name:'퇴원',ic:'🏠',kind:'flow',
+  steps:[
+   {ic:'💊',title:'퇴원약 확인',detail:'퇴원약 있는지 여부 확인',why:'처방된 퇴원약이 있는지 확인해 빠뜨리지 않도록 해요.'},
+   {ic:'♻️',title:'남은약 반납',detail:'반납용지+약→간호조무사 선생님 / 접수만된약→약국 전화 취소',why:'쓰지 않은 약은 반납하고, 접수만 된 약은 약국에 전화해 취소해요.',
+     subs:['옴니셀에서 꺼내 쓴 약, 모두 처방 입력했는지 확인 (비품 사용 후 미처방 방지)']},
+   {ic:'📄',title:'퇴원 서류 확인',detail:'진단서·입원사실증명서 등 필요서류 확인',why:'환자가 필요로 하는 서류를 빠짐없이 확인해요.'},
+   {ic:'🧾',title:'최종 수가 확인',detail:'미입력 수가 여부 확인, 중복 여부 수가도 확인',why:'입력 안 된 수가나 중복 수가를 점검해 청구 오류·누락을 막아요.',
+     subs:['약품·처치·검사 청구 누락 없는지 확인','중복 수가 없는지 확인']},
+   {ic:'🧫',title:'검체 접수여부 확인',detail:'검체접수- 검체가 scan 되어있는지 확인',why:'접수한 검체가 scan 되었는지 확인해 검사 누락을 막아요.'},
+   {ic:'🩹',title:'Line 제거',detail:'IV line 등 제거',why:'퇴원 전 IV 등 각종 라인을 제거해요.'},
+   {ic:'📋',title:'퇴원간호기록지 전달',detail:'수납 전달',why:'퇴원간호기록지를 수납에 전달해요.'},
+   {ic:'🩺',title:'응급실퇴실간호기록',detail:"퇴실일시=간호기록'퇴원함'시간",why:"퇴실 일시는 간호기록의 '퇴원함' 시각과 맞춰 기록해요."},
+   {ic:'🧹',title:'침상정리',detail:'간호조무사, 청소담당 직원 연락',why:'다음 환자를 위해 침상을 정리하고 청소를 요청해요.'},
+  ],
+  chart:['응급실 퇴실 결정 주치의를 확인함','응급실 퇴실 및 퇴원약 유무 확인함','응급실 퇴실 및 외래 검사예약 유무와 내용을 확인함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함','퇴원 교육함','각종 tube 와 line 제거함','퇴원함']},
+ {id:'transfer',name:'전원',ic:'🔄',kind:'flow',
+  steps:[
+   {ic:'📝',title:'전원동의서',detail:'주치의 전원동의서 받기',why:'전원은 환자·보호자 동의가 필요해요. 주치의가 전원동의서를 받아요.'},
+   {ic:'📋',title:'전원소견서',detail:'이송수단(자차, 사설 구급차) ·병원이름. 정규:전원전담간호사',why:'전원 병원·이송수단을 정하고, 정규면 전원전담간호사가 소견서를 챙겨요.'},
+   {ic:'📑',title:'의무기록복사',detail:'확인필요',why:'전원 병원에서 진료를 이어가게 의무기록을 복사해 보내요.'},
+   {ic:'💿',title:'CD/DVD복사',detail:'확인필요',why:'영상 자료를 CD/DVD로 복사해 전달해요.'},
+   {ic:'↩️',title:'전원회신확인',detail:'진료협력센터경유여부확인',why:'진료협력센터를 거쳐야 하는 전원인지 확인해요.'},
+   {ic:'📄',title:'전원 서류 확인',detail:'진단서·입원사실증명서 등 필요서류 확인',why:'필요 서류를 빠짐없이 확인해요.'},
+   {ic:'🚑',title:'구급차안내',detail:'구급차 비용 안내, 구급차 연락하기',why:'사설구급차는 비용을 안내하고 배차를 연락해요.'},
+   {ic:'💊',title:'퇴원약확인',detail:'필요시퇴원약안내',why:'필요하면 퇴원약을 안내하고, 사용한 약의 처방·청구가 빠지지 않았는지 점검해요.',
+     subs:['옴니셀에서 꺼내 쓴 약, 모두 처방 입력했는지 확인 (비품 사용 후 미처방 방지)','약품·처치·검사 청구 누락 없는지 확인','중복 수가 없는지 확인 / 미사용 약 반납']},
+   {ic:'📅',title:'외래예약확인',detail:'다음외래꼭확인!',why:'다음 외래 예약을 꼭 확인해요.'},
+   {ic:'🩺',title:'퇴실30분전 V/S',detail:'반드시 입력해야함',w:true,why:'이송 직전 상태를 남기기 위해 퇴실 30분 전 활력징후를 반드시 측정·입력해요.'},
+   {ic:'📝',title:'응급실퇴실간호기록',detail:'작성 및 환자 퇴실 누른 뒤',why:'퇴실간호기록을 작성하고 환자 퇴실 처리를 눌러요.'},
+   {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 케이블·이름표정리',why:'다음 환자를 위해 정리해요.'},
+  ],
+  chart:['응급실 퇴실 결정 주치의를 확인함','응급실 전원 병원을 확인함','응급실 전원 사유를 확인함','응급실 전원 수단을 확인함','응급실 전원시 의사 동반 유무를 확인함','응급실 퇴실시 동반자 확인함','활력징후 측정함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함','보호자 동의 하에 타병원으로 전원시킴']},
+ {id:'death',name:'사망',ic:'🕊️',kind:'flow',
+  steps:[
+   {ic:'🩺',title:'주치의 사망 선언 확인',detail:'주치의에게 사망 선언 시각 확인 및 기록',why:'사망은 주치의가 선언해요. 선언 시각을 정확히 확인해 기록의 기준으로 삼아요.'},
+   {ic:'🕰️',title:'사망 시각 기록',detail:'차트에 정확한 사망 시각 기록(사망시간 = 주치의 사망선언시간 = ECG flat 시간)',w:true,why:'사망시각은 주치의 선언시간이자 ECG flat 시간과 일치해야 해요. 법적·행정적으로 가장 중요한 기록이에요.'},
+   {ic:'📞',title:'보호자 연락',detail:'보호자에게 사망 사실 통보 및 병원 내원 안내',why:'보호자에게 조심스럽게 사망 사실을 알리고 내원을 안내해요.'},
+   {ic:'🤍',title:'시신 정리',detail:'눈·입 닫기, 자세 정리, 깨끗한 시트로 교체',why:'고인에 대한 예를 갖춰 눈·입을 닫고 자세를 바르게 하며 시트를 교체해요.'},
+   {ic:'🩹',title:'IV line 등 제거',detail:'IV line·foley·NG tube 등 의료기기 전부 제거',why:'몸에 남은 의료기기를 모두 제거해요.'},
+   {ic:'💍',title:'귀중품 확인 및 인계',detail:'귀중품 목록 작성 후 보호자에게 직접 인계',why:'분실·분쟁을 막기 위해 목록을 작성하고 보호자에게 직접 인계해요.'},
+   {ic:'📃',title:'사망진단서 확인',detail:'주치의 사망진단서 발급 여부 확인(가족관계증명서 발급 여부 확인 ) 보통 10부',why:'장례·행정에 필요한 사망진단서 발급을 확인해요(보통 10부).'},
+   {ic:'📝',title:'사망간호기록지 작성',detail:'사망 전 처치 발행·V/S·경과 포함하여 간호기록 작성',why:'사망 전 처치·활력징후·경과를 남기고, 사용한 약·처치의 처방·청구 누락이 없는지 점검해요.',
+     subs:['사망 전 사용한 약·처치, 모두 처방 입력했는지 확인 (옴니셀 포함 · 비품 사용 후 미처방 방지)','약품·처치·검사 청구 누락 및 중복 수가 없는지 확인']},
+   {ic:'🗂️',title:'응급실 퇴실 간호기록',detail:"퇴실 기록에 '사망' 시각 및 사유 입력",why:"퇴실 기록에 사유를 '사망'으로, 시각을 사망시각으로 입력해요."},
+   {ic:'🏛️',title:'원무과 사망 신고',detail:'원무과에 사망 신고 후 행정 처리 확인',why:'원무과에 사망을 신고하고 행정 처리를 확인해요.'},
+   {ic:'🕯️',title:'영안실 연락 및 이송',detail:'영안실(☏ 내선 확인) 연락 → 이송 등록 후 이송',why:'영안실에 연락해 이송을 등록하고 고인을 정중히 이송해요.'},
+   {ic:'🧹',title:'침상 정리 및 소독',detail:'간호조무사, 침상·장비 소독 및 정리',why:'다음 환자를 위해 소독하고 정리해요.'},
+  ],
+  chart:['응급실 퇴실 결정 주치의를 확인함','사망 선언함','응급실 퇴실 일시를 확인함','사후 처치함','사망진단서 발부에 대해 설명함','응급실 퇴실 처리 간호사를 확인함','보호자 동의 하에 영안실 보냄']},
+];
+const ALL={}; EXAMS.forEach(e=>ALL[e.id]=e); TASKS.forEach(t=>ALL[t.id]=t);
+
+/* ===== 상태 ===== */
+let view='home', cur=null, branch='', sedOn=false, q='';
+let checks={}, subChecks={}, chartOn={send:false,back:false,single:false};
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+/* ===== 네비 ===== */
+function goHome(){view='home';cur=null;q='';render();}
+function openItem(id){cur=ALL[id];view='detail';
+  branch=cur.branches?cur.branches[0].id:'';sedOn=false;checks={};subChecks={};chartOn={send:false,back:false,single:false};render();}
+function setBranch(b){branch=b;render();}
+function toggleSed(){sedOn=!sedOn;render();}
+function tog(i){checks[i]=!checks[i];render();}
+function togSub(i,j){subChecks[i+'_'+j]=!subChecks[i+'_'+j];render();}
+function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
+
+/* ===== 렌더 ===== */
+function render(){
+  document.getElementById('back').style.display=view==='home'?'none':'flex';
+  document.getElementById('ttl').innerHTML=view==='home'
+    ?'<span class="brand">NFH</span> ER Mate <span class="vtag">v5</span>'
+    :`${cur.ic} ${esc(cur.name)} <span class="vtag">${cur.kind==='prep'?'검사 준비':'필수 업무'}</span>`;
+  document.getElementById('app').innerHTML = view==='home'?homeHtml():detailHtml();
+}
+function homeHtml(){
+  const ql=q.trim().toLowerCase();
+  let res='';
+  if(ql){
+    const hits=[...EXAMS.map(x=>({x,c:'검사 준비'})),...TASKS.map(x=>({x,c:'필수 업무'}))]
+      .filter(o=>o.x.name.toLowerCase().includes(ql)||(o.x.tag||'').toLowerCase().includes(ql));
+    res=`<div class="sres">${hits.length?hits.map(o=>`<div class="r" onclick="openItem('${o.x.id}')"><span class="em">${o.x.ic}</span>${esc(o.x.name)}<span class="cat">${o.c}</span></div>`).join(''):'<div class="r">검색 결과 없음</div>'}</div>`;
+  }
+  const grid=(arr,extra)=>`<div class="grid">${arr.map(x=>`<div class="gcard" onclick="openItem('${x.id}')"><div class="em">${x.ic}</div><div class="nm">${esc(x.name)}</div></div>`).join('')}${extra?'<div class="gcard add"><div class="em">➕</div><div class="nm">추가</div></div>':''}</div>`;
+  return `<div class="search">🔍 <input id="q" placeholder="CT, 입원, 전원… 검색" oninput="onSearch(this.value)" value="${esc(q)}"></div>
+    ${res}
+    <div class="gtitle">🔬 검사 준비</div>${grid(EXAMS,true)}
+    <div class="gtitle">📋 필수 업무</div>${grid(TASKS,false)}`;
+}
+function onSearch(v){q=v;const a=document.getElementById('app');
+  // 검색만 부분 갱신(포커스 유지)
+  const ql=v.trim().toLowerCase();
+  let res='';
+  if(ql){const hits=[...EXAMS.map(x=>({x,c:'검사 준비'})),...TASKS.map(x=>({x,c:'필수 업무'}))]
+      .filter(o=>o.x.name.toLowerCase().includes(ql)||(o.x.tag||'').toLowerCase().includes(ql));
+    res=hits.length?hits.map(o=>`<div class="r" onclick="openItem('${o.x.id}')"><span class="em">${o.x.ic}</span>${esc(o.x.name)}<span class="cat">${o.c}</span></div>`).join(''):'<div class="r">검색 결과 없음</div>';}
+  let box=document.getElementById('sresBox');
+  if(!box){box=document.createElement('div');box.className='sres';box.id='sresBox';
+    document.querySelector('.search').after(box);}
+  box.innerHTML=res;box.style.display=ql?'block':'none';
+}
+/* --- 상세 --- */
+function detailHtml(){return cur.kind==='prep'?prepHtml():flowHtml();}
+function curItems(){return cur.items.map((it,i)=>({it,i})).filter(o=>{
+  const b=o.it.br;if(b==='both')return true;if(b==='sed')return sedOn;return b===branch;});}
+function prepHtml(){
+  const P=cur;
+  const bch=`<div class="branch">${P.branches.map(b=>`<div class="btab ${b.id===branch?'on':''}" onclick="setBranch('${b.id}')">${b.l}<div class="d">${b.d}</div></div>`).join('')}</div>`;
+  const sed=P.sedation?`<div class="sedrow ${sedOn?'on':''}" onclick="toggleSed()"><div class="sw"></div><div>💤 진정(Sedation) — 진정제 사용 시 항목·차팅 추가</div></div>`:'';
+  const vis=curItems();let list='',curSec='';
+  vis.forEach(({it,i})=>{
+    if(it.sec!==curSec){curSec=it.sec;list+=`<div class="sec">${it.sec}</div>`;}
+    const on=checks[i];
+    list+=`<div class="it ${it.w?'warn':''} ${on?'done':''}"><div class="irow">
+      <div class="ck" onclick="tog(${i})">${on?'✓':''}</div><div class="ic">${it.ic}</div>
+      <div class="bd"><div class="tx" onclick="tog(${i})">${esc(it.t)}</div>
+        <div class="meta">${it.badge?`<span class="badge">${esc(it.badge)}</span>`:''}${it.w?'<span class="req">⚠️ 필수</span>':''}<button class="whyb" onclick="toggleWhy(${i})">💡 왜?</button></div></div>
+      </div><div class="why" id="why${i}">${esc(it.why)}</div></div>`;
+  });
+  const tot=vis.length,done=vis.filter(o=>checks[o.i]).length;
+  const reqs=vis.filter(o=>o.it.w),reqDone=reqs.filter(o=>checks[o.i]).length;
+  const ok=reqs.length?reqDone===reqs.length:done===tot&&tot>0;
+  const gate=`<div class="gate ${ok?'ok':''}">${ok?'🚑 이송 준비 완료':(reqs.length?`🔒 필수항목(${reqDone}/${reqs.length}) 남음`:`🔒 ${done}/${tot} 진행 중`)}</div>`;
+  const prog=`<div class="prog"><div class="pbar"><div class="pfill" style="width:${tot?done/tot*100:0}%"></div></div><div class="ptx">${done}/${tot}</div></div>`;
+  const chart=`<div class="chart"><div class="chd">📋 간호기록 — 검사 이송 차팅</div><div class="chsub">버튼을 누르면 차팅이 생성됩니다 (마스터 원문 · ★=칩스 검증)</div>
+    <div class="cbtns"><button class="cbtn ${chartOn.send?'on':''}" onclick="togChart('send')">📤 검사실 보냄</button><button class="cbtn ${chartOn.back?'on':''}" onclick="togChart('back')">📥 검사실에서 돌아옴</button></div>
+    <textarea id="chartTx" readonly placeholder="위 버튼을 누르면 차팅이 생성됩니다.">${prepChartText()}</textarea>
+    <button class="copy" onclick="copyChart()">📋 EMR 복사</button></div>`;
+  return bch+sed+prog+list+gate+chart;
+}
+function prepChartText(){
+  const C=cur.chart;const lines=[];
+  ['send','back'].forEach(k=>{if(chartOn[k]){const c=C[k];
+    const arr=[...c.both,...(branch==='contrast'?(c.contrast||[]):[]),...(sedOn?(c.sed||[]):[])];
+    lines.push('['+(k==='send'?'검사실 보냄':'검사실에서 돌아옴')+']');arr.forEach(x=>lines.push(' · '+x));lines.push('');}});
+  return lines.join('\n').trim();
+}
+function flowHtml(){
+  const warn=cur.steps.some(s=>s.w);
+  const hint=`<div class="hint">${cur.id==='death'?'🕊️':'📋'} 절차형 — 위에서 아래로 순서대로 진행하세요.${warn?' <b>⚠️ 필수 항목</b>은 반드시 완료하세요.':''}</div>`;
+  let list='';
+  cur.steps.forEach((s,i)=>{
+    const on=checks[i];
+    const subs=s.subs?`<div class="subs">${s.subs.map((t,j)=>{const sk=subChecks[i+'_'+j];
+      return `<div class="sub ${sk?'on':''}" onclick="togSub(${i},${j})"><div class="sck">${sk?'✓':''}</div><div>${esc(t)} <span class="star">★ 칩스확정</span></div></div>`;}).join('')}</div>`:'';
+    list+=`<div class="fl ${on?'done':''} ${s.w?'warn':''}"><div class="num" onclick="tog(${i})">${on?'✓':i+1}</div>
+      <div class="ln"><div class="ft" onclick="tog(${i})"><span class="ic2">${s.ic}</span>${esc(s.title)} ${s.w?'<span class="req">⚠️ 필수</span>':''}</div>
+        <div class="fd">${esc(s.detail)}</div>${subs}
+        <div class="flwhy"><button class="whyb" onclick="toggleWhy(${i})">💡 왜?</button></div>
+        <div class="why" id="why${i}">${esc(s.why)}</div></div></div>`;
+  });
+  const done=cur.steps.filter((s,i)=>checks[i]).length,tot=cur.steps.length;
+  const prog=`<div class="prog"><div class="pbar"><div class="pfill" style="width:${done/tot*100}%"></div></div><div class="ptx">${done}/${tot}</div></div>`;
+  const label=cur.name;
+  const chart=`<div class="chart"><div class="chd">📋 ${esc(label)} 간호기록 — 응급실 퇴실</div><div class="chsub">버튼을 누르면 차팅이 생성됩니다 (마스터 원문)</div>
+    <button class="cbtn ${chartOn.single?'on':''}" style="width:100%" onclick="togChart('single')">📥 ${esc(label)}(응급실 퇴실) 간호기록 생성</button>
+    <textarea id="chartTx" readonly placeholder="버튼을 누르면 차팅이 생성됩니다." style="margin-top:12px">${chartOn.single?'['+label+' · 응급실 퇴실]\n'+cur.chart.map(x=>' · '+x).join('\n'):''}</textarea>
+    <button class="copy" onclick="copyChart()">📋 EMR 복사</button></div>`;
+  return hint+prog+list+chart;
+}
+function togChart(k){chartOn[k]=!chartOn[k];render();}
+function copyChart(){const t=document.getElementById('chartTx');
+  if(!t||!t.value){alert('먼저 간호기록 버튼을 눌러주세요');return;}
+  t.select();document.execCommand('copy');const b=event.target;const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1200);}
+render();
+</script>
+</body>
+</html>
