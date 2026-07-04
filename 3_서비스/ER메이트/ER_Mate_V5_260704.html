@@ -127,20 +127,52 @@ const EXAMS=[
   ],
   chart:{send:{both:['검사실 보냄','검진 위해 이송함'],contrast:['금식 확인함']},
          back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],contrast:['조영제 부작용이 있는지 관찰함 ★']}}},
- {id:'mri',name:'MRI',tag:'MRI',ic:'🧲',kind:'prep',sedation:true,
+ {id:'mri',name:'MRI',tag:'MRI',ic:'🧲',kind:'prep',extra:{id:'sed',label:'💤 진정(Sedation) — 진정제 사용 시 항목·차팅 추가'},
   branches:[{id:'contrast',l:'💉 조영 MRI',d:'조영제 사용 — IV·GFR'},{id:'non',l:'⚪ 비조영 MRI',d:'조영제 없음 — 금속 제거'}],
   items:[
    {ic:'🧲',sec:'준비사항',br:'both',w:true,badge:'⚠️ 금속 제거',t:'금속물질(안경, 보청기, 틀니, ECG lead, SPO2 sensor, 뇌심부자극기, pacemaker 등) 제거된 지 직접 확인 및 질문.',why:'MRI는 강한 자석을 써요. 금속이 있으면 끌려가거나 화상·영상왜곡 위험이 있어 반드시 확인해요.'},
    {ic:'📝',sec:'준비사항',br:'both',t:'MRI 검사 동의서 준비',why:'MRI 검사 자체에 동의서가 필요해요(조영 여부와 무관).'},
    {ic:'💉',sec:'준비사항',br:'contrast',badge:'20G↑ · 손목 위',t:'20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)',why:'조영제 자동주입용 — 비조영이면 불필요해요.'},
    {ic:'🫘',sec:'준비사항',br:'contrast',badge:'GFR 60↑',t:'GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)',why:'조영제는 콩팥으로 빠져나가요. 신장 기능이 나쁘면 신독성 위험이 있어요.'},
-   {ic:'😴',sec:'준비사항',br:'sed',t:'Sedation 시: midazolam #1 출발 시 IVS 준비물: O2, mask/nasal, ambu, O2 line, fitting mask',why:'진정 중 호흡 억제에 대비해 산소·앰부 등 응급 호흡 장비를 준비해요.'},
-   {ic:'🩺',sec:'준비사항',br:'sed',t:'Sedation tl 이송모니터 + 의료진 동반',why:'진정 환자는 이송 중에도 감시·의료진 동반이 필요해요.'},
-   {ic:'🫁',sec:'검사 후',br:'sed',t:'Sedation 후 의식/호흡 확인',why:'진정에서 깨는 동안 의식·호흡 회복을 확인해요.'},
+   {ic:'😴',sec:'준비사항',br:'extra',t:'Sedation 시: midazolam #1 출발 시 IVS 준비물: O2, mask/nasal, ambu, O2 line, fitting mask',why:'진정 중 호흡 억제에 대비해 산소·앰부 등 응급 호흡 장비를 준비해요.'},
+   {ic:'🩺',sec:'준비사항',br:'extra',t:'Sedation tl 이송모니터 + 의료진 동반',why:'진정 환자는 이송 중에도 감시·의료진 동반이 필요해요.'},
+   {ic:'🫁',sec:'검사 후',br:'extra',t:'Sedation 후 의식/호흡 확인',why:'진정에서 깨는 동안 의식·호흡 회복을 확인해요.'},
    {ic:'🚑',sec:'이송 부서',br:'both',t:'응급 MRI (☏)',why:'MRI 촬영은 응급MRI실로 이송해요.'},
   ],
-  chart:{send:{both:['검사실 보냄','검진 위해 이송함','금속물 제거 교육함'],sed:['처방에 의해 Midazolam 을 투여함','산소포화도 monitor 하면서 보냄']},
-         back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],sed:['의식상태 사정함','산소포화도 monitor 중임']}}},
+  chart:{send:{both:['검사실 보냄','검진 위해 이송함','금속물 제거 교육함'],extra:['처방에 의해 Midazolam 을 투여함','산소포화도 monitor 하면서 보냄']},
+         back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],extra:['의식상태 사정함','산소포화도 monitor 중임']}}},
+ {id:'cag',name:'CAG',tag:'관상동맥조영·심도자술',ic:'🫀',kind:'prep',
+  extra:{id:'icu',label:'🏥 ICU 입실 — 입실동의서 추가'},
+  branches:[{id:'naive',l:'💊 항혈소판제 미복용',d:'DAPT 로딩 4종'},{id:'prior',l:'💊 기존 복용 중',d:'각 1tab만'}],
+  items:[
+   {ic:'📝',sec:'준비사항',br:'both',t:'심도자술 동의서 (봉합기 포함)',why:'심도자술과 천자부위 봉합기 사용에 대한 동의를 받아요.'},
+   {ic:'🏥',sec:'준비사항',br:'extra',t:'ICU vs 병동 확인 — ICU면 입실동의서 추가',why:'ICU로 갈 경우 중환자실 입실동의서를 추가로 받아요.'},
+   {ic:'🧴',sec:'준비사항',br:'both',t:'Skin prep (사타구니) → 족배동맥 촉지 확인, 마커 표시, 간호기록 → Sandbag',why:'천자 부위를 소독하고, 시술 후 지혈 확인을 위해 족배동맥을 촉지·표시해요.'},
+   {ic:'💊',sec:'투약/약물',br:'naive',badge:'DAPT 4종',t:'DAPT 로딩: Aspirin Protect 100mg 3T + Pidogul(Clopidogrel) 75mg 8T + Statin(Lipitor or Vivacor) + 위장약(PPI) — 4가지 P.O 확인',why:'스텐트 혈전을 막기 위해 항혈소판제 2제(DAPT)와 스타틴·위장약을 미리 로딩해요.'},
+   {ic:'💊',sec:'투약/약물',br:'prior',t:'기존에 Aspirin이나 clopidogrel 복용하던 사람은 각각 1tab만 복용(주치의확인 추천)',why:'이미 복용 중이면 로딩 대신 각 1정만 — 주치의 확인을 권해요.'},
+   {ic:'🚑',sec:'이송 부서',br:'both',t:'혈관조영실 (☏)',why:'CAG는 심혈관조영실로 이송해요.'},
+   {ic:'🛏️',sec:'이송 부서',br:'both',t:'위급상황 아니면 이송용카로 바꿔서 이송',why:'위급하지 않으면 이송용 카트로 옥겨 안전하게 이송해요.'},
+  ],
+  chart:{send:{both:['심혈관조영실 보냄','검진 위해 이송함']},back:{both:['심혈관조영실에서 돌아옴','Coronary Angiography 후 합병증이 있는지 확인함']}}},
+ {id:'cline',name:'C-line',tag:'중심정맥관',ic:'💉',kind:'prep',
+  extra:{id:'sed',label:'💤 진정(Sedation) — 진정 시 금식 필요'},
+  branches:[{id:'new',l:'🆕 신규 삽입',d:'새로 삽입'},{id:'revision',l:'🔁 교환(Change)',d:'기존 교환·revision'}],
+  items:[
+   {ic:'📝',sec:'준비사항',br:'both',t:'중심정맥 도관삽입술 동의서 (lumen 수 주치의 확인)',why:'삽입 동의와 함께 필요한 lumen(관 개수)을 주치의에게 확인해요.'},
+   {ic:'💉',sec:'준비사항',br:'both',t:'22G IV + Main fluid or KVO fluid (CIV 사용 중이면 새 IV 필요)',why:'시술 중 수액·약물 투여를 위해 IV를 확보해요.'},
+   {ic:'🍽️',sec:'준비사항',br:'extra',t:'금식 없음 (진정 시: 고형 6~8hr, 유동식 2~3hr)',why:'평소엔 금식이 필요 없지만, 진정하면 흡인 예방을 위해 금식이 필요해요.'},
+   {ic:'🧪',sec:'준비사항',br:'both',w:true,badge:'INR<2.0 · PLT>2만',t:'1달 이내 Lab 확인 (INR<2.0, PLT>2만)',why:'출혈 위험을 줄이기 위해 응고 수치(INR·혈소판)를 확인해요.'},
+   {ic:'👕',sec:'준비사항',br:'both',t:'상의 속옷 탈의',why:'삽입 부위(가슴·목) 접근을 위해 상의 속옷을 별어요.'},
+   {ic:'🔁',sec:'준비사항',br:'revision',t:'Change/revision 시 Central line 에 연결 된 모든 수액 약물 제거',why:'교환할 때는 기존 관에 연결된 수액·약물을 먼저 제거해요.'},
+   {ic:'🩺',sec:'검사 후',br:'both',t:'V/S check',why:'시술 후 활력징후를 확인해요.'},
+   {ic:'🩸',sec:'검사 후',br:'both',t:'삽입부위 oozing/bleeding 관찰 (필요시 sandbag 압박)',why:'삽입 부위 출혈을 관찰하고 필요하면 모래주머니로 압박해요.'},
+   {ic:'📍',sec:'검사 후',br:'both',t:'중심정맥관 원위부 위치 주치의 확인 후 사용',why:'관 끝 위치가 맞는지 주치의가 확인한 뒤 사용해요.'},
+   {ic:'🩸',sec:'검사 후',br:'both',t:'채혈 가능 여부 주치의 확인',why:'이 관으로 채혈해도 되는지 주치의에게 확인해요.'},
+   {ic:'📷',sec:'주의사항',br:'both',t:'혈관조영실 외 삽입 시 Post Chest xray 오더 필요',why:'혈관조영실이 아닌 곳에서 삽입하면 위치 확인용 흉부 X선이 필요해요.'},
+   {ic:'⛔',sec:'주의사항',br:'both',w:true,t:'투석용 IJC: 투석/혈장교환 외 사용 금기 (응급 제외)',why:'투석용 관은 투석·혈장교환 외 사용이 금기예요(응급 제외).'},
+   {ic:'🚑',sec:'이송 부서',br:'both',t:'혈관조영실 (☏)',why:'혈관조영실에서 삽입하는 경우 이송해요.'},
+  ],
+  chart:{send:{both:['혈관조영실 보냄','도관삽입 전 활력징후 측정함']},back:{both:['혈관조영실에서 돌아옴','도관삽입 후 활력징후 측정함','중심정맥관 유지 중임']}}},
 ];
 const TASKS=[
  {id:'admit',name:'입원',ic:'🏥',kind:'flow',
@@ -210,16 +242,16 @@ const TASKS=[
 const ALL={}; EXAMS.forEach(e=>ALL[e.id]=e); TASKS.forEach(t=>ALL[t.id]=t);
 
 /* ===== 상태 ===== */
-let view='home', cur=null, branch='', sedOn=false, q='';
+let view='home', cur=null, branch='', exOn=false, q='';
 let checks={}, subChecks={}, chartOn={send:false,back:false,single:false};
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 
 /* ===== 네비 ===== */
 function goHome(){view='home';cur=null;q='';render();}
 function openItem(id){cur=ALL[id];view='detail';
-  branch=cur.branches?cur.branches[0].id:'';sedOn=false;checks={};subChecks={};chartOn={send:false,back:false,single:false};render();}
+  branch=cur.branches?cur.branches[0].id:'';exOn=false;checks={};subChecks={};chartOn={send:false,back:false,single:false};render();}
 function setBranch(b){branch=b;render();}
-function toggleSed(){sedOn=!sedOn;render();}
+function toggleExtra(){exOn=!exOn;render();}
 function tog(i){checks[i]=!checks[i];render();}
 function togSub(i,j){subChecks[i+'_'+j]=!subChecks[i+'_'+j];render();}
 function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
@@ -261,11 +293,11 @@ function onSearch(v){q=v;const a=document.getElementById('app');
 /* --- 상세 --- */
 function detailHtml(){return cur.kind==='prep'?prepHtml():flowHtml();}
 function curItems(){return cur.items.map((it,i)=>({it,i})).filter(o=>{
-  const b=o.it.br;if(b==='both')return true;if(b==='sed')return sedOn;return b===branch;});}
+  const b=o.it.br;if(b==='both')return true;if(b==='extra')return exOn;return b===branch;});}
 function prepHtml(){
   const P=cur;
   const bch=`<div class="branch">${P.branches.map(b=>`<div class="btab ${b.id===branch?'on':''}" onclick="setBranch('${b.id}')">${b.l}<div class="d">${b.d}</div></div>`).join('')}</div>`;
-  const sed=P.sedation?`<div class="sedrow ${sedOn?'on':''}" onclick="toggleSed()"><div class="sw"></div><div>💤 진정(Sedation) — 진정제 사용 시 항목·차팅 추가</div></div>`:'';
+  const sed=P.extra?`<div class="sedrow ${exOn?'on':''}" onclick="toggleExtra()"><div class="sw"></div><div>${esc(P.extra.label)}</div></div>`:'';
   const vis=curItems();let list='',curSec='';
   vis.forEach(({it,i})=>{
     if(it.sec!==curSec){curSec=it.sec;list+=`<div class="sec">${it.sec}</div>`;}
@@ -290,7 +322,7 @@ function prepHtml(){
 function prepChartText(){
   const C=cur.chart;const lines=[];
   ['send','back'].forEach(k=>{if(chartOn[k]){const c=C[k];
-    const arr=[...c.both,...(branch==='contrast'?(c.contrast||[]):[]),...(sedOn?(c.sed||[]):[])];
+    const arr=[...c.both,...(branch==='contrast'?(c.contrast||[]):[]),...(exOn?(c.sed||[]):[])];
     lines.push('['+(k==='send'?'검사실 보냄':'검사실에서 돌아옴')+']');arr.forEach(x=>lines.push(' · '+x));lines.push('');}});
   return lines.join('\n').trim();
 }
