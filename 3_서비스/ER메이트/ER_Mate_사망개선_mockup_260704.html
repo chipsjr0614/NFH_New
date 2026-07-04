@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ER Mate · 사망 처리 mockup</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--line:#e1e6ee;--tx:#1d2733;--tx2:#6b7789;
+  --blue:#2563eb;--blueL:#eef4ff;--green:#16a34a;--greenL:#e9f9ef;--warn:#dc2626;--warnL:#fdecec;
+  --star:#b45309;--starL:#fef3c7;--why:#7c3aed;--whyL:#f3edff;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.hd{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+.hd h1{font-size:22px;margin:0}.hd .sub{color:var(--tx2);font-size:13px}
+.note{background:#fff8e1;border:1px solid #f3e0a0;border-radius:10px;padding:10px 13px;font-size:13px;color:#7a5d00;margin-bottom:14px}
+.prog{display:flex;align-items:center;gap:10px;margin:4px 2px 14px}
+.pbar{flex:1;height:9px;background:var(--line);border-radius:6px;overflow:hidden}
+.pfill{height:100%;background:var(--green);width:0;transition:.25s}
+.ptx{font-size:13px;color:var(--tx2);font-weight:700;min-width:36px;text-align:right}
+.hint{background:var(--blueL);border-radius:10px;padding:10px 13px;font-size:13px;color:#1e40af;margin-bottom:12px}
+.fl{display:flex;gap:12px;position:relative}
+.fl::before{content:'';position:absolute;left:18px;top:6px;bottom:-6px;width:2px;background:var(--line)}
+.fl:last-child::before{display:none}
+.num{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--tx2);cursor:pointer;z-index:1}
+.fl.done .num{background:var(--green);border-color:var(--green);color:#fff}
+.fl.warn .num{border-color:var(--warn);color:var(--warn)}
+.fl.warn.done .num{background:var(--warn);border-color:var(--warn);color:#fff}
+.ln{flex:1;min-width:0;background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+.fl.done .ln{background:var(--greenL);border-color:#bfe6cc}
+.fl.warn .ln{border-color:#f3c0c0}
+.ft{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap}
+.ft .ic{font-size:20px}
+.req{background:var(--warnL);color:var(--warn);font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:7px}
+.fd{font-size:13.5px;color:var(--tx2);margin-top:5px;line-height:1.55}
+.subs{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+.sub{display:flex;align-items:flex-start;gap:8px;background:var(--starL);border:1px solid #f0d488;border-radius:9px;padding:9px 11px;font-size:13.5px;color:var(--star);cursor:pointer}
+.sub .sck{flex:0 0 18px;width:18px;height:18px;border-radius:5px;border:2px solid #d6a93e;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:1px}
+.sub.on{background:#fde9a8}.sub.on .sck{background:var(--star);border-color:var(--star)}
+.whyb{margin-top:8px;background:var(--whyL);color:var(--why);font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;cursor:pointer;border:none}
+.why{display:none;margin-top:8px;padding:10px 12px;background:var(--whyL);border-radius:9px;font-size:13.5px;color:#4b2a86;border-left:3px solid var(--why)}
+.why.open{display:block}
+.star{background:var(--starL);color:var(--star);font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:4px}
+.chart{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:15px}
+.chd{font-weight:800;font-size:15.5px;margin-bottom:4px}
+.chsub{font-size:12.5px;color:var(--tx2);margin-bottom:12px}
+.cbtn{width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:800;font-size:15px;cursor:pointer;color:var(--tx2);margin-bottom:12px}
+.cbtn.on{border-color:var(--green);background:var(--greenL);color:var(--green)}
+#chartTx{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;resize:vertical;background:#fafbfd;color:var(--tx)}
+.copy{margin-top:10px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd"><span style="font-size:26px">🕊️</span><div><h1>사망 처리</h1><div class="sub">필수업무 · 절차형 — 개선 mockup</div></div></div>
+  <div class="note">💡 <b>mockup 시안</b> — 단계 문구는 엑셀 원문, 간호기록은 마스터 원문입니다. 고인과 유가족에 대한 예를 갖춰 진행하며, <b>★ 문구는 칩스 확정</b>이 필요합니다.</div>
+
+  <div class="hint">🕊️ 절차형 — 위에서 아래로 순서대로 진행하세요. <b>⚠️ 사망 시각(주치의 선언 = ECG flat)은 반드시 정확히 기록</b>해야 합니다.</div>
+  <div class="prog"><div class="pbar"><div class="pfill" id="pf"></div></div><div class="ptx" id="pt">0/12</div></div>
+  <div id="list"></div>
+
+  <div class="chart">
+    <div class="chd">📋 사망 간호기록 — 응급실 퇴실</div>
+    <div class="chsub">버튼을 누르면 차팅 문구가 생성됩니다 (마스터 원문)</div>
+    <button class="cbtn" id="cbGen" onclick="toggleChart()">📥 사망(응급실 퇴실) 간호기록 생성</button>
+    <textarea id="chartTx" readonly placeholder="버튼을 누르면 차팅 문구가 생성됩니다."></textarea>
+    <button class="copy" onclick="copyChart()">📋 EMR 복사</button>
+  </div>
+</div>
+
+<script>
+// 단계: title/detail=엑셀 원문, ic=차분한 아이콘, why=교육설명, w=필수, subs=칩스확정(★)
+const STEPS=[
+ {ic:'🩺',title:'주치의 사망 선언 확인',detail:'주치의에게 사망 선언 시각 확인 및 기록',why:'사망은 주치의가 선언해요. 선언 시각을 정확히 확인해 기록의 기준으로 삼아요.'},
+ {ic:'🕰️',title:'사망 시각 기록',detail:'차트에 정확한 사망 시각 기록(사망시간 = 주치의 사망선언시간 = ECG flat 시간)',w:true,why:'사망시각은 주치의 선언시간이자 ECG flat 시간과 일치해야 해요. 법적·행정적으로 가장 중요한 기록이라 정확히 남겨요.'},
+ {ic:'📞',title:'보호자 연락',detail:'보호자에게 사망 사실 통보 및 병원 내원 안내',why:'보호자에게 조심스럽게 사망 사실을 알리고 병원 내원을 안내해요.'},
+ {ic:'🤍',title:'시신 정리',detail:'눈·입 닫기, 자세 정리, 깨끗한 시트로 교체',why:'고인에 대한 예를 갖춰 눈·입을 닫고 자세를 바르게 하며 깨끗한 시트로 교체해요.'},
+ {ic:'🩹',title:'IV line 등 제거',detail:'IV line·foley·NG tube 등 의료기기 전부 제거',why:'몸에 남은 의료기기(IV·foley·NG tube 등)를 모두 제거해요.'},
+ {ic:'💍',title:'귀중품 확인 및 인계',detail:'귀중품 목록 작성 후 보호자에게 직접 인계',why:'분실·분쟁을 막기 위해 귀중품 목록을 작성하고 보호자에게 직접 인계해요.'},
+ {ic:'📃',title:'사망진단서 확인',detail:'주치의 사망진단서 발급 여부 확인(가족관계증명서 발급 여부 확인 ) 보통 10부',why:'장례·행정에 필요한 사망진단서를 주치의가 발급했는지 확인해요(보통 10부).'},
+ {ic:'📝',title:'사망간호기록지 작성',detail:'사망 전 처치 발행·V/S·경과 포함하여 간호기록 작성',why:'사망 전 처치·활력징후·경과를 빠짐없이 간호기록으로 남기고, 사용한 약·처치의 처방·청구가 누락되지 않았는지 함께 점검해요.',
+   subs:['사망 전 사용한 약·처치, 모두 처방 입력했는지 확인 (옴니셀 포함 · 비품 사용 후 미처방 방지)','약품·처치·검사 청구 누락 및 중복 수가 없는지 확인']},
+ {ic:'🗂️',title:'응급실 퇴실 간호기록',detail:"퇴실 기록에 '사망' 시각 및 사유 입력",why:"응급실 퇴실 기록에 사유를 '사망'으로, 시각을 사망시각으로 입력해요."},
+ {ic:'🏛️',title:'원무과 사망 신고',detail:'원무과에 사망 신고 후 행정 처리 확인',why:'원무과에 사망을 신고하고 행정 처리가 되었는지 확인해요.'},
+ {ic:'🕯️',title:'영안실 연락 및 이송',detail:'영안실(☏ 내선 확인) 연락 → 이송 등록 후 이송',why:'영안실에 연락해 이송을 등록하고 고인을 정중히 이송해요.'},
+ {ic:'🧹',title:'침상 정리 및 소독',detail:'간호조무사, 침상·장비 소독 및 정리',why:'다음 환자를 위해 침상과 장비를 소독하고 정리해요.'},
+];
+// 사망 간호기록 차팅 (전부 마스터 원문)
+const CHART=['응급실 퇴실 결정 주치의를 확인함','사망 선언함','응급실 퇴실 일시를 확인함','사후 처치함','사망진단서 발부에 대해 설명함','응급실 퇴실 처리 간호사를 확인함','보호자 동의 하에 영안실 보냄'];
+const checks={}, subChecks={};
+let chartOn=false;
+function tog(i){checks[i]=!checks[i];render();}
+function togSub(i,j){const k=i+'_'+j;subChecks[k]=!subChecks[k];render();}
+function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
+function render(){
+  let html='';
+  STEPS.forEach((s,i)=>{
+    const on=checks[i];
+    const req=s.w?'<span class="req">⚠️ 필수</span>':'';
+    const subs=s.subs?`<div class="subs">${s.subs.map((t,j)=>{const sk=subChecks[i+'_'+j];
+      return `<div class="sub ${sk?'on':''}" onclick="togSub(${i},${j})"><div class="sck">${sk?'✓':''}</div><div>${t} <span class="star">★ 칩스확정</span></div></div>`;}).join('')}</div>`:'';
+    html+=`<div class="fl ${on?'done':''} ${s.w?'warn':''}">
+      <div class="num" onclick="tog(${i})">${on?'✓':i+1}</div>
+      <div class="ln">
+        <div class="ft" onclick="tog(${i})"><span class="ic">${s.ic}</span>${s.title} ${req}</div>
+        <div class="fd">${s.detail}</div>
+        ${subs}
+        <button class="whyb" onclick="toggleWhy(${i})">💡 왜?</button>
+        <div class="why" id="why${i}">${s.why}</div>
+      </div></div>`;
+  });
+  document.getElementById('list').innerHTML=html;
+  const done=STEPS.filter((s,i)=>checks[i]).length;
+  document.getElementById('pf').style.width=(done/STEPS.length*100)+'%';
+  document.getElementById('pt').textContent=done+'/'+STEPS.length;
+}
+function toggleChart(){chartOn=!chartOn;document.getElementById('cbGen').classList.toggle('on',chartOn);renderChart();}
+function renderChart(){
+  if(!chartOn){document.getElementById('chartTx').value='';return;}
+  document.getElementById('chartTx').value='[사망 · 응급실 퇴실]\n'+CHART.map(x=>' · '+x).join('\n');
+}
+function copyChart(){const t=document.getElementById('chartTx');
+  if(!t.value){alert('먼저 간호기록 생성 버튼을 눌러주세요');return;}
+  t.select();document.execCommand('copy');const b=event.target;const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1200);}
+render();
+</script>
+</body>
+</html>
