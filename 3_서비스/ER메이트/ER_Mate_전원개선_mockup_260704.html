@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ER Mate · 전원 mockup</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--line:#e1e6ee;--tx:#1d2733;--tx2:#6b7789;
+  --blue:#2563eb;--blueL:#eef4ff;--green:#16a34a;--greenL:#e9f9ef;--warn:#dc2626;--warnL:#fdecec;
+  --star:#b45309;--starL:#fef3c7;--why:#7c3aed;--whyL:#f3edff;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.hd{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+.hd h1{font-size:22px;margin:0}.hd .sub{color:var(--tx2);font-size:13px}
+.note{background:#fff8e1;border:1px solid #f3e0a0;border-radius:10px;padding:10px 13px;font-size:13px;color:#7a5d00;margin-bottom:14px}
+.prog{display:flex;align-items:center;gap:10px;margin:4px 2px 14px}
+.pbar{flex:1;height:9px;background:var(--line);border-radius:6px;overflow:hidden}
+.pfill{height:100%;background:var(--green);width:0;transition:.25s}
+.ptx{font-size:13px;color:var(--tx2);font-weight:700;min-width:36px;text-align:right}
+.hint{background:var(--blueL);border-radius:10px;padding:10px 13px;font-size:13px;color:#1e40af;margin-bottom:12px}
+.fl{display:flex;gap:12px;position:relative}
+.fl::before{content:'';position:absolute;left:18px;top:6px;bottom:-6px;width:2px;background:var(--line)}
+.fl:last-child::before{display:none}
+.num{flex:0 0 38px;width:38px;height:38px;border-radius:50%;background:var(--card);border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--tx2);cursor:pointer;z-index:1}
+.fl.done .num{background:var(--green);border-color:var(--green);color:#fff}
+.fl.warn .num{border-color:var(--warn);color:var(--warn)}
+.fl.warn.done .num{background:var(--warn);border-color:var(--warn);color:#fff}
+.ln{flex:1;min-width:0;background:var(--card);border:1.5px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:11px}
+.fl.done .ln{background:var(--greenL);border-color:#bfe6cc}
+.fl.warn .ln{border-color:#f3c0c0}
+.ft{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap}
+.ft .ic{font-size:20px}
+.req{background:var(--warnL);color:var(--warn);font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:7px}
+.fd{font-size:13.5px;color:var(--tx2);margin-top:5px;line-height:1.55}
+.subs{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+.sub{display:flex;align-items:flex-start;gap:8px;background:var(--starL);border:1px solid #f0d488;border-radius:9px;padding:9px 11px;font-size:13.5px;color:var(--star);cursor:pointer}
+.sub .sck{flex:0 0 18px;width:18px;height:18px;border-radius:5px;border:2px solid #d6a93e;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;margin-top:1px}
+.sub.on{background:#fde9a8}.sub.on .sck{background:var(--star);border-color:var(--star)}
+.whyb{margin-top:8px;background:var(--whyL);color:var(--why);font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;cursor:pointer;border:none}
+.why{display:none;margin-top:8px;padding:10px 12px;background:var(--whyL);border-radius:9px;font-size:13.5px;color:#4b2a86;border-left:3px solid var(--why)}
+.why.open{display:block}
+.star{background:var(--starL);color:var(--star);font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;margin-left:4px}
+.chart{margin-top:18px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:15px}
+.chd{font-weight:800;font-size:15.5px;margin-bottom:4px}
+.chsub{font-size:12.5px;color:var(--tx2);margin-bottom:12px}
+.cbtn{width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:800;font-size:15px;cursor:pointer;color:var(--tx2);margin-bottom:12px}
+.cbtn.on{border-color:var(--green);background:var(--greenL);color:var(--green)}
+#chartTx{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;resize:vertical;background:#fafbfd;color:var(--tx)}
+.copy{margin-top:10px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd"><span style="font-size:26px">🔄</span><div><h1>전원 (타 병원)</h1><div class="sub">필수업무 · 절차형 — 개선 mockup</div></div></div>
+  <div class="note">💡 <b>mockup 시안</b> — 단계 문구는 엑셀 원문, 간호기록은 마스터 원문입니다. <b>옴니셀·처방/청구/수가 확인 ★ 문구는 칩스 확정</b>이 필요합니다(마스터에 없는 실무 내용).</div>
+
+  <div class="hint">📋 절차형 — 위에서 아래로 순서대로 진행하세요. <b>⚠️ 퇴실 30분 전 V/S는 반드시 입력</b>해야 합니다.</div>
+  <div class="prog"><div class="pbar"><div class="pfill" id="pf"></div></div><div class="ptx" id="pt">0/12</div></div>
+  <div id="list"></div>
+
+  <div class="chart">
+    <div class="chd">📋 전원 간호기록 — 응급실 퇴실</div>
+    <div class="chsub">버튼을 누르면 차팅 문구가 생성됩니다 (마스터 원문)</div>
+    <button class="cbtn" id="cbGen" onclick="toggleChart()">📥 전원(응급실 퇴실) 간호기록 생성</button>
+    <textarea id="chartTx" readonly placeholder="버튼을 누르면 차팅 문구가 생성됩니다."></textarea>
+    <button class="copy" onclick="copyChart()">📋 EMR 복사</button>
+  </div>
+</div>
+
+<script>
+// 단계: title/detail=엑셀 원문, ic=아이콘, why=교육설명, w=필수, subs=칩스확정 추가항목(★)
+const STEPS=[
+ {ic:'📝',title:'전원동의서',detail:'주치의 전원동의서 받기',why:'전원은 환자·보호자 동의가 필요해요. 주치의가 전원동의서를 받아요.'},
+ {ic:'📋',title:'전원소견서',detail:'이송수단(자차, 사설 구급차) ·병원이름. 정규:전원전담간호사',why:'전원 갈 병원과 이송수단(자차/사설구급차)을 정하고, 정규 전원이면 전원전담간호사가 소견서를 챙겨요.'},
+ {ic:'📑',title:'의무기록복사',detail:'확인필요',why:'전원 병원에서 진료를 이어갈 수 있게 의무기록을 복사해 함께 보내요.'},
+ {ic:'💿',title:'CD/DVD복사',detail:'확인필요',why:'영상 자료(CT·MRI 등)를 CD/DVD로 복사해 전원 병원에 전달해요.'},
+ {ic:'↩️',title:'전원회신확인',detail:'진료협력센터경유여부확인',why:'진료협력센터를 거쳐야 하는 전원인지 확인해요.'},
+ {ic:'📄',title:'전원 서류 확인',detail:'진단서·입원사실증명서 등 필요서류 확인',why:'환자가 필요로 하는 진단서·증명서 등 서류를 빠짐없이 확인해요.'},
+ {ic:'🚑',title:'구급차안내',detail:'구급차 비용 안내, 구급차 연락하기',why:'사설구급차는 비용을 미리 안내하고, 구급차를 연락해 배차해요.'},
+ {ic:'💊',title:'퇴원약확인',detail:'필요시퇴원약안내',why:'필요하면 퇴원약을 안내하고, 사용한 약의 처방·청구가 빠지지 않았는지 함께 점검해요.',
+   subs:['옴니셀에서 꺼내 쓴 약, 모두 처방 입력했는지 확인 (비품 사용 후 미처방 방지)','약품·처치·검사 청구 누락 없는지 확인','중복 수가 없는지 확인 / 미사용 약 반납']},
+ {ic:'📅',title:'외래예약확인',detail:'다음외래꼭확인!',why:'다음 외래 예약을 꼭 확인해 환자가 진료를 이어갈 수 있게 해요.'},
+ {ic:'🩺',title:'퇴실30분전 V/S',detail:'반드시 입력해야함',w:true,why:'전원 이송 직전 상태를 기록으로 남기기 위해 퇴실 30분 전 활력징후를 반드시 측정·입력해요.'},
+ {ic:'📝',title:'응급실퇴실간호기록',detail:'작성 및 환자 퇴실 누른 뒤',why:'퇴실간호기록을 작성하고 환자 퇴실 처리를 눌러요.'},
+ {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 케이블·이름표정리',why:'다음 환자를 위해 침상·케이블·이름표를 정리해요.'},
+];
+// 전원 간호기록 차팅 (전부 마스터 원문)
+const CHART=['응급실 퇴실 결정 주치의를 확인함','응급실 전원 병원을 확인함','응급실 전원 사유를 확인함','응급실 전원 수단을 확인함','응급실 전원시 의사 동반 유무를 확인함','응급실 퇴실시 동반자 확인함','활력징후 측정함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함','보호자 동의 하에 타병원으로 전원시킴'];
+const checks={}, subChecks={};
+let chartOn=false;
+function tog(i){checks[i]=!checks[i];render();}
+function togSub(i,j){const k=i+'_'+j;subChecks[k]=!subChecks[k];render();}
+function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');}
+function render(){
+  let html='';
+  STEPS.forEach((s,i)=>{
+    const on=checks[i];
+    const req=s.w?'<span class="req">⚠️ 필수</span>':'';
+    const subs=s.subs?`<div class="subs">${s.subs.map((t,j)=>{const sk=subChecks[i+'_'+j];
+      return `<div class="sub ${sk?'on':''}" onclick="togSub(${i},${j})"><div class="sck">${sk?'✓':''}</div><div>${t} <span class="star">★ 칩스확정</span></div></div>`;}).join('')}</div>`:'';
+    html+=`<div class="fl ${on?'done':''} ${s.w?'warn':''}">
+      <div class="num" onclick="tog(${i})">${on?'✓':i+1}</div>
+      <div class="ln">
+        <div class="ft" onclick="tog(${i})"><span class="ic">${s.ic}</span>${s.title} ${req}</div>
+        <div class="fd">${s.detail}</div>
+        ${subs}
+        <button class="whyb" onclick="toggleWhy(${i})">💡 왜?</button>
+        <div class="why" id="why${i}">${s.why}</div>
+      </div></div>`;
+  });
+  document.getElementById('list').innerHTML=html;
+  const done=STEPS.filter((s,i)=>checks[i]).length;
+  document.getElementById('pf').style.width=(done/STEPS.length*100)+'%';
+  document.getElementById('pt').textContent=done+'/'+STEPS.length;
+}
+function toggleChart(){chartOn=!chartOn;document.getElementById('cbGen').classList.toggle('on',chartOn);renderChart();}
+function renderChart(){
+  if(!chartOn){document.getElementById('chartTx').value='';return;}
+  document.getElementById('chartTx').value='[전원 · 응급실 퇴실]\n'+CHART.map(x=>' · '+x).join('\n');
+}
+function copyChart(){const t=document.getElementById('chartTx');
+  if(!t.value){alert('먼저 간호기록 생성 버튼을 눌러주세요');return;}
+  t.select();document.execCommand('copy');const b=event.target;const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1200);}
+render();
+</script>
+</body>
+</html>
