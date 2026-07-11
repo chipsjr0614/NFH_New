@@ -101,6 +101,12 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
 #chartTx{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:11px;padding:13px;font-size:14.5px;font-family:inherit;line-height:1.7;resize:vertical;background:#fafbfd;color:var(--tx)}
 .copy{margin-top:10px;width:100%;padding:14px;border-radius:12px;border:none;background:var(--green);color:#fff;font-weight:800;font-size:15.5px;cursor:pointer}
 .hide{display:none}
+.citem{display:flex;align-items:center;gap:9px;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;margin-bottom:7px;cursor:pointer;font-size:14.5px;font-weight:600;background:var(--bg);color:var(--tx)}
+.citem.on{border-color:var(--green);background:var(--greenL);color:var(--green)}
+.citem .cck{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex:0 0 20px}
+.citem.on .cck{background:var(--green);border-color:var(--green)}
+.cin{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;margin:-2px 0 9px;font-family:inherit;background:#fafbfd;color:var(--tx);outline:none}
+.cin:focus{border-color:var(--blue)}
 </style>
 </head>
 <body>
@@ -210,20 +216,24 @@ const TASKS=[
  {id:'transfer',name:'전원',ic:'🚑',kind:'flow',
   steps:[
    {ic:'📝',title:'전원동의서',detail:'주치의 전원동의서 받기',why:'전원은 환자·보호자 동의가 필요해요. 주치의가 전원동의서를 받아요.'},
-   {ic:'📋',title:'전원소견서',detail:'이송수단(자차, 사설 구급차) ·병원이름. 정규:전원전담간호사',why:'전원 병원·이송수단을 정하고, 정규면 전원전담간호사가 소견서를 챙겨요.'},
-   {ic:'📑',title:'의무기록복사',detail:'확인필요',why:'전원 병원에서 진료를 이어가게 의무기록을 복사해 보내요.'},
-   {ic:'💿',title:'CD/DVD복사',detail:'확인필요',why:'영상 자료를 CD/DVD로 복사해 전달해요.'},
-   {ic:'↩️',title:'전원회신확인',detail:'진료협력센터경유여부확인',why:'진료협력센터를 거쳐야 하는 전원인지 확인해요.'},
-   {ic:'📄',title:'전원 서류 확인',detail:'진단서·입원사실증명서 등 필요서류 확인',why:'필요 서류를 빠짐없이 확인해요.'},
-   {ic:'🚑',title:'구급차안내',detail:'구급차 비용 안내, 구급차 연락하기',why:'사설구급차는 비용을 안내하고 배차를 연락해요.'},
-   {ic:'💊',title:'퇴원약확인',detail:'필요시퇴원약안내',why:'필요하면 퇴원약을 안내하고, 사용한 약의 처방·청구가 빠지지 않았는지 점검해요.',
-     subs:['옴니셀에서 꺼내 쓴 약, 모두 처방 입력했는지 확인 (비품 사용 후 미처방 방지)','약품·처치·검사 청구 누락 없는지 확인','중복 수가 없는지 확인 / 미사용 약 반납']},
-   {ic:'📅',title:'외래예약확인',detail:'다음외래꼭확인!',why:'다음 외래 예약을 꼭 확인해요.'},
-   {ic:'🩺',title:'퇴실30분전 V/S',detail:'반드시 입력해야함',w:true,why:'이송 직전 상태를 남기기 위해 퇴실 30분 전 활력징후를 반드시 측정·입력해요.'},
-   {ic:'📝',title:'응급실퇴실간호기록',detail:'작성 및 환자 퇴실 누른 뒤',why:'퇴실간호기록을 작성하고 환자 퇴실 처리를 눌러요.'},
-   {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 케이블·이름표정리',why:'다음 환자를 위해 정리해요.'},
+   {ic:'📋',title:'응급환자 진료의뢰서',detail:'이송수단(자차, 사설 구급차) · 병원이름',why:'전원 갈 병원과 이송수단을 응급환자 진료의뢰서에 기재해요.'},
+   {ic:'📑',title:'의무기록, CD/DVD 복사',detail:'의무기록 + 영상(CT·MRI 등) CD/DVD 복사',why:'전원 병원에서 진료를 이어가게 의무기록과 영상 자료를 복사해 보내요.'},
+   {ic:'📄',title:'각종서류',detail:'진료확인서 발급여부 확인(진단서는 반드시 해당 전문의에게 컨설팅 후 발급받도록 주치의 확인 후 안내)',why:'진료확인서 발급을 확인하고, 진단서는 전문의 컨설팅 후 발급하도록 주치의 확인 후 안내해요.'},
+   {ic:'🚑',title:'구급차 안내',detail:'사설구급차 갈지, 본원 구급차 갈지 확인 및 비용 안내하기, 주치의 컨펌 후 사설 구급차 연락 또는 본원 응급실 준비',why:'사설/본원 구급차를 정하고 비용을 안내하며, 주치의 컨펌 후 사설 구급차 연락 또는 본원 응급실을 준비해요.'},
+   {ic:'💊',title:'퇴원약 확인',detail:'옴니셀 반납 · 오더/처치/검사 상태 확인 · 중복수가 확인',why:'사용 안 한 약 반납, 오더·처치·검사 상태 재확인, 중복수가 점검으로 누락·오청구를 막아요.',
+     subs:['옴니셀에서 꺼내쓴 약 중 사용 안 한 것, 옴니셀에 약 남았는지 확인 → 남은 것들 약국에 반납처리 요청','약품 오더·처치발행·검사 채혈 상태나 시행 상태 여부 다시 확인(초기로 돌리기 또는 시행 진행)','중복수가 없는지 확인']},
+   {ic:'💳',title:'수납 및 외래예약 확인',detail:'다음 예약 있는지 확인',why:'수납 상태와 다음 외래 예약이 있는지 확인해요.'},
+   {ic:'🩺',title:'퇴실 30분전 Vital Sign',detail:'반드시 입력해야함',w:true,why:'이송 직전 상태를 남기기 위해 퇴실 30분 전 활력징후를 반드시 측정·입력해요.'},
+   {ic:'🧳',title:'출발 전 환자 이송 챙기기',detail:'낙상 주의, 소지품 놓고 가지 않도록 하기',why:'이송 중 낙상에 주의하고, 환자 소지품을 놓고 가지 않도록 챙겨요.'},
+   {ic:'🧹',title:'침상정리',detail:'간호조무사 연락하기, 모니터 정리 및 연동 해제하기',why:'다음 환자를 위해 침상을 정리하고 모니터를 정리·연동 해제해요.'},
   ],
-  chart:['응급실 퇴실 결정 주치의를 확인함','응급실 전원 병원을 확인함','응급실 전원 사유를 확인함','응급실 전원 수단을 확인함','응급실 전원시 의사 동반 유무를 확인함','응급실 퇴실시 동반자 확인함','활력징후 측정함','응급실 퇴실 일시를 확인함','응급실 퇴실 처리 간호사를 확인함','보호자 동의 하에 타병원으로 전원시킴']},
+  chart:{interactive:true,items:[
+   {t:'응급실 전원 병원을 확인함',ph:'전원 병원명'},
+   {t:'응급실 전원 사유를 확인함',ph:'전원 사유'},
+   {t:'응급실 전원 수단을 확인함',ph:'이송 수단(사설/본원 구급차 등)'},
+   {t:'응급실 전원시 의사 동반 유무를 확인함',ph:'동반 의사(있으면 이름)'},
+   {t:'타병원으로 전원감',ph:''},
+  ]}},
  {id:'death',name:'사망',ic:'🕊️',kind:'flow',
   steps:[
    {ic:'🩺',title:'주치의 사망 선언 확인',detail:'주치의에게 사망 선언 시각 확인 및 기록',why:'사망은 주치의가 선언해요. 선언 시각을 정확히 확인해 기록의 기준으로 삼아요.'},
@@ -246,13 +256,13 @@ const ALL={}; EXAMS.forEach(e=>ALL[e.id]=e); TASKS.forEach(t=>ALL[t.id]=t);
 
 /* ===== 상태 ===== */
 let view='home', cur=null, branch='', exOn=false, q='';
-let checks={}, subChecks={}, chartOn={send:false,back:false,single:false};
+let checks={}, subChecks={}, chartOn={send:false,back:false,single:false}, chartCk={}, chartIn={};
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 
 /* ===== 네비 ===== */
 function goHome(){view='home';cur=null;q='';render();}
 function openItem(id){cur=ALL[id];view='detail';
-  branch=cur.branches?cur.branches[0].id:'';exOn=false;checks={};subChecks={};chartOn={send:false,back:false,single:false};render();}
+  branch=cur.branches?cur.branches[0].id:'';exOn=false;checks={};subChecks={};chartOn={send:false,back:false,single:false};chartCk={};chartIn={};render();}
 function setBranch(b){branch=b;render();}
 function toggleExtra(){exOn=!exOn;render();}
 function tog(i){checks[i]=!checks[i];render();}
@@ -346,13 +356,24 @@ function flowHtml(){
   const done=cur.steps.filter((s,i)=>checks[i]).length,tot=cur.steps.length;
   const prog=`<div class="prog"><div class="pbar"><div class="pfill" style="width:${done/tot*100}%"></div></div><div class="ptx">${done}/${tot}</div></div>`;
   const label=cur.name;
-  const chart=`<div class="chart"><div class="chd">📋 ${esc(label)} 간호기록 — 응급실 퇴실</div><div class="chsub">버튼을 누르면 차팅이 생성됩니다 (마스터 원문)</div>
-    <button class="cbtn ${chartOn.single?'on':''}" style="width:100%" onclick="togChart('single')">📥 ${esc(label)}(응급실 퇴실) 간호기록 생성</button>
-    <textarea id="chartTx" readonly placeholder="버튼을 누르면 차팅이 생성됩니다." style="margin-top:12px">${chartOn.single?'['+label+' · 응급실 퇴실]\n'+cur.chart.map(x=>' · '+x).join('\n'):''}</textarea>
-    <button class="copy" onclick="copyChart()">📋 EMR 복사</button></div>`;
+  let chart;
+  if(cur.chart&&cur.chart.interactive){const cs=cur.chart.items;
+    chart=`<div class="chart"><div class="chd">📋 ${esc(label)} 간호기록 — 응급실 퇴실</div><div class="chsub">항목을 눌러 선택하고 세부사항을 입력하세요 (마스터 원문)</div>
+      ${cs.map((it,idx)=>`<div class="citem ${chartCk[idx]?'on':''}" onclick="togCC(${idx})"><span class="cck">${chartCk[idx]?'✓':''}</span>${esc(it.t)}</div>${it.ph?`<input class="cin" oninput="ccIn(${idx},this.value)" placeholder="${esc(it.ph)}" value="${esc(chartIn[idx]||'')}">`:''}`).join('')}
+      <textarea id="chartTx" readonly style="margin-top:6px" placeholder="항목을 선택하면 차팅이 생성됩니다.">${transferChartText()}</textarea>
+      <button class="copy" onclick="copyChart()">📋 EMR 복사</button></div>`;
+  }else{
+    chart=`<div class="chart"><div class="chd">📋 ${esc(label)} 간호기록 — 응급실 퇴실</div><div class="chsub">버튼을 누르면 차팅이 생성됩니다 (마스터 원문)</div>
+      <button class="cbtn ${chartOn.single?'on':''}" style="width:100%" onclick="togChart('single')">📥 ${esc(label)}(응급실 퇴실) 간호기록 생성</button>
+      <textarea id="chartTx" readonly placeholder="버튼을 누르면 차팅이 생성됩니다." style="margin-top:12px">${chartOn.single?'['+label+' · 응급실 퇴실]\n'+cur.chart.map(x=>' · '+x).join('\n'):''}</textarea>
+      <button class="copy" onclick="copyChart()">📋 EMR 복사</button></div>`;
+  }
   return hint+prog+list+chart;
 }
 function togChart(k){chartOn[k]=!chartOn[k];render();}
+function transferChartText(){const cs=cur.chart.items;const L=['['+cur.name+' · 응급실 퇴실]'];cs.forEach((it,idx)=>{if(chartCk[idx]){let l=' · '+it.t;if(chartIn[idx]&&chartIn[idx].trim())l+=' ('+chartIn[idx].trim()+')';L.push(l);}});return L.length>1?L.join('\n'):'';}
+function togCC(i){chartCk[i]=!chartCk[i];render();}
+function ccIn(i,v){chartIn[i]=v;const t=document.getElementById('chartTx');if(t)t.value=transferChartText();}
 function copyChart(){const t=document.getElementById('chartTx');
   if(!t||!t.value){alert('먼저 간호기록 버튼을 눌러주세요');return;}
   t.select();document.execCommand('copy');const b=event.target;const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1200);}
