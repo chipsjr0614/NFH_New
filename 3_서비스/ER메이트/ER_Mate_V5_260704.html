@@ -356,7 +356,7 @@ function flowHtml(){
   cur.steps.forEach((s,i)=>{
     const on=checks[i];
     const subs=s.subs?`<div class="subs">${s.subs.map((t,j)=>{const sk=subChecks[i+'_'+j];
-      return `<div class="sub ${sk?'on':''}" onclick="togSub(${i},${j})"><div class="sck">${sk?'✓':''}</div><div>${esc(t)} <span class="star">★ 칩스확정</span></div></div>`;}).join('')}</div>`:'';
+      return `<div class="sub ${sk?'on':''}" onclick="togSub(${i},${j})"><div class="sck">${sk?'✓':''}</div><div>${esc(t)}</div></div>`;}).join('')}</div>`:'';
     list+=`<div class="fl ${on?'done':''} ${s.w?'warn':''}"><div class="num" onclick="tog(${i})">${on?'✓':i+1}</div>
       <div class="ln"><div class="ft" onclick="tog(${i})"><span class="ic2">${s.ic}</span>${esc(s.title)} ${s.w?'<span class="req">⚠️ 필수</span>':''}</div>
         <div class="fd">${esc(s.detail)}</div>${subs}
