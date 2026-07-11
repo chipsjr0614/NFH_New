@@ -121,21 +121,21 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,'Ap
 <script>
 /* ===== 데이터 (문구=엑셀 원문 · 차팅=마스터 원문 · ★=칩스확정) ===== */
 const EXAMS=[
- {id:'ct',name:'CT 조영제',tag:'CT(변경중)',ic:'<svg viewBox="0 0 64 64" style="width:1em;height:1em;vertical-align:-.12em"><rect x="17" y="5" width="34" height="44" rx="10" fill="#dbe6fb" stroke="#2563eb" stroke-width="3"/><circle cx="34" cy="27" r="12.5" fill="#fff" stroke="#2563eb" stroke-width="3"/><circle cx="34" cy="27" r="5" fill="#dbe6fb"/><rect x="3" y="43" width="56" height="7" rx="3.5" fill="#7ba3f0"/><rect x="7" y="34.5" width="27" height="8" rx="4" fill="#bcd2f8"/><circle cx="12" cy="32" r="6" fill="#ffe0b2" stroke="#c98a3c" stroke-width="2"/></svg>',kind:'prep',
+ {id:'ct',name:'CT검사',tag:'CT',ic:'<svg viewBox="0 0 64 64" style="width:1em;height:1em;vertical-align:-.12em"><rect x="17" y="5" width="34" height="44" rx="10" fill="#dbe6fb" stroke="#2563eb" stroke-width="3"/><circle cx="34" cy="27" r="12.5" fill="#fff" stroke="#2563eb" stroke-width="3"/><circle cx="34" cy="27" r="5" fill="#dbe6fb"/><rect x="3" y="43" width="56" height="7" rx="3.5" fill="#7ba3f0"/><rect x="7" y="34.5" width="27" height="8" rx="4" fill="#bcd2f8"/><circle cx="12" cy="32" r="6" fill="#ffe0b2" stroke="#c98a3c" stroke-width="2"/></svg>',kind:'prep',
   branches:[{id:'contrast',l:'💉 조영 CT',d:'조영제 사용'},{id:'non',l:'⚪ 비조영 CT',d:'조영제 없음'}],
   items:[
    {ic:'📝',sec:'준비사항',br:'contrast',t:'CT동의서 준비(조영제 사용시)',why:'조영제는 드물게 알러지·신장 부작용이 있어 검사 전 설명하고 동의를 받아요.'},
    {ic:'👕',sec:'준비사항',br:'both',t:'환의(아래 속옷만 입힌다)로 갈아입기 + 귀금속(귀걸이 목걸이 등) 제거 - 영상 방해될 수 있음',why:'금속은 CT 영상에 줄무늬 인공물을 만들어 판독을 방해해요.'},
    {ic:'🫘',sec:'준비사항',br:'contrast',w:true,badge:'GFR 60↑',t:'GFR 60 이상 확인.(60미만일 시 주치의 확인 필요)',why:'조영제는 콩팥으로 빠져나가요. 신장 기능이 나쁘면(60 미만) 조영제 신독성 위험이 있어요.'},
    {ic:'💉',sec:'준비사항',br:'contrast',badge:'20G↑ · 손목 위',t:'20G 이상 손목 위 Pressure line IV (Non-Contrast)는 필요없음)',why:'조영제를 빠르게 자동 주입하기 때문에 굵은(20G↑) 바늘을 손목 위에 잡아요.'},
-   {ic:'💊',sec:'준비사항',br:'contrast',badge:'Avil 30min · 스테로이드 1hr',t:'조영제 알러지 시 전처치: Avil 다 들어간 후 30min, 스테로이드는 1hr 후 촬영',why:'알러지 예방을 위해 항히스타민·스테로이드를 미리 투여하고 약효 시간을 두고 촬영해요.'},
+   {ic:'💊',sec:'준비사항',br:'contrast',badge:'Chlorpheniramine 30분 · 스테로이드 1시간',t:'조영제 알러지 시 전처치: Chlorpheniramine 다 들어간 후 30분, 스테로이드는 1시간 후 촬영(반드시 주치의 컨펌필요)',why:'알러지 예방을 위해 항히스타민·스테로이드를 미리 투여하고 약효 시간을 두고 촬영해요.'},
    {ic:'📞',sec:'준비사항',br:'contrast',t:'전처치 시작 전 CT실 전화해서 투약 시간 확인',why:'전처치 약효 시간에 맞춰 촬영 타이밍을 조율해요.'},
    {ic:'🖥️',sec:'검사 후',br:'both',t:'15분 후 영상병동뷰어 영상 올라왔는지 확인',why:'촬영 누락·재촬영 필요 여부를 빠르게 확인해요.'},
    {ic:'❤️',sec:'주의사항',br:'contrast',badge:'HR>70 → betaloc',t:'CT Heart angio+3D: TNI 확인 & HR>70 → betaloc 후 30분 f/u',why:'심장 CT는 심박이 빠르면 흔들려요. 베타차단제로 심박을 낮춰요.'},
    {ic:'🚑',sec:'이송 부서',br:'both',t:'응급CT (☏)',why:'CT 촬영은 응급CT실로 이송해요.'},
   ],
-  chart:{send:{both:['검사실 보냄','검진 위해 이송함'],contrast:['금식 확인함']},
-         back:{both:['검사실에서 돌아옴','검사 후 응급실 돌아와 관찰 중임'],contrast:['조영제 부작용이 있는지 관찰함 ★']}}},
+  chart:{send:{both:['검사실 보냄']},
+         back:{both:['검사실에서 돌아옴']}}},
  {id:'mri',name:'MRI',tag:'MRI',ic:'🧲',kind:'prep',extra:{id:'sed',label:'💤 진정(Sedation) — 진정제 사용 시 항목·차팅 추가'},
   branches:[{id:'contrast',l:'💉 조영 MRI',d:'조영제 사용 — IV·GFR'},{id:'non',l:'⚪ 비조영 MRI',d:'조영제 없음 — 금속 제거'}],
   items:[
