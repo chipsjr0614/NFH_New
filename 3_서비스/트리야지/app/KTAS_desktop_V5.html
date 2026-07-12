@@ -237,13 +237,17 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
             <div class="fl" style="margin-top:8px">반응 증상</div>
             <input class="oinp" id="contrastSx" style="width:100%;text-align:left;font-size:15px" placeholder="예) 호흡곤란, 가려움, 두드러기, 의식소실" oninput="S.contrastSx=this.value;render()">
           </div></div>
-        <div class="q"><div class="qt">💊 약물 알러지 <span style="font-size:11px;color:var(--mute);font-weight:400">(약물 - 반응, 없으면 비워두세요)</span></div>
-          <input class="oinp" style="text-align:left;font-size:15px;width:100%" id="drugAl" placeholder="예) 페니실린 - 호흡곤란·가려움·의식소실" oninput="render()"></div>
-        <div class="q"><div class="qt">🌾 각종 알러지 <span style="font-size:11px;color:var(--mute);font-weight:400">(음식·기타, 없으면 비워두세요)</span></div>
-          <input class="oinp" style="text-align:left;font-size:15px;width:100%" id="etcAl" placeholder="예) 계란 - 두드러기 / 견과류 - 아나필락시스" oninput="render()"></div>
-        <div class="q"><div class="qt">💊 복용약물 <span style="font-size:11px;color:var(--mute);font-weight:400">(없으면 비워두세요)</span></div>
-          <input class="oinp" style="text-align:left;font-size:15px;width:100%" id="curMed" placeholder="예) 와파린 / 메트포르민" oninput="render()"></div>
-        <div class="q"><div class="qt">🛡️ 면역저하 / 항암 <span style="font-size:11px;color:var(--mute);font-weight:400">(항암 2주 이내 등 — 역격리 고려)</span></div><div class="opts" id="immunoOpts"></div></div>
+        <div class="q"><div class="qt">💊 약물 알러지</div><div class="opts" id="drugAlOpts"></div>
+          <div id="drugAlWrap" style="display:none;margin-top:8px"><input class="oinp" style="text-align:left;font-size:15px;width:100%" id="drugAl" placeholder="예) 페니실린 - 호흡곤란·가려움·의식소실" oninput="render()"></div></div>
+        <div class="q"><div class="qt">🌾 각종 알러지 <span style="font-size:11px;color:var(--mute);font-weight:400">(음식·기타)</span></div><div class="opts" id="etcAlOpts"></div>
+          <div id="etcAlWrap" style="display:none;margin-top:8px"><input class="oinp" style="text-align:left;font-size:15px;width:100%" id="etcAl" placeholder="예) 계란 - 두드러기 / 견과류 - 아나필락시스" oninput="render()"></div></div>
+        <div class="q"><div class="qt">💊 복용약물</div><div class="opts" id="curMedOpts"></div>
+          <div id="curMedWrap" style="display:none;margin-top:8px"><input class="oinp" style="text-align:left;font-size:15px;width:100%" id="curMed" placeholder="예) 와파린 / 메트포르민 / 아스피린" oninput="render()"></div></div>
+        <div class="q"><div class="qt">🦠 감염 / 격리 <span style="font-size:11px;color:var(--mute);font-weight:400">(해당 시 선택, 복수 가능)</span></div>
+          <div class="opts" id="isoTypeOpts"></div>
+          <div id="isoReasonWrap" style="display:none;margin-top:8px"><div class="fl">이유 / 균주 / 진단</div>
+            <input class="oinp" id="isoReason" style="width:100%;text-align:left;font-size:15px" placeholder="예) 폐결핵(TB) / MRSA 객담 / AML 항암 2주 이내" oninput="S.isoReason=this.value;render()"></div>
+        </div>
         <div class="q"><div class="qt">🚬 흡연</div><div class="opts" id="smkOpts"></div></div>
         <div class="q" style="margin-bottom:0"><div class="qt">✈️ 여행력</div>
           <div class="opts" id="trvOpts"></div>
@@ -468,9 +472,9 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <script>
 // ══════════ STATE ══════════
-const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',immuno:'',smoking:'',travel:'',bpArm:'',
+const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',smoking:'',travel:'',bpArm:'',
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),traumaOn:false,trArea:new Set(),trBleed:'',trWound:'',trSMC:'',trLOC:'',
-  gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', track:'mild', ans:{}, nrs:0,
+  gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', ccs:[], ccOther:'', forceSevere:false, track:'mild', ans:{}, nrs:0,
   onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
   ktas:'', ktasChg:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false, abuseOpen:false, noteEdited:false, o2mode:'RA', o2:'', o2L:'', note:'', present:''};
 let cur=1;
@@ -482,9 +486,9 @@ function toggleTheme(){const l=document.body.getAttribute('data-theme')==='light
 // 역할: pre(앞 수식)·count·assoc(동반)·info / yn 동반은 label
 const CC={
  '흉통':{track:'crit',noun:'흉통',color:'cr',icon:'💔',alert:['흉통 — ECG 먼저','12-lead ECG 즉시 / 산소 / IV / Aspirin 확인'],
-   q:[{id:'region',t:'부위',role:'pre',suf:'부위',o:['중앙','좌측','우측','전체']},
-      {id:'quality',t:'양상',role:'pre',suf:'양상의',o:['쥐어짜는','압박감','찌르는','타는']},
-      {id:'rad',t:'방사',role:'assoc',lblPre:'방사통',skip:['없음'],o:['없음','왼팔','턱','등','어깨']},
+   q:[{id:'region',t:'부위 (복수 선택)',role:'pre',multi:true,suf:'부위',o:['중앙','좌측','우측','전체']},
+      {id:'quality',t:'양상 (복수 선택)',role:'pre',multi:true,suf:'양상의',o:['쥐어짜는','압박감','찌르는','타는']},
+      {id:'rad',t:'방사 (복수 선택)',role:'assoc',multi:true,lblPre:'방사통',skip:['없음'],o:['왼팔','턱','등','어깨']},
       {id:'diap',t:'식은땀',role:'assoc',type:'yn',label:'식은땀',esc:'식은땀 동반 흉통 → ACS 의심'},
       {id:'dysp',t:'호흡곤란 동반',role:'assoc',type:'yn',label:'호흡곤란'},
       {id:'palp',t:'심계항진',role:'assoc',type:'yn',label:'심계항진'}],
@@ -503,7 +507,7 @@ const CC={
    rf:['현재 의식저하','외상 동반','흉통·호흡곤란 선행','경련 동반']},
  '두통':{track:'severe',noun:'두통',color:'cb',icon:'🤕',
    q:[{id:'mode',t:'발생 양상',role:'pre',suf:'발생한',o:['서서히','갑자기(벼락두통)'],esc:'벼락두통 → SAH 감별'},
-      {id:'region',t:'부위',role:'pre',o:['전두부','측두부','후두부','전체']},
+      {id:'region',t:'부위 (복수 선택)',role:'pre',multi:true,o:['전두부','측두부','후두부','전체']},
       {id:'nausea',t:'구역/구토',role:'assoc',type:'yn',label:'구역·구토'},
       {id:'neuro',t:'신경학적 증상',role:'assoc',type:'yn',label:'신경학적 증상',esc:'두통+신경학적 증상'}],
    rf:['벼락두통','의식저하','발열+경부강직','편측마비·안면마비','반복 구토','외상 후 두통']},
@@ -521,8 +525,8 @@ const CC={
       {id:'speech',t:'언어 장애',role:'assoc',type:'yn',label:'언어장애'}],
    rf:['갑작스런 발생','편측 위약감','안면 마비','언어 장애','시야 장애','의식저하']},
  '복통':{track:'severe',noun:'복통',color:'co',icon:'🤢',
-   q:[{id:'region',t:'부위',role:'pre',suf:'부위',cols:3,o:['RUQ','LUQ','RLQ','LLQ','상복부','배꼽주위','전체']},
-      {id:'quality',t:'양상',role:'pre',suf:'양상의',o:['쥐어짜는','찌르는','묵직한','쥐어트는']},
+   q:[{id:'region',t:'부위 (복수 선택)',role:'pre',multi:true,suf:'부위',cols:3,o:['RUQ','LUQ','RLQ','LLQ','상복부','배꼽주위','전체']},
+      {id:'quality',t:'양상 (복수 선택)',role:'pre',multi:true,suf:'양상의',o:['쥐어짜는','찌르는','묵직한','쥐어트는']},
       {id:'fever',t:'발열',role:'assoc',type:'yn',label:'발열'},
       {id:'vomit',t:'구토',role:'assoc',type:'yn',label:'구토'},
       {id:'diarr',t:'설사',role:'assoc',type:'yn',label:'설사'}],
@@ -672,6 +676,13 @@ function chips(id,arr,key,danger){
   }).join('');
 }
 function pickInfo(key,id,_x,v){S[key]=(S[key]===v?'':v);renderInfoChips();if(key==='travel')document.getElementById('trvDetail').style.display=S.travel==='있음'?'block':'none';render();}
+const ISO_TYPES=['호흡기 격리(결핵·수두·코로나 등)','접촉 격리(MRSA·CRE·VRE 등)','역격리(항암·백혈병·면역저하)'];
+function renderIsoType(){
+  const el=document.getElementById('isoTypeOpts');if(!el)return;
+  el.innerHTML=ISO_TYPES.map(v=>`<div class="opt ${S.isoType.has(v)?'sel-r':''}" style="min-width:120px" onclick="toggleIsoType('${v}')">${v}</div>`).join('');
+  const w=document.getElementById('isoReasonWrap');if(w)w.style.display=S.isoType.size?'':'none';
+}
+function toggleIsoType(v){S.isoType.has(v)?S.isoType.delete(v):S.isoType.add(v);renderIsoType();render();}
 function renderInfoChips(){
   const mk=(id,arr,key,danger)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=arr.map(v=>{
     const sel=S[key]===v;const cls=sel?((danger&&danger.includes(v))?'sel-r':'sel'):'';
@@ -683,7 +694,11 @@ function renderInfoChips(){
   mk('trvOpts',['없음','있음'],'travel');
   mk('bpArmOpts',['없음','좌측 금지','우측 금지','양측 주의'],'bpArm',['좌측 금지','우측 금지','양측 주의']);
   mk('contrastExamOpts',['CT','MRI','CT·MRI'],'contrastExam');
-  mk('immunoOpts',['해당없음','면역저하·항암중'],'immuno',['면역저하·항암중']);
+  mk('drugAlOpts',['없음','있음'],'drugAlY',['있음']);
+  mk('etcAlOpts',['없음','있음'],'etcAlY',['있음']);
+  mk('curMedOpts',['없음','있음'],'curMedY',['있음']);
+  [['drugAlY','drugAlWrap'],['etcAlY','etcAlWrap'],['curMedY','curMedWrap']].forEach(([k,w])=>{const e=document.getElementById(w);if(e)e.style.display=(S[k]==='있음')?'':'none';});
+  renderIsoType();
   const fem=(S.sex==='여');
   const pr=document.getElementById('pregRow');if(pr)pr.style.display=fem?'':'none';
   const lr=document.getElementById('lmpRow');if(lr)lr.style.display=fem?'':'none';
@@ -779,7 +794,16 @@ function renderTrack(){
 
 // ══════════ 주호소 ══════════
 function ccCell(name){const d=CC[name]||{color:'',icon:'•'};const nm=name.replace(/'/g,"\\'");
-  return `<div class="cc ${d.color} ${S.cc===name?'sel':''}" onclick="pickCC('${nm}')"><span class="ci">${d.icon||'•'}</span><span class="ct">${name}</span></div>`;}
+  return `<div class="cc ${d.color} ${S.ccs.includes(name)?'sel':''}" onclick="pickCC('${nm}')"><span class="ci">${d.icon||'•'}</span><span class="ct">${name}</span></div>`;}
+// 복수선택 헬퍼
+function ccList(){const o=S.ccOther.trim();return o?[...S.ccs,o]:S.ccs.slice();}
+function ccHas(n){return S.ccs.includes(n);}
+function worstTrack(){let t='mild';for(const c of S.ccs){const d=CC[c];if(d&&d.track==='crit')return 'crit';if(d&&d.track==='severe')t='severe';}if(t==='mild'&&S.forceSevere)t='severe';return t;}
+function ansKey(cc,id){return cc+''+id;}
+function getAns(cc,id){return S.ans[ansKey(cc,id)];}
+function ansAny(id,val){return ccList().some(cc=>{const v=getAns(cc,id);return val===undefined?(v!==undefined&&v!==''&&v!==null):v===val;});}
+function rfKey(cc,f){return cc+''+f;}
+function rfOn(cc,f){return S.redFlags.includes(rfKey(cc,f));}
 function renderCCGrid(){
   const q=((document.getElementById('ccSearch')||{}).value||'').trim();
   const grid=document.getElementById('ccGrid');
@@ -799,14 +823,12 @@ function renderMore(){document.getElementById('ccMore').innerHTML=SYS169.map(([t
 function moreOpen(){const m=document.getElementById('ccMore');return m&&m.style.display!=='none'&&m.style.display!=='';}
 function toggleMore(){const m=document.getElementById('ccMore');const show=!moreOpen();m.style.display=show?'':'none';document.getElementById('moreBtn').textContent=show?'－ 접기 ▴':'＋ 다른 증상 (계통별 전체) ▾';if(show)renderMore();}
 function pickCC(name){
-  S.cc=name;S.ans={};S.redFlags=[];S.nrs=0;
-  const d=CC[name];S.track=d?d.track:'mild';
-  document.getElementById('ccOther').value='';
+  const i=S.ccs.indexOf(name);
+  if(i>=0){S.ccs.splice(i,1);}
+  else{S.ccs.push(name);const d=CC[name];if(d&&d.alert)showAlert(d.alert[0],d.alert[1]);if(name==='어지럼증'||name==='실신/의식변화')openBST(name+' 호소 환자.');}
   renderCCGrid();if(moreOpen())renderMore();
-  if(d&&d.alert)showAlert(d.alert[0],d.alert[1]);
-  if(name==='어지럼증'||name==='실신/의식변화')openBST(name+' 호소 환자.');
 }
-function setOtherCC(v){if(v.trim()){S.cc=v.trim();S.track='mild';S.ans={};document.querySelectorAll('.cc').forEach(c=>c.classList.remove('sel'));}}
+function setOtherCC(v){S.ccOther=v;}
 function showAlert(t,body){document.getElementById('alertT').textContent='⚠️ '+t;document.getElementById('alertBody').innerHTML=body;document.getElementById('alertModal').classList.add('show');}
 function closeAlert(){document.getElementById('alertModal').classList.remove('show');}
 
@@ -827,56 +849,64 @@ function setNRS(v){v=+v;S.nrs=v;document.getElementById('nrsv').textContent=v;
   document.getElementById('nrsl').textContent=labs[v]||'';
   const cols=['#22c55e','#4ade80','#86efac','#a3e635','#d4d400','#eab308','#f97316','#fb923c','#ef4444','#dc2626','#b91c1c'];
   document.getElementById('nrsv').style.color=cols[v];render();}
+const COMMON_RF=['의식 저하/반응 저하','호흡곤란/청색증','활력징후 불안정(쇼크)','대량 출혈','심한 통증(NRS≥7)','고열(≥39.5℃)'];
 function renderDetail(){
-  const cc=CC[S.cc];
-  document.getElementById('s4title').textContent=(S.cc||'주호소')+' — 세부';
-  document.getElementById('s4sub').textContent=({crit:'🔴 위급 트랙',severe:'🟠 중증 트랙',mild:'🟢 경증 트랙'})[S.track]||'';
-  // 현재호소 직접작성 칸 값 유지
+  const list=ccList();const track=worstTrack();
+  document.getElementById('s4title').textContent=(list.join(', ')||'주호소')+' — 세부';
+  document.getElementById('s4sub').textContent=({crit:'🔴 위급 트랙',severe:'🟠 중증 트랙',mild:'🟢 경증 트랙'})[track]||'';
   const pi=document.getElementById('presentInp');if(pi)pi.value=S.present||'';
-  if(!cc){document.getElementById('qBox').innerHTML='<div style="color:var(--mute);font-size:13px">세부질문 없는 주호소 — 현재호소를 직접 작성하세요.</div>';document.getElementById('rfCard').style.display='none';renderKTAS();renderCcHint();return;}
-  // 질문: 조건부(showIf) 필터 후, 경증이면 핵심(앞 3개)만
-  let qs=cc.q.filter(qVisible);
-  if(S.track==='mild')qs=qs.slice(0,3);
-  document.getElementById('qBox').innerHTML=qs.map(q=>buildQ(q)).join('');
-  // red flag (경증은 숨김)
-  const rfCard=document.getElementById('rfCard');
-  if(S.track==='mild'||!cc.rf){rfCard.style.display='none';}
-  else{rfCard.style.display='';document.getElementById('rfList').innerHTML=cc.rf.map((f,i)=>`<div class="rf ${S.redFlags.includes(f)?'on':''}" onclick="toggleRF('${f.replace(/'/g,"")}')"><span class="rfb">${S.redFlags.includes(f)?'✓':''}</span><span class="rt">${f}</span></div>`).join('');}
+  // 각 주호소 세부질문 섹션
+  let html='';
+  if(!list.length)html='<div style="color:var(--mute);font-size:13px">주호소를 선택하세요.</div>';
+  list.forEach(cc=>{
+    const d=CC[cc];
+    html+=`<div class="grp" style="color:#60a5fa;margin-top:10px">▸ ${cc}</div>`;
+    if(d){let qs=d.q.filter(q=>qVisible(q,cc));if(track==='mild')qs=qs.slice(0,3);html+=(qs.map(q=>buildQ(q,cc)).join('')||'<div style="color:var(--mute);font-size:13px">—</div>');}
+    else html+='<div style="color:var(--mute);font-size:13px;padding:2px 0">세부질문 없음 — 현재호소 직접 작성</div>';
+  });
+  document.getElementById('qBox').innerHTML=html;
+  renderRF(track);
   renderKTAS();renderCcHint();
 }
-// 클릭한 세부질문 값을 현재호소 작성 참고용으로 요약 표시
+function renderRF(track){
+  const card=document.getElementById('rfCard');let items=[];
+  ccList().forEach(cc=>{const d=CC[cc];if(d&&d.rf&&track!=='mild')d.rf.forEach(f=>items.push({cc,f}));});
+  COMMON_RF.forEach(f=>items.push({cc:'공통',f}));
+  card.style.display=items.length?'':'none';
+  document.getElementById('rfList').innerHTML=items.map(it=>{const on=rfOn(it.cc,it.f);const ff=it.f.replace(/'/g,'');return `<div class="rf ${on?'on':''}" onclick="toggleRF('${it.cc}','${ff}')"><span class="rfb">${on?'✓':''}</span><span class="rt">${it.f}${it.cc==='공통'?'':` <span style="color:var(--mute);font-size:11px">·${it.cc}</span>`}</span></div>`;}).join('');
+}
 function renderCcHint(){
-  const el=document.getElementById('ccHint');if(!el)return;
-  const cc=CC[S.cc];let items=[];
-  if(cc)cc.q.forEach(q=>{if(!qVisible(q))return;let v=S.ans[q.id];if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;if(Array.isArray(v))v=v.join('·');items.push(v);});
+  const el=document.getElementById('ccHint');if(!el)return;let items=[];
+  ccList().forEach(cc=>{const d=CC[cc];if(!d)return;d.q.forEach(q=>{if(!qVisible(q,cc))return;let v=getAns(cc,q.id);if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;if(Array.isArray(v))v=v.join('·');items.push(v);});});
   if(S.nrs>0)items.push('NRS '+S.nrs+'/10');
-  if(S.redFlags.length)items.push('⚠'+S.redFlags.join('·'));
+  if(S.redFlags.length)items.push('⚠위험징후 '+S.redFlags.length+'개');
   el.innerHTML=items.length?('참고(클릭한 항목): '+items.join(' / ')):'';
 }
-function qVisible(q){return !q.showIf||(q.showIf.in||[]).includes(S.ans[q.showIf.id]);}
-function buildQ(q){
+function qVisible(q,cc){return !q.showIf||(q.showIf.in||[]).includes(getAns(cc,q.showIf.id));}
+function buildQ(q,cc){
+  const k=ansKey(cc,q.id),cur=S.ans[k];
   if(q.type==='text'){
-    if(q.big)return `<div class="q"><div class="qt">${q.t}</div><textarea class="fi" style="min-height:72px;resize:vertical;font-family:inherit" placeholder="${q.ph||''}" oninput="S.ans['${q.id}']=this.value;render()">${S.ans[q.id]||''}</textarea></div>`;
-    return `<div class="q"><div class="qt">${q.t}</div><input class="fi" value="${S.ans[q.id]||''}" placeholder="${q.ph||''}" oninput="S.ans['${q.id}']=this.value;render()"></div>`;
+    if(q.big)return `<div class="q"><div class="qt">${q.t}</div><textarea class="fi" style="min-height:72px;resize:vertical;font-family:inherit" placeholder="${q.ph||''}" oninput="setAns('${cc}','${q.id}',this.value)">${cur||''}</textarea></div>`;
+    return `<div class="q"><div class="qt">${q.t}</div><input class="fi" value="${cur||''}" placeholder="${q.ph||''}" oninput="setAns('${cc}','${q.id}',this.value)"></div>`;
   }
-  if(q.multi){const arr=Array.isArray(S.ans[q.id])?S.ans[q.id]:[];const cells=q.o.map(o=>`<div class="opt ${arr.includes(o)?'msel':''}" onclick="pickMulti('${q.id}','${o}')">${o}</div>`).join('');return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;}
-  if(q.type==='datetime'){const val=S.ans[q.id]||'';const ps=val.split(' ');return `<div class="q"><div class="qt">${q.t}</div><div class="orow"><input type="date" class="odate" id="dt_${q.id}" value="${ps[0]||''}" onchange="setDT('${q.id}')"><input class="oinp" id="tm_${q.id}" value="${ps[1]||''}" placeholder="--:--" maxlength="5" oninput="setDT('${q.id}')"></div></div>`;}
-  let opts;
-  if(q.type==='yn')opts=['있음','없음'];else opts=q.o;
-  const cells=opts.map(o=>{const sel=S.ans[q.id]===o;const danger=(q.esc&&o==='있음')||(q.esc2&&o===q.esc2)||(q.esc&&q.type!=='yn'&&o===q.esc);
-    return `<div class="opt ${sel?(danger?'sel-r':'sel'):''}" onclick="pickQ('${q.id}','${o}')">${o}</div>`;}).join('');
+  if(q.multi){const arr=Array.isArray(cur)?cur:[];const cells=q.o.map(o=>`<div class="opt ${arr.includes(o)?'msel':''}" onclick="pickMulti('${cc}','${q.id}','${o}')">${o}</div>`).join('');return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;}
+  if(q.type==='datetime'){const ps=(cur||'').split(' ');return `<div class="q"><div class="qt">${q.t}</div><div class="orow"><input type="date" class="odate" id="dt_${k}" value="${ps[0]||''}" onchange="setDT('${cc}','${q.id}')"><input class="oinp" id="tm_${k}" value="${ps[1]||''}" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="dtTime(this,'${cc}','${q.id}')"></div></div>`;}
+  let opts;if(q.type==='yn')opts=['있음','없음'];else opts=q.o;
+  const cells=opts.map(o=>{const sel=cur===o;const danger=(q.esc&&o==='있음')||(q.esc2&&o===q.esc2)||(q.esc&&q.type!=='yn'&&o===q.esc);
+    return `<div class="opt ${sel?(danger?'sel-r':'sel'):''}" onclick="pickQ('${cc}','${q.id}','${o}')">${o}</div>`;}).join('');
   return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;
 }
-function pickMulti(id,v){let a=Array.isArray(S.ans[id])?S.ans[id].slice():[];const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);S.ans[id]=a;renderDetail();render();}
-function pickQ(id,v){S.ans[id]=(S.ans[id]===v?'':v);
-  const cc=CC[S.cc];const q=cc.q.find(x=>x.id===id);
-  // esc → 경증이면 중증 승격
+function setAns(cc,id,v){S.ans[ansKey(cc,id)]=v;render();}
+function pickMulti(cc,id,v){const k=ansKey(cc,id);let a=Array.isArray(S.ans[k])?S.ans[k].slice():[];const i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);S.ans[k]=a;renderDetail();render();}
+function pickQ(cc,id,v){const k=ansKey(cc,id);S.ans[k]=(S.ans[k]===v?'':v);
+  const d=CC[cc],q=d&&d.q.find(x=>x.id===id);
   const isEsc=q&&((q.type==='yn'&&v==='있음'&&q.esc)||(q.esc2&&v===q.esc2)||(q.esc&&q.type!=='yn'&&v===q.esc&&v!=='있음'));
-  if(isEsc&&S.track==='mild'){S.track='severe';showAlert('중증 전환',(q.esc||'위험 징후')+' → Red Flag 확인이 필요합니다.');}
+  if(isEsc&&worstTrack()==='mild'){S.forceSevere=true;showAlert('중증 전환',(q.esc||'위험 징후')+' → Red Flag 확인이 필요합니다.');}
   renderDetail();render();
 }
-function toggleRF(f){if(S.redFlags.includes(f))S.redFlags=S.redFlags.filter(x=>x!==f);else S.redFlags.push(f);renderDetail();render();}
-function setDT(id){const d=(document.getElementById('dt_'+id)||{}).value||'';const t=(document.getElementById('tm_'+id)||{}).value||'';S.ans[id]=[d,t].filter(Boolean).join(' ');render();}
+function toggleRF(cc,f){const k=rfKey(cc,f);if(S.redFlags.includes(k))S.redFlags=S.redFlags.filter(x=>x!==k);else S.redFlags.push(k);renderDetail();render();}
+function setDT(cc,id){const k=ansKey(cc,id);const d=(document.getElementById('dt_'+k)||{}).value||'';const t=(document.getElementById('tm_'+k)||{}).value||'';S.ans[k]=[d,t].filter(Boolean).join(' ');render();}
+function dtTime(el,cc,id){let v=el.value.replace(/[^0-9]/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+':'+v.slice(2);el.value=v;setDT(cc,id);}
 
 // ══════════ KTAS 자동 ══════════
 function vnum(id){const v=document.getElementById(id)?document.getElementById(id).value:'';return v===''?NaN:parseFloat(v);}
@@ -896,7 +926,7 @@ function calcKTAS(){
   if(S.traumaOn&&(S.trSMC==='이상'||S.trLOC==='있음'))mods.push({t:'외상 위험(SMC/의식소실)',l:'high'});
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)){if(b<70)mods.push({t:`저혈당 BST ${b}`,l:'high'});else if(b>300)mods.push({t:`고혈당 BST ${b}`,l:'mid'});}}
   // 위급 주호소
-  if(CC[S.cc]&&CC[S.cc].track==='crit')mods.push({t:S.cc+' (초응급)',l:'high'});
+  if(S.ccs.some(c=>CC[c]&&CC[c].track==='crit'))mods.push({t:'초응급 주호소',l:'high'});
   let level=4;
   if(mods.some(m=>m.l==='crit'))level=1;else if(mods.some(m=>m.l==='high'))level=2;else if(mods.some(m=>m.l==='mid'))level=3;
   return {level,mods};
@@ -914,7 +944,7 @@ const A_CHILD=[['발달단계 불일치','발달상 불가능한 손상(못 걷�
 const A_ELDER=[['양상 손상','설명 안 되는 손상, 결박·담금 자국'],['방임 단서','탈수·영양불량·욕창·심한 위생불량'],['약 관리 안 됨','처방약 미사용 누적 등'],['보호자 두려움','보호자에 위축·두려운 태도'],['경제적 착취','보호자가 비용 거부 등']];
 function ageNum(){const a=parseInt(S.age,10);return isNaN(a)?null:a;}
 function renderAbuse(){
-  const a=ageNum();const ped=(a!==null&&a<15)||isPed()||(CC[S.cc]&&CC[S.cc].ped);const elder=a!==null&&a>=65;const trauma=S.cc==='외상'||S.cc==='소아 외상'||S.traumaOn;
+  const a=ageNum();const ped=(a!==null&&a<15)||isPed()||S.ccs.some(c=>CC[c]&&CC[c].ped);const elder=a!==null&&a>=65;const trauma=ccHas('외상')||ccHas('소아 외상')||S.traumaOn;
   // 첫 페이지: 소아·노인이면 선별 권고 배지만
   const badge=document.getElementById('abuseBadge1');
   if(badge){const rec=ped||elder;badge.style.display=rec?'':'none';if(rec){const t=document.getElementById('abuseBadgeTxt');if(t)t.textContent=(ped?'소아':'노인')+' — 학대 선별 권고';}}
@@ -1018,14 +1048,14 @@ function buildNarrative(){
 // 배경정보를 2묶음으로 (문제=red 플래그). g1: 임신·알러지 / g2: 약물·상태·여행
 function bgGroups(){
   const val=id=>((document.getElementById(id)||{}).value||'').trim();
-  const da=val('drugAl'),ea=val('etcAl'),cm=val('curMed');
+  const da=(S.drugAlY==='있음')?val('drugAl'):'',ea=(S.etcAlY==='있음')?val('etcAl'):'',cm=(S.curMedY==='있음')?val('curMed'):'';
   const g1=[],g2=[];
   if(S.preg){let t='임신 '+S.preg;if(S.lmp)t+=' (LMP '+S.lmp+')';g1.push({t,red:(S.preg==='가능성'||S.preg==='임신중')});}
   g1.push({t:contrastText(),red:S.contrast==='있음'});
   g1.push({t:'약물알러지 '+(da||'없음'),red:!!da});
-  if(ea)g1.push({t:'기타알러지 '+ea,red:true});
+  g1.push({t:'기타알러지 '+(ea||'없음'),red:!!ea});
   g2.push({t:'복용약물 '+(cm||'없음'),red:!!cm});
-  if(S.immuno==='면역저하·항암중')g2.push({t:'면역저하/항암중',red:true});
+  if(S.isoType.size){const short=[...S.isoType].map(x=>x.split('(')[0]);g2.push({t:'격리 '+short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
   if(S.smoking)g2.push({t:S.smoking,red:false});
   {const ps=pedSummary();if(ps)g2.push({t:ps,red:false});}
   {const ts=traumaSummary();if(ts)g2.push({t:ts,red:true});}
@@ -1074,7 +1104,7 @@ function fullNote(){
   const present=(S.present||'').trim();
   let t=`[환자] ${S.pname||'-'} ${S.pid?'('+S.pid+') ':''}· ${S.sex||'-'} · ${S.age||'-'}세 · ${S.date} ${S.arr||''}\n`;
   t+=`[배경정보] ${bgLine()}\n`;
-  t+=`[내원동기] ${S.cc||'-'}\n`;
+  t+=`[내원동기] ${ccList().join(', ')||'-'}\n`;
   t+=`[현재호소] ${head}${present?', '+present:''}\n`;
   t+=`[V/S] ${vsText()}`;
   let spec=[];
@@ -1089,17 +1119,22 @@ function fullNote(){
 }
 
 // ══════════ 1구역 / 엑셀 ══════════
-function feverFlag(){const bt=vnum('vsBT');return (!isNaN(bt)&&bt>=37.8)||S.ans.fever==='있음'||S.cc==='발열'||S.cc==='소아 발열';}
-function respFlag(){return S.cc==='호흡곤란'||S.cc==='인후통'||S.ans.dysp==='있음'||S.ans.uri==='있음'||S.ans.cough||S.ans.sput;}
+function feverFlag(){const bt=vnum('vsBT');return (!isNaN(bt)&&bt>=37.8)||ansAny('fever','있음')||ccHas('발열')||ccHas('소아 발열');}
+function respFlag(){return ccHas('호흡곤란')||ccHas('인후통')||ansAny('dysp','있음')||ansAny('uri','있음')||ansAny('cough')||ansAny('sput');}
 // 1구역(감염 격리): 발열(≥37.8)·호흡기(기침·가래)
 function isolationReason(){let r=[];if(feverFlag())r.push('발열(≥37.8℃)');if(respFlag())r.push('호흡기 증상(기침·가래)');return r;}
 // 일반격리 이동: 여행력 + (설사·호흡기·발열 감염 의심)
-function generalIso(){if(S.travel!=='있음')return [];let s=[];if(S.cc==='설사'||S.ans.diarr==='있음')s.push('설사');if(respFlag())s.push('호흡기');if(feverFlag())s.push('발열');return s.length?['여행력 + '+s.join('·')]:[];}
-// 역격리(일반격리실): 면역억제 의심 → 의사 컨펌 후
-function reverseIso(){return S.immuno==='면역저하·항암중'?['면역저하/항암 의심']:[];}
+function generalIso(){if(S.travel!=='있음')return [];let s=[];if(ccHas('설사')||ansAny('diarr','있음'))s.push('설사');if(respFlag())s.push('호흡기');if(feverFlag())s.push('발열');return s.length?['여행력 + '+s.join('·')]:[];}
+// 선택된 감염/격리 상태
+function hasIso(k){for(const v of S.isoType)if(v.startsWith(k))return true;return false;}
+function isoWhy(){return S.isoReason.trim()?' — '+S.isoReason.trim():'';}
+// 역격리(일반격리실): 역격리 선택 또는 면역저하 → 의사 컨펌 후
+function reverseIso(){return hasIso('역격리')?['항암·백혈병·면역저하'+isoWhy()]:[];}
 // 격리·마스크 안내 메시지 통합
 function isoMessages(){
   const m=[];const iso=isolationReason(),gen=generalIso(),rev=reverseIso();
+  if(hasIso('호흡기 격리'))m.push('🚨 호흡기(공기·비말) 격리 — 1구역/음압 · 마스크(N95) 착용'+isoWhy());
+  if(hasIso('접촉 격리'))m.push('🧤 접촉 격리 — 개인 물품·장갑·가운 · 손위생 강화'+isoWhy());
   if(iso.length)m.push('🚨 1구역(감염 격리) 안내 · 마스크 착용 ('+iso.join('·')+')');
   if(gen.length)m.push('🟠 일반격리 이동(여행+감염 의심) · 마스크 착용 ('+gen.join('·')+')');
   if(rev.length)m.push('🛡️ 역격리 — 일반격리실 배치(의사 컨펌 후) ('+rev.join('·')+')');
@@ -1136,8 +1171,8 @@ function copyExcel(){
   const bgHtml=G.map(g=>g.map(x=>x.red?RED(esc(x.t)):esc(x.t)).join(' / ')).filter(Boolean).join('<br>');
   const bgPlain=G.map(g=>g.map(x=>x.t).join(' / ')).filter(Boolean).join(' | ');
   // 내원동기 셀
-  const motiveH=['- '+bgHtml,'- 과거력 : '+esc(pmhxText()),'- 내원이유 : '+esc(S.cc||''),'- 현재호소 : '+esc(present)].join('<br>');
-  const motiveP=['- '+bgPlain,'- 과거력 : '+pmhxText(),'- 내원이유 : '+(S.cc||''),'- 현재호소 : '+present].join(' | ');
+  const motiveH=['- '+bgHtml,'- 과거력 : '+esc(pmhxText()),'- 내원이유 : '+esc(ccList().join(', ')),'- 현재호소 : '+esc(present)].join('<br>');
+  const motiveP=['- '+bgPlain,'- 과거력 : '+pmhxText(),'- 내원이유 : '+ccList().join(', '),'- 현재호소 : '+present].join(' | ');
   // 특이사항 셀 (1구역·학대 = 빨강)
   let specH=[],specP=[];
   {const bn=bpArmNote();if(bn){specH.push(RED(bn));specP.push(bn);}}
@@ -1202,7 +1237,7 @@ function go(n){
 function goBack(){if(cur>1)go(cur-1);}
 function goNext(){
   if(cur===1&&!S.route){alert('내원 경로를 선택하세요.');return;}
-  if(cur===2&&!S.cc){alert('주호소를 선택하세요.');return;}
+  if(cur===2&&!ccList().length){alert('주호소를 선택하세요.');return;}
   if(cur<5)go(cur+1);
 }
 
