@@ -636,6 +636,13 @@ const CC={
       {id:'rad',t:'하지 방사통',role:'assoc',type:'yn',label:'하지 방사통'},
       {id:'void',t:'배뇨 변화',role:'assoc',lblPre:'배뇨',skip:['정상'],o:['정상','곤란/실금'],esc2:'곤란/실금'}],
    rf:['마미증후군 의심(하지마비+배뇨장애)','발열+척추 통증','암 과거력']},
+ '화상':{track:'severe',noun:'화상',color:'co',icon:'🔥',
+   q:[{id:'cause',t:'원인',role:'pre',o:['불꽃','열탕(뜨거운 물)','증기','접촉(고온 물체)','화학','전기']},
+      {id:'area',t:'부위 (복수 선택)',role:'assoc',multi:true,cols:3,o:['얼굴','목','가슴','복부','등','상지','손','하지','발','회음']},
+      {id:'depth',t:'화상 깊이',role:'assoc',lblPre:'',o:['1도(홍반·표피, 물집X)','2도(물집·진물, 통증심함)','3도(전층·창백/가죽양, 무통)','4도(근육·뼈 침범)'],esc2:'3도(전층·창백/가죽양, 무통)'},
+      {id:'tbsa',t:'범위 (체표면적 %)',role:'info',rec:'범위',type:'text',ph:'예) 약 9% (한쪽 팔 전체) / 손바닥=1%'},
+      {id:'inhale',t:'기도화상 의심 (얼굴·목 화상·그을음·쉰목소리·코털 그을림·객담내 검댕)',role:'assoc',type:'yn',label:'기도화상 의심',esc:'기도화상 의심 → 기도 확보·조기 삽관 고려'}],
+   rf:['기도화상 의심(얼굴화상·그을음·쉰목소리)','전기 화상 / 화학 화상','전층(3도)·광범위(성인 15%↑)','회음·관절·손·발·안면 화상','일산화탄소 중독 동반(밀폐공간 화재)']},
 };
 const SYS=[
  ['⚡ 초응급',['흉통','호흡곤란','실신/의식변화']],
@@ -667,6 +674,28 @@ const SYS169=[
  ['🍼 소아',['소아 발열','소아 외상','신생아 수유곤란','신생아 황달','달랠 수 없는 울음','영아 무호흡','천명음','축 늘어진 소아','소아 보행장애','소아 파괴적 행동','소아 학대/방임','소아 선천적 문제']],
  ['🗂️ 일반/처치',['경증/비특이적 증상','창백/빈혈','감염 노출','고혈당','저혈당','수술 후 합병증','비정상 검사 결과','전문 진료 의뢰','드레싱 교체','봉합사 제거','반지 제거']],
 ];
+// 계통별 서술 문진 템플릿 (모듈 없는 주호소용 — 서술항목만, Red Flag는 공통)
+const GEN_DEFAULT=[{id:'gLoc',t:'부위/위치',type:'text',ph:'예) 우측 하복부 / 좌측 팔'},{id:'gQual',t:'양상/성상',type:'text',ph:'예) 찌르는·묵직한 / 노란 가래'},{id:'gDur',t:'기간/경과',type:'text',ph:'예) 3일째 / 점점 심해짐'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 발열·구토 동반'}];
+const GEN={
+ '❤️ 심혈관/전신':[{id:'gQual',t:'양상',type:'text',ph:'예) 조이는·두근거림'},{id:'gDur',t:'기간/경과',type:'text'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 흉통·호흡곤란·부종'}],
+ '🫁 호흡기':[{id:'gQual',t:'양상',type:'text',ph:'예) 마른기침 / 노란 가래'},{id:'gDur',t:'기간',type:'text',ph:'예) 3일째'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 발열·흉통'}],
+ '🧠 신경':[{id:'gMode',t:'발생',o:['갑자기','서서히','모름']},{id:'gLoc',t:'부위/편측',type:'text',ph:'예) 우측 / 양측'},{id:'gDur',t:'기간',type:'text'},{id:'gAssoc',t:'동반 증상',type:'text'}],
+ '🤢 소화기':[{id:'gLoc',t:'부위 (복수)',multi:true,o:['상복부','배꼽주위','우상복','좌상복','우하복','좌하복','전체']},{id:'gQual',t:'양상',type:'text',ph:'예) 쥐어짜는·묵직한'},{id:'gDur',t:'기간',type:'text'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 구토·설사·발열'}],
+ '🫘 비뇨생식':[{id:'gLoc',t:'부위',type:'text',ph:'예) 옆구리 / 하복부 / 회음'},{id:'gQual',t:'양상',type:'text'},{id:'gDur',t:'기간',type:'text'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 발열·혈뇨·배뇨통'}],
+ '🤰 산과/여성':[{id:'gDur',t:'기간',type:'text'},{id:'gAmt',t:'양/정도',type:'text',ph:'예) 소량 / 다량'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 복통·발열'}],
+ '🚨 정신':[{id:'gType',t:'유형/내용',type:'text',ph:'예) 자살사고 / 불안·초조'},{id:'gDur',t:'기간/경과',type:'text'},{id:'gAssoc',t:'동반/특이',type:'text'}],
+ '💊 중독':[{id:'gSubst',t:'물질',type:'text',ph:'예) 처방약 / 알코올'},{id:'gTime',t:'복용/노출 시각',type:'text'},{id:'gAmt',t:'양/정도',type:'text'}],
+ '🩹 외상':[{id:'gMech',t:'손상 기전',type:'text'},{id:'gLoc',t:'손상 부위',type:'text'},{id:'gAssoc',t:'동반',type:'text'}],
+ '🖐️ 근골격':[{id:'gLoc',t:'부위',type:'text',ph:'예) 좌측 무릎 / 요추'},{id:'gTr',t:'외상 여부',o:['외상성','비외상']},{id:'gDur',t:'기간',type:'text'}],
+ '🌡️ 피부':[{id:'gLoc',t:'부위',type:'text',ph:'예) 양팔·몸통 / 좌측 하지'},{id:'gForm',t:'양상 (복수)',multi:true,o:['발진','물집','궤양','발적','부종','고름','멍','건조']},{id:'gSize',t:'범위/크기',type:'text',ph:'예) 손바닥 크기 / 전신'},{id:'gDur',t:'기간',type:'text'},{id:'gItch',t:'가려움',type:'yn',label:'가려움'}],
+ '👁️ 안과':[{id:'gSide',t:'한쪽/양쪽',o:['우측','좌측','양측']},{id:'gQual',t:'양상',type:'text',ph:'예) 충혈·통증·시력저하'},{id:'gDur',t:'기간',type:'text'}],
+ '👂 이비인후/구강':[{id:'gSide',t:'한쪽/양쪽',o:['우측','좌측','양측','해당없음']},{id:'gQual',t:'양상',type:'text'},{id:'gDur',t:'기간',type:'text'},{id:'gAssoc',t:'동반',type:'text'}],
+ '🌦️ 환경':[{id:'gCause',t:'원인',type:'text',ph:'예) 뜨거운 물 / 산 / 전기 / 추위'},{id:'gTime',t:'노출 시각',type:'text'},{id:'gLoc',t:'부위/범위',type:'text'}],
+ '🍼 소아':[{id:'gDur',t:'기간/경과',type:'text'},{id:'gAssoc',t:'동반 증상',type:'text',ph:'예) 발열·보챔·수유거부·처짐'}],
+ '🗂️ 일반/처치':[{id:'gDetail',t:'내용/사유',type:'text'},{id:'gDur',t:'기간/경과',type:'text'}],
+};
+const CAT_OF={};SYS169.forEach(([t,arr])=>arr.forEach(n=>{if(!(n in CAT_OF))CAT_OF[n]=t;}));
+function qsFor(cc){const d=CC[cc];if(d)return d.q;return GEN[CAT_OF[cc]]||GEN_DEFAULT;}
 
 // ══════════ 초기 간호정보 ══════════
 function chips(id,arr,key,danger){
@@ -860,9 +889,10 @@ function renderDetail(){
   if(!list.length)html='<div style="color:var(--mute);font-size:13px">주호소를 선택하세요.</div>';
   list.forEach(cc=>{
     const d=CC[cc];
-    html+=`<div class="grp" style="color:#60a5fa;margin-top:10px">▸ ${cc}</div>`;
-    if(d){let qs=d.q.filter(q=>qVisible(q,cc));if(track==='mild')qs=qs.slice(0,3);html+=(qs.map(q=>buildQ(q,cc)).join('')||'<div style="color:var(--mute);font-size:13px">—</div>');}
-    else html+='<div style="color:var(--mute);font-size:13px;padding:2px 0">세부질문 없음 — 현재호소 직접 작성</div>';
+    html+=`<div class="grp" style="color:#60a5fa;margin-top:10px">▸ ${cc}${d?'':' <span style="color:var(--mute);font-weight:400">(서술 문진)</span>'}</div>`;
+    let qs=qsFor(cc).filter(q=>qVisible(q,cc));
+    if(d&&track==='mild')qs=qs.slice(0,3);
+    html+=(qs.map(q=>buildQ(q,cc)).join('')||'<div style="color:var(--mute);font-size:13px">—</div>');
   });
   document.getElementById('qBox').innerHTML=html;
   renderRF(track);
@@ -877,7 +907,7 @@ function renderRF(track){
 }
 function renderCcHint(){
   const el=document.getElementById('ccHint');if(!el)return;let items=[];
-  ccList().forEach(cc=>{const d=CC[cc];if(!d)return;d.q.forEach(q=>{if(!qVisible(q,cc))return;let v=getAns(cc,q.id);if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;if(Array.isArray(v))v=v.join('·');items.push(v);});});
+  ccList().forEach(cc=>{qsFor(cc).forEach(q=>{if(!qVisible(q,cc))return;let v=getAns(cc,q.id);if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;if(Array.isArray(v))v=v.join('·');items.push(v);});});
   if(S.nrs>0)items.push('NRS '+S.nrs+'/10');
   if(S.redFlags.length)items.push('⚠위험징후 '+S.redFlags.length+'개');
   el.innerHTML=items.length?('참고(클릭한 항목): '+items.join(' / ')):'';
