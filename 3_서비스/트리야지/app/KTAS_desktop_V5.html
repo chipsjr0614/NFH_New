@@ -603,12 +603,12 @@ const CC={
    rf:['호흡곤란·Stridor','혈압저하','의식저하','전신 두드러기+복통']},
  '외상':{track:'severe',noun:'외상',color:'cg',icon:'🩹',verb:'발생한',narr:'trauma',
    q:[{id:'mech',t:'손상 기전',role:'pre',o:['낙상','교통사고','부딪힘','타박','자상·관통','기타']},
-      {id:'fallHeight',t:'낙상 높이',role:'assoc',lblPre:'높이',showIf:{id:'mech',in:['낙상']},o:['주저앉음','본인 키 이하','본인 키 이상','1m↑/계단']},
+      {id:'fallHeight',t:'낙상 높이',role:'assoc',lblPre:'낙상',showIf:{id:'mech',in:['낙상']},o:['주저앉음','본인 키 이하','본인 키 이상','1m↑/계단']},
       {id:'fallType',t:'낙상 양상',role:'assoc',lblPre:'',showIf:{id:'mech',in:['낙상']},o:['미끄러짐','걸려 넘어짐','실신성','어지러움']},
       {id:'taType',t:'교통사고 유형',role:'assoc',lblPre:'',showIf:{id:'mech',in:['교통사고']},o:['운전자','동승자','보행자','오토바이','자전거']},
       {id:'taImpact',t:'충격 정도',role:'assoc',lblPre:'',showIf:{id:'mech',in:['교통사고']},o:['저속','고속(40km/h↑)','차량서 튕겨나감','전복','20분↑ 구조']},
-      {id:'place',t:'발생 장소',type:'text',ph:'예) 집 화장실 / 지하철 계단 / 직장'},
-      {id:'trDetail',t:'경위 (무엇하다 어떻게 다쳤는지)',type:'text',big:true,ph:'다친 과정을 문장으로 자유롭게.\n예) 화장실 바닥에 미끄러지며 세면대 모서리에 손가락 찔림.\n예) 계단 내려오다 발 헛디뎌 5칸 굴러떨어짐.\n예) 자전거 타다 넘어지며 오른손으로 땅 짚음.\n예) 작업 중 기계에 손가락 끼임.'},
+      {id:'place',t:'발생 장소',type:'text',ph:'예) 지하철 계단(강남역 3번출구) / 집 화장실(자택) / 공장 작업장(○○산업) — 정확한 지역은 괄호로'},
+      {id:'trDetail',t:'경위 (무엇하다 어떻게 다쳤는지)',type:'text',big:true,ph:'장소는 위 칸에 적었으니, 여기엔 무엇을 하다 어떻게 다쳤는지만.\n예) 바닥에 미끄러지며 세면대 모서리에 손가락 찔림.\n예) 계단 내려오다 발 헛디뎌 5칸 굴러떨어짐.\n예) 자전거 타다 넘어지며 오른손으로 땅 짚음.\n예) 작업 중 기계에 손가락 끼임.'},
       {id:'area',t:'주 손상 부위 (복수 선택)',role:'assoc',multi:true,sufx:'손상',cols:3,o:['두부','경추','흉부','복부','골반','척추','상지','하지','안면']},
       {id:'loc',t:'의식 소실',role:'assoc',type:'yn',label:'의식소실',tail:true,esc:'외상+의식소실 → 두부손상'},
       {id:'bleed',t:'출혈',role:'assoc',type:'yn',label:'출혈',tail:true},
@@ -616,9 +616,9 @@ const CC={
    rf:['의식저하','혈압저하','다발성 외상','두부 외상 의심','척추 손상 의심','관통상']},
  '소아 외상':{track:'severe',noun:'외상',color:'cg',icon:'👶',verb:'발생한',ped:1,narr:'trauma',
    q:[{id:'mech',t:'손상 기전',role:'pre',o:['낙상','교통사고','끼임·눌림','타박','기타']},
-      {id:'hi',t:'낙상 높이',role:'assoc',lblPre:'높이',showIf:{id:'mech',in:['낙상']},o:['낮음','본인 키 이하','고에너지(영아0.9m·소아1.5m↑)'],esc2:'고에너지(영아0.9m·소아1.5m↑)'},
-      {id:'place',t:'발생 장소',type:'text',ph:'예) 침대 / 계단 / 놀이터'},
-      {id:'trDetail',t:'경위 (무엇하다 어떻게 다쳤는지)',type:'text',big:true,ph:'다친 과정을 문장으로 자유롭게.\n예) 소파에서 뛰다 바닥으로 떨어져 이마 부딪힘(약 60cm).\n예) 보행기 타다 넘어져 뒤로 머리 부딪힘.\n예) 식탁 모서리에 얼굴 부딪힘.\n예) 형이 던진 장난감에 눈 주위 맞음.'},
+      {id:'hi',t:'낙상 높이',role:'assoc',lblPre:'낙상',showIf:{id:'mech',in:['낙상']},o:['낮음','본인 키 이하','고에너지(영아0.9m·소아1.5m↑)'],esc2:'고에너지(영아0.9m·소아1.5m↑)'},
+      {id:'place',t:'발생 장소',type:'text',ph:'예) 놀이터 미끄럼틀(○○어린이집) / 침대(자택) / 계단 — 정확한 지역은 괄호로'},
+      {id:'trDetail',t:'경위 (무엇하다 어떻게 다쳤는지)',type:'text',big:true,ph:'장소는 위 칸에 적었으니, 여기엔 무엇을 하다 어떻게 다쳤는지만.\n예) 소파에서 뛰다 바닥으로 떨어져 이마 부딪힘(약 60cm).\n예) 보행기 타다 넘어져 뒤로 머리 부딪힘.\n예) 식탁 모서리에 얼굴 부딪힘.\n예) 형이 던진 장난감에 눈 주위 맞음.'},
       {id:'area',t:'주 손상 부위 (복수 선택)',role:'assoc',multi:true,sufx:'손상',cols:3,o:['두부','안면','경부','흉부','복부','상지','하지']},
       {id:'loc',t:'의식 소실',role:'assoc',type:'yn',label:'의식소실',tail:true,esc:'소아 두부외상 의심'},
       {id:'vomit',t:'구토',role:'assoc',type:'yn',label:'구토',tail:true}],
@@ -967,7 +967,16 @@ function setOnsetDays(v){S.onsetDaysAgo=v;const d=new Date();d.setDate(d.getDate
 function setOnsetDate(val){if(!val){S.onsetDaysAgo=null;renderOnsetDays();render();return;}const t=new Date();t.setHours(0,0,0,0);const od=new Date(val+'T00:00:00');S.onsetDaysAgo=Math.round((t-od)/86400000);renderOnsetDays();render();}
 function onsetNow(){const d=new Date();const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');S.onsetTime=t;document.getElementById('onsetInp').value=t;render();}
 function onsetTimeInput(el){let v=el.value.replace(/[^0-9]/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+':'+v.slice(2);el.value=v;S.onsetTime=v;render();}
-function onsetPhrase(){const t=S.onsetTime?S.onsetTime+'경':'';if(S.onsetDaysAgo===null&&!t)return '';const dayTxt=S.onsetDaysAgo===null?'':(S.onsetDaysAgo===0?'금일':S.onsetDaysAgo+'일 전');const p=[dayTxt,t].filter(Boolean).join(' ');return p?p+'부터':'';}
+// 발생시점 → 요일 붙여 표기. 예) 3 → "3일 전(토)" · 0 → "금일"(요일 생략)
+const DOW=['일','월','화','수','목','금','토'];
+function onsetDayTxt(){
+  const n=S.onsetDaysAgo;
+  if(n===null||n===undefined)return '';
+  if(n===0)return '금일';
+  const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-n);
+  return n+'일 전('+DOW[d.getDay()]+')';
+}
+function onsetPhrase(){const t=S.onsetTime?S.onsetTime+'경':'';const dayTxt=onsetDayTxt();if(!dayTxt&&!t)return '';const p=[dayTxt,t].filter(Boolean).join(' ');return p?p+'부터':'';}
 
 // ══════════ 세부질문 ══════════
 const NRS_LAB=['통증 없음','','경미','','불편','','중등도','','심함','','최악'];
@@ -1021,19 +1030,66 @@ function presentEx(){const cc=ccList()[0];return (cc&&PRESENT_EX[CAT_OF[cc]])||'
 // 질문에서 깔끔한 항목명 추출 ("자세 관련"→"자세", 괄호·꼬리말 제거)
 function ccLabel(q){return (q.label||q.t||'').replace(/\s*\(.*?\)\s*/g,'').replace(/\s*(관련|동반|여부)\s*$/,'').trim();}
 // 클릭한 세부질문 → 현재호소 초안 자동 완성 (편집 전까지). 답이 없으면 '' → 흐린 예시 표시.
+// 외상: 언제·어디서·어떻게를 괄호가 아니라 문장 본문으로. (아래 id는 본문으로 빠지므로 괄호에서 제외)
+const TR_LEAD_IDS=['mech','fallType','taType','taImpact','place','trDetail'];
+function traumaLead(cc){
+  const g=id=>getAns(cc,id);
+  const seg=[];
+  const when=[onsetDayTxt(),S.onsetTime?S.onsetTime+'경':''].filter(Boolean).join(' ');
+  if(when)seg.push(when);
+  const place=(g('place')||'').trim();
+  if(place)seg.push(place+'에서');
+  const mech=g('mech');let mechTxt='';
+  if(mech==='낙상'){
+    const fmap={'미끄러짐':'미끄러져 넘어짐','걸려 넘어짐':'걸려 넘어짐','실신성':'실신성으로 넘어짐','어지러움':'어지러워 넘어짐'};
+    const ft=g('fallType');mechTxt=ft?(fmap[ft]||'넘어짐'):'넘어짐';
+  }else if(mech==='교통사고'){
+    const tt=[g('taType'),g('taImpact')].filter(Boolean).join('·');
+    mechTxt='교통사고'+(tt?'('+tt+')':'')+' 발생';
+  }else if(mech){
+    const mv={'부딪힘':'부딪힘','타박':'타박','자상·관통':'자상·관통상 입음','끼임·눌림':'끼이거나 눌림'};
+    mechTxt=mv[mech]||mech;
+  }
+  const det=(g('trDetail')||'').trim().replace(/\s*\n\s*/g,' ').replace(/[.]\s*$/,'');
+  if(mechTxt&&!det)seg.push(mechTxt);   // 경위를 직접 썼으면 기전 자동문구는 생략(중복 방지) → 괄호로 요약
+  let s=seg.join(' ');
+  if(det)s=(s?s+' ':'')+det;
+  return s;
+}
+// 경위를 직접 쓴 경우, 기전을 괄호 한 항목으로 요약. 예) "낙상 주저앉음·미끄러짐"
+function traumaMechBrief(cc){
+  const g=id=>getAns(cc,id);
+  const m=g('mech');if(!m)return '';
+  let sub=[];
+  if(m==='낙상')sub=[g('fallHeight')||g('hi'),g('fallType')];
+  else if(m==='교통사고')sub=[g('taType'),g('taImpact')];
+  sub=sub.filter(Boolean);
+  return m+(sub.length?' '+sub.join('·'):'');
+}
 function buildPresentDraft(){
   const list=ccList();if(!list.length)return '';
   // "상기 N세 X환, (발생시점·시각) 주호소로 내원함 (문제 있는 것만)." — 부위·양상·정상/없음은 제외(간호사 직접 작성)
-  const cores=[],problems=[],times=[];
-  const on=onsetPhrase();if(on)times.push(on);          // 온셋타임 → 앞에
+  const cores=[],problems=[],times=[],leads=[];
+  const anyTrauma=list.some(c=>CC[c]&&CC[c].narr==='trauma');
+  const on=onsetPhrase();if(on&&!anyTrauma)times.push(on);   // 온셋타임 → 앞에 (외상은 본문에 들어가므로 제외)
   list.forEach(cc=>{
     const d=CC[cc];
+    const isTr=!!(d&&d.narr==='trauma');
+    const trDet=isTr&&!!(getAns(cc,'trDetail')||'').trim();   // 경위 직접 작성 여부
+    if(isTr){const L=traumaLead(cc);if(L)leads.push(L);
+      if(trDet){const mb=traumaMechBrief(cc);if(mb)problems.push(mb);}}
     qsFor(cc).filter(q=>qVisible(q,cc)).forEach(q=>{
+      if(isTr&&(TR_LEAD_IDS.includes(q.id)||q.id==='area'||q.id==='bleedSite'))return;  // 본문·핵심·출혈에 합쳐짐
+      if(trDet&&(q.id==='fallHeight'||q.id==='hi'))return;                              // 기전 요약에 합쳐짐
       let v=getAns(cc,q.id);
       if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;
       const val=Array.isArray(v)?v.join('·'):v;
       if(q.type==='datetime'){times.push((q.rec||ccLabel(q))+' '+val);return;}  // LKW 등 시각 → 앞에
-      if(q.type==='yn'){if(v==='있음')problems.push(ccLabel(q));return;}  // 양성만
+      if(q.type==='yn'){                                                 // 양성만, "있음"까지 명시
+        if(v!=='있음')return;
+        let y=ccLabel(q)+' 있음';
+        if(isTr&&q.id==='bleed'){const bs=getAns(cc,'bleedSite');if(Array.isArray(bs)&&bs.length)y+='('+bs.join('·')+')';}
+        problems.push(y);return;}
       if(q.type==='text')return;                                         // 서술은 제외
       if(q.role==='pre')return;                                          // 부위·양상 등 제외
       if(!Array.isArray(v)&&q.skip&&q.skip.includes(v))return;           // 없음·무관·정상 제외
@@ -1041,14 +1097,20 @@ function buildPresentDraft(){
       const lp=(q.lblPre!==undefined)?q.lblPre:'';
       problems.push((lp?lp+' ':'')+val);                                 // 양성 소견
     });
-    cores.push(d?d.noun:cc);
+    if(isTr){const A=getAns(cc,'area');const ar=Array.isArray(A)?A.join('·'):(A||'');cores.push(ar?ar+' 손상':(d.noun||cc));}
+    else cores.push(d?d.noun:cc);
   });
   const body=cores.join('·');
-  let s=presentLead()+(times.length?times.join(' ')+' ':'')+body+ro(body)+' 내원함';
-  const parts=[...problems];
-  if(S.nrs>0){const site=(S.nrsSite||'').trim();parts.push((site?site+' ':'')+'NRS 현재 '+S.nrs+(S.nrsPast>S.nrs?'/최고 '+S.nrsPast:'')+'점');}
-  if(parts.length)s+=' ('+parts.join(', ')+')';
-  return s+'.';
+  let s=presentLead();
+  if(leads.length)s+=leads.join(' / ')+'. ';
+  if(times.length)s+=times.join(' ')+' ';
+  s+=body+ro(body)+' 내원함';
+  if(problems.length)s+=' ('+problems.join(', ')+')';
+  s+='.';
+  // NRS는 괄호 밖 별도 문장 (부위에 쉼표를 쓰면 괄호 항목과 섞여 읽히므로)
+  if(S.nrs>0){const site=(S.nrsSite||'').trim().replace(/\s*,\s*/g,'·');
+    s+=' '+(site?site+' ':'')+'통증 NRS 현재 '+S.nrs+(S.nrsPast>S.nrs?'/최고 '+S.nrsPast:'')+'점.';}
+  return s;
 }
 function refreshPresent(){
   const pi=document.getElementById('presentInp');if(!pi)return;
