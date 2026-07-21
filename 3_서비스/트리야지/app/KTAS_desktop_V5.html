@@ -216,7 +216,11 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         </div>
         <div class="q" style="margin-top:10px"><div class="qt">성별</div><div class="opts" id="sexOpts"></div></div>
         <div class="q" style="margin-bottom:0"><div class="qt">나이 <span style="font-size:11px;color:var(--mute);font-weight:400">(소아 &lt;15 · 노인 ≥65 자동)</span></div>
-          <input class="fi" id="ageInp" placeholder="나이 입력 (예: 45 / 7세 / 18개월 / 72)" oninput="S.age=this.value;renderTrack();renderPeds();renderAbuse()">
+          <input class="fi" id="ageInp" placeholder="나이 직접 입력 (예: 45 / 7세 / 18개월 / 72)" oninput="setAgeDirect(this)">
+          <div style="margin-top:8px"><div class="fl">🎂 생일 6자리 (YYMMDD) — 입력 시 만나이 자동</div>
+            <input class="fi" id="dobInp" inputmode="numeric" maxlength="6" placeholder="예) 850614" oninput="dobInput(this)">
+            <div id="dobAge" style="display:none;margin-top:6px;font-size:16px;font-weight:800;color:#22c55e"></div>
+          </div>
         </div>
       </div>
 
@@ -247,7 +251,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div class="lbl">안전 · 배경 정보</div>
         <div class="q" id="pregRow"><div class="qt">🤰 임신 <span style="font-size:11px;color:var(--mute);font-weight:400">(여성)</span></div><div class="opts" id="pregOpts"></div></div>
         <div class="q" id="lmpRow"><div class="qt">🩸 LMP <span style="font-size:11px;color:var(--mute);font-weight:400">(마지막 월경 시작일)</span></div><input type="date" class="odate" id="lmpInp" style="width:100%" onchange="S.lmp=this.value;render()"></div>
-        <div class="q"><div class="qt">💉 조영제 알러지</div><div class="opts" id="contrastOpts"></div>
+        <div class="q"><div class="qt">💉 조영제 부작용</div><div class="opts" id="contrastOpts"></div>
           <div id="contrastDetail" style="display:none;margin-top:8px;background:var(--k1bg);border:1px solid var(--k1bd);border-radius:var(--rs);padding:10px 11px">
             <div style="font-size:12px;color:#dc2626;font-weight:700;margin-bottom:7px">⚠️ CT·MRI 조영증강 검사 시 주의 (전처치/대체검사 확인)</div>
             <div class="fl">어떤 검사에서?</div>
@@ -267,7 +271,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
             <input class="oinp" id="isoReason" style="width:100%;text-align:left;font-size:15px" placeholder="예) 폐결핵(TB) / MRSA 객담 / AML 항암 2주 이내" oninput="S.isoReason=this.value;render()"></div>
         </div>
         <div class="q"><div class="qt">🚬 흡연</div><div class="opts" id="smkOpts"></div></div>
-        <div class="q" style="margin-bottom:0"><div class="qt">✈️ 여행력</div>
+        <div class="q" style="margin-bottom:0"><div class="qt">✈️ 여행력 <span style="font-size:11px;color:var(--mute);font-weight:400">(최근 1달 이내 해외 여행)</span></div>
           <div class="opts" id="trvOpts"></div>
           <div id="trvDetail" style="display:none;margin-top:8px">
             <div class="row2">
@@ -781,7 +785,7 @@ function renderInfoChips(){
     return `<div class="opt ${cls}" onclick="pickInfo('${key}','${id}',0,'${v}')">${v}${(danger&&danger.includes(v))?' ⚠️':''}</div>`;}).join('');};
   mk('sexOpts',['남','여'],'sex');
   mk('pregOpts',['해당없음','없음','가능성','임신중'],'preg');
-  mk('contrastOpts',['없음','있음'],'contrast',['있음']);
+  mk('contrastOpts',['없음','있음','CT/MR 찍은 적 없음'],'contrast',['있음']);
   mk('smkOpts',['비흡연','현재 흡연','과거(금연)'],'smoking');
   mk('trvOpts',['없음','있음'],'travel');
   mk('bpArmOpts',['없음','좌측 금지','우측 금지','양측 주의'],'bpArm',['좌측 금지','우측 금지','양측 주의']);
@@ -815,6 +819,35 @@ function renderO2(){
   const fw=document.getElementById('o2Flow');if(fw)fw.style.display=(S.o2mode==='O2'&&O2FLOW.includes(S.o2))?'':'none';
 }
 function pickO2mode(v){S.o2mode=v;if(v==='RA'){S.o2='';S.o2L='';}renderO2();render();}
+// 생일 6자리(YYMMDD) → 만나이
+function ageFromYMD(s){
+  if(!/^\d{6}$/.test(s))return null;
+  const yy=+s.slice(0,2),mm=+s.slice(2,4),dd=+s.slice(4,6);
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  const now=new Date();const cy=now.getFullYear();
+  let year=2000+yy;if(year>cy)year-=100;   // 미래면 1900년대 (85→1985, 05→2005)
+  const bm=mm-1;
+  let age=cy-year;
+  const passed=(now.getMonth()>bm)||(now.getMonth()===bm&&now.getDate()>=dd);
+  if(!passed)age--;
+  return (age>=0&&age<=120)?age:null;
+}
+// 나이 직접 입력
+function setAgeDirect(el){S.age=el.value;const f=document.getElementById('fmAgeInp');if(f)f.value=el.value;const s=document.getElementById('fmAge');if(s)s.textContent=el.value||'__';renderTrack();renderPeds();renderAbuse();}
+// 생일 6자리 → 아래에 "만 N세" 표시 + 나이 자동 채움
+function dobInput(el){
+  const t=el.value.replace(/[^0-9]/g,'').slice(0,6);el.value=t;
+  const disp=document.getElementById('dobAge');
+  const a=(/^\d{6}$/.test(t))?ageFromYMD(t):null;
+  if(a!==null){
+    if(disp){disp.textContent='→ 만 '+a+'세';disp.style.display='';}
+    S.age=String(a);
+    const ai=document.getElementById('ageInp');if(ai)ai.value=S.age;
+    const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age;
+    const s=document.getElementById('fmAge');if(s)s.textContent=S.age||'__';
+    renderTrack();renderPeds();renderAbuse();
+  }else if(disp){disp.textContent=(t.length===6)?'날짜 확인 필요':'';disp.style.display=t?'':'none';}
+}
 // 소아 평가
 function isPed(){const a=(S.age||'').trim();if(!a)return false;if(/개월|주|일/.test(a))return true;const n=parseInt(a,10);return !isNaN(n)&&n<15;}
 function patRender(){
@@ -990,41 +1023,32 @@ function ccLabel(q){return (q.label||q.t||'').replace(/\s*\(.*?\)\s*/g,'').repla
 // 클릭한 세부질문 → 현재호소 초안 자동 완성 (편집 전까지). 답이 없으면 '' → 흐린 예시 표시.
 function buildPresentDraft(){
   const list=ccList();if(!list.length)return '';
-  let answered=false;
-  const cores=[],assocAll=[],extras=[];
+  // "상기 N세 X환, (발생시점·시각) 주호소로 내원함 (문제 있는 것만)." — 부위·양상·정상/없음은 제외(간호사 직접 작성)
+  const cores=[],problems=[],times=[];
+  const on=onsetPhrase();if(on)times.push(on);          // 온셋타임 → 앞에
   list.forEach(cc=>{
-    const d=CC[cc];const pre=[];
+    const d=CC[cc];
     qsFor(cc).filter(q=>qVisible(q,cc)).forEach(q=>{
       let v=getAns(cc,q.id);
       if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;
-      answered=true;
       const val=Array.isArray(v)?v.join('·'):v;
-      // yn: 있음→"발열", 없음→"발열 없음" (덜렁 '없음' 방지)
-      if(q.type==='yn'){assocAll.push(ccLabel(q)+(v==='있음'?'':' 없음'));return;}
-      if(q.type==='text'){extras.push(val);return;}
-      if(q.type==='datetime'){assocAll.push((q.rec||ccLabel(q))+' '+val);return;}
-      if(q.role==='pre'){pre.push(val+(q.suf?' '+q.suf:''));return;}
-      if(q.sufx){assocAll.push(val+' '+q.sufx);return;}
-      const lp=(q.lblPre!==undefined)?q.lblPre:(q.rec||'');
-      const isSkip=!Array.isArray(v)&&q.skip&&q.skip.includes(v);
-      if(lp)assocAll.push(lp+' '+val);              // "활동 정상" 등
-      else if(isSkip)assocAll.push(ccLabel(q)+' '+val);  // "기침 없음"·"자세 무관"
-      else assocAll.push(val);                      // "건성 기침"·"누우면 악화" 등 그대로
+      if(q.type==='datetime'){times.push((q.rec||ccLabel(q))+' '+val);return;}  // LKW 등 시각 → 앞에
+      if(q.type==='yn'){if(v==='있음')problems.push(ccLabel(q));return;}  // 양성만
+      if(q.type==='text')return;                                         // 서술은 제외
+      if(q.role==='pre')return;                                          // 부위·양상 등 제외
+      if(!Array.isArray(v)&&q.skip&&q.skip.includes(v))return;           // 없음·무관·정상 제외
+      if(q.sufx){problems.push(val+' '+q.sufx);return;}
+      const lp=(q.lblPre!==undefined)?q.lblPre:'';
+      problems.push((lp?lp+' ':'')+val);                                 // 양성 소견
     });
-    const noun=d?d.noun:cc;
-    cores.push((pre.join(' ')+' '+noun).trim());
+    cores.push(d?d.noun:cc);
   });
-  if(!answered)return '';
   const body=cores.join('·');
-  const on=onsetPhrase();
-  // "상기 33세 여환, (발생시점) OO로 내원함." — 경로(휠체어·119)는 제외. 동반은 괄호로.
-  let s=presentLead()+(on?on+' ':'')+body+ro(body)+' 내원함.';
-  const paren=[];
-  if(assocAll.length)paren.push(assocAll.join('·'));
-  if(extras.length)paren.push(extras.join(', '));
-  if(paren.length)s+=' ('+paren.join(', ')+')';
-  if(S.nrs>0){const site=(S.nrsSite||'').trim();s+=' '+(site?site+' ':'')+'NRS 현재 '+S.nrs+(S.nrsPast>S.nrs?'/최고 '+S.nrsPast:'')+'점.';}
-  return s;
+  let s=presentLead()+(times.length?times.join(' ')+' ':'')+body+ro(body)+' 내원함';
+  const parts=[...problems];
+  if(S.nrs>0){const site=(S.nrsSite||'').trim();parts.push((site?site+' ':'')+'NRS 현재 '+S.nrs+(S.nrsPast>S.nrs?'/최고 '+S.nrsPast:'')+'점');}
+  if(parts.length)s+=' ('+parts.join(', ')+')';
+  return s+'.';
 }
 function refreshPresent(){
   const pi=document.getElementById('presentInp');if(!pi)return;
@@ -1237,10 +1261,10 @@ function buildNarrative(){
 // 배경정보를 2묶음으로 (문제=red 플래그). g1: 임신·알러지 / g2: 약물·상태·여행
 // 항목 → "라벨 : 값". 값이 있거나 문제면 red=true (엑셀서 빨강 굵게).
 function contrastItem(){
-  if(S.contrast!=='있음')return {label:'조영제알러지',value:(S.contrast||'없음'),red:false};
+  if(S.contrast!=='있음')return {label:'조영제부작용',value:(S.contrast||'없음'),red:false};
   let d=[];if(S.contrastExam)d.push(S.contrastExam);
   const sx=((document.getElementById('contrastSx')||{}).value||'').trim();if(sx)d.push(sx);
-  return {label:'조영제알러지',value:'있음'+(d.length?' ('+d.join(' / ')+')':''),red:true};
+  return {label:'조영제부작용',value:'있음'+(d.length?' ('+d.join(' / ')+')':''),red:true};
 }
 // 줄 단위로 반환: ①임신 ②알러지들 ③격리·흡연·여행력 ④과거력·수술력·복용약물 ⑤소아·외상
 function bgGroups(){
@@ -1271,10 +1295,10 @@ function fmtBg(x){return x.label?x.label+' : '+x.value:x.value;}
 function bgLine(){return bgGroups().map(g=>g.map(fmtBg).join(' / ')).filter(Boolean).join('\n');}
 function pmhxText(){const p=S.pmhx.join(' '),s=S.surg.join(' / ');const both=[p,s].filter(x=>x).join(' / ');return both||'없음';}
 function contrastText(){
-  if(S.contrast!=='있음')return '조영제알러지 '+(S.contrast||'없음');
+  if(S.contrast!=='있음')return '조영제부작용 '+(S.contrast||'없음');
   let d=[];if(S.contrastExam)d.push(S.contrastExam);
   const sx=((document.getElementById('contrastSx')||{}).value||'').trim();if(sx)d.push(sx);
-  return '조영제알러지 있음'+(d.length?' ('+d.join(' / ')+')':'');
+  return '조영제부작용 있음'+(d.length?' ('+d.join(' / ')+')':'');
 }
 function bpArmNote(){
   if(!S.bpArm||S.bpArm==='없음')return '';
