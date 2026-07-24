@@ -1563,7 +1563,8 @@ function showRestoreBar(){
   const d=readSaved();
   if(!savedHasContent(d)){bar.style.display='none';return;}
   const w=document.getElementById('restoreWhen');
-  if(w)w.textContent=agoTxt(d.ts)+' 저장 · '+(d.S.pname||'이름 미입력')+(d.S.pid?' ('+d.S.pid+')':'')+' · '+(d.S.ccs&&d.S.ccs.length?d.S.ccs.join(', '):'주호소 미선택');
+  // ★V6: 복구 바는 신원확인 전 화면에 남는 유일한 지점 → 여기도 이름을 가린다
+  if(w)w.textContent=agoTxt(d.ts)+' 저장 · '+(maskName(d.S.pname)||'이름 미입력')+(d.S.pid?' ('+d.S.pid+')':'')+' · '+(d.S.ccs&&d.S.ccs.length?d.S.ccs.join(', '):'주호소 미선택');
   bar.style.display='';
 }
 function applyStateToDom(){
