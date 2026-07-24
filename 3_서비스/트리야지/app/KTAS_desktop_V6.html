@@ -118,6 +118,13 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .rfb{width:20px;height:20px;border-radius:5px;border:1px solid var(--dim);background:var(--surf2);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;}
 .rf.on .rfb{background:var(--k1);border-color:var(--k1);}
 .rf .rt{font-size:14px;}.rf.on .rt{color:#fca5a5;}
+/* 주호소 접이식 섹션 (★V6) */
+.ccsec{border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:9px;background:var(--surf2);overflow:hidden;}
+.ccsec-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px;cursor:pointer;font-size:16px;font-weight:800;color:#60a5fa;}
+.ccsec-h .cnt{font-size:12px;font-weight:600;color:var(--mute);background:var(--surf);border:1px solid var(--brd);border-radius:20px;padding:3px 10px;white-space:nowrap;}
+.ccsec.open .ccsec-h{border-bottom:1px solid var(--brd);}
+.ccsec-b{padding:4px 12px 13px;}
+.miniq{margin:13px 0 6px;font-size:12px;color:var(--mute);font-weight:700;letter-spacing:.5px;}
 /* KTAS box */
 .ktas{border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;margin-bottom:11px;}
 .ktasn{font-size:24px;font-weight:800;}.ktasnm{font-size:12px;color:var(--mute);margin-bottom:8px;}
@@ -377,33 +384,12 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="sub" id="s4sub">해당 항목 탭</div>
       <div class="ktas" id="ktasBox"></div>
       <div class="card">
-        <div class="lbl">발생 시점 (온셋)</div>
-        <div id="onsetDays"></div>
-        <div class="orow" style="margin-top:8px">
-          <input type="date" class="odate" id="onsetDate" onchange="setOnsetDate(this.value)">
-          <input class="oinp" id="onsetInp" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="onsetTimeInput(this)">
-          <button class="onow" onclick="onsetNow()">🕐 지금</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="lbl" id="qLbl" style="margin:0">주호소별 사정 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mute)">발생시점·통증·세부질문</span></div>
+          <button class="onow" id="allCCBtn" style="font-size:12px;padding:6px 10px" onclick="toggleAllCC()">모두 펼치기</button>
         </div>
+        <div id="qBox"></div>
       </div>
-      <div class="card"><div class="lbl">통증/불편 NRS</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:210px">
-            <div class="fl" style="margin-bottom:2px">🔴 지금 (현재)</div>
-            <div class="nrsv" id="nrsv">0</div>
-            <input type="range" class="nrssl" min="0" max="10" value="0" id="nrs" oninput="setNRS(this.value)">
-            <div class="nrsl" id="nrsl">통증 없음</div>
-          </div>
-          <div style="flex:1;min-width:210px">
-            <div class="fl" style="margin-bottom:2px">🕐 과거 최고 (제일 아플 때)</div>
-            <div class="nrsv" id="nrsvP">0</div>
-            <input type="range" class="nrssl" min="0" max="10" value="0" id="nrsP" oninput="setNRSPast(this.value)">
-            <div class="nrsl" id="nrslP">통증 없음</div>
-          </div>
-        </div>
-        <div style="margin-top:10px"><div class="fl">📍 통증 위치 (직접 입력)</div>
-          <input class="fi" id="nrsSite" placeholder="예) 두통 / 우측 하복부 / 좌측 무릎" oninput="S.nrsSite=this.value;render()"></div>
-      </div>
-      <div class="card"><div class="lbl" id="qLbl">핵심질문 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mute)">(KTAS·Red Flag 자동 판정용)</span></div><div id="qBox"></div></div>
       <div class="card" id="rfCard"><div class="lbl">⚠️ Red Flag</div><div id="rfList"></div></div>
       <div class="card" style="border-color:var(--k5bd)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -513,8 +499,9 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 // ══════════ STATE ══════════
 const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',smoking:'',travel:'',bpArm:'',
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),
-  gi:{},abcd:{A:'',B:'',C:'',D:''}, cc:'', ccs:[], ccOther:'', forceSevere:false, track:'mild', ans:{}, nrs:0, nrsPast:0, nrsSite:'',
-  onsetTime:'', onsetDaysAgo:null, redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
+  gi:{},abcd:{A:'',B:'',C:'',D:''}, ccs:[], ccOther:'', forceSevere:false, ans:{},
+  onsetBy:{}, painBy:{}, openCC:{},        // ★V6: 발생시점·통증(NRS)을 주호소별로 분리
+  redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
   ktas:'', ktasChg:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false, abuseOpen:false, abuseAuto:false, noteEdited:false, o2mode:'RA', o2:'', o2L:'', note:'', present:'', presentEdited:false};
 let cur=1;
 const KN={1:'즉시소생',2:'응급',3:'긴급',4:'준응급',5:'비응급'};
@@ -954,34 +941,49 @@ function showAlert(t,body){document.getElementById('alertT').textContent='⚠️
 function closeAlert(){document.getElementById('alertModal').classList.remove('show');
   if(pendingBST){const w=pendingBST;pendingBST='';setTimeout(()=>openBST(w),150);}}
 
-// ══════════ 발생시점 ══════════
-function renderOnsetDays(){
-  const L=[['오늘',0],['어제',1],['2일 전',2],['3일 전',3]];
-  document.getElementById('onsetDays').innerHTML='<div class="opts">'+L.map(([t,v])=>`<div class="opt ${S.onsetDaysAgo===v?'sel':''}" onclick="setOnsetDays(${v})">${t}</div>`).join('')+'</div>';
-}
-function setOnsetDays(v){S.onsetDaysAgo=v;const d=new Date();d.setDate(d.getDate()-v);document.getElementById('onsetDate').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');renderOnsetDays();render();}
-function setOnsetDate(val){if(!val){S.onsetDaysAgo=null;renderOnsetDays();render();return;}const t=new Date();t.setHours(0,0,0,0);const od=new Date(val+'T00:00:00');S.onsetDaysAgo=Math.round((t-od)/86400000);renderOnsetDays();render();}
-function onsetNow(){const d=new Date();const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');S.onsetTime=t;document.getElementById('onsetInp').value=t;render();}
-function onsetTimeInput(el){let v=el.value.replace(/[^0-9]/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+':'+v.slice(2);el.value=v;S.onsetTime=v;render();}
+// ══════════ 발생시점 (★V6: 주호소별) ══════════
+// V5는 온셋이 전역 1세트라 흉통+외상을 같이 고르면 발생시점을 하나만 적을 수 있었다.
+function jsq(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function onsetOf(cc){if(!S.onsetBy[cc])S.onsetBy[cc]={d:null,t:''};return S.onsetBy[cc];}
+function setOnsetDays(cc,v){const o=onsetOf(cc);o.d=(o.d===v?null:v);renderDetail();render();}
+function setOnsetDate(cc,val){const o=onsetOf(cc);
+  if(!val){o.d=null;}else{const t=new Date();t.setHours(0,0,0,0);const od=new Date(val+'T00:00:00');o.d=Math.round((t-od)/86400000);}
+  renderDetail();render();}
+function onsetNow(cc){const d=new Date();onsetOf(cc).t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');renderDetail();render();}
+function onsetTimeInput(el,cc){let v=el.value.replace(/[^0-9]/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+':'+v.slice(2);el.value=v;onsetOf(cc).t=v;render();}
+function onsetDateStr(cc){const n=onsetOf(cc).d;if(n===null||n===undefined)return '';
+  const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 // 발생시점 → 요일 붙여 표기. 예) 3 → "3일 전(토)" · 0 → "금일"(요일 생략)
 const DOW=['일','월','화','수','목','금','토'];
-function onsetDayTxt(){
-  const n=S.onsetDaysAgo;
+function onsetDayTxt(cc){
+  const n=onsetOf(cc).d;
   if(n===null||n===undefined)return '';
   if(n===0)return '금일';
   if(n<0)return '';                       // ★V6: 미래 날짜 입력 시 "-1일 전" 방지(표기 생략)
   const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-n);
   return n+'일 전('+DOW[d.getDay()]+')';
 }
-function onsetPhrase(){const t=S.onsetTime?S.onsetTime+'경':'';const dayTxt=onsetDayTxt();if(!dayTxt&&!t)return '';const p=[dayTxt,t].filter(Boolean).join(' ');return p?p+'부터':'';}
+function onsetPhrase(cc){const o=onsetOf(cc);const t=o.t?o.t+'경':'';const dayTxt=onsetDayTxt(cc);
+  const p=[dayTxt,t].filter(Boolean).join(' ');return p?p+'부터':'';}
+
+// ══════════ 통증 NRS (★V6: 주호소별) ══════════
+function painOf(cc){if(!S.painBy[cc])S.painBy[cc]={n:0,p:0,site:''};return S.painBy[cc];}
+function maxNRS(){let m=0;ccList().forEach(cc=>{const v=painOf(cc).n;if(v>m)m=v;});return m;}
+function maxNRSPast(){let m=0;ccList().forEach(cc=>{const v=painOf(cc).p;if(v>m)m=v;});return m;}
 
 // ══════════ 세부질문 ══════════
 const NRS_LAB=['통증 없음','','경미','','불편','','중등도','','심함','','최악'];
 const NRS_COL=['#22c55e','#4ade80','#86efac','#a3e635','#d4d400','#eab308','#f97316','#fb923c','#ef4444','#dc2626','#b91c1c'];
-function setNRS(v){v=+v;S.nrs=v;const e=document.getElementById('nrsv');e.textContent=v;e.style.color=NRS_COL[v];
-  document.getElementById('nrsl').textContent=NRS_LAB[v]||'';render();}
-function setNRSPast(v){v=+v;S.nrsPast=v;const e=document.getElementById('nrsvP');e.textContent=v;e.style.color=NRS_COL[v];
-  document.getElementById('nrslP').textContent=NRS_LAB[v]||'';render();}
+function setNRS(cc,i,v){v=+v;painOf(cc).n=v;
+  const e=document.getElementById('nrsv'+i);if(e){e.textContent=v;e.style.color=NRS_COL[v];}
+  const l=document.getElementById('nrsl'+i);if(l)l.textContent=NRS_LAB[v]||'';
+  render();}
+function setNRSPast(cc,i,v){v=+v;painOf(cc).p=v;
+  const e=document.getElementById('nrsvP'+i);if(e){e.textContent=v;e.style.color=NRS_COL[v];}
+  const l=document.getElementById('nrslP'+i);if(l)l.textContent=NRS_LAB[v]||'';
+  render();}
+function setNRSSite(cc,v){painOf(cc).site=v;render();}
 const COMMON_RF=['의식 저하/반응 저하','호흡곤란/청색증','활력징후 불안정(쇼크)','대량 출혈','심한 통증(NRS≥7)','고열(≥39.5℃)'];
 // 현재호소 자동 리드(나이·성별) + 계통별 작성 가이드
 function ageWord(){const a=(S.age||'').toString().trim();if(!a)return '';return /^[0-9]+$/.test(a)?a+'세':a;}
@@ -1032,7 +1034,7 @@ const TR_LEAD_IDS=['mech','fallType','taType','taImpact','place','trDetail'];
 function traumaLead(cc){
   const g=id=>getAns(cc,id);
   const seg=[];
-  const when=[onsetDayTxt(),S.onsetTime?S.onsetTime+'경':''].filter(Boolean).join(' ');
+  const when=[onsetDayTxt(cc),onsetOf(cc).t?onsetOf(cc).t+'경':''].filter(Boolean).join(' ');
   if(when)seg.push(when);
   const place=(g('place')||'').trim();
   if(place)seg.push(place+'에서');
@@ -1065,10 +1067,9 @@ function traumaMechBrief(cc){
 }
 function buildPresentDraft(){
   const list=ccList();if(!list.length)return '';
-  // "상기 N세 X환, (발생시점·시각) 주호소로 내원함 (문제 있는 것만)." — 부위·양상·정상/없음은 제외(간호사 직접 작성)
-  const cores=[],problems=[],times=[],leads=[];
-  const anyTrauma=list.some(c=>CC[c]&&CC[c].narr==='trauma');
-  const on=onsetPhrase();if(on&&!anyTrauma)times.push(on);   // 온셋타임 → 앞에 (외상은 본문에 들어가므로 제외)
+  // "상기 N세 X환, (주호소별 발생시점) 주호소로 내원함 (문제 있는 것만). 통증 NRS…"
+  const cores=[],problems=[],times=[],leads=[],pains=[];
+  let hasOnsetPrefix=false;
   list.forEach(cc=>{
     const d=CC[cc];
     const isTr=!!(d&&d.narr==='trauma');
@@ -1094,19 +1095,29 @@ function buildPresentDraft(){
       const lp=(q.lblPre!==undefined)?q.lblPre:'';
       problems.push((lp?lp+' ':'')+val);                                 // 양성 소견
     });
-    if(isTr){const A=getAns(cc,'area');const ar=Array.isArray(A)?A.join('·'):(A||'');cores.push(ar?ar+' 손상':(d.noun||cc));}
-    else cores.push(d?d.noun:cc);
+    // 주호소 단어(코어) — 앞에 그 주호소의 발생시점을 붙인다 (★V6: 주호소별)
+    let core;
+    if(isTr){const A=getAns(cc,'area');const ar=Array.isArray(A)?A.join('·'):(A||'');core=ar?ar+' 손상':(d.noun||cc);}
+    else core=d?d.noun:cc;
+    if(!isTr){const op=onsetPhrase(cc);if(op){core=op+' '+core;hasOnsetPrefix=true;}}  // 외상 발생시점은 본문(traumaLead)에 들어감
+    cores.push(core);
+    // 통증 문장 — 주호소별. 부위를 안 적었고 주호소가 여러 개면 주호소명으로 구분
+    const P=painOf(cc);
+    if(P.n>0){const site=(P.site||'').trim().replace(/\s*,\s*/g,'·');
+      const who=site||(list.length>1?cc:'');
+      const word=/통증?$/.test(who)?'':'통증 ';        // "흉통 통증 NRS" 중복 방지
+      pains.push((who?who+' ':'')+word+'NRS 현재 '+P.n+(P.p>P.n?'/최고 '+P.p:'')+'점');}
   });
-  const body=cores.join('·');
+  const body=cores.join(hasOnsetPrefix?', ':'·');
+  const last=cores[cores.length-1]||'';
   let s=presentLead();
   if(leads.length)s+=leads.join(' / ')+'. ';
   if(times.length)s+=times.join(' ')+' ';
-  s+=body+ro(body)+' 내원함';
+  s+=body+ro(last)+' 내원함';
   if(problems.length)s+=' ('+problems.join(', ')+')';
   s+='.';
   // NRS는 괄호 밖 별도 문장 (부위에 쉼표를 쓰면 괄호 항목과 섞여 읽히므로)
-  if(S.nrs>0){const site=(S.nrsSite||'').trim().replace(/\s*,\s*/g,'·');
-    s+=' '+(site?site+' ':'')+'통증 NRS 현재 '+S.nrs+(S.nrsPast>S.nrs?'/최고 '+S.nrsPast:'')+'점.';}
+  if(pains.length)s+=' '+pains.join('. ')+'.';
   return s;
 }
 function refreshPresent(){
@@ -1117,36 +1128,83 @@ function refreshPresent(){
   S.present=dr;pi.value=dr;
 }
 function presentReset(){S.presentEdited=false;refreshPresent();render();}
+// ══════════ 세부질문 렌더 (★V6: 주호소별 접이식) ══════════
+// V5는 모든 주호소의 질문이 한 화면에 쭉 나열돼, 복수 선택 시 수십 개가 되면서
+// "5분 이내 분류"와 충돌했다. 주호소마다 접이식 섹션 — 기본은 첫 주호소만 펼침.
+function isCCOpen(cc){const v=S.openCC[cc];if(v===undefined)return ccList()[0]===cc;return !!v;}
+function toggleCCOpen(cc){S.openCC[cc]=!isCCOpen(cc);renderDetail();}
+function toggleAllCC(){const list=ccList();const allOpen=list.length>0&&list.every(isCCOpen);
+  list.forEach(cc=>{S.openCC[cc]=!allOpen;});renderDetail();}
+function onsetBlock(cc){
+  const o=onsetOf(cc);const L=[['오늘',0],['어제',1],['2일 전',2],['3일 전',3]];
+  const days=L.map(([t,v])=>`<div class="opt ${o.d===v?'sel':''}" onclick="setOnsetDays('${jsq(cc)}',${v})">${t}</div>`).join('');
+  return `<div class="miniq">🕐 발생 시점 (온셋)</div><div class="opts">${days}</div>
+    <div class="orow" style="margin-top:7px">
+      <input type="date" class="odate" value="${onsetDateStr(cc)}" onchange="setOnsetDate('${jsq(cc)}',this.value)">
+      <input class="oinp" value="${esc(o.t)}" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="onsetTimeInput(this,'${jsq(cc)}')">
+      <button class="onow" onclick="onsetNow('${jsq(cc)}')">🕐 지금</button></div>`;
+}
+function nrsBlock(cc,i){
+  const P=painOf(cc);
+  const one=(lab,val,id,fn)=>`<div style="flex:1;min-width:185px">
+      <div class="fl" style="margin-bottom:2px">${lab}</div>
+      <div class="nrsv" id="${id}" style="color:${NRS_COL[val]}">${val}</div>
+      <input type="range" class="nrssl" min="0" max="10" value="${val}" oninput="${fn}('${jsq(cc)}',${i},this.value)">
+      <div class="nrsl" id="${id.replace('nrsv','nrsl')}">${NRS_LAB[val]||''}</div></div>`;
+  return `<div class="miniq">📊 통증 / 불편 NRS</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">${one('🔴 지금 (현재)',P.n,'nrsv'+i,'setNRS')}${one('🕐 과거 최고 (제일 아플 때)',P.p,'nrsvP'+i,'setNRSPast')}</div>
+    <div style="margin-top:8px"><div class="fl">📍 통증 위치 (직접 입력)</div>
+      <input class="fi" value="${esc(P.site)}" placeholder="예) 두통 / 우측 하복부 / 좌측 무릎" oninput="setNRSSite('${jsq(cc)}',this.value)"></div>`;
+}
 function renderDetail(){
   const list=ccList();const track=worstTrack();
   document.getElementById('s4title').textContent=(list.join(', ')||'주호소')+' — 세부';
   document.getElementById('s4sub').textContent=({crit:'🔴 위급 트랙',severe:'🟠 중증 트랙',mild:'🟢 경증 트랙'})[track]||'';
   refreshPresent();
-  // 각 주호소 세부질문 섹션
   let html='';
   if(!list.length)html='<div style="color:var(--mute);font-size:13px">주호소를 선택하세요.</div>';
-  list.forEach(cc=>{
-    const d=CC[cc];
-    html+=`<div class="grp" style="color:#60a5fa;margin-top:10px">▸ ${cc}${d?'':' <span style="color:var(--mute);font-weight:400">(서술 문진)</span>'}</div>`;
-    let qs=qsFor(cc).filter(q=>qVisible(q,cc));
-    html+=(qs.map(q=>buildQ(q,cc)).join('')||'<div style="color:var(--mute);font-size:13px">—</div>');
+  list.forEach((cc,i)=>{
+    const qs=qsFor(cc).filter(q=>qVisible(q,cc));
+    const done=qs.filter(q=>{const v=getAns(cc,q.id);return v!==undefined&&v!==''&&v!==null&&!(Array.isArray(v)&&!v.length);}).length;
+    const open=isCCOpen(cc),o=onsetOf(cc),P=painOf(cc);
+    const mk=[];
+    if((o.d!==null&&o.d!==undefined)||o.t)mk.push('🕐');
+    if(P.n>0)mk.push('NRS '+P.n);
+    mk.push('답 '+done+'/'+qs.length);
+    const sub=CC[cc]?'':' <span style="font-size:12px;font-weight:400;color:var(--mute)">(서술 문진)</span>';
+    html+=`<div class="ccsec ${open?'open':''}">`+
+      `<div class="ccsec-h" onclick="toggleCCOpen('${jsq(cc)}')"><span>${open?'▾':'▸'} ${cc}${sub}</span><span class="cnt">${mk.join(' · ')}</span></div>`+
+      `<div class="ccsec-b" style="${open?'':'display:none'}">${onsetBlock(cc)}${nrsBlock(cc,i)}`+
+      `<div class="miniq">📝 세부 질문</div>${qs.map(q=>buildQ(q,cc)).join('')||'<div style="color:var(--mute);font-size:13px">—</div>'}</div></div>`;
   });
   document.getElementById('qBox').innerHTML=html;
-  renderRF(track);
-  renderKTAS();renderCcHint();
+  const ab=document.getElementById('allCCBtn');
+  if(ab)ab.textContent=(list.length>0&&list.every(isCCOpen))?'모두 접기':'모두 펼치기';
+  renderRF(track);renderKTAS();renderCcHint();
 }
 function renderRF(track){
-  const card=document.getElementById('rfCard');let items=[];
-  ccList().forEach(cc=>{const d=CC[cc];if(d&&d.rf&&track!=='mild')d.rf.forEach(f=>items.push({cc,f}));});
-  COMMON_RF.forEach(f=>items.push({cc:'공통',f}));
-  card.style.display=items.length?'':'none';
-  document.getElementById('rfList').innerHTML=items.map(it=>{const on=rfOn(it.cc,it.f);const ff=it.f.replace(/'/g,'');return `<div class="rf ${on?'on':''}" onclick="toggleRF('${it.cc}','${ff}')"><span class="rfb">${on?'✓':''}</span><span class="rt">${it.f}${it.cc==='공통'?'':` <span style="color:var(--mute);font-size:11px">·${it.cc}</span>`}</span></div>`;}).join('');
+  const card=document.getElementById('rfCard');const groups=[];
+  ccList().forEach(cc=>{const d=CC[cc];if(d&&d.rf&&track!=='mild')groups.push([cc,d.rf]);});
+  groups.push(['공통',COMMON_RF]);
+  card.style.display='';
+  // ★V6: 주호소별로 묶어서 표시(행마다 붙던 "·주호소" 꼬리표 제거 → 목록이 짧아짐)
+  document.getElementById('rfList').innerHTML=groups.map(([cc,fs])=>
+    `<div class="miniq">${cc==='공통'?'공통':'▸ '+cc}</div>`+
+    fs.map(f=>{const on=rfOn(cc,f);
+      return `<div class="rf ${on?'on':''}" onclick="toggleRF('${jsq(cc)}','${jsq(f)}')"><span class="rfb">${on?'✓':''}</span><span class="rt">${f}</span></div>`;}).join('')
+  ).join('');
 }
 function renderCcHint(){
   const el=document.getElementById('ccHint');if(!el)return;let items=[];
-  ccList().forEach(cc=>{qsFor(cc).forEach(q=>{if(!qVisible(q,cc))return;let v=getAns(cc,q.id);if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;if(Array.isArray(v))v=v.join('·');items.push(v);});});
-  if(S.nrs>0)items.push((S.nrsSite?S.nrsSite+' ':'')+'현재 NRS '+S.nrs+'/10');
-  if(S.nrsPast>0)items.push('최고 NRS '+S.nrsPast+'/10');
+  ccList().forEach(cc=>{
+    const op=onsetPhrase(cc);if(op)items.push(cc+' '+op);
+    qsFor(cc).forEach(q=>{if(!qVisible(q,cc))return;let v=getAns(cc,q.id);
+      if(v===undefined||v===''||v===null||(Array.isArray(v)&&!v.length))return;
+      if(Array.isArray(v))v=v.join('·');items.push(v);});
+    const P=painOf(cc);
+    if(P.n>0)items.push((P.site?P.site+' ':'')+'현재 NRS '+P.n+'/10');
+    if(P.p>0)items.push('최고 NRS '+P.p+'/10');
+  });
   if(S.redFlags.length)items.push('⚠위험징후 '+S.redFlags.length+'개');
   el.innerHTML=items.length?('참고(클릭한 항목): '+items.join(' / ')):'';
 }
@@ -1155,14 +1213,14 @@ function buildQ(q,cc){
   const k=ansKey(cc,q.id),cur=S.ans[k];
   if(q.type==='text'){
     // ★V6: 값·안내문구를 이스케이프(큰따옴표 입력 시 값이 잘리던 문제)
-    if(q.big)return `<div class="q"><div class="qt">${q.t}</div><textarea class="fi" style="min-height:72px;resize:vertical;font-family:inherit" placeholder="${esc(q.ph||'')}" oninput="setAns('${cc}','${q.id}',this.value)">${esc(cur||'')}</textarea></div>`;
-    return `<div class="q"><div class="qt">${q.t}</div><input class="fi" value="${esc(cur||'')}" placeholder="${esc(q.ph||'')}" oninput="setAns('${cc}','${q.id}',this.value)"></div>`;
+    if(q.big)return `<div class="q"><div class="qt">${q.t}</div><textarea class="fi" style="min-height:72px;resize:vertical;font-family:inherit" placeholder="${esc(q.ph||'')}" oninput="setAns('${jsq(cc)}','${q.id}',this.value)">${esc(cur||'')}</textarea></div>`;
+    return `<div class="q"><div class="qt">${q.t}</div><input class="fi" value="${esc(cur||'')}" placeholder="${esc(q.ph||'')}" oninput="setAns('${jsq(cc)}','${q.id}',this.value)"></div>`;
   }
-  if(q.multi){const arr=Array.isArray(cur)?cur:[];const cells=q.o.map(o=>`<div class="opt ${arr.includes(o)?'msel':''}" onclick="pickMulti('${cc}','${q.id}','${o}')">${o}</div>`).join('');return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;}
-  if(q.type==='datetime'){const ps=(cur||'').split(' ');return `<div class="q"><div class="qt">${q.t}</div><div class="orow"><input type="date" class="odate" id="dt_${k}" value="${ps[0]||''}" onchange="setDT('${cc}','${q.id}')"><input class="oinp" id="tm_${k}" value="${ps[1]||''}" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="dtTime(this,'${cc}','${q.id}')"></div></div>`;}
+  if(q.multi){const arr=Array.isArray(cur)?cur:[];const cells=q.o.map(o=>`<div class="opt ${arr.includes(o)?'msel':''}" onclick="pickMulti('${jsq(cc)}','${q.id}','${jsq(o)}')">${o}</div>`).join('');return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;}
+  if(q.type==='datetime'){const ps=(cur||'').split(' ');return `<div class="q"><div class="qt">${q.t}</div><div class="orow"><input type="date" class="odate" id="dt_${k}" value="${ps[0]||''}" onchange="setDT('${jsq(cc)}','${q.id}')"><input class="oinp" id="tm_${k}" value="${ps[1]||''}" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="dtTime(this,'${jsq(cc)}','${q.id}')"></div></div>`;}
   let opts;if(q.type==='yn')opts=['있음','없음'];else opts=q.o;
   const cells=opts.map(o=>{const sel=cur===o;const danger=(q.esc&&o==='있음')||(q.esc2&&o===q.esc2);   // ★V6: 참이 될 수 없던 3번째 조건 제거
-    return `<div class="opt ${sel?(danger?'sel-r':'sel'):''}" onclick="pickQ('${cc}','${q.id}','${o}')">${o}</div>`;}).join('');
+    return `<div class="opt ${sel?(danger?'sel-r':'sel'):''}" onclick="pickQ('${jsq(cc)}','${q.id}','${jsq(o)}')">${o}</div>`;}).join('');
   return `<div class="q"><div class="qt">${q.t}</div><div class="opts">${cells}</div></div>`;
 }
 function setAns(cc,id,v){S.ans[ansKey(cc,id)]=v;render();}
@@ -1202,7 +1260,7 @@ function calcKTAS(){
   if(!isNaN(hr)){if(hr<50)mods.push({t:`HR ${hr} 서맥`,l:'crit'});else if(hr>=130)mods.push({t:`HR ${hr} 빈맥`,l:'high'});else if(hr>=120)mods.push({t:`HR ${hr}`,l:'mid'});}
   if(!isNaN(rr)){if(rr<10)mods.push({t:`RR ${rr} 서호흡`,l:'crit'});else if(rr>=30)mods.push({t:`RR ${rr} 빈호흡`,l:'high'});else if(rr>=25)mods.push({t:`RR ${rr}`,l:'mid'});}
   if(!isNaN(bt)){if(bt<35)mods.push({t:`BT ${bt}℃ 저체온`,l:'high'});else if(bt>=39.5)mods.push({t:`BT ${bt}℃ 고열`,l:'high'});else if(bt>=38)mods.push({t:`BT ${bt}℃ 발열`,l:'mid'});}
-  if(S.nrs>=7)mods.push({t:`NRS ${S.nrs}/10`,l:'high'});else if(S.nrs>=4)mods.push({t:`NRS ${S.nrs}/10`,l:'mid'});
+  {const mx=maxNRS();if(mx>=7)mods.push({t:`NRS ${mx}/10`,l:'high'});else if(mx>=4)mods.push({t:`NRS ${mx}/10`,l:'mid'});}   // ★V6: 주호소별 NRS 중 최댓값
   if(Object.values(S.abcd).some(v=>v==='bad'))mods.push({t:'ABCD 이상',l:'crit'});
   if(S.redFlags.length)mods.push({t:`Red Flag ${S.redFlags.length}개`,l:'high'});
   if(S.patApp==='이상'||S.patWob==='이상'||S.patCir==='이상')mods.push({t:'소아 PAT 이상',l:'high'});
@@ -1443,7 +1501,7 @@ function go(n){
   document.getElementById('nextBtn').textContent=n===5?'완료':(n===4?'기록 →':'다음 →');
   document.getElementById('nextBtn').style.display=n===5?'none':'';
   if(n===2)renderCCGrid();
-  if(n===4){renderOnsetDays();renderDetail();}
+  if(n===4){renderDetail();}
   if(n===5){renderPmhx();renderSurg();render();}
   window.scrollTo(0,0);
   saveSoon();                       // ★V6 자동 저장
@@ -1486,16 +1544,13 @@ function showRestoreBar(){
 function applyStateToDom(){
   const set=(id,val)=>{const e=document.getElementById(id);if(e)e.value=(val===null||val===undefined)?'':val;};
   set('pidInp',S.pid);set('nameInp',S.pname);set('ageInp',S.age);set('lmpInp',S.lmp);
-  set('arrInp',S.arr);set('regInp',S.reg);set('onsetInp',S.onsetTime);set('presentInp',S.present);
-  set('noteInp',S.note);set('o2L',S.o2L);set('ccOther',S.ccOther);set('nrsSite',S.nrsSite);
+  set('arrInp',S.arr);set('regInp',S.reg);set('presentInp',S.present);
+  set('noteInp',S.note);set('o2L',S.o2L);set('ccOther',S.ccOther);
   const dd=document.getElementById('dateDisp');if(dd)dd.textContent=S.date;
-  if(S.onsetDaysAgo!==null&&S.onsetDaysAgo!==undefined){const d=new Date();d.setDate(d.getDate()-S.onsetDaysAgo);
-    set('onsetDate',d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));}
-  const n=document.getElementById('nrs');if(n){n.value=S.nrs;setNRS(S.nrs);}
-  const np=document.getElementById('nrsP');if(np){np.value=S.nrsPast;setNRSPast(S.nrsPast);}
   const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age||'';
   renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();
-  renderPeds();renderPmhx();renderSurg();renderAbuse();renderOnsetDays();
+  renderPeds();renderPmhx();renderSurg();renderAbuse();
+  // 주호소별 발생시점·NRS는 renderDetail()이 S에서 직접 그리므로 별도 복원 불필요
 }
 function restoreSaved(){
   const d=readSaved();if(!savedHasContent(d))return;
