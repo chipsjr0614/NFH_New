@@ -419,37 +419,37 @@ const ADULT_DRUGS = [
 
 // ── 지속주입 계산 약물 (약물도우미 2021 기반 · ⚠️약제부 검증 필요) ──
 const HELPER_DRUGS = [
-  { id:'nicar', name:'Nicardipine', badge:'혈압강하(CCB)', color:'blue', twoCol:false,
+  { id:'nicar', name:'Nicardipine', vol:'(10mg/10ml)', badge:'혈압강하(CCB)', color:'blue', twoCol:false,
     routes:[{label:'말초', detail:'5@ + NS/D5W 200ml (0.2mg/ml)', conc:0.2, unit:'mg/ml'}],
     doses:[1,2,3,4,5], doseUnit:'mg/hr', weightBased:false, perHour:true, highlight:2 },
-  { id:'ntg', name:'Nitroglycerin', badge:'혈관확장(NTG)', color:'orange', twoCol:false,
+  { id:'ntg', name:'Nitroglycerin', vol:'(10mg/10ml)', badge:'혈관확장(NTG)', color:'orange', twoCol:false,
     routes:[{label:'표준', detail:'10mg 2@ + NS/D5W 80ml (0.2mg/ml)', conc:200, unit:'mcg/ml'}],
     doses:[5,10,20,30,50,75,100], doseUnit:'mcg/min', weightBased:false, highlight:10 },
-  { id:'labe', name:'Labetalol', badge:'혈압강하(αβ)', color:'purple', twoCol:false,
+  { id:'labe', name:'Labetalol', vol:'(100mg/20ml)', badge:'혈압강하(αβ)', color:'purple', twoCol:false,
     routes:[{label:'표준', detail:'2@ + D5W 160ml (1mg/ml)', conc:1, unit:'mg/ml'}],
     doses:[15,30,60,90,120], doseUnit:'mg/hr', weightBased:false, perHour:true, highlight:30 },
-  { id:'dilt', name:'Diltiazem', badge:'빈맥·AF(CCB)', color:'blue', twoCol:false,
+  { id:'dilt', name:'Diltiazem', vol:'(50mg vial)', badge:'빈맥·AF(CCB)', color:'blue', twoCol:false,
     routes:[{label:'표준', detail:'1vial + NS/D5W 50ml (1mg/ml)', conc:1, unit:'mg/ml'}],
     doses:[3,5,10,15], doseUnit:'mg/hr', weightBased:false, perHour:true, highlight:5 },
-  { id:'esmo', name:'Esmolol', badge:'β-blocker', color:'purple', twoCol:false,
+  { id:'esmo', name:'Esmolol', vol:'(2.5g/10ml)', badge:'β-blocker', color:'purple', twoCol:false,
     routes:[{label:'표준', detail:'2.5g 1vial + NS/D5W 240ml (10mg/ml)', conc:10000, unit:'mcg/ml'}],
     doses:[50,100,150,200,300], doseUnit:'mcg/kg/min', weightBased:true, highlight:100 },
-  { id:'milr', name:'Milrinone', badge:'강심(inodilator)', color:'red', twoCol:false,
+  { id:'milr', name:'Milrinone', vol:'(10mg/10ml)', badge:'강심(inodilator)', color:'red', twoCol:false,
     routes:[{label:'표준', detail:'2@ + NS/D5W 80ml (0.2mg/ml)', conc:200, unit:'mcg/ml'}],
     doses:[0.125,0.25,0.375,0.5,0.75], doseUnit:'mcg/kg/min', weightBased:true, highlight:0.375 },
-  { id:'isup', name:'Isoproterenol', badge:'서맥·강심', color:'orange', twoCol:false,
+  { id:'isup', name:'Isoproterenol', vol:'(0.2mg/1ml)', badge:'서맥·강심', color:'orange', twoCol:false,
     routes:[{label:'표준', detail:'2@ + D5W 98ml (4mcg/ml)', conc:4, unit:'mcg/ml'}],
     doses:[0.5,1,2,3,5], doseUnit:'mcg/min', weightBased:false, highlight:2 },
-  { id:'lido', name:'Lidocaine 2%', badge:'심실부정맥', color:'blue', twoCol:false,
+  { id:'lido', name:'Lidocaine 2%', vol:'(400mg/20ml)', badge:'심실부정맥', color:'blue', twoCol:false,
     routes:[{label:'표준', detail:'1vial + D5W 80ml (4mg/ml)', conc:4, unit:'mg/ml'}],
     doses:[1,2,3,4], doseUnit:'mg/min', weightBased:false, highlight:2 },
-  { id:'nipr', name:'Nitroprusside', badge:'혈압강하(차광)', color:'red', twoCol:false,
+  { id:'nipr', name:'Nitroprusside', vol:'(50mg/2ml)', badge:'혈압강하(차광)', color:'red', twoCol:false,
     routes:[{label:'표준', detail:'1vial + D5W 248ml (0.2mg/ml)', conc:200, unit:'mcg/ml'}],
     doses:[0.5,1,2,3,5,10], doseUnit:'mcg/kg/min', weightBased:true, highlight:1 },
-  { id:'isok', name:'Isoket', badge:'협심증(질산염)', color:'orange', twoCol:false,
+  { id:'isok', name:'Isoket', vol:'(10mg/10ml)', badge:'협심증(질산염)', color:'orange', twoCol:false,
     routes:[{label:'표준', detail:'2@ + NS/D5W 80ml (0.2mg/ml)', conc:0.2, unit:'mg/ml'}],
     doses:[1,2,4,7,10], doseUnit:'mg/hr', weightBased:false, perHour:true, highlight:2 },
-  { id:'amio', name:'Amiodarone', badge:'항부정맥·24h', color:'blue',
+  { id:'amio', name:'Amiodarone', vol:'(150mg/3ml)', badge:'항부정맥·24h', color:'blue',
     mix:'6@ + D5W 582ml = 900mg/600ml (1.5mg/ml) · only D5W',
     protocol:[
       {phase:'로딩', detail:'150mg (심정지 300mg) IV', ml:'—', amt:'—'},
@@ -652,7 +652,7 @@ function updateAdult(){
     content.innerHTML=`
       <div class="card">
         <div class="card-head" style="background:var(--bg)">
-          <div><h3 style="color:#58a6ff">${drug.name}</h3><div class="sub">${drug.mix}</div></div>
+          <div><h3 style="color:#58a6ff">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3><div class="sub">${drug.mix}</div></div>
           <span class="badge" style="background:#21262d;color:#58a6ff">${drug.badge}</span>
         </div>
         <div class="card-body">
@@ -737,7 +737,7 @@ function updateInfuse(){
   const list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)):HELPER_DRUGS;
   document.getElementById('infuseSidebar').innerHTML=list.map(d=>
     `<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
-      <span class="${d.color}">${d.name}</span><br>
+      <span class="${d.color}">${d.name}</span> <span style="font-size:10px;color:#8b949e">${d.vol||''}</span><br>
       <span style="font-size:10px;color:#8b949e">${d.badge}</span>
     </button>`
   ).join('')||'<div style="color:#8b949e;font-size:12px;padding:8px">검색 결과 없음</div>';
@@ -749,7 +749,7 @@ function updateInfuse(){
     content.innerHTML=`
       <div class="card">
         <div class="card-head" style="background:var(--bg)">
-          <div><h3 style="color:#58a6ff">${drug.name}</h3><div class="sub">${drug.mix}</div></div>
+          <div><h3 style="color:#58a6ff">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3><div class="sub">${drug.mix}</div></div>
           <span class="badge" style="background:#21262d;color:#58a6ff">${drug.badge}</span>
         </div>
         <div class="card-body">
@@ -773,7 +773,7 @@ function updateInfuse(){
   content.innerHTML=`
     <div class="card">
       <div class="card-head" style="background:var(--bg)">
-        <div><h3 style="color:${c}">${drug.name}</h3>
+        <div><h3 style="color:${c}">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3>
           <div class="sub">${route.detail} · ${route.conc} ${route.unit} · 체중 ${w}kg</div>
         </div>
         <span class="badge" style="background:#21262d;color:${c}">${drug.badge}</span>
