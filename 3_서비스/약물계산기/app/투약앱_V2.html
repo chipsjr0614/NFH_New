@@ -209,6 +209,7 @@ body.light .extrav-box{background:#ffebe9;border-color:#ffb3b3;color:#a40e26}
       <button class="age-btn" onclick="setAW(90)">90kg</button>
     </div>
   </div>
+  <input type="text" id="adultSearch" placeholder="🔍 약물 검색 (예: Nicardipine · NTG · 혈압)" oninput="updateAdult()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:14px;outline:none">
   <div class="adult-layout">
     <div class="drug-sidebar" id="drugSidebar"></div>
     <div id="drugContent"></div>
@@ -393,6 +394,28 @@ const ADULT_DRUGS = [
     routes:[{label:'표준', detail:'20u + D5W 99ml', conc:0.2, unit:'u/ml'}],
     doses:[0.01,0.02,0.03], doseUnit:'unit/min', weightBased:false, highlight:0.02,
   },
+  {
+    id:'nicar', name:'Nicardipine', badge:'혈압강하(CCB)', color:'blue',
+    twoCol:false,
+    routes:[{label:'말초', detail:'5@ + NS/D5W 200ml (0.2mg/ml)', conc:0.2, unit:'mg/ml'}],
+    doses:[1,2,3,4,5], doseUnit:'mg/hr', weightBased:false, perHour:true, highlight:2,
+  },
+  {
+    id:'ntg', name:'Nitroglycerin', badge:'혈관확장(NTG)', color:'orange',
+    twoCol:false,
+    routes:[{label:'표준', detail:'10mg 2@ + NS/D5W 80ml (0.2mg/ml)', conc:200, unit:'mcg/ml'}],
+    doses:[5,10,20,30,50,75,100], doseUnit:'mcg/min', weightBased:false, highlight:10,
+  },
+  {
+    id:'amio', name:'Amiodarone', badge:'항부정맥·24h', color:'blue',
+    mix:'6@ + D5W 582ml = 900mg/600ml (1.5mg/ml) · only D5W',
+    protocol:[
+      {phase:'로딩', detail:'150mg (심정지 300mg) IV', ml:'—', amt:'—'},
+      {phase:'처음 6시간', detail:'1 mg/min', ml:'40 ml/hr', amt:'360mg'},
+      {phase:'이후 18시간', detail:'0.5 mg/min', ml:'20 ml/hr', amt:'540mg'},
+    ],
+    note:'총 900mg / 24시간 (백 1개=600ml가 정확히 24h). 서맥·QT연장 주의 · only D5W',
+  },
 ];
 
 // ── PALS 기도 장비 ──
@@ -560,24 +583,44 @@ function gotoAdult(name){
 // ════════════════════════════════════════════════
 let activeAdultDrug = 'norepi';
 function setAW(w){ document.getElementById('adultWeight').value=w; updateAdult(); }
-function calcRate(dose,conc,weightBased,w){
-  return weightBased ? (dose*w*60)/conc : (dose*60)/conc;
+function calcRate(dose,conc,weightBased,w,perHour){
+  const t = perHour ? 1 : 60;   // mg/hr 등 시간단위 용량은 ×60 안 함
+  return weightBased ? (dose*w*t)/conc : (dose*t)/conc;
 }
 function selectDrug(id){ activeAdultDrug=id; updateAdult(); }
 
 function updateAdult(){
   const w=parseFloat(document.getElementById('adultWeight').value)||70;
-  // 사이드바
-  document.getElementById('drugSidebar').innerHTML=ADULT_DRUGS.map(d=>
+  // 사이드바 (검색 필터)
+  const se=document.getElementById('adultSearch');
+  const q=(se&&se.value?se.value:'').toLowerCase().trim();
+  const list=q?ADULT_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)):ADULT_DRUGS;
+  document.getElementById('drugSidebar').innerHTML=list.map(d=>
     `<button class="drug-btn ${d.id===activeAdultDrug?'active':''}" onclick="selectDrug('${d.id}')">
       <span class="${d.color}">${d.name}</span><br>
       <span style="font-size:10px;color:#8b949e">${d.badge}</span>
     </button>`
-  ).join('');
+  ).join('')||'<div style="color:#8b949e;font-size:12px;padding:8px">검색 결과 없음</div>';
   // 컨텐츠
   const content=document.getElementById('drugContent');
   const drug=ADULT_DRUGS.find(d=>d.id===activeAdultDrug);
   if(!drug){content.innerHTML='';return;}
+
+  if(drug.protocol){   // Amiodarone 24시간 유지주입 등 고정 프로토콜
+    const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:#58a6ff">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
+    content.innerHTML=`
+      <div class="card">
+        <div class="card-head" style="background:var(--bg)">
+          <div><h3 style="color:#58a6ff">${drug.name}</h3><div class="sub">${drug.mix}</div></div>
+          <span class="badge" style="background:#21262d;color:#58a6ff">${drug.badge}</span>
+        </div>
+        <div class="card-body">
+          <table><tr><th>구간</th><th>속도</th><th>ml/hr</th><th>투여량</th></tr>${rows}</table>
+          <div class="sub" style="margin-top:10px;line-height:1.6">⚠️ ${drug.note}</div>
+        </div>
+      </div>`;
+    return;
+  }
 
   if(drug.twoCol){
     // 노에피 - 말초/중심 동시 표시
@@ -612,7 +655,7 @@ function updateAdult(){
   } else {
     const route=drug.routes[0];
     const rows=drug.doses.map(dose=>{
-      const rate=calcRate(dose,route.conc,drug.weightBased,w);
+      const rate=calcRate(dose,route.conc,drug.weightBased,w,drug.perHour);
       const hl=dose===drug.highlight;
       return `<tr class="${hl?'hl':''}">
         <td class="dim">${dose} ${drug.doseUnit}</td>
