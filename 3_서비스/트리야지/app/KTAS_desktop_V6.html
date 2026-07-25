@@ -501,7 +501,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div class="modal-t" style="margin:0">📁 보관 기록 <span id="histCount" style="font-size:13px;color:var(--mute);font-weight:400"></span></div>
         <button class="onow" onclick="histExportAll()" style="font-size:12px;padding:6px 10px">전체 엑셀 내보내기</button>
       </div>
-      <div style="font-size:11px;color:var(--mute);margin-bottom:10px">⚠️ 이 태블릿에만 저장 · 이름은 가려서 보관 · 최대 100건(초과 시 오래된 것부터 삭제)</div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:10px">⚠️ 이 태블릿에만 저장 · 이름은 가려서 보관 · 최대 10,000건(태블릿 용량 한도 내, 초과 시 오래된 것부터 삭제)</div>
       <div id="histList" style="max-height:52vh;overflow-y:auto"></div>
       <button class="mbtn gray" onclick="closeHistory()">닫기</button>
     </div>
@@ -1758,10 +1758,16 @@ function snapshot(){
 }
 
 // ══════════ 보관 기록 (완료 시 자동 · 최대 100건 · PIN 8020 · 이름 마스킹본) ══════════
-const HIST_KEY='NFH_TRIAGE_HISTORY',HIST_MAX=100,HIST_PIN='8020';
+const HIST_KEY='NFH_TRIAGE_HISTORY',HIST_MAX=10000,HIST_PIN='8020';
 let histUnlocked=false;
 function histRead(){try{const r=localStorage.getItem(HIST_KEY);return r?JSON.parse(r):[];}catch(e){return[];}}
-function histWrite(a){try{localStorage.setItem(HIST_KEY,JSON.stringify(a));}catch(e){}}
+function histWrite(a){
+  try{localStorage.setItem(HIST_KEY,JSON.stringify(a));return true;}
+  catch(e){ // 용량 초과 → 오래된 것부터 버리며 재시도(무음 전체실패 방지)
+    while(a.length>1){a.shift();try{localStorage.setItem(HIST_KEY,JSON.stringify(a));return true;}catch(e2){}}
+    return false;
+  }
+}
 function saveToHistory(){
   try{
     if(!S._histId)S._histId='h'+Date.now()+'_'+Math.floor(Math.random()*1000);
