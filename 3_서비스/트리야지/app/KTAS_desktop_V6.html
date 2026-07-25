@@ -261,7 +261,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div class="vsg">
           <div><div class="fl">키(cm)</div><input class="fi" id="pedH" inputmode="decimal" placeholder="예) 85" oninput="S.pedH=this.value;render()"></div>
           <div><div class="fl">체중(kg) <span style="color:#dc2626;font-weight:800">⚠️ 필수</span></div><input class="fi" id="pedW" inputmode="decimal" placeholder="반드시 측정·입력" oninput="S.pedW=this.value;render()"></div>
-          <div><div class="fl">체온(℃)</div><input class="fi" id="pedT" inputmode="decimal" placeholder="예) 38.5" oninput="S.pedT=this.value;render()"></div>
+          <div><div class="fl">체온(℃)</div><input class="fi" id="pedT" inputmode="decimal" placeholder="예) 38.5" oninput="pedTemp(this)"></div>
         </div>
         <div class="q" style="margin-top:9px"><div class="qt">PAT — 외관</div><div class="opts" id="patAppOpts"></div></div>
         <div class="q"><div class="qt">PAT — 호흡노력</div><div class="opts" id="patWobOpts"></div></div>
@@ -1326,6 +1326,8 @@ function vnum(id){const v=document.getElementById(id)?document.getElementById(id
 function vsInt(el,max){let v=el.value.replace(/[^0-9]/g,'');while(v.length>0&&parseInt(v,10)>max)v=v.slice(0,-1);el.value=v;render();}
 // 체온: 숫자 2개 들어가면 자동 소수점(XX.X)
 function vsBT(el){let v=el.value.replace(/[^0-9]/g,'').slice(0,3);if(v.length>=2)v=v.slice(0,2)+'.'+v.slice(2);el.value=v;render();}
+// 소아 체온: vsBT와 동일 자동 소수점(333→33.3) + S.pedT 저장
+function pedTemp(el){let v=el.value.replace(/[^0-9]/g,'').slice(0,3);if(v.length>=2)v=v.slice(0,2)+'.'+v.slice(2);el.value=v;S.pedT=v;render();}
 function calcKTAS(){
   const mods=[];const sbp=vnum('vsSBP');
   const hr=vnum('vsHR'),rr=vnum('vsRR'),bt=vnum('vsBT'),spo2=vnum('vsSpO2');
