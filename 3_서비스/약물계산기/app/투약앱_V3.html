@@ -491,7 +491,11 @@ const HELPER_DRUGS = [
     ref:{ dose:'1~2g (max 2~4g/day) · MIVs 1g + N/S 50~100cc (10% 이하 희석) over 30분', mix:'N/S 또는 D5W', caution:'IV bolus 금지 · 서맥 주의' } },
   { id:'phos', name:'Phosten', vol:'(P 20mmol/20ml)', badge:'인(P) 교정', color:'purple', cat:'🧪 전해질',
     ref:{ dose:'phosphate >2mg/dL 또는 무증상까지 교정 · MIVs 1@ + N/S 250cc(말초) over 1시간', mix:'—', caution:'IV bolus 금지 · 1@에 K 20mEq 함유(투여속도 <20mmol/hr)' } },
+  { id:'nacl3', name:'3% NaCl', vol:'(고장성 식염수)', badge:'저Na·뇌부종', color:'red', cat:'🧪 전해질',
+    ref:{ dose:'증상성 저나트륨혈증: 100~150ml IV over 10~20분, 증상 지속 시 반복 (목표 24h Na 상승 <8~10mEq/L) · 뇌부종/ICP↑: 2~5ml/kg over 10~20분', mix:'원액(3% ≈ 513mEq/L Na) · 고장성 → 가급적 중심정맥', caution:'⚠️ 과교정 시 삼투성 탈수초증(ODS/CPM) — Na 상승속도 엄격 제한 · 혈청 Na 자주 f/u · 용량과부하 · ★원내 프로토콜·약제부 확인' } },
 ];
+// 지속주입 약물 한글명 (검색용)
+const HELPER_KR = { nicar:'니카르디핀', ntg:'니트로글리세린', labe:'라베탈롤', dilt:'딜티아젬', esmo:'에스몰롤', milr:'밀리논', isup:'이소프로테레놀', lido:'리도카인', nipr:'니트로프루시드', isok:'이소켓 이소소르비드', amio:'아미오다론', adeno:'아데노신', vera:'베라파밀', vaso2:'바소프레신', mida:'미다졸람', etom:'에토미데이트', rocu:'로쿠로니움', nalo:'날록손', flum:'플루마제닐', cagl:'칼슘 글루코네이트', kcl:'염화칼륨 포타슘', mag:'마그네슘', phos:'포스텐 인산염', nacl3:'고장성 식염수 생리식염수 저나트륨' };
 
 // ── PALS 기도 장비 ──
 const AIRWAY_TABLE = [
@@ -538,7 +542,7 @@ function globalSearch(){
   if(!q){ box.style.display='none'; box.innerHTML=''; return; }
   const res=[];
   DRUG_DB.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.kr||'').toLowerCase().includes(q)||(d.full||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.kr||'',src:'약물정보',go:"gotoInfo('"+gEsc(d.name)+"')"}); });
-  HELPER_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.badge||'',src:'지속주입',go:"gotoInfuse('"+d.id+"')"}); });
+  HELPER_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)||(HELPER_KR[d.id]||'').includes(q)) res.push({n:d.name,s:(HELPER_KR[d.id]||d.badge||'').split(' ')[0],src:'지속주입',go:"gotoInfuse('"+d.id+"')"}); });
   ADULT_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.badge||'',src:'성인계산기',go:"gotoAdultCalc('"+d.id+"')"}); });
   if(!res.length){ box.style.display='block'; box.innerHTML='<div style="padding:10px 14px;color:#8b949e;font-size:13px">결과 없음</div>'; return; }
   const sc={'약물정보':'#58a6ff','지속주입':'#6ee7a0','성인계산기':'#ffa726'};
@@ -796,7 +800,7 @@ function updateInfuse(){
   document.getElementById('infuseCatPills').innerHTML=INFUSE_CATS.map(ct=>`<div class="sub-tab ${ct===infuseCat?'active':''}" onclick="setInfuseCat('${ct}')">${ct}</div>`).join('');
   const se=document.getElementById('infuseSearch');
   const q=(se&&se.value?se.value:'').toLowerCase().trim();
-  let list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)):HELPER_DRUGS.slice();
+  let list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)||(HELPER_KR[d.id]||'').includes(q)):HELPER_DRUGS.slice();
   if(infuseCat!=='전체') list=list.filter(d=>(d.cat||'💧 지속주입(계산)')===infuseCat);
   const cats=[]; list.forEach(d=>{const ct=d.cat||'💧 지속주입(계산)';if(!cats.includes(ct))cats.push(ct);});
   const btn=d=>`<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
