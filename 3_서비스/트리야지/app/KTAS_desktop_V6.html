@@ -1034,6 +1034,10 @@ function onsetDayTxt(cc){
 }
 function onsetPhrase(cc){const o=onsetOf(cc);const t=o.t?o.t+'경':'';const dayTxt=onsetDayTxt(cc);
   const p=[dayTxt,t].filter(Boolean).join(' ');return p?p+'부터':'';}
+// 내원이유 표시용: 주호소명 + 정확한 발생일시. 예) "두통 (2026-07-25 08:10)"
+function ccOnsetLabel(cc){const dateStr=onsetDateStr(cc);const t=(onsetOf(cc).t||'').trim();
+  const when=[dateStr,t].filter(Boolean).join(' ');return when?cc+' ('+when+')':cc;}
+function ccMotiveList(){return ccList().map(ccOnsetLabel);}
 
 // ══════════ 통증 NRS (★V6: 주호소별) ══════════
 function painOf(cc){if(!S.painBy[cc])S.painBy[cc]={n:0,p:0,site:''};return S.painBy[cc];}
@@ -1479,7 +1483,7 @@ function fullNote(){
   const present=(S.present||'').trim();
   let t=`[환자] ${maskName(S.pname)||'-'} ${S.pid?'('+S.pid+') ':''}· ${S.sex||'-'} · ${ageWord()||'-'} · ${S.date} ${S.arr||''}\n`;
   t+=`[배경정보] ${bgLine()}\n`;
-  t+=`[내원동기] ${ccList().join(', ')||'-'}\n`;
+  t+=`[내원동기] ${ccMotiveList().join(', ')||'-'}\n`;
   t+=`[현재호소] ${present||(pmhx==='없음'?'특이 과거력 없는 환자':pmhx+' 과거력 있는 환자')}\n`;
   t+=`[V/S] ${vsText()}`;
   let spec=[];
@@ -1546,7 +1550,7 @@ function recordParts(){
   const present=(S.present||'').trim().replace(/[\r\n\t]+/g,' ');
   // 내원동기: 그룹별 한 줄씩. 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원으로 강조)
   const bgLines=bgGroups().map(line=>line.map(x=>(x.red?'🔴 ':'')+fmtBg(x)).join(' / ')).filter(Boolean);
-  const motive=[...bgLines,'내원이유 : '+(ccList().join(', ')||'-'),'현재호소 : '+present].join('\n');
+  const motive=[...bgLines,'내원이유 : '+(ccMotiveList().join(', ')||'-'),'현재호소 : '+present].join('\n');
   // 특이사항: 항목별 한 줄씩 (주의 항목은 🔴)
   const specLines=[];
   {const bn=bpArmNote();if(bn)specLines.push('🔴 '+bn);}
