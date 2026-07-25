@@ -1750,7 +1750,7 @@ const LS_KEY='NFH_TRIAGE_V6';
 // S에 없고 DOM에만 있는 값들(바이탈·알러지 상세·여행력 등)
 const DOM_KEYS=['vsSBP','vsDBP','vsHR','vsRR','vsBT','vsSpO2','drugAl','etcAl','curMed',
   'trvGo','trvDur','trvPlace','contrastSx','isoReason','dobInp','outNote'];
-let saveTimer=null,restoring=false;
+let saveTimer=null,restoring=false,restorePending=false;   // restorePending: 복구 바 뜬 동안 자동저장 정지(덮어쓰기 방지)
 function snapshot(){
   const st={};Object.keys(S).forEach(k=>{const v=S[k];st[k]=(v instanceof Set)?{__set:[...v]}:v;});
   const dom={};DOM_KEYS.forEach(id=>{const e=document.getElementById(id);if(e&&e.value)dom[id]=e.value;});
@@ -1809,8 +1809,8 @@ function histRestore(id){const e=histRead().find(x=>x.id===id);if(!e)return;if(!
 function histReCopy(id){const e=histRead().find(x=>x.id===id);if(!e)return;navigator.clipboard.writeText(e.excel||'').then(()=>alert('엑셀 복사 완료.'),()=>alert('복사 실패 — 다시 시도하세요.'));}
 function histDelete(id){if(!confirm('이 기록을 삭제할까요?'))return;histWrite(histRead().filter(x=>x.id!==id));renderHistory();}
 function histExportAll(){const a=histRead();if(!a.length){alert('내보낼 기록이 없습니다.');return;}navigator.clipboard.writeText(a.map(e=>e.excel).join('\n')).then(()=>alert(a.length+'건 엑셀 복사 완료.\n엑셀에 붙여넣으세요.'),()=>alert('복사 실패'));}
-function saveNow(){try{localStorage.setItem(LS_KEY,JSON.stringify(snapshot()));}catch(e){}}
-function saveSoon(){if(restoring)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,700);}
+function saveNow(){if(restoring||restorePending)return;try{localStorage.setItem(LS_KEY,JSON.stringify(snapshot()));}catch(e){}}
+function saveSoon(){if(restoring||restorePending)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,700);}
 function clearSaved(){try{localStorage.removeItem(LS_KEY);}catch(e){}}
 function readSaved(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
 function agoTxt(ts){const m=Math.round((Date.now()-ts)/60000);if(m<1)return '방금 전';if(m<60)return m+'분 전';return Math.floor(m/60)+'시간 '+(m%60)+'분 전';}
@@ -1819,7 +1819,8 @@ function savedHasContent(d){const x=d&&d.S;if(!x)return false;
 function showRestoreBar(){
   const bar=document.getElementById('restoreBar');if(!bar)return;
   const d=readSaved();
-  if(!savedHasContent(d)){bar.style.display='none';return;}
+  if(!savedHasContent(d)){bar.style.display='none';restorePending=false;return;}
+  restorePending=true;clearTimeout(saveTimer);          // 복구 대기: 자동저장 정지 + 예약된 덮어쓰기 취소
   const w=document.getElementById('restoreWhen');
   // ★V6: 복구 바는 신원확인 전 화면에 남는 유일한 지점 → 여기도 이름을 가린다
   if(w)w.textContent=agoTxt(d.ts)+' 저장 · '+(maskName(d.S.pname)||'이름 미입력')+(d.S.pid?' ('+d.S.pid+')':'')+' · '+(d.S.ccs&&d.S.ccs.length?d.S.ccs.join(', '):'주호소 미선택');
@@ -1838,6 +1839,7 @@ function applyStateToDom(){
 }
 function restoreSaved(){
   const d=readSaved();if(!savedHasContent(d))return;
+  restorePending=false;                 // 사용자가 '이어서 작성' 선택 → 대기 해제
   restoring=true;
   try{
     Object.keys(d.S).forEach(k=>{const v=d.S[k];S[k]=(v&&typeof v==='object'&&v.__set)?new Set(v.__set):v;});
@@ -1849,7 +1851,7 @@ function restoreSaved(){
   }finally{restoring=false;}
   saveNow();
 }
-function discardSaved(){clearSaved();const bar=document.getElementById('restoreBar');if(bar)bar.style.display='none';}
+function discardSaved(){clearSaved();restorePending=false;const bar=document.getElementById('restoreBar');if(bar)bar.style.display='none';}
 
 // init
 S.date=today();document.getElementById('dateDisp').textContent=S.date;
