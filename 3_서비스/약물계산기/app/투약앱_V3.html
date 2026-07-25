@@ -9,7 +9,7 @@
 body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
 
 /* ── 탭 ── */
-.main-tabs{display:flex;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:0;z-index:100}
+.main-tabs{display:flex;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:54px;z-index:100}
 .main-tab{flex:1;padding:14px 6px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:#8b949e;border-bottom:3px solid transparent;transition:.2s}
 .main-tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
 .panel{display:none;padding:16px;max-width:1100px;margin:0 auto}
@@ -173,6 +173,13 @@ body.light .extrav-box{background:#ffebe9;border-color:#ffb3b3;color:#a40e26}
   </div>
 </div>
 
+<div id="globalBar" style="position:sticky;top:0;z-index:200;background:#161b22;border-bottom:1px solid #30363d;padding:8px 12px">
+  <div style="position:relative;max-width:1100px;margin:0 auto">
+    <input type="text" id="globalSearch" placeholder="🔎 전체 약물 검색 (모든 탭)" autocomplete="off" oninput="globalSearch()" style="width:100%;background:#0d1117;border:1px solid #388bfd;color:#e6edf3;font-size:14px;padding:9px 12px;border-radius:8px;outline:none">
+    <div id="globalResults" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:340px;overflow-y:auto;background:#0d1117;border:1px solid #30363d;border-radius:8px;z-index:210;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
+  </div>
+</div>
+
 <div class="main-tabs">
   <div class="main-tab" onclick="showMain('info')">🔍 약물정보</div>
   <div class="main-tab" onclick="showMain('infuse')">💧 지속주입</div>
@@ -210,7 +217,8 @@ body.light .extrav-box{background:#ffebe9;border-color:#ffb3b3;color:#a40e26}
       <button class="age-btn" onclick="setIW(90)">90kg</button>
     </div>
   </div>
-  <input type="text" id="infuseSearch" placeholder="🔍 약물 검색 (예: Labetalol · Milrinone · 혈압)" oninput="updateInfuse()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:14px;outline:none">
+  <input type="text" id="infuseSearch" placeholder="🔍 약물 검색 (예: Labetalol · Milrinone · 혈압)" oninput="updateInfuse()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:10px;outline:none">
+  <div id="infuseCatPills" class="sub-tabs" style="margin-bottom:14px"></div>
   <div class="adult-layout">
     <div class="drug-sidebar" id="infuseSidebar"></div>
     <div id="infuseContent"></div>
@@ -522,6 +530,30 @@ function showSub(name){
   document.getElementById('sub-'+name).classList.add('active');
 }
 
+// ── 통합 검색 (모든 탭) ──
+function gEsc(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function globalSearch(){
+  const q=(document.getElementById('globalSearch').value||'').toLowerCase().trim();
+  const box=document.getElementById('globalResults');
+  if(!q){ box.style.display='none'; box.innerHTML=''; return; }
+  const res=[];
+  DRUG_DB.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.kr||'').toLowerCase().includes(q)||(d.full||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.kr||'',src:'약물정보',go:"gotoInfo('"+gEsc(d.name)+"')"}); });
+  HELPER_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.badge||'',src:'지속주입',go:"gotoInfuse('"+d.id+"')"}); });
+  ADULT_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.badge||'',src:'성인계산기',go:"gotoAdultCalc('"+d.id+"')"}); });
+  if(!res.length){ box.style.display='block'; box.innerHTML='<div style="padding:10px 14px;color:#8b949e;font-size:13px">결과 없음</div>'; return; }
+  const sc={'약물정보':'#58a6ff','지속주입':'#6ee7a0','성인계산기':'#ffa726'};
+  box.innerHTML=res.slice(0,40).map(r=>
+    `<div onclick="${r.go}" style="padding:9px 14px;border-bottom:1px solid #21262d;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span style="font-size:14px;font-weight:600;color:#e6edf3">${r.n} <span style="font-size:11px;color:#8b949e;font-weight:400">${r.s}</span></span>
+      <span style="font-size:10px;color:${sc[r.src]||'#8b949e'};white-space:nowrap">${r.src}</span>
+    </div>`).join('');
+  box.style.display='block';
+}
+function closeGlobal(){ const b=document.getElementById('globalResults'); if(b)b.style.display='none'; const g=document.getElementById('globalSearch'); if(g)g.value=''; }
+function gotoInfo(name){ showMain('info'); selCat='전체'; renderCatChips(); const s=document.getElementById('drugSearch'); if(s)s.value=name; renderDrugList(curList()); closeGlobal(); window.scrollTo({top:0,behavior:'smooth'}); }
+function gotoInfuse(id){ showMain('infuse'); infuseCat='전체'; activeInfuseDrug=id; updateInfuse(); closeGlobal(); window.scrollTo({top:0,behavior:'smooth'}); }
+function gotoAdultCalc(id){ showMain('adult'); activeAdultDrug=id; updateAdult(); closeGlobal(); window.scrollTo({top:0,behavior:'smooth'}); }
+
 // ════════════════════════════════════════════════
 // 탭 1: 약물정보
 // ════════════════════════════════════════════════
@@ -754,13 +786,18 @@ function updateAdult(){
 // 탭: 지속주입 계산 (약물도우미)
 // ════════════════════════════════════════════════
 let activeInfuseDrug = 'nicar';
+let infuseCat = '전체';
+const INFUSE_CATS = ['전체','💧 지속주입(계산)','⚡ 응급·삽관','🧪 전해질'];
 function setIW(w){ document.getElementById('infuseWeight').value=w; updateInfuse(); }
 function selectInfuse(id){ activeInfuseDrug=id; updateInfuse(); }
+function setInfuseCat(c){ infuseCat=c; const first=HELPER_DRUGS.find(d=>c==='전체'||(d.cat||'💧 지속주입(계산)')===c); if(first)activeInfuseDrug=first.id; updateInfuse(); }
 function updateInfuse(){
   const w=parseFloat(document.getElementById('infuseWeight').value)||70;
+  document.getElementById('infuseCatPills').innerHTML=INFUSE_CATS.map(ct=>`<div class="sub-tab ${ct===infuseCat?'active':''}" onclick="setInfuseCat('${ct}')">${ct}</div>`).join('');
   const se=document.getElementById('infuseSearch');
   const q=(se&&se.value?se.value:'').toLowerCase().trim();
-  const list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)):HELPER_DRUGS;
+  let list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)):HELPER_DRUGS.slice();
+  if(infuseCat!=='전체') list=list.filter(d=>(d.cat||'💧 지속주입(계산)')===infuseCat);
   const cats=[]; list.forEach(d=>{const ct=d.cat||'💧 지속주입(계산)';if(!cats.includes(ct))cats.push(ct);});
   const btn=d=>`<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
       <span class="${d.color}">${d.name}</span> <span style="font-size:10px;color:#8b949e">${d.vol||''}</span><br>
@@ -1081,6 +1118,7 @@ function updatePeds(){
 function goHome(){ showMain('info'); selDrug=null; selCat='전체'; var sb=document.getElementById('drugSearch'); if(sb) sb.value=''; renderCatChips(); renderDrugList(curList()); window.scrollTo({top:0,behavior:'smooth'}); }
 function toggleTheme(){ var l=document.body.classList.toggle('light'); var b=document.getElementById('themeBtn'); if(b)b.textContent=l?'☀️':'🌙'; try{localStorage.setItem('nfh_theme',l?'light':'dark');}catch(e){} }
 (function(){ try{ if(localStorage.getItem('nfh_theme')==='light'){ document.body.classList.add('light'); var b=document.getElementById('themeBtn'); if(b)b.textContent='☀️'; } }catch(e){} })();
+document.addEventListener('click',function(e){ var bar=document.getElementById('globalBar'); if(bar&&!bar.contains(e.target)){ var b=document.getElementById('globalResults'); if(b)b.style.display='none'; } });
 initDrugList();
 updateInfuse();
 updateAdult();
