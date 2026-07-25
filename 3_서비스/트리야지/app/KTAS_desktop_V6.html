@@ -292,6 +292,10 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
           <div style="margin-top:12px"><div class="fl">🏥 이전 병원 입원력 <span style="font-size:11px;color:var(--mute)">(최근 1년 이내 · 타병원·본원)</span></div>
             <div class="opts" id="admitHxOpts"></div>
             <div id="admitIsoWrap" style="display:none;margin-top:8px">
+              <div class="row2" style="margin-bottom:8px">
+                <div><div class="fl">최근 입원 날짜</div><input type="date" class="odate" id="admitDate" style="width:100%" onchange="S.admitDate=this.value;render()"></div>
+                <div><div class="fl">입원 병원</div><input class="oinp" id="admitHosp" style="width:100%;text-align:left;font-size:15px" placeholder="예) OO대학병원" oninput="S.admitHosp=this.value;render()"></div>
+              </div>
               <div style="font-size:11px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:7px 9px;margin-bottom:8px">💡 격리 확진 <b>이력</b>은 기간과 무관하게 '있음'으로 (특히 CRE 등 다제내성균)</div>
               <div class="fl">🫁 호흡기 격리 확진 <span style="font-size:11px;color:var(--mute)">(결핵·수두·코로나 등)</span></div>
               <div class="opts" id="admitRespOpts"></div>
@@ -512,7 +516,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <script>
 // ══════════ STATE ══════════
-const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',admitHx:'',admitResp:'',admitContact:'',admitWhen:'',smoking:'',travel:'',bpArm:'',
+const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',admitHx:'',admitDate:'',admitHosp:'',admitResp:'',admitContact:'',admitWhen:'',smoking:'',travel:'',bpArm:'',
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),
   gi:{},abcd:{A:'',B:'',C:'',D:''}, ccs:[], ccOther:'', forceSevere:false, ans:{},
   onsetBy:{}, painBy:{}, openCC:{},        // ★V6: 발생시점·통증(NRS)을 주호소별로 분리
@@ -800,7 +804,7 @@ function renderAdmitHx(){
   mkYN('admitRespOpts','admitResp');mkYN('admitContactOpts','admitContact');
   const ww=document.getElementById('admitWhenWrap');if(ww)ww.style.display=(S.admitHx==='있음'&&(S.admitResp==='있음'||S.admitContact==='있음'))?'':'none';
 }
-function pickAdmitHx(v){S.admitHx=(S.admitHx===v?'':v);if(S.admitHx!=='있음'){S.admitResp='';S.admitContact='';S.admitWhen='';const w=document.getElementById('admitWhen');if(w)w.value='';}renderAdmitHx();render();}
+function pickAdmitHx(v){S.admitHx=(S.admitHx===v?'':v);if(S.admitHx!=='있음'){S.admitResp='';S.admitContact='';S.admitWhen='';S.admitDate='';S.admitHosp='';['admitWhen','admitDate','admitHosp'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}renderAdmitHx();render();}
 function pickAdmitIso(key,v){S[key]=(S[key]===v?'':v);renderAdmitHx();render();}
 function renderInfoChips(){
   const mk=(id,arr,key,danger)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=arr.map(v=>{
@@ -1425,14 +1429,16 @@ function bgGroups(){
   // ③ 격리·흡연·여행력
   const l3=[];
   {const isoReal=[...S.isoType].filter(x=>x!=='없음');
-   if(isoReal.length){const short=isoReal.map(x=>x.split('(')[0]);l3.push({label:'격리',value:short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
-   else if(S.isoType.has('없음'))l3.push({label:'격리',value:'없음',red:false});}
+   if(isoReal.length){const short=isoReal.map(x=>x.split('(')[0]);l3.push({label:'격리(호흡·접촉)',value:short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
+   else if(S.isoType.has('없음'))l3.push({label:'격리(호흡·접촉)',value:'없음',red:false});}
   if(S.admitHx==='있음'){const conf=[];if(S.admitResp==='있음')conf.push('호흡기');if(S.admitContact==='있음')conf.push('접촉');
     let v='이전 입원력 있음';
+    const meta=[(S.admitHosp||'').trim(),(S.admitDate||'').trim()].filter(Boolean).join(' ');
+    if(meta)v+=' · '+meta;
     if(conf.length)v+=' · '+conf.join('·')+' 격리 확진';
-    else if(S.admitResp==='없음'||S.admitContact==='없음')v+=' · 격리 확진 없음';
+    else if(S.admitResp==='없음'||S.admitContact==='없음')v+=' · 격리 확진 이력 없음';
     if((S.admitWhen||'').trim())v+=' ('+S.admitWhen.trim()+')';
-    l3.push({label:'입원력',value:v,red:conf.length>0});}
+    l3.push({label:'입원력',value:v,red:true});}
   else if(S.admitHx==='없음')l3.push({label:'입원력',value:'없음',red:false});
   if(S.smoking)l3.push({label:'흡연',value:S.smoking,red:false});
   if(S.travel==='있음')l3.push({label:'여행력',value:travelText(),red:true});
@@ -1655,7 +1661,7 @@ function applyStateToDom(){
   const set=(id,val)=>{const e=document.getElementById(id);if(e)e.value=(val===null||val===undefined)?'':val;};
   set('pidInp',S.pid);set('nameInp',S.pname);set('ageInp',S.age);set('lmpInp',S.lmp);
   set('arrInp',S.arr);set('regInp',S.reg);set('presentInp',S.present);
-  set('noteInp',S.note);set('o2L',S.o2L);set('ccOther',S.ccOther);set('admitWhen',S.admitWhen);
+  set('noteInp',S.note);set('o2L',S.o2L);set('ccOther',S.ccOther);set('admitWhen',S.admitWhen);set('admitDate',S.admitDate);set('admitHosp',S.admitHosp);
   const dd=document.getElementById('dateDisp');if(dd)dd.textContent=S.date;
   const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age||'';
   renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();
