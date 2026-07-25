@@ -289,9 +289,10 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
           <div class="opts" id="isoTypeOpts"></div>
           <div id="isoReasonWrap" style="display:none;margin-top:8px"><div class="fl">이유 / 균주 / 진단</div>
             <input class="oinp" id="isoReason" style="width:100%;text-align:left;font-size:15px" placeholder="예) 폐결핵(TB) / MRSA 객담 / AML 항암 2주 이내" oninput="S.isoReason=this.value;render()"></div>
-          <div style="margin-top:12px"><div class="fl">🏥 이전 병원 입원력 <span style="font-size:11px;color:var(--mute)">(최근 타병원·본원 입원 경험)</span></div>
+          <div style="margin-top:12px"><div class="fl">🏥 이전 병원 입원력 <span style="font-size:11px;color:var(--mute)">(최근 1년 이내 · 타병원·본원)</span></div>
             <div class="opts" id="admitHxOpts"></div>
             <div id="admitIsoWrap" style="display:none;margin-top:8px">
+              <div style="font-size:11px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:7px 9px;margin-bottom:8px">💡 격리 확진 <b>이력</b>은 기간과 무관하게 '있음'으로 (특히 CRE 등 다제내성균)</div>
               <div class="fl">🫁 호흡기 격리 확진 <span style="font-size:11px;color:var(--mute)">(결핵·수두·코로나 등)</span></div>
               <div class="opts" id="admitRespOpts"></div>
               <div class="fl" style="margin-top:8px">🧤 접촉 격리 확진 <span style="font-size:11px;color:var(--mute)">(MRSA·CRE·VRE 등)</span></div>
