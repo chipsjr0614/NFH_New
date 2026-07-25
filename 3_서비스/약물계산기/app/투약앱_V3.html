@@ -457,6 +457,32 @@ const HELPER_DRUGS = [
       {phase:'이후 18시간', detail:'0.5 mg/min', ml:'20 ml/hr', amt:'540mg'},
     ],
     note:'총 900mg / 24시간 (백 1개=600ml가 정확히 24h). 서맥·QT연장 주의 · only D5W' },
+  // ── 응급·삽관 (볼루스/푸시 · 참고) ──
+  { id:'adeno', name:'Adenosine', vol:'(6mg/2ml)', badge:'PSVT', color:'red', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs 6mg → 12mg → 12mg (원액)', mix:'0.1~0.2mg/cc 희석권고 · 투약 즉시 N/S 20cc↑ 빠르게 flush', caution:'심장 가까운 route · EKG monitoring · phlebitis(말초 12시간마다 route change)' } },
+  { id:'vera', name:'Verapamil', vol:'(5mg/2ml)', badge:'SVT', color:'blue', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs 1차 2.5~5mg over 2분 → 무반응 시 15~30분 후 2차 5~10mg (max 20mg)', mix:'—', caution:'서맥·저혈압' } },
+  { id:'vaso2', name:'Vasopressin (bolus)', vol:'(20unit/1ml)', badge:'CPR·승압', color:'orange', cat:'⚡ 응급·삽관',
+    ref:{ dose:'CPR: epinephrine 대신 40unit IV (1·2차 epi 대체)', mix:'냉장보관', caution:'CIV(0.01~0.04u/min)는 성인계산기 탭 참조' } },
+  { id:'mida', name:'Midazolam', vol:'(3mg/3ml·5mg/5ml)', badge:'진정[마약류]', color:'purple', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs 1mg (장기진정 0.03~0.2mg/kg IV bolus/CIV) · 원액', mix:'원액', caution:'삽관 시 신경근차단제 투여 전 · 호흡억제(역전제 Flumazenil)' } },
+  { id:'etom', name:'Etomidate', vol:'(20mg/10ml)', badge:'유도(삽관)', color:'blue', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs 1~10mg (0.1~0.2mg/kg) · 원액', mix:'원액', caution:'삽관 시 신경근차단제 투여 전 · 단회도 부신억제' } },
+  { id:'rocu', name:'Rocuronium', vol:'(50mg/5ml)', badge:'근이완(삽관)', color:'red', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs 10mg (0.6~1mg/kg) · 원액', mix:'원액 · 냉장보관', caution:'신경근차단제 — 진정제 투여 후 · 기도확보/인공호흡 준비 필수' } },
+  { id:'nalo', name:'Naloxone', vol:'(0.4mg/1ml)', badge:'역전(아편)', color:'orange', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs·IM·SC 0.4~2mg, 2~3분 간격 반복 · CIV 0.2~0.6mg/hr', mix:'IVs: 1@+N/S 9cc(=0.4mg/10cc) over 30초 slow · E-tube: 1@+N/S 1~2ml→N/S 5cc flush · CIV: 10@+N/S/D5W 1L', caution:'아편유사제 역전' } },
+  { id:'flum', name:'Flumazenil', vol:'(0.3mg/3ml)', badge:'역전(벤조)', color:'orange', cat:'⚡ 응급·삽관',
+    ref:{ dose:'IVs 0.2~0.3mg (15초 이내) → 60초 내 의식회복 안되면 0.1mg push (반복, max 1mg)', mix:'—', caution:'벤조디아제핀 역전' } },
+  // ── 전해질 교정 (참고) ──
+  { id:'cagl', name:'Calcium gluconate', vol:'(2g/20ml)', badge:'Ca·hyperK', color:'blue', cat:'🧪 전해질',
+    ref:{ dose:'IVs 0.4~2g (혈압저하 시) · MIVs 1g + N/S 50~100cc · hyperK 교정: D5W에 희석', mix:'N/S 또는 D5W', caution:'Bivon(탄산수소나트륨) 병용금기 · IV bolus 주의 · IM 불가' } },
+  { id:'kcl', name:'Potassium Chloride', vol:'(40mEq/20ml)', badge:'K 교정', color:'purple', cat:'🧪 전해질',
+    ref:{ dose:'K 보정식 = (기준수치 − 환자 lab) × 체중 / 8 cc · MIVs: KCl 1cc×25 = N/S(cc) 되도록 희석 (NAK 권장)', mix:'말초 희석농도 80mEq/L · 최대 25mEq/hr', caution:'IV bolus 금지 · 반드시 희석' } },
+  { id:'mag', name:'10% Magnesium', vol:'(2g/20ml)', badge:'Mg 교정', color:'blue', cat:'🧪 전해질',
+    ref:{ dose:'1~2g (max 2~4g/day) · MIVs 1g + N/S 50~100cc (10% 이하 희석) over 30분', mix:'N/S 또는 D5W', caution:'IV bolus 금지 · 서맥 주의' } },
+  { id:'phos', name:'Phosten', vol:'(P 20mmol/20ml)', badge:'인(P) 교정', color:'purple', cat:'🧪 전해질',
+    ref:{ dose:'phosphate >2mg/dL 또는 무증상까지 교정 · MIVs 1@ + N/S 250cc(말초) over 1시간', mix:'—', caution:'IV bolus 금지 · 1@에 K 20mEq 함유(투여속도 <20mmol/hr)' } },
 ];
 
 // ── PALS 기도 장비 ──
@@ -735,15 +761,19 @@ function updateInfuse(){
   const se=document.getElementById('infuseSearch');
   const q=(se&&se.value?se.value:'').toLowerCase().trim();
   const list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)):HELPER_DRUGS;
-  document.getElementById('infuseSidebar').innerHTML=list.map(d=>
-    `<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
+  const cats=[]; list.forEach(d=>{const ct=d.cat||'💧 지속주입(계산)';if(!cats.includes(ct))cats.push(ct);});
+  const btn=d=>`<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
       <span class="${d.color}">${d.name}</span> <span style="font-size:10px;color:#8b949e">${d.vol||''}</span><br>
       <span style="font-size:10px;color:#8b949e">${d.badge}</span>
-    </button>`
+    </button>`;
+  document.getElementById('infuseSidebar').innerHTML=cats.map(ct=>
+    `<div style="width:100%;font-size:10px;color:#8b949e;font-weight:700;margin:10px 2px 2px">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
   ).join('')||'<div style="color:#8b949e;font-size:12px;padding:8px">검색 결과 없음</div>';
   const content=document.getElementById('infuseContent');
   const drug=HELPER_DRUGS.find(d=>d.id===activeInfuseDrug);
   if(!drug){content.innerHTML='';return;}
+  const colors={blue:'#58a6ff',purple:'#bc8cff',red:'#f85149',orange:'#ffa726'};
+  const c=colors[drug.color]||'#58a6ff';
   if(drug.protocol){   // Amiodarone 24시간 유지주입 등 고정 프로토콜
     const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:#58a6ff">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
     content.innerHTML=`
@@ -759,6 +789,24 @@ function updateInfuse(){
       </div>`;
     return;
   }
+  if(drug.ref){   // 볼루스/교정 등 참고 카드 (계산 없음)
+    const r=drug.ref;
+    content.innerHTML=`
+      <div class="card">
+        <div class="card-head" style="background:var(--bg)">
+          <div><h3 style="color:${c}">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3></div>
+          <span class="badge" style="background:#21262d;color:${c}">${drug.badge}</span>
+        </div>
+        <div class="card-body">
+          <table>
+            <tr><th style="width:88px;vertical-align:top">투여용량</th><td class="val" style="font-weight:600;line-height:1.6">${r.dose}</td></tr>
+            ${(r.mix&&r.mix!=='—')?`<tr><th style="vertical-align:top">희석/믹스</th><td style="line-height:1.6">${r.mix}</td></tr>`:''}
+            <tr><th style="vertical-align:top">주의</th><td class="dim" style="line-height:1.6">${r.caution}</td></tr>
+          </table>
+        </div>
+      </div>`;
+    return;
+  }
   const route=drug.routes[0];
   const rows=drug.doses.map(dose=>{
     const rate=calcRate(dose,route.conc,drug.weightBased,w,drug.perHour);
@@ -768,8 +816,6 @@ function updateInfuse(){
       <td class="val" style="font-size:${hl?'18px':'14px'};font-weight:700;color:var(--c)">${rate.toFixed(1)} ml/hr</td>
     </tr>`;
   }).join('');
-  const colors={blue:'#58a6ff',purple:'#bc8cff',red:'#f85149',orange:'#ffa726'};
-  const c=colors[drug.color]||'#58a6ff';
   content.innerHTML=`
     <div class="card">
       <div class="card-head" style="background:var(--bg)">
