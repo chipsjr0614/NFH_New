@@ -292,8 +292,10 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
           <div style="margin-top:12px"><div class="fl">🏥 이전 병원 입원력 <span style="font-size:11px;color:var(--mute)">(최근 타병원·본원 입원 경험)</span></div>
             <div class="opts" id="admitHxOpts"></div>
             <div id="admitIsoWrap" style="display:none;margin-top:8px">
-              <div class="fl">입원 중 격리 확진 <span style="font-size:11px;color:var(--mute)">(호흡기·접촉 · 복수 가능)</span></div>
-              <div class="opts" id="admitIsoOpts"></div>
+              <div class="fl">🫁 호흡기 격리 확진 <span style="font-size:11px;color:var(--mute)">(결핵·수두·코로나 등)</span></div>
+              <div class="opts" id="admitRespOpts"></div>
+              <div class="fl" style="margin-top:8px">🧤 접촉 격리 확진 <span style="font-size:11px;color:var(--mute)">(MRSA·CRE·VRE 등)</span></div>
+              <div class="opts" id="admitContactOpts"></div>
               <div id="admitWhenWrap" style="display:none;margin-top:8px"><div class="fl">확진 시기 / 기간 <span style="font-size:11px;color:var(--mute)">(균주·진단 함께)</span></div>
                 <input class="oinp" id="admitWhen" style="width:100%;text-align:left;font-size:15px" placeholder="예) 2026-05 MRSA 객담 확진 / 3주 전 결핵 확진" oninput="S.admitWhen=this.value;render()"></div>
             </div>
@@ -359,6 +361,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     <div class="screen" id="s3">
       <div class="sec">V/S 측정</div>
       <div class="sub" id="s3sub">활력징후 입력 (주호소 직후 일찍 측정)</div>
+      <div id="pedVSRef" style="display:none"></div>
       <div class="card">
         <div class="lbl">활력징후</div>
         <div class="q" style="margin-bottom:12px"><div class="qt">🩺 혈압 측정 금지 팔 <span style="font-size:11px;color:var(--mute);font-weight:400">(유방절제·투석혈관·정맥주사 등)</span></div><div class="opts" id="bpArmOpts"></div></div>
@@ -508,7 +511,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <script>
 // ══════════ STATE ══════════
-const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',admitHx:'',admitIso:new Set(),admitWhen:'',smoking:'',travel:'',bpArm:'',
+const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',admitHx:'',admitResp:'',admitContact:'',admitWhen:'',smoking:'',travel:'',bpArm:'',
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),
   gi:{},abcd:{A:'',B:'',C:'',D:''}, ccs:[], ccOther:'', forceSevere:false, ans:{},
   onsetBy:{}, painBy:{}, openCC:{},        // ★V6: 발생시점·통증(NRS)을 주호소별로 분리
@@ -782,17 +785,17 @@ function renderIsoType(){
   const w=document.getElementById('isoReasonWrap');if(w)w.style.display=S.isoType.size?'':'none';
 }
 function toggleIsoType(v){S.isoType.has(v)?S.isoType.delete(v):S.isoType.add(v);renderIsoType();render();}
-// 이전 병원 입원력 + 입원 중 격리 확진
-const ADMIT_ISO=['호흡기 격리','접촉 격리'];
+// 이전 병원 입원력 + 입원 중 격리 확진(호흡기·접촉 각각 있음/없음)
 function renderAdmitHx(){
   const el=document.getElementById('admitHxOpts');if(!el)return;
   el.innerHTML=['없음','있음'].map(v=>{const sel=S.admitHx===v;const cls=sel?(v==='있음'?'sel-r':'sel'):'';return `<div class="opt ${cls}" onclick="pickAdmitHx('${v}')">${v}${v==='있음'?' ⚠️':''}</div>`;}).join('');
   const w=document.getElementById('admitIsoWrap');if(w)w.style.display=(S.admitHx==='있음')?'':'none';
-  const io=document.getElementById('admitIsoOpts');if(io)io.innerHTML=ADMIT_ISO.map(v=>`<div class="opt ${S.admitIso.has(v)?'sel-r':''}" onclick="toggleAdmitIso('${v}')">${v}</div>`).join('');
-  const ww=document.getElementById('admitWhenWrap');if(ww)ww.style.display=(S.admitHx==='있음'&&S.admitIso.size)?'':'none';
+  const mkYN=(id,key)=>{const e=document.getElementById(id);if(!e)return;e.innerHTML=['있음','없음'].map(v=>{const sel=S[key]===v;const cls=sel?(v==='있음'?'sel-r':'sel'):'';return `<div class="opt ${cls}" onclick="pickAdmitIso('${key}','${v}')">${v}</div>`;}).join('');};
+  mkYN('admitRespOpts','admitResp');mkYN('admitContactOpts','admitContact');
+  const ww=document.getElementById('admitWhenWrap');if(ww)ww.style.display=(S.admitHx==='있음'&&(S.admitResp==='있음'||S.admitContact==='있음'))?'':'none';
 }
-function pickAdmitHx(v){S.admitHx=(S.admitHx===v?'':v);if(S.admitHx!=='있음'){S.admitIso.clear();S.admitWhen='';const w=document.getElementById('admitWhen');if(w)w.value='';}renderAdmitHx();render();}
-function toggleAdmitIso(v){S.admitIso.has(v)?S.admitIso.delete(v):S.admitIso.add(v);renderAdmitHx();render();}
+function pickAdmitHx(v){S.admitHx=(S.admitHx===v?'':v);if(S.admitHx!=='있음'){S.admitResp='';S.admitContact='';S.admitWhen='';const w=document.getElementById('admitWhen');if(w)w.value='';}renderAdmitHx();render();}
+function pickAdmitIso(key,v){S[key]=(S[key]===v?'':v);renderAdmitHx();render();}
 function renderInfoChips(){
   const mk=(id,arr,key,danger)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=arr.map(v=>{
     const sel=S[key]===v;const cls=sel?((danger&&danger.includes(v))?'sel-r':'sel'):'';
@@ -875,7 +878,37 @@ function patRender(){
 }
 function pickPat(key,id,v){S[key]=(S[key]===v?'':v);patRender();render();}
 function togglePedRisk(r){S.pedRisk.has(r)?S.pedRisk.delete(r):S.pedRisk.add(r);patRender();render();}
-function renderPeds(){const c=document.getElementById('pedCard');if(!c)return;if(!isPed()){c.style.display='none';return;}c.style.display='';patRender();}
+function renderPeds(){const c=document.getElementById('pedCard');if(!c)return;renderPedVS();if(!isPed()){c.style.display='none';return;}c.style.display='';patRender();}
+// 소아 연령별 정상 V/S — 재설계 §7.4(칩스 채택 260628, 출처 PALS/APLS). 표시만·자동판정/승격 없음.
+const PED_VS=[
+  {band:'신생아',sub:'0~1개월',hr:'100~205',rr:'30~60',sbp:'60 이상'},
+  {band:'영아',sub:'1~12개월',hr:'100~180',rr:'30~53',sbp:'70 이상'},
+  {band:'유아',sub:'1~2세',hr:'98~140',rr:'22~37',sbp:'72 이상'},
+  {band:'학령전',sub:'3~5세',hr:'80~120',rr:'20~28',sbp:'74 이상'},
+  {band:'학령기',sub:'6~11세',hr:'75~118',rr:'18~25',sbp:'80 이상'},
+  {band:'청소년',sub:'12~15세',hr:'60~100',rr:'12~20',sbp:'90 이상'}];
+// 나이 문자열에서 첫 정수 추출("생후 3일"·"3일"·"18개월"·"7세" 모두)
+function ageDigits(){const m=(S.age||'').match(/\d+/);return m?parseInt(m[0],10):NaN;}
+// 나이 문자열 → 개월수(1세 미만 해상도 필요 시). 개월/주/일 표기가 아니면 null(연 단위로 처리)
+function pedMonths(){const a=(S.age||'').trim();if(!a)return null;const n=ageDigits();if(isNaN(n))return null;
+  if(/개월/.test(a))return n;if(/주/.test(a))return n*7/30;if(/일/.test(a))return n/30;return null;}
+function pedBand(){if(!isPed())return null;
+  const mo=pedMonths();if(mo!==null)return mo<=1?PED_VS[0]:(mo<=12?PED_VS[1]:PED_VS[2]);
+  const n=ageDigits();if(isNaN(n))return null;
+  if(n===0)return PED_VS[1];      // '0'(단위 없음) → 영아로 표시
+  if(n<=2)return PED_VS[2];if(n<=5)return PED_VS[3];if(n<=11)return PED_VS[4];if(n<15)return PED_VS[5];return null;}
+function renderPedVS(){const el=document.getElementById('pedVSRef');if(!el)return;const b=pedBand();
+  if(!b){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='';
+  el.innerHTML='<div style="background:var(--k3bg);border:1px solid var(--k3bd);border-radius:var(--rs);padding:11px 13px;margin-bottom:12px">'
+    +'<div style="font-size:14px;font-weight:800;color:#eab308;margin-bottom:7px">👶 '+b.band+'('+b.sub+') 정상 V/S <span style="font-weight:400;color:var(--mute);font-size:12px">· 참고용(자동판정 안 함)</span></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:14px;text-align:center">'
+    +'<div><div style="font-size:11px;color:var(--mute)">HR (회/분)</div><b>'+b.hr+'</b></div>'
+    +'<div><div style="font-size:11px;color:var(--mute)">RR (회/분)</div><b>'+b.rr+'</b></div>'
+    +'<div><div style="font-size:11px;color:var(--mute)">SBP (mmHg)</div><b>'+b.sbp+'</b></div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--mute);margin-top:7px">출처 PALS/APLS · 비정상 판단·KTAS 보정은 RN 몫(자동화 미적용)</div>'
+    +'</div>';}
 function pedSummary(){if(!isPed())return '';let p=[];if(S.pedH)p.push('키 '+S.pedH+'cm');if(S.pedW)p.push('체중 '+S.pedW+'kg');if(S.pedT)p.push('체온 '+S.pedT+'℃');const pat=[];if(S.patApp==='이상')pat.push('외관');if(S.patWob==='이상')pat.push('호흡노력');if(S.patCir==='이상')pat.push('순환');if(pat.length)p.push('PAT이상('+pat.join('·')+')');if(S.pedRisk.size)p.push('소아위험 '+[...S.pedRisk].join('·'));return p.length?'소아 '+p.join(' / '):'';}
 // ★V6: "외상 사정" 카드 삭제 — HTML 엘리먼트가 없어 V5에서 한 번도 열리지 않던 유령 기능.
 //      외상 문진은 주호소 "외상"·"소아 외상" 모듈이 담당한다.
@@ -1386,7 +1419,12 @@ function bgGroups(){
   // ③ 격리·흡연·여행력
   const l3=[];
   if(S.isoType.size){const short=[...S.isoType].map(x=>x.split('(')[0]);l3.push({label:'격리',value:short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
-  if(S.admitHx==='있음'){let v='이전 입원력 있음';if(S.admitIso.size)v+=' · '+[...S.admitIso].join('·')+' 확진';if((S.admitWhen||'').trim())v+=' ('+S.admitWhen.trim()+')';l3.push({label:'입원력',value:v,red:S.admitIso.size>0});}
+  if(S.admitHx==='있음'){const conf=[];if(S.admitResp==='있음')conf.push('호흡기');if(S.admitContact==='있음')conf.push('접촉');
+    let v='이전 입원력 있음';
+    if(conf.length)v+=' · '+conf.join('·')+' 격리 확진';
+    else if(S.admitResp==='없음'||S.admitContact==='없음')v+=' · 격리 확진 없음';
+    if((S.admitWhen||'').trim())v+=' ('+S.admitWhen.trim()+')';
+    l3.push({label:'입원력',value:v,red:conf.length>0});}
   else if(S.admitHx==='없음')l3.push({label:'입원력',value:'없음',red:false});
   if(S.smoking)l3.push({label:'흡연',value:S.smoking,red:false});
   if(S.travel==='있음')l3.push({label:'여행력',value:travelText(),red:true});
