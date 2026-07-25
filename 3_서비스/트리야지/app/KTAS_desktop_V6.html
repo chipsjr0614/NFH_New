@@ -1630,9 +1630,10 @@ function erDateShort(){const p=(S.date||'').split('-');return (p.length===3)?((+
 function copyReminder2(){
   const p=recordParts();
   const er='[ER '+erDateShort()+(S.reg?' '+S.reg:'')+']';   // ER + 접수일 + 접수시간
-  const patLine='- '+(maskName(S.pname)||'-')+' ('+(S.sex||'-')+'/'+(S.age||'-')+', '+(S.pid||'-')+')';
-  // 내원동기 = 과거력(#·s/p)·격리·입원력·알러지 등 배경 + 내원이유(주호소+onset) + 현재호소 전체
-  const head=[er,patLine,'initial V/S : '+p.vs,'내원동기 :',p.motive,'특이사항 :',p.spec];
+  const patLine='# '+(maskName(S.pname)||'-')+' ('+(S.sex||'-')+'/'+(S.age||'-')+', '+(S.pid||'-')+')';
+  const indent=s=>String(s==null?'':s).split('\n').map(l=>'  '+l).join('\n');   // - 항목 2칸 들여쓰기
+  // 헤더 줄(이름·V/S·내원동기·특이사항)은 '#', 내용(- 항목)은 들여쓰기. 내원동기 = 배경+내원이유+현재호소 전체
+  const head=[er,patLine,'# initial V/S : '+p.vs,'# 내원동기 :',indent(p.motive),'# 특이사항 :',indent(p.spec)];
   const SEP='-----------------------------------------------';
   // 평문 폴백
   const secPlain=REMIND_SECTIONS.map(s=>s.h+s.ex+'\n-\n-').join('\n\n');
