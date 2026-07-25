@@ -12,8 +12,11 @@
     ],
     "additionalDirectories": [
       "/tmp"
-    ]
+    ],
+    "defaultMode": "bypassPermissions"
   },
+  "skipDangerousModePermissionPrompt": true,
+  "skipAutoPermissionPrompt": true,
   "hooks": {
     "Stop": [
       {
