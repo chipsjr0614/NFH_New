@@ -1553,7 +1553,7 @@ function recordParts(){
   const present=(S.present||'').trim().replace(/[\r\n\t]+/g,' ');
   // 내원동기: 그룹별 한 줄씩(항목은 ' / '로 구분), 줄 맨 앞에 '- '. 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원)
   const bgLines=bgGroups().map(line=>line.map(x=>(x.red?'🔴 ':'')+fmtBg(x)).join(' / ')).filter(Boolean);
-  const motive=[...bgLines,'내원이유 : '+(ccMotiveList().join(', ')||'-'),'현재호소 : '+present].map(l=>'- '+l).join('\n');
+  const motive=[...bgLines,'내원이유 : '+(ccMotiveList().join(', ')||'-'),'현재호소 : '+present].map(l=>'• '+l).join('\n');
   // 특이사항: 항목별 한 줄씩 (주의 항목은 🔴)
   const specLines=[];
   {const bn=bpArmNote();if(bn)specLines.push('🔴 '+bn);}
@@ -1561,7 +1561,7 @@ function recordParts(){
   isoMessages().forEach(m=>specLines.push('🔴 '+m));
   if(S.abuse.size)specLines.push('🔴 학대 의심: '+[...S.abuse].join(', '));
   if((S.note||'').trim()){const nt=S.note.trim().replace(/[\r\n\t]+/g,' ');specLines.push((nt.startsWith('$')?'🔴 ':'')+nt);}
-  const spec=specLines.length?specLines.map(l=>'- '+l).join('\n'):'없음';
+  const spec=specLines.length?specLines.map(l=>'• '+l).join('\n'):'없음';
   const sexAge=(S.sex||'-')+' / '+(S.age||'-');
   return {motive,spec,sexAge,vs:vsText()};
 }
