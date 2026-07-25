@@ -1551,10 +1551,9 @@ function tsvCell(s){s=String(s==null?'':s);return /[\t\n\r"]/.test(s)?'"'+s.repl
 // 엑셀·네이버웍스 복사가 공유하는 값 조립(내원동기·특이사항·성별나이·V/S)
 function recordParts(){
   const present=(S.present||'').trim().replace(/[\r\n\t]+/g,' ');
-  // 내원동기: 항목마다 한 줄, 앞에 '- ' 붙여 가독성↑. 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원)
-  const bgItems=[];
-  bgGroups().forEach(g=>g.forEach(x=>{const s=fmtBg(x);if(s)bgItems.push('- '+(x.red?'🔴 ':'')+s);}));
-  const motive=[...bgItems,'- 내원이유 : '+(ccMotiveList().join(', ')||'-'),'- 현재호소 : '+present].join('\n');
+  // 내원동기: 그룹별 한 줄씩(항목은 ' / '로 구분). 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원)
+  const bgLines=bgGroups().map(line=>line.map(x=>(x.red?'🔴 ':'')+fmtBg(x)).join(' / ')).filter(Boolean);
+  const motive=[...bgLines,'내원이유 : '+(ccMotiveList().join(', ')||'-'),'현재호소 : '+present].join('\n');
   // 특이사항: 항목별 한 줄씩 (주의 항목은 🔴)
   const specLines=[];
   {const bn=bpArmNote();if(bn)specLines.push('🔴 '+bn);}
