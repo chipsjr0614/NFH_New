@@ -182,6 +182,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .alert-card li{margin-left:18px;margin-top:3px;}
 .mbtn{width:100%;padding:13px;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;margin-top:8px;}
 .mbtn.blue{background:#1d4ed8;} .mbtn.gray{background:var(--surf2);color:var(--mute);border:1px solid var(--brd);}
+.mbtn.green{background:#03c75a;} .mbtn.green:disabled{background:#8fd9ad;} .mbtn.blue:disabled{background:#93a7d8;}
 .note{font-size:11px;color:var(--mute);text-align:center;padding:8px 16px;}
 </style>
 </head>
@@ -509,6 +510,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="fmchk" id="fmC2" onclick="fmToggle('fmC2')"><span class="fmbox"></span><div><b>📋 환자 교육</b><small>낙상 방지(어지러우면 말씀해주세요) · 금식(검사 확인 전까지 물 포함) · 도난 주의(귀중품 관리)</small></div></div>
       <div class="fmwarn" id="fmWarn">이름·등록번호 입력 + 신원 확인·환자 교육을 완료하세요.</div>
       <button class="mbtn blue" id="fmGo" disabled onclick="copyExcel()">✅ 확인 완료 → 엑셀 복사</button>
+      <button class="mbtn green" id="fmGoNW" disabled onclick="copyNaverWorks()">📋 확인 완료 → 네이버웍스용 복사</button>
       <button class="mbtn gray" onclick="closeFinal()">닫기</button>
     </div>
   </div>
@@ -1530,6 +1532,7 @@ function fmValidate(){
   const ck=document.getElementById('fmC1').classList.contains('on')&&document.getElementById('fmC2').classList.contains('on');
   const ok=nm&&pid&&ck;
   document.getElementById('fmGo').disabled=!ok;
+  const nw=document.getElementById('fmGoNW');if(nw)nw.disabled=!ok;
   document.getElementById('fmWarn').style.display=ok?'none':'block';
 }
 function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
@@ -1538,12 +1541,12 @@ function travelText(){if(S.travel!=='있음')return (S.travel||'없음');const g
 // V3 칸 순서 유지 + 이름 뒤 [성별/나이] 한 칸 추가. 위험항목(임신·조영제·여행력·1구역·학대)은 빨강(HTML 복사).
 // TSV 셀: 줄바꿈·탭·따옴표 있으면 큰따옴표로 감싸 한 칸 유지(엑셀·구글시트·Numbers 공통 → 셀 안 여러 줄)
 function tsvCell(s){s=String(s==null?'':s);return /[\t\n\r"]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
-function copyExcel(){
+// 엑셀·네이버웍스 복사가 공유하는 값 조립(내원동기·특이사항·성별나이·V/S)
+function recordParts(){
   const present=(S.present||'').trim().replace(/[\r\n\t]+/g,' ');
   // 내원동기: 그룹별 한 줄씩. 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원으로 강조)
   const bgLines=bgGroups().map(line=>line.map(x=>(x.red?'🔴 ':'')+fmtBg(x)).join(' / ')).filter(Boolean);
-  const motiveLines=[...bgLines,'내원이유 : '+(ccList().join(', ')||'-'),'현재호소 : '+present];
-  const motive=motiveLines.join('\n');
+  const motive=[...bgLines,'내원이유 : '+(ccList().join(', ')||'-'),'현재호소 : '+present].join('\n');
   // 특이사항: 항목별 한 줄씩 (주의 항목은 🔴)
   const specLines=[];
   {const bn=bpArmNote();if(bn)specLines.push('🔴 '+bn);}
@@ -1553,12 +1556,54 @@ function copyExcel(){
   if((S.note||'').trim()){const nt=S.note.trim().replace(/[\r\n\t]+/g,' ');specLines.push((nt.startsWith('$')?'🔴 ':'')+nt);}
   const spec=specLines.length?specLines.join('\n'):'없음';
   const sexAge=(S.sex||'-')+' / '+(S.age||'-');
+  return {motive,spec,sexAge,vs:vsText()};
+}
+function copyExcel(){
+  const p=recordParts();
   // 칸 순서: 날짜·내원·접수·환자번호·이름·[성별/나이]·경로·KTAS내원·KTAS변경·V/S·내원동기·특이사항·주치의
-  const cells=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),sexAge,S.route,S.ktas||'',S.ktasChg||'',vsText(),motive,spec,S.doctor];
+  const cells=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'',S.ktasChg||'',p.vs,p.motive,p.spec,S.doctor];
   const plain=cells.map(tsvCell).join('\t');
   const msgs=isoMessages();
   const done=()=>alert('엑셀 복사 완료.\n셀에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):''));
   navigator.clipboard.writeText(plain).then(done,()=>done());
+}
+// ══════════ 네이버웍스용 복사 (표1: 기본 10칸 / 표2: 내원동기·특이사항·담당교수 옆으로) ══════════
+function copyNaverWorks(){
+  const p=recordParts();
+  const H1=['접수일','내원시간','접수시간','환자번호','이름','성별/나이','내원경로','내원시 KTAS','변경시 KTAS(접수후)','V/S(대기 길면 재측정·시간 재입력)'];
+  const V1=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'-',S.ktasChg||'-',p.vs];
+  const H2=['내원동기(과거력 #·s/p·내원사유·현재호소)','특이사항($ 문제사항)','담당교수'];
+  const V2=[p.motive,p.spec,S.doctor||'-'];
+  // HTML: 셀 내 줄바꿈 유지(<br> + mso-data-placement:same-cell) → 붙여넣기 시 한 칸 안에 여러 줄
+  const th=t=>`<td style="font-weight:bold;background:#eaf6ee;border:1px solid #888;padding:4px 8px">${esc(t)}</td>`;
+  const td=t=>`<td style="border:1px solid #888;padding:4px 8px;vertical-align:top;mso-data-placement:same-cell">${esc(String(t==null?'':t)).replace(/\n/g,'<br>')}</td>`;
+  const tbl=(H,V)=>`<table style="border-collapse:collapse;font-family:sans-serif;font-size:13px"><tr>${H.map(th).join('')}</tr><tr>${V.map(td).join('')}</tr></table>`;
+  const html=tbl(H1,V1)+'<br>'+tbl(H2,V2);
+  // 평문 폴백(리치 붙여넣기 안 되는 환경): 표1은 탭 2줄, 긴 3항목은 제목+아래 여러 줄
+  const plain=H1.join('\t')+'\n'+V1.map(x=>String(x==null?'':x)).join('\t')+'\n\n'
+    +'■ 내원동기\n'+p.motive+'\n\n■ 특이사항\n'+p.spec+'\n\n■ 담당교수\n'+(S.doctor||'-');
+  const msgs=isoMessages();
+  copyRich(html,plain,ok=>alert((ok?'네이버웍스용 복사 완료.':'복사 시도함 — 붙여넣기로 확인하세요.')+'\n네이버웍스에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):'')));
+}
+// 리치(text/html)+평문 동시 복사. ClipboardItem 우선, 안 되면 execCommand 폴백(file:// 대비)
+function copyRich(html,plain,done){
+  try{
+    if(navigator.clipboard&&window.ClipboardItem){
+      const item=new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})});
+      navigator.clipboard.write([item]).then(()=>done(true),()=>execCopyHtml(html,done));
+      return;
+    }
+  }catch(e){}
+  execCopyHtml(html,done);
+}
+function execCopyHtml(html,done){
+  const div=document.createElement('div');
+  div.contentEditable='true';div.style.position='fixed';div.style.left='-99999px';div.style.top='0';div.style.whiteSpace='pre-wrap';
+  div.innerHTML=html;document.body.appendChild(div);
+  const range=document.createRange();range.selectNodeContents(div);
+  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){}
+  sel.removeAllRanges();document.body.removeChild(div);done(ok);
 }
 function copyNote(){const t=document.getElementById('outNote').value;navigator.clipboard.writeText(t).then(()=>alert('간호기록 복사 완료.'));}
 
