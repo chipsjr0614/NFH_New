@@ -183,6 +183,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .mbtn{width:100%;padding:13px;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;margin-top:8px;}
 .mbtn.blue{background:#1d4ed8;} .mbtn.gray{background:var(--surf2);color:var(--mute);border:1px solid var(--brd);}
 .mbtn.green{background:#03c75a;} .mbtn.green:disabled{background:#8fd9ad;} .mbtn.blue:disabled{background:#93a7d8;}
+.mbtn.purple{background:#7e22ce;} .mbtn.purple:disabled{background:#c4a3e0;}
 .note{font-size:11px;color:var(--mute);text-align:center;padding:8px 16px;}
 </style>
 </head>
@@ -511,6 +512,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <div class="fmwarn" id="fmWarn">이름·등록번호 입력 + 신원 확인·환자 교육을 완료하세요.</div>
       <button class="mbtn blue" id="fmGo" disabled onclick="copyExcel()">✅ 확인 완료 → 엑셀 복사</button>
       <button class="mbtn green" id="fmGoNW" disabled onclick="copyNaverWorks()">📋 확인 완료 → 네이버웍스용 복사</button>
+      <button class="mbtn purple" id="fmGoR2" disabled onclick="copyReminder2()">📝 확인 완료 → 간호인계용 Reminder2</button>
       <button class="mbtn gray" onclick="closeFinal()">닫기</button>
     </div>
   </div>
@@ -1537,6 +1539,7 @@ function fmValidate(){
   const ok=nm&&pid&&ck;
   document.getElementById('fmGo').disabled=!ok;
   const nw=document.getElementById('fmGoNW');if(nw)nw.disabled=!ok;
+  const r2=document.getElementById('fmGoR2');if(r2)r2.disabled=!ok;
   document.getElementById('fmWarn').style.display=ok?'none':'block';
 }
 function closeFinal(){document.getElementById('finalModal').classList.remove('show');}
@@ -1613,6 +1616,38 @@ function execCopyHtml(html,done){
   const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
   let ok=false;try{ok=document.execCommand('copy');}catch(e){}
   sel.removeAllRanges();document.body.removeChild(div);done(ok);
+}
+// ══════════ 간호인계용 Reminder2 (환자 헤더 자동채움 + 인계 템플릿) ══════════
+// 인계 항목 원본 서식(빈칸 '-'는 인계 시 손으로 채움). blue=파란색 강조 항목.
+const REMIND_SECTIONS=[
+  {h:'[V/S target]',ex:'(Ex : 의사 컨펌된 혈압 타겟, 산소흡입시 산소 양, 타겟 적기)',blue:true},
+  {h:'[full drip]',ex:'(Ex : 6/8 NS 1L full drip(이유 : 혈압저하, hydration, Total 양 적기)'},
+  {h:'[Dressing]',ex:'(Ex : IV, dressing, 도관 삽입, 시작시, 삽입일)'},
+  {h:'[각종 tube, 중심 동맥 정맥관]',ex:'(Ex : Foley 16Fr 2/3way, 삽입일시 등)'},
+  {h:'[잉여 검체 보관]',ex:'(Ex : 6/8 혈액, 요추, 복수천자 50ml 실온보관, 냉장보관)'},
+  {h:'[미시행 검사]',ex:'(Ex : 6/8 MRI contrast 초기 – 검사 취소, 환자 거부)'},
+  {h:'[기타공유인계사항]',ex:'(Ex : self 약 등, 검사, 플랜 등 기록하고 인계)'}];
+function erDateShort(){const p=(S.date||'').split('-');return (p.length===3)?((+p[1])+'/'+(+p[2])):(S.date||'');}
+function copyReminder2(){
+  const p=recordParts();
+  const er='[ER '+erDateShort()+(S.reg?' '+S.reg:'')+']';   // ER + 접수일 + 접수시간
+  const patLine='- '+(maskName(S.pname)||'-')+' ('+(S.sex||'-')+'/'+(S.age||'-')+', '+(S.pid||'-')+')';
+  const pm=(S.pmhx&&S.pmhx.length)?S.pmhx.join(', '):'없음';
+  const sg=(S.surg&&S.surg.length)?S.surg.join(', '):'없음';
+  const head=[er,patLine,'initial V/S : '+p.vs,'내원동기 : 과거력 '+pm+' / 수술력 '+sg,
+    '내원이유 : '+(ccMotiveList().join(', ')||'-'),'특이사항 : '+p.spec.replace(/\n/g,' / ')];
+  const SEP='-----------------------------------------------';
+  // 평문 폴백
+  const secPlain=REMIND_SECTIONS.map(s=>s.h+s.ex+'\n-\n-').join('\n\n');
+  const plain=SEP+'\n'+head.join('\n')+'\n\n'+secPlain+'\n'+SEP;
+  // HTML(모든 항목 헤더 큰 글씨 · V/S target 파란색)
+  const e=s=>esc(String(s==null?'':s));
+  const headHtml='<b style="font-size:16px">'+e(er)+'</b>\n'+head.slice(1).map(e).join('\n');
+  const secHtml=REMIND_SECTIONS.map(s=>'<span style="font-size:20px;font-weight:800;'+(s.blue?'color:#1d4ed8;':'')+'">'+e(s.h)+'</span>'
+    +'<span style="color:#888;font-size:13px">'+e(s.ex)+'</span>\n-\n-').join('\n\n');
+  const html='<div style="font-family:sans-serif;font-size:15px;line-height:1.7;white-space:pre-wrap">'+e(SEP)+'\n'+headHtml+'\n\n'+secHtml+'\n'+e(SEP)+'</div>';
+  const msgs=isoMessages();
+  copyRich(html,plain,ok=>alert((ok?'간호인계용 Reminder2 복사 완료.':'복사 시도함 — 붙여넣기로 확인하세요.')+'\n인계 노트/메신저에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):'')));
 }
 function copyNote(){const t=document.getElementById('outNote').value;navigator.clipboard.writeText(t).then(()=>alert('간호기록 복사 완료.'));}
 
