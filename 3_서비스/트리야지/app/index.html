@@ -193,6 +193,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     <div class="tr">
       <div style="display:flex;align-items:center;gap:8px">
         <button class="tb" onclick="resetAll()" title="처음으로">🏠</button>
+        <button class="tb" onclick="openHistory()" title="보관 기록 (PIN)">📁</button>
         <div class="nm">NFH <em>ER</em> TRIAGE <span style="font-size:12px;color:var(--mute)">V6</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -490,6 +491,19 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <input class="fi" id="bstInp" type="number" inputmode="decimal" placeholder="mg/dL" style="font-size:22px;text-align:center;font-weight:700">
       <button class="mbtn blue" onclick="saveBST()">입력 완료</button>
       <button class="mbtn gray" onclick="skipBST()">건너뛰기 →</button>
+    </div>
+  </div>
+
+  <!-- 보관 기록 모달 (PIN) -->
+  <div class="modal-bg" id="histModal">
+    <div class="modal" style="max-width:460px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="modal-t" style="margin:0">📁 보관 기록 <span id="histCount" style="font-size:13px;color:var(--mute);font-weight:400"></span></div>
+        <button class="onow" onclick="histExportAll()" style="font-size:12px;padding:6px 10px">전체 엑셀 내보내기</button>
+      </div>
+      <div style="font-size:11px;color:var(--mute);margin-bottom:10px">⚠️ 이 태블릿에만 저장 · 이름은 가려서 보관 · 최대 100건(초과 시 오래된 것부터 삭제)</div>
+      <div id="histList" style="max-height:52vh;overflow-y:auto"></div>
+      <button class="mbtn gray" onclick="closeHistory()">닫기</button>
     </div>
   </div>
 
@@ -1573,17 +1587,22 @@ function recordParts(){
   const sexAge=(S.sex||'-')+' / '+(S.age||'-');
   return {motive,spec,sexAge,vs:vsText()};
 }
-function copyExcel(){
+// 칸 순서: 날짜·내원·접수·환자번호·이름·[성별/나이]·경로·KTAS내원·KTAS변경·V/S·내원동기·특이사항·주치의
+function buildExcelTSV(){
   const p=recordParts();
-  // 칸 순서: 날짜·내원·접수·환자번호·이름·[성별/나이]·경로·KTAS내원·KTAS변경·V/S·내원동기·특이사항·주치의
   const cells=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'',S.ktasChg||'',p.vs,p.motive,p.spec,S.doctor];
-  const plain=cells.map(tsvCell).join('\t');
+  return cells.map(tsvCell).join('\t');
+}
+function copyExcel(){
+  saveToHistory();                 // ★완료 시 자동 보관
+  const plain=buildExcelTSV();
   const msgs=isoMessages();
   const done=()=>alert('엑셀 복사 완료.\n셀에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):''));
   navigator.clipboard.writeText(plain).then(done,()=>done());
 }
 // ══════════ 네이버웍스용 복사 (표1: 기본 10칸 / 표2: 내원동기·특이사항·담당교수 옆으로) ══════════
 function copyNaverWorks(){
+  saveToHistory();                 // ★완료 시 자동 보관
   const p=recordParts();
   // 표A(기본정보 11칸): 담당교수를 위로 올림. V/S 넓게(310), KTAS 좁게(40). 총폭 870.
   const HA=['접수일','내원시간','접수시간','환자번호','이름','성별/나이','내원경로','내원 KTAS','변경 KTAS','V/S (접수 전 대기 길면 재측정·시간 재입력)','담당교수'];
@@ -1636,6 +1655,7 @@ const REMIND_SECTIONS=[
   {h:'[기타공유인계사항]',ex:'(Ex : self 약 등, 검사, 플랜 등 기록하고 인계)'}];
 function erDateShort(){const p=(S.date||'').split('-');return (p.length===3)?((+p[1])+'/'+(+p[2])):(S.date||'');}
 function copyReminder2(){
+  saveToHistory();                 // ★완료 시 자동 보관
   const p=recordParts();
   const er='[ER '+erDateShort()+(S.reg?' '+S.reg:'')+']';   // ER + 접수일 + 접수시간
   const patLine='# '+(maskName(S.pname)||'-')+' ('+(S.sex||'-')+'/'+(S.age||'-')+', '+(S.pid||'-')+')';
@@ -1736,6 +1756,53 @@ function snapshot(){
   const dom={};DOM_KEYS.forEach(id=>{const e=document.getElementById(id);if(e&&e.value)dom[id]=e.value;});
   return {v:6,ts:Date.now(),cur:cur,S:st,dom:dom};
 }
+
+// ══════════ 보관 기록 (완료 시 자동 · 최대 100건 · PIN 8020 · 이름 마스킹본) ══════════
+const HIST_KEY='NFH_TRIAGE_HISTORY',HIST_MAX=100,HIST_PIN='8020';
+let histUnlocked=false;
+function histRead(){try{const r=localStorage.getItem(HIST_KEY);return r?JSON.parse(r):[];}catch(e){return[];}}
+function histWrite(a){try{localStorage.setItem(HIST_KEY,JSON.stringify(a));}catch(e){}}
+function saveToHistory(){
+  try{
+    if(!S._histId)S._histId='h'+Date.now()+'_'+Math.floor(Math.random()*1000);
+    const snap=snapshot();const masked=maskName(S.pname)||'-';
+    if(snap.S)snap.S.pname=masked;                    // 저장은 마스킹본만
+    const e={id:S._histId,ts:Date.now(),name:masked,pid:S.pid||'',sexAge:(S.sex||'-')+'/'+(S.age||'-'),
+      cc:ccList().join(', ')||'-',ktas:S.ktas||'',ktasChg:S.ktasChg||'',excel:buildExcelTSV(),snap:snap};
+    const a=histRead();const i=a.findIndex(x=>x.id===e.id);
+    if(i>=0)a[i]=e;else a.push(e);
+    while(a.length>HIST_MAX)a.shift();               // 100 초과 시 오래된 것부터
+    histWrite(a);
+  }catch(err){}
+}
+function openHistory(){
+  if(!histUnlocked){const p=prompt('📁 보관 기록 — PIN 입력');if(p===null)return;if(p!==HIST_PIN){alert('PIN이 올바르지 않습니다.');return;}histUnlocked=true;}
+  renderHistory();document.getElementById('histModal').classList.add('show');
+}
+function closeHistory(){document.getElementById('histModal').classList.remove('show');}
+function histTime(ts){const d=new Date(ts),p=n=>String(n).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function renderHistory(){
+  const a=histRead();const cnt=document.getElementById('histCount');if(cnt)cnt.textContent=a.length+' / '+HIST_MAX;
+  const body=document.getElementById('histList');if(!body)return;
+  if(!a.length){body.innerHTML='<div style="color:var(--mute);padding:16px;text-align:center">보관된 기록이 없습니다</div>';return;}
+  body.innerHTML=a.slice().reverse().map(e=>
+    `<div style="border:1px solid var(--brd);border-radius:var(--rs);padding:10px 11px;margin-bottom:8px;background:var(--surf2)">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:13px">
+        <b>${esc(e.name)} <span style="color:var(--mute);font-weight:400">${e.pid?'('+e.pid+')':''} · ${esc(e.sexAge)}</span></b>
+        <span style="color:var(--mute);font-size:12px;white-space:nowrap">${histTime(e.ts)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--mute);margin:4px 0 8px">${esc(e.cc)} · KTAS ${e.ktas||'-'}${e.ktasChg?' → '+e.ktasChg:''}</div>
+      <div style="display:flex;gap:6px">
+        <button class="onow" style="flex:1;padding:8px;font-size:12px" onclick="histRestore('${e.id}')">↩︎ 불러오기</button>
+        <button class="onow" style="flex:1;padding:8px;font-size:12px;background:var(--k4bg);border-color:var(--k4bd);color:#86efac" onclick="histReCopy('${e.id}')">📋 엑셀복사</button>
+        <button class="onow" style="flex:0 0 auto;padding:8px 10px;font-size:12px;background:var(--k1bg);border-color:var(--k1bd);color:#fca5a5" onclick="histDelete('${e.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+function histRestore(id){const e=histRead().find(x=>x.id===id);if(!e)return;if(!confirm('이 기록을 불러옵니다. 작성 중이던 내용은 대체됩니다.'))return;try{localStorage.setItem(LS_KEY,JSON.stringify(e.snap));}catch(err){}closeHistory();restoreSaved();}
+function histReCopy(id){const e=histRead().find(x=>x.id===id);if(!e)return;navigator.clipboard.writeText(e.excel||'').then(()=>alert('엑셀 복사 완료.'),()=>alert('복사 실패 — 다시 시도하세요.'));}
+function histDelete(id){if(!confirm('이 기록을 삭제할까요?'))return;histWrite(histRead().filter(x=>x.id!==id));renderHistory();}
+function histExportAll(){const a=histRead();if(!a.length){alert('내보낼 기록이 없습니다.');return;}navigator.clipboard.writeText(a.map(e=>e.excel).join('\n')).then(()=>alert(a.length+'건 엑셀 복사 완료.\n엑셀에 붙여넣으세요.'),()=>alert('복사 실패'));}
 function saveNow(){try{localStorage.setItem(LS_KEY,JSON.stringify(snapshot()));}catch(e){}}
 function saveSoon(){if(restoring)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,700);}
 function clearSaved(){try{localStorage.removeItem(LS_KEY);}catch(e){}}
