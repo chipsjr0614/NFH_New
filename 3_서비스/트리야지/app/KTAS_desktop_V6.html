@@ -1551,9 +1551,9 @@ function tsvCell(s){s=String(s==null?'':s);return /[\t\n\r"]/.test(s)?'"'+s.repl
 // 엑셀·네이버웍스 복사가 공유하는 값 조립(내원동기·특이사항·성별나이·V/S)
 function recordParts(){
   const present=(S.present||'').trim().replace(/[\r\n\t]+/g,' ');
-  // 내원동기: 그룹별 한 줄씩(항목은 ' / '로 구분). 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원)
+  // 내원동기: 그룹별 한 줄씩(항목은 ' / '로 구분), 줄 맨 앞에 '- '. 문제 항목은 🔴 표시(텍스트라 색 대신 빨간 원)
   const bgLines=bgGroups().map(line=>line.map(x=>(x.red?'🔴 ':'')+fmtBg(x)).join(' / ')).filter(Boolean);
-  const motive=[...bgLines,'내원이유 : '+(ccMotiveList().join(', ')||'-'),'현재호소 : '+present].join('\n');
+  const motive=[...bgLines,'내원이유 : '+(ccMotiveList().join(', ')||'-'),'현재호소 : '+present].map(l=>'- '+l).join('\n');
   // 특이사항: 항목별 한 줄씩 (주의 항목은 🔴)
   const specLines=[];
   {const bn=bpArmNote();if(bn)specLines.push('🔴 '+bn);}
@@ -1561,7 +1561,7 @@ function recordParts(){
   isoMessages().forEach(m=>specLines.push('🔴 '+m));
   if(S.abuse.size)specLines.push('🔴 학대 의심: '+[...S.abuse].join(', '));
   if((S.note||'').trim()){const nt=S.note.trim().replace(/[\r\n\t]+/g,' ');specLines.push((nt.startsWith('$')?'🔴 ':'')+nt);}
-  const spec=specLines.length?specLines.join('\n'):'없음';
+  const spec=specLines.length?specLines.map(l=>'- '+l).join('\n'):'없음';
   const sexAge=(S.sex||'-')+' / '+(S.age||'-');
   return {motive,spec,sexAge,vs:vsText()};
 }
@@ -1632,7 +1632,7 @@ function copyReminder2(){
   const er='[ER '+erDateShort()+(S.reg?' '+S.reg:'')+']';   // ER + 접수일 + 접수시간
   const patLine='- '+(maskName(S.pname)||'-')+' ('+(S.sex||'-')+'/'+(S.age||'-')+', '+(S.pid||'-')+')';
   // 내원동기 = 과거력(#·s/p)·격리·입원력·알러지 등 배경 + 내원이유(주호소+onset) + 현재호소 전체
-  const head=[er,patLine,'initial V/S : '+p.vs,'내원동기 :',p.motive,'특이사항 : '+p.spec.replace(/\n/g,' / ')];
+  const head=[er,patLine,'initial V/S : '+p.vs,'내원동기 :',p.motive,'특이사항 :',p.spec];
   const SEP='-----------------------------------------------';
   // 평문 폴백
   const secPlain=REMIND_SECTIONS.map(s=>s.h+s.ex+'\n-\n-').join('\n\n');
