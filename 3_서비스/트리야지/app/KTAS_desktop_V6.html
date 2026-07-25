@@ -782,10 +782,15 @@ function pickInfo(key,id,_x,v){S[key]=(S[key]===v?'':v);renderInfoChips();if(key
 const ISO_TYPES=['호흡기 격리(결핵·수두·코로나 등)','접촉 격리(MRSA·CRE·VRE 등)','역격리(항암·백혈병·면역저하)'];
 function renderIsoType(){
   const el=document.getElementById('isoTypeOpts');if(!el)return;
-  el.innerHTML=ISO_TYPES.map(v=>`<div class="opt ${S.isoType.has(v)?'sel-r':''}" style="min-width:120px" onclick="toggleIsoType('${v}')">${v}</div>`).join('');
-  const w=document.getElementById('isoReasonWrap');if(w)w.style.display=S.isoType.size?'':'none';
+  const none=`<div class="opt ${S.isoType.has('없음')?'sel':''}" style="min-width:66px" onclick="toggleIsoType('없음')">없음</div>`;
+  el.innerHTML=none+ISO_TYPES.map(v=>`<div class="opt ${S.isoType.has(v)?'sel-r':''}" style="min-width:120px" onclick="toggleIsoType('${v}')">${v}</div>`).join('');
+  const w=document.getElementById('isoReasonWrap');if(w)w.style.display=(S.isoType.size&&!S.isoType.has('없음'))?'':'none';
 }
-function toggleIsoType(v){S.isoType.has(v)?S.isoType.delete(v):S.isoType.add(v);renderIsoType();render();}
+function toggleIsoType(v){
+  if(v==='없음'){ if(S.isoType.has('없음'))S.isoType.delete('없음'); else {S.isoType.clear();S.isoType.add('없음');} }
+  else { S.isoType.delete('없음'); S.isoType.has(v)?S.isoType.delete(v):S.isoType.add(v); }
+  renderIsoType();render();
+}
 // 이전 병원 입원력 + 입원 중 격리 확진(호흡기·접촉 각각 있음/없음)
 function renderAdmitHx(){
   const el=document.getElementById('admitHxOpts');if(!el)return;
@@ -1419,7 +1424,9 @@ function bgGroups(){
   L.push([contrastItem(),{label:'약물알러지',value:da||'없음',red:!!da},{label:'기타알러지',value:ea||'없음',red:!!ea}]);
   // ③ 격리·흡연·여행력
   const l3=[];
-  if(S.isoType.size){const short=[...S.isoType].map(x=>x.split('(')[0]);l3.push({label:'격리',value:short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
+  {const isoReal=[...S.isoType].filter(x=>x!=='없음');
+   if(isoReal.length){const short=isoReal.map(x=>x.split('(')[0]);l3.push({label:'격리',value:short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
+   else if(S.isoType.has('없음'))l3.push({label:'격리',value:'없음',red:false});}
   if(S.admitHx==='있음'){const conf=[];if(S.admitResp==='있음')conf.push('호흡기');if(S.admitContact==='있음')conf.push('접촉');
     let v='이전 입원력 있음';
     if(conf.length)v+=' · '+conf.join('·')+' 격리 확진';
@@ -1594,8 +1601,22 @@ function go(n){
   saveSoon();                       // ★V6 자동 저장
 }
 function goBack(){if(cur>1)go(cur-1);}
+// 안전·배경 정보 중 미선택 항목(전부 클릭해야 S1 통과). 임신은 여성일 때만 필수.
+function missingBg(){
+  const m=[];
+  if(S.sex==='여'&&!S.preg)m.push('임신');
+  if(!S.contrast)m.push('조영제 부작용');
+  if(!S.drugAlY)m.push('약물 알러지');
+  if(!S.etcAlY)m.push('각종 알러지');
+  if(!S.curMedY)m.push('복용약물');
+  if(!S.isoType.size)m.push('감염/격리');
+  if(!S.smoking)m.push('흡연');
+  if(!S.travel)m.push('여행력');
+  return m;
+}
 function goNext(){
   if(cur===1&&isPed()&&!(S.pedW||'').trim()){alert('소아 환자는 체중(kg)을 반드시 측정·입력하세요.');const w=document.getElementById('pedW');if(w)w.focus();return;}
+  if(cur===1){const miss=missingBg();if(miss.length){alert('안전·배경 정보를 모두 선택하세요.\n미선택: '+miss.join(', ')+'\n(해당 없으면 "없음"을 선택)');return;}}
   if(cur===1&&!S.route){alert('내원 경로를 선택하세요.');return;}
   if(cur===2&&!ccList().length){alert('주호소를 선택하세요.');return;}
   if(cur<5)go(cur+1);
