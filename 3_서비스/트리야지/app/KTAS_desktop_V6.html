@@ -1388,7 +1388,11 @@ function addSurg(){const i=document.getElementById('surgInp');const dt=document.
 function renderSurg(){const e=document.getElementById('surgTags');if(e)e.innerHTML=S.surg.map((p,k)=>`<span class="tag surg" onclick="rmSurg(${k})">${p} ✕</span>`).join('');}
 function rmSurg(k){S.surg.splice(k,1);renderSurg();render();}
 function addDollar(){const el=document.getElementById('noteInp');if(!el)return;if(!el.value.trim().startsWith('$'))el.value='$ '+el.value;S.note=el.value;el.focus();render();}
-function setKtas(t,v,el){const row=t==='init'?'ktasRow':'ktasChgRow';document.querySelectorAll('#'+row+' .kb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');if(t==='init')S.ktas=v;else S.ktasChg=v;render();}
+function setKtas(t,v,el){const row=t==='init'?'ktasRow':'ktasChgRow';const cur=(t==='init')?S.ktas:S.ktasChg;
+  document.querySelectorAll('#'+row+' .kb').forEach(b=>b.classList.remove('sel'));
+  if(cur===v){ if(t==='init')S.ktas='';else S.ktasChg=''; }          // 같은 걸 다시 누르면 해제
+  else { el.classList.add('sel'); if(t==='init')S.ktas=v;else S.ktasChg=v; }
+  render();}
 
 // ══════════ 이름 마스킹 (★V6) ══════════
 // 기록·엑셀 등 "밖으로 나가는 출력물"에만 적용. 앱 화면·신원확인 팝업은 전체 이름 그대로
@@ -1526,7 +1530,9 @@ function isoMessages(){
   if(rev.length)m.push('🛡️ 역격리 — 일반격리실 배치(의사 컨펌 후) ('+rev.join('·')+')');
   return m;
 }
-function openFinal(){document.getElementById('fName').value=S.pname;document.getElementById('fPid').value=S.pid;document.getElementById('fDoc').value=S.doctor;
+function openFinal(){
+  if(!S.ktas){alert('내원시 KTAS를 입력하세요.');const r=document.getElementById('ktasRow');if(r)r.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  document.getElementById('fName').value=S.pname;document.getElementById('fPid').value=S.pid;document.getElementById('fDoc').value=S.doctor;
   document.getElementById('fmArr').value=S.arr||'';document.getElementById('fmReg').value=S.reg||'';document.getElementById('fmAgeInp').value=S.age||'';
   const msgs=isoMessages();const b=document.getElementById('isoBanner');
   if(msgs.length){b.style.display='block';b.innerHTML=msgs.join('<br><br>');}else b.style.display='none';
