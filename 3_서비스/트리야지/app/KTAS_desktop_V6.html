@@ -1461,7 +1461,7 @@ function bgGroups(){
   return L;
 }
 function fmtBg(x){return x.label?x.label+' : '+x.value:x.value;}
-function bgLine(){return bgGroups().map(g=>g.map(fmtBg).join(' / ')).filter(Boolean).join('\n');}
+function bgLine(){return bgGroups().map(g=>g.map(fmtBg).join(' / ')).filter(Boolean).map(l=>'• '+l).join('\n');}
 function pmhxText(){const p=S.pmhx.join(' '),s=S.surg.join(' / ');const both=[p,s].filter(x=>x).join(' / ');return both||'없음';}
 function contrastText(){
   if(S.contrast!=='있음')return '조영제부작용 '+(S.contrast||'없음');
@@ -1484,7 +1484,7 @@ function fullNote(){
   const pmhx=pmhxText();
   const present=(S.present||'').trim();
   let t=`[환자] ${maskName(S.pname)||'-'} ${S.pid?'('+S.pid+') ':''}· ${S.sex||'-'} · ${ageWord()||'-'} · ${S.date} ${S.arr||''}\n`;
-  t+=`[배경정보] ${bgLine()}\n`;
+  t+=`[배경정보]\n${bgLine()}\n`;
   t+=`[내원동기] ${ccMotiveList().join(', ')||'-'}\n`;
   t+=`[현재호소] ${present||(pmhx==='없음'?'특이 과거력 없는 환자':pmhx+' 과거력 있는 환자')}\n`;
   t+=`[V/S] ${vsText()}`;
