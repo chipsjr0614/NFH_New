@@ -1643,7 +1643,7 @@ function copyReminder2(){
   // HTML(모든 항목 헤더 큰 글씨 · V/S target 파란색)
   const e=s=>esc(String(s==null?'':s));
   const headHtml='<b style="font-size:16px">'+e(er)+'</b>\n'+head.slice(1).map(e).join('\n');
-  const secHtml=REMIND_SECTIONS.map(s=>'<span style="font-size:20px;font-weight:800;'+(s.blue?'color:#1d4ed8;':'')+'">'+e(s.h)+'</span>'
+  const secHtml=REMIND_SECTIONS.map(s=>'<span style="font-size:20px;font-weight:800;color:#1d4ed8">'+e(s.h)+'</span>'
     +'<span style="color:#888;font-size:13px">'+e(s.ex)+'</span>\n-\n-').join('\n\n');
   const html='<div style="font-family:sans-serif;font-size:15px;line-height:1.7;white-space:pre-wrap">'+e(SEP)+'\n'+headHtml+'\n\n'+secHtml+'\n'+e(SEP)+'</div>';
   const msgs=isoMessages();
