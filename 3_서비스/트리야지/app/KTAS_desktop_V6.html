@@ -258,7 +258,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div class="lbl">👶 소아 평가 <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--mute)">· 나이 어리면 자동</span></div>
         <div class="vsg">
           <div><div class="fl">키(cm)</div><input class="fi" id="pedH" inputmode="decimal" placeholder="예) 85" oninput="S.pedH=this.value;render()"></div>
-          <div><div class="fl">체중(kg)</div><input class="fi" id="pedW" inputmode="decimal" placeholder="예) 11" oninput="S.pedW=this.value;render()"></div>
+          <div><div class="fl">체중(kg) <span style="color:#dc2626;font-weight:800">⚠️ 필수</span></div><input class="fi" id="pedW" inputmode="decimal" placeholder="반드시 측정·입력" oninput="S.pedW=this.value;render()"></div>
           <div><div class="fl">체온(℃)</div><input class="fi" id="pedT" inputmode="decimal" placeholder="예) 38.5" oninput="S.pedT=this.value;render()"></div>
         </div>
         <div class="q" style="margin-top:9px"><div class="qt">PAT — 외관</div><div class="opts" id="patAppOpts"></div></div>
@@ -289,6 +289,15 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
           <div class="opts" id="isoTypeOpts"></div>
           <div id="isoReasonWrap" style="display:none;margin-top:8px"><div class="fl">이유 / 균주 / 진단</div>
             <input class="oinp" id="isoReason" style="width:100%;text-align:left;font-size:15px" placeholder="예) 폐결핵(TB) / MRSA 객담 / AML 항암 2주 이내" oninput="S.isoReason=this.value;render()"></div>
+          <div style="margin-top:12px"><div class="fl">🏥 이전 병원 입원력 <span style="font-size:11px;color:var(--mute)">(최근 타병원·본원 입원 경험)</span></div>
+            <div class="opts" id="admitHxOpts"></div>
+            <div id="admitIsoWrap" style="display:none;margin-top:8px">
+              <div class="fl">입원 중 격리 확진 <span style="font-size:11px;color:var(--mute)">(호흡기·접촉 · 복수 가능)</span></div>
+              <div class="opts" id="admitIsoOpts"></div>
+              <div id="admitWhenWrap" style="display:none;margin-top:8px"><div class="fl">확진 시기 / 기간 <span style="font-size:11px;color:var(--mute)">(균주·진단 함께)</span></div>
+                <input class="oinp" id="admitWhen" style="width:100%;text-align:left;font-size:15px" placeholder="예) 2026-05 MRSA 객담 확진 / 3주 전 결핵 확진" oninput="S.admitWhen=this.value;render()"></div>
+            </div>
+          </div>
         </div>
         <div class="q"><div class="qt">🚬 흡연</div><div class="opts" id="smkOpts"></div></div>
         <div class="q" style="margin-bottom:0"><div class="qt">✈️ 여행력 <span style="font-size:11px;color:var(--mute);font-weight:400">(최근 1달 이내 해외 여행)</span></div>
@@ -499,7 +508,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <script>
 // ══════════ STATE ══════════
-const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',smoking:'',travel:'',bpArm:'',
+const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contrastExam:'',contrastSx:'',drugAlY:'',etcAlY:'',curMedY:'',isoType:new Set(),isoReason:'',admitHx:'',admitIso:new Set(),admitWhen:'',smoking:'',travel:'',bpArm:'',
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),
   gi:{},abcd:{A:'',B:'',C:'',D:''}, ccs:[], ccOther:'', forceSevere:false, ans:{},
   onsetBy:{}, painBy:{}, openCC:{},        // ★V6: 발생시점·통증(NRS)을 주호소별로 분리
@@ -773,6 +782,17 @@ function renderIsoType(){
   const w=document.getElementById('isoReasonWrap');if(w)w.style.display=S.isoType.size?'':'none';
 }
 function toggleIsoType(v){S.isoType.has(v)?S.isoType.delete(v):S.isoType.add(v);renderIsoType();render();}
+// 이전 병원 입원력 + 입원 중 격리 확진
+const ADMIT_ISO=['호흡기 격리','접촉 격리'];
+function renderAdmitHx(){
+  const el=document.getElementById('admitHxOpts');if(!el)return;
+  el.innerHTML=['없음','있음'].map(v=>{const sel=S.admitHx===v;const cls=sel?(v==='있음'?'sel-r':'sel'):'';return `<div class="opt ${cls}" onclick="pickAdmitHx('${v}')">${v}${v==='있음'?' ⚠️':''}</div>`;}).join('');
+  const w=document.getElementById('admitIsoWrap');if(w)w.style.display=(S.admitHx==='있음')?'':'none';
+  const io=document.getElementById('admitIsoOpts');if(io)io.innerHTML=ADMIT_ISO.map(v=>`<div class="opt ${S.admitIso.has(v)?'sel-r':''}" onclick="toggleAdmitIso('${v}')">${v}</div>`).join('');
+  const ww=document.getElementById('admitWhenWrap');if(ww)ww.style.display=(S.admitHx==='있음'&&S.admitIso.size)?'':'none';
+}
+function pickAdmitHx(v){S.admitHx=(S.admitHx===v?'':v);if(S.admitHx!=='있음'){S.admitIso.clear();S.admitWhen='';const w=document.getElementById('admitWhen');if(w)w.value='';}renderAdmitHx();render();}
+function toggleAdmitIso(v){S.admitIso.has(v)?S.admitIso.delete(v):S.admitIso.add(v);renderAdmitHx();render();}
 function renderInfoChips(){
   const mk=(id,arr,key,danger)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=arr.map(v=>{
     const sel=S[key]===v;const cls=sel?((danger&&danger.includes(v))?'sel-r':'sel'):'';
@@ -789,6 +809,7 @@ function renderInfoChips(){
   mk('curMedOpts',['없음','있음'],'curMedY',['있음']);
   [['drugAlY','drugAlWrap'],['etcAlY','etcAlWrap'],['curMedY','curMedWrap']].forEach(([k,w])=>{const e=document.getElementById(w);if(e)e.style.display=(S[k]==='있음')?'':'none';});
   renderIsoType();
+  renderAdmitHx();
   const fem=(S.sex==='여');
   const pr=document.getElementById('pregRow');if(pr)pr.style.display=fem?'':'none';
   const lr=document.getElementById('lmpRow');if(lr)lr.style.display=(fem&&S.preg!=='임신중')?'':'none';
@@ -800,7 +821,7 @@ function nowHM(){const d=new Date();return String(d.getHours()).padStart(2,'0')+
 function setTime(k){const t=nowHM();S[k]=t;syncTime(k);}
 function timeInput(el,k){let v=el.value.replace(/[^0-9]/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+':'+v.slice(2);el.value=v;S[k]=v;syncTime(k,el);}
 function syncTime(k,skip){[k+'Inp','fm'+(k==='arr'?'Arr':'Reg')].forEach(id=>{const e=document.getElementById(id);if(e&&e!==skip)e.value=S[k];});}
-const ROUTES=[['🚶 도보','도보'],['🚗 자가용','자가용'],['♿ 휠체어','휠체어'],['🏥 전원','전원(타병원)'],['🚐 129 사설','사설구급차(129)'],['🚑 119 구급','119 구급대'],['🚁 헬기 ⚠️','헬기']];
+const ROUTES=[['🚶 도보','도보'],['🚗 자가용','자가용'],['♿ 휠체어','휠체어'],['🏥 전원','전원(타병원 구급차)'],['🚐 129 사설','사설구급차(129)'],['🚑 119 구급','119 구급대'],['🚁 헬기 ⚠️','헬기']];
 function renderRoute(){document.getElementById('routeGrid').innerHTML=ROUTES.map(([lbl,v])=>{const sel=S.route===v;const cls=sel?((v.includes('119')||v==='헬기')?'sel-g':'sel'):'';return `<div class="rbtn ${cls}" onclick="pickRoute('${v}')">${lbl}</div>`;}).join('');}
 function pickRoute(v){S.route=v;renderRoute();}
 // 산소 투여 방식 (드롭다운: 기본 Room air)
@@ -1365,6 +1386,8 @@ function bgGroups(){
   // ③ 격리·흡연·여행력
   const l3=[];
   if(S.isoType.size){const short=[...S.isoType].map(x=>x.split('(')[0]);l3.push({label:'격리',value:short.join('·')+(S.isoReason.trim()?'('+S.isoReason.trim()+')':''),red:true});}
+  if(S.admitHx==='있음'){let v='이전 입원력 있음';if(S.admitIso.size)v+=' · '+[...S.admitIso].join('·')+' 확진';if((S.admitWhen||'').trim())v+=' ('+S.admitWhen.trim()+')';l3.push({label:'입원력',value:v,red:S.admitIso.size>0});}
+  else if(S.admitHx==='없음')l3.push({label:'입원력',value:'없음',red:false});
   if(S.smoking)l3.push({label:'흡연',value:S.smoking,red:false});
   if(S.travel==='있음')l3.push({label:'여행력',value:travelText(),red:true});
   else l3.push({label:'여행력',value:'없음',red:false});
@@ -1533,6 +1556,7 @@ function go(n){
 }
 function goBack(){if(cur>1)go(cur-1);}
 function goNext(){
+  if(cur===1&&isPed()&&!(S.pedW||'').trim()){alert('소아 환자는 체중(kg)을 반드시 측정·입력하세요.');const w=document.getElementById('pedW');if(w)w.focus();return;}
   if(cur===1&&!S.route){alert('내원 경로를 선택하세요.');return;}
   if(cur===2&&!ccList().length){alert('주호소를 선택하세요.');return;}
   if(cur<5)go(cur+1);
@@ -1571,7 +1595,7 @@ function applyStateToDom(){
   const set=(id,val)=>{const e=document.getElementById(id);if(e)e.value=(val===null||val===undefined)?'':val;};
   set('pidInp',S.pid);set('nameInp',S.pname);set('ageInp',S.age);set('lmpInp',S.lmp);
   set('arrInp',S.arr);set('regInp',S.reg);set('presentInp',S.present);
-  set('noteInp',S.note);set('o2L',S.o2L);set('ccOther',S.ccOther);
+  set('noteInp',S.note);set('o2L',S.o2L);set('ccOther',S.ccOther);set('admitWhen',S.admitWhen);
   const dd=document.getElementById('dateDisp');if(dd)dd.textContent=S.date;
   const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age||'';
   renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();
