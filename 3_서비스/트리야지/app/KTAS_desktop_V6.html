@@ -1578,27 +1578,22 @@ function copyExcel(){
 // ══════════ 네이버웍스용 복사 (표1: 기본 10칸 / 표2: 내원동기·특이사항·담당교수 옆으로) ══════════
 function copyNaverWorks(){
   const p=recordParts();
-  const H1=['접수일','내원시간','접수시간','환자번호','이름','성별/나이','내원경로','내원 KTAS','변경 KTAS','V/S (접수 전 대기 길면 재측정·시간 재입력)'];
-  const V1=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'-',S.ktasChg||'-',p.vs];
-  const H2=['내원동기(과거력 #·s/p·내원사유·현재호소)','특이사항($ 문제사항)','담당교수'];
-  const V2=[p.motive,p.spec,S.doctor||'-'];
-  // 칸 폭: V/S는 넓게(310), 내원시/변경시 KTAS는 좁게(40). 나머지는 값이 들어갈 만큼만.
-  const W1=[72,46,46,72,54,54,72,40,40,310];
-  const colgroup='<colgroup>'+W1.map(w=>`<col style="width:${w}px">`).join('')+'</colgroup>';
-  // HTML: 표1(10칸)+표2(내원동기·특이사항·담당교수)를 한 표로 합침 → 사이 간격 없이 붙고 가로 폭이 딱 맞음.
-  //       아래 3칸은 colspan 6/3/1(합 10)로 위 10칸 폭에 정렬. 셀 내 줄바꿈은 <br>+same-cell로 유지.
-  const th=(t,cs)=>`<td colspan="${cs||1}" style="font-weight:bold;background:#eaf6ee;border:1px solid #888;padding:4px 6px;text-align:center;word-break:keep-all">${esc(t)}</td>`;
-  const td=(t,cs)=>`<td colspan="${cs||1}" style="border:1px solid #888;padding:4px 6px;vertical-align:top;mso-data-placement:same-cell;word-break:break-word">${esc(String(t==null?'':t)).replace(/\n/g,'<br>')}</td>`;
-  const html='<table style="border-collapse:collapse;table-layout:fixed;font-family:sans-serif;font-size:13px">'
-    +colgroup
-    +'<tr>'+H1.map(h=>th(h)).join('')+'</tr>'
-    +'<tr>'+V1.map(v=>td(v)).join('')+'</tr>'
-    +'<tr>'+th(H2[0],6)+th(H2[1],3)+th(H2[2],1)+'</tr>'
-    +'<tr>'+td(V2[0],6)+td(V2[1],3)+td(V2[2],1)+'</tr>'
-    +'</table>';
-  // 평문 폴백(리치 붙여넣기 안 되는 환경): 표1은 탭 2줄, 긴 3항목은 제목+아래 여러 줄
-  const plain=H1.join('\t')+'\n'+V1.map(x=>String(x==null?'':x)).join('\t')+'\n\n'
-    +'■ 내원동기\n'+p.motive+'\n\n■ 특이사항\n'+p.spec+'\n\n■ 담당교수\n'+(S.doctor||'-');
+  // 표A(기본정보 11칸): 담당교수를 위로 올림. V/S 넓게(310), KTAS 좁게(40). 총폭 870.
+  const HA=['접수일','내원시간','접수시간','환자번호','이름','성별/나이','내원경로','내원 KTAS','변경 KTAS','V/S (접수 전 대기 길면 재측정·시간 재입력)','담당교수'];
+  const VA=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'-',S.ktasChg||'-',p.vs,S.doctor||'-'];
+  const WA=[72,46,46,72,54,54,72,40,40,310,64];   // 합 870
+  // 표B(내원동기·특이사항 2칸): 같은 총폭 870, 내원동기 넓게. 표A 바로 아래 붙임.
+  const HB=['내원동기 (과거력 #·s/p · 내원사유 · 현재호소)','특이사항 ($ 문제사항)'];
+  const VB=[p.motive,p.spec];
+  const WB=[540,330];                              // 합 870
+  const th=t=>`<td style="font-weight:bold;background:#eaf6ee;border:1px solid #888;padding:4px 6px;text-align:center;word-break:keep-all">${esc(t)}</td>`;
+  const td=t=>`<td style="border:1px solid #888;padding:4px 6px;vertical-align:top;mso-data-placement:same-cell;word-break:break-word">${esc(String(t==null?'':t)).replace(/\n/g,'<br>')}</td>`;
+  const cg=W=>'<colgroup>'+W.map(w=>`<col style="width:${w}px">`).join('')+'</colgroup>';
+  const tbl=(W,H,V)=>{const tot=W.reduce((a,b)=>a+b,0);return `<table style="border-collapse:collapse;table-layout:fixed;width:${tot}px;font-family:sans-serif;font-size:13px">`+cg(W)+`<tr>${H.map(th).join('')}</tr><tr>${V.map(td).join('')}</tr></table>`;};
+  const html=tbl(WA,HA,VA)+tbl(WB,HB,VB);          // 두 표 같은 폭·간격 없이 세로로 붙음
+  // 평문 폴백: 표A 탭 2줄 + 내원동기·특이사항 제목/내용
+  const plain=HA.join('\t')+'\n'+VA.map(x=>String(x==null?'':x)).join('\t')+'\n\n'
+    +'■ 내원동기\n'+p.motive+'\n\n■ 특이사항\n'+p.spec;
   const msgs=isoMessages();
   copyRich(html,plain,ok=>alert((ok?'네이버웍스용 복사 완료.':'복사 시도함 — 붙여넣기로 확인하세요.')+'\n네이버웍스에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):'')));
 }
