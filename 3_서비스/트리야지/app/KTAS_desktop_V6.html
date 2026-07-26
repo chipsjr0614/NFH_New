@@ -494,7 +494,17 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     </div>
   </div>
 
-  <!-- 보관 기록 모달 (PIN) -->
+  <!-- PIN 입력 모달 -->
+  <div class="modal-bg" id="pinModal">
+    <div class="modal" style="max-width:300px">
+      <div class="modal-t">📁 보관 기록 · PIN</div>
+      <input class="fi" id="pinInp" type="password" inputmode="numeric" maxlength="6" placeholder="PIN 입력" autocomplete="off" style="font-size:22px;text-align:center;letter-spacing:8px" onkeydown="if(event.key==='Enter')pinSubmit()">
+      <button class="mbtn blue" onclick="pinSubmit()">확인</button>
+      <button class="mbtn gray" onclick="closePin()">취소</button>
+    </div>
+  </div>
+
+  <!-- 보관 기록 모달 -->
   <div class="modal-bg" id="histModal">
     <div class="modal" style="max-width:460px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -1588,14 +1598,16 @@ function recordParts(){
   return {motive,spec,sexAge,vs:vsText()};
 }
 // 칸 순서: 날짜·내원·접수·환자번호·이름·[성별/나이]·경로·KTAS내원·KTAS변경·V/S·내원동기·특이사항·주치의
-function buildExcelTSV(){
+function buildExcelRow(flat){
   const p=recordParts();
-  const cells=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'',S.ktasChg||'',p.vs,p.motive,p.spec,S.doctor];
+  const mv=flat?p.motive.replace(/\n/g,' / '):p.motive;   // flat: 케이스당 한 줄(셀 내 줄바꿈 → ' / ')
+  const sp=flat?p.spec.replace(/\n/g,' / '):p.spec;
+  const cells=[S.date,S.arr,S.reg,S.pid,maskName(S.pname),p.sexAge,S.route,S.ktas||'',S.ktasChg||'',p.vs,mv,sp,S.doctor];
   return cells.map(tsvCell).join('\t');
 }
 function copyExcel(){
   saveToHistory();                 // ★완료 시 자동 보관
-  const plain=buildExcelTSV();
+  const plain=buildExcelRow();
   const msgs=isoMessages();
   const done=()=>alert('엑셀 복사 완료.\n셀에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):''));
   navigator.clipboard.writeText(plain).then(done,()=>done());
@@ -1758,7 +1770,7 @@ function snapshot(){
 }
 
 // ══════════ 보관 기록 (완료 시 자동 · 최대 100건 · PIN 8020 · 이름 마스킹본) ══════════
-const HIST_KEY='NFH_TRIAGE_HISTORY',HIST_MAX=1000,HIST_PIN='8020';
+const HIST_KEY='NFH_TRIAGE_HISTORY',HIST_MAX=1000,HIST_PIN='123456';
 let histUnlocked=false;
 function histRead(){try{const r=localStorage.getItem(HIST_KEY);return r?JSON.parse(r):[];}catch(e){return[];}}
 function histWrite(a){
@@ -1774,16 +1786,25 @@ function saveToHistory(){
     const snap=snapshot();const masked=maskName(S.pname)||'-';
     if(snap.S)snap.S.pname=masked;                    // 저장은 마스킹본만
     const e={id:S._histId,ts:Date.now(),name:masked,pid:S.pid||'',sexAge:(S.sex||'-')+'/'+(S.age||'-'),
-      cc:ccList().join(', ')||'-',ktas:S.ktas||'',ktasChg:S.ktasChg||'',excel:buildExcelTSV(),snap:snap};
+      cc:ccList().join(', ')||'-',ktas:S.ktas||'',ktasChg:S.ktasChg||'',excel:buildExcelRow(),excelFlat:buildExcelRow(true),snap:snap};
     const a=histRead();const i=a.findIndex(x=>x.id===e.id);
     if(i>=0)a[i]=e;else a.push(e);
     while(a.length>HIST_MAX)a.shift();               // 100 초과 시 오래된 것부터
     histWrite(a);
   }catch(err){}
 }
+function showHistList(){renderHistory();document.getElementById('histModal').classList.add('show');}
 function openHistory(){
-  if(!histUnlocked){const p=prompt('📁 보관 기록 — PIN 입력');if(p===null)return;if(p!==HIST_PIN){alert('PIN이 올바르지 않습니다.');return;}histUnlocked=true;}
-  renderHistory();document.getElementById('histModal').classList.add('show');
+  if(histUnlocked){showHistList();return;}
+  const p=document.getElementById('pinInp');if(p)p.value='';
+  document.getElementById('pinModal').classList.add('show');
+  if(p)setTimeout(function(){try{p.focus();}catch(e){}},60);
+}
+function closePin(){document.getElementById('pinModal').classList.remove('show');}
+function pinSubmit(){
+  const v=((document.getElementById('pinInp')||{}).value)||'';
+  if(v!==HIST_PIN){alert('PIN이 올바르지 않습니다.');const p=document.getElementById('pinInp');if(p)p.value='';return;}
+  histUnlocked=true;closePin();showHistList();
 }
 function closeHistory(){document.getElementById('histModal').classList.remove('show');}
 function histTime(ts){const d=new Date(ts),p=n=>String(n).padStart(2,'0');return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
@@ -1808,7 +1829,10 @@ function renderHistory(){
 function histRestore(id){const e=histRead().find(x=>x.id===id);if(!e)return;if(!confirm('이 기록을 불러옵니다. 작성 중이던 내용은 대체됩니다.'))return;try{localStorage.setItem(LS_KEY,JSON.stringify(e.snap));}catch(err){}closeHistory();restoreSaved();}
 function histReCopy(id){const e=histRead().find(x=>x.id===id);if(!e)return;navigator.clipboard.writeText(e.excel||'').then(()=>alert('엑셀 복사 완료.'),()=>alert('복사 실패 — 다시 시도하세요.'));}
 function histDelete(id){if(!confirm('이 기록을 삭제할까요?'))return;histWrite(histRead().filter(x=>x.id!==id));renderHistory();}
-function histExportAll(){const a=histRead();if(!a.length){alert('내보낼 기록이 없습니다.');return;}navigator.clipboard.writeText(a.map(e=>e.excel).join('\n')).then(()=>alert(a.length+'건 엑셀 복사 완료.\n엑셀에 붙여넣으세요.'),()=>alert('복사 실패'));}
+const HIST_EXCEL_HEADER=['접수일','내원시간','접수시간','환자번호','이름','성별/나이','내원경로','내원시 KTAS','변경시 KTAS','V/S','내원동기','특이사항','담당교수'].join('\t');
+function histExportAll(){const a=histRead();if(!a.length){alert('내보낼 기록이 없습니다.');return;}
+  const tsv=HIST_EXCEL_HEADER+'\n'+a.map(e=>e.excelFlat||(e.excel||'').replace(/\n/g,' / ')).join('\n');   // 제목행 + 케이스마다 한 줄
+  navigator.clipboard.writeText(tsv).then(()=>alert(a.length+'건 엑셀 복사 완료(제목행 포함).\n엑셀 빈 셀에 붙여넣으세요.'),()=>alert('복사 실패'));}
 function saveNow(){if(restoring||restorePending)return;try{localStorage.setItem(LS_KEY,JSON.stringify(snapshot()));}catch(e){}}
 function saveSoon(){if(restoring||restorePending)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,700);}
 function clearSaved(){try{localStorage.removeItem(LS_KEY);}catch(e){}}
