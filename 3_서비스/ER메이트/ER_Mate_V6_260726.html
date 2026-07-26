@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>NFH ER Mate v5</title>
+<title>NFH ER Mate v6</title>
 <style>
 :root{--bg:#f4f6fa;--card:#fff;--line:#e4e9f0;--tx:#1d2733;--tx2:#768393;
   --blue:#2563eb;--blueL:#eef4ff;--green:#16a34a;--greenL:#e9f9ef;--warn:#dc2626;--warnL:#fdecec;
@@ -120,7 +120,7 @@ body.dark .sub.on{background:#3a2f12}
 <div class="wrap">
   <div class="top">
     <button class="hbtn" id="homeBtn" onclick="goHome()">🏠</button>
-    <h1 id="ttl"><span class="brand">NFH</span> ER Mate <span class="vtag">v5</span></h1>
+    <h1 id="ttl"><span class="brand">NFH</span> ER Mate <span class="vtag">v6</span></h1>
     <button class="hbtn" id="darkBtn" onclick="toggleDark()">🌙</button>
   </div>
   <div id="app"></div>
@@ -288,7 +288,7 @@ function toggleWhy(i){document.getElementById('why'+i).classList.toggle('open');
 function render(){
   document.getElementById('homeBtn').style.display=view==='home'?'none':'flex';
   document.getElementById('ttl').innerHTML=view==='home'
-    ?'<span class="brand">NFH</span> ER Mate <span class="vtag">v5</span>'
+    ?'<span class="brand">NFH</span> ER Mate <span class="vtag">v6</span>'
     :`${cur.ic} ${esc(cur.name)} <span class="vtag">${cur.kind==='prep'?'검사 준비':'필수 업무'}</span>`;
   document.getElementById('app').innerHTML = view==='home'?homeHtml():detailHtml();
 }
