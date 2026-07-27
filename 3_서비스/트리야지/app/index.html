@@ -1674,12 +1674,13 @@ function copyReminder2(){
   // 🔴 → [중요](깨짐 방지) · 내원동기는 줄마다 번호(그룹 유지)
   let mn=0;
   const motiveF=p.motive.split('\n').map(l=>{l=l.replace(/🔴\s*/g,'[중요] ');return l.replace(/^•\s*/,()=>(++mn)+') ');}).join('\n');
-  const specF=p.spec.replace(/🔴\s*/g,'[중요] ');
+  let sn=0;
+  const specF=p.spec.split('\n').map(l=>{l=l.replace(/🔴\s*/g,'[중요] ');return l.replace(/^•\s*/,()=>(++sn)+') ');}).join('\n');
   const indent=s=>String(s==null?'':s).split('\n').map(l=>'  '+l).join('\n');
   const head=[er,patLine,'# initial V/S : '+p.vs,'# 내원동기 :',indent(motiveF),'# 특이사항 :',indent(specF)];
   const SEP='-----------------------------------------------';
   // 평문 폴백(섹션 사이 빈 줄 없이)
-  const secPlain=REMIND_SECTIONS.map(s=>s.h+s.ex+'\n-\n-').join('\n');
+  const secPlain=REMIND_SECTIONS.map(s=>s.h+s.ex+'\n-').join('\n');
   const plain=SEP+'\n'+head.join('\n')+'\n\n'+secPlain+'\n'+SEP;
   // HTML: ER·이름 크게+음영 / 인계 항목 더 크게+파랑 / (Ex)는 그대로 / 섹션 사이 빈 줄 없음
   const e=s=>esc(String(s==null?'':s));
@@ -1688,7 +1689,7 @@ function copyReminder2(){
     +'<span style="font-size:17px;font-weight:800;'+hi+'">'+e(patLine)+'</span>\n'
     +head.slice(2).map(e).join('\n');
   const secHtml=REMIND_SECTIONS.map(s=>'<span style="font-size:22px;font-weight:800;color:#1d4ed8">'+e(s.h)+'</span>'
-    +'<span style="color:#888;font-size:13px">'+e(s.ex)+'</span>\n-\n-').join('\n');
+    +'<span style="color:#888;font-size:13px">'+e(s.ex)+'</span>\n-').join('\n');
   const html='<div style="font-family:sans-serif;font-size:15px;line-height:1.7;white-space:pre-wrap">'+e(SEP)+'\n'+headHtml+'\n\n'+secHtml+'\n'+e(SEP)+'</div>';
   const msgs=isoMessages();
   copyRich(html,plain,ok=>alert((ok?'간호인계용 Reminder2 복사 완료.':'복사 시도함 — 붙여넣기로 확인하세요.')+'\n인계 노트/메신저에 붙여넣기 하세요.'+(msgs.length?'\n\n⚠️ '+msgs.join('\n'):'')));
