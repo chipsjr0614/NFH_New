@@ -156,7 +156,14 @@ for r in rows('1.주호소트리'):
                    'set':  str(r.get('소분류') or '').strip()})
 
 # ── 4) 도관 / 낙상교육 / 환자설명 / 마무리질문 ─────────────────
-CATH = [canon(r['도관 진술문'], '도관') for r in rows('4.도관') if r.get('도관 진술문')]
+CATH = []
+for r in rows('4.도관'):
+    raw = r.get('도관 진술문(| 로 구분)') or r.get('도관 진술문')
+    if not r.get('도관') or not raw: continue
+    CATH.append({'s': str(r['도관']).strip(),
+                 'n': str(r.get('정식명칭') or r['도관']).strip(),
+                 'd': [canon(x, f"도관/{r['도관']}") for x in str(raw).split('|') if x.strip()],
+                 'new': bool(str(r.get('비고') or '').strip())})
 EDU  = [{'say': str(r.get('말할 문구(📢)') or '').strip(),
          'recs': [canon(x, '낙상교육') for x in str(r.get('기록 진술문(여러개는 | 로 구분)') or '').split('|') if x.strip()]}
         for r in rows('5.낙상교육') if r.get('id')]

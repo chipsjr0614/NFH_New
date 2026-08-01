@@ -2171,28 +2171,254 @@ window.NFH_V6 = {
   }
  },
  "cath": [
-  "Foley catheter 유지 중임",
-  "Foley catheter 통해 소변 배출되고 있음",
-  "Levin tube 유지 중임",
-  "Levin tube 통해 배액됨",
-  "중심정맥관 유지 중임",
-  "arterial line 유지 중임",
-  "arterial line를 통해 혈압 monitor 중임",
-  "Percutaneous Transhepatic Biliary Drainage 유지 중임",
-  "Percutaneous Transhepatic Biliary Drainage 통해 배액됨",
-  "Percutaneous Transhepatic Gall bladder Drainage 통해 배액됨",
-  "Percutaneous Drainage 유지 중임",
-  "Percutaneous Drainage 통해 배액됨",
-  "흉관 유지 중임",
-  "흉관 통해 배액됨",
-  "장루 통해 변 배출됨",
-  "장루 통해 변 배출 안됨",
-  "기관절개관 유지 중임",
-  "Percutaneous Nephrostomy tube 유지 중임",
-  "상처 dressing 상태임",
-  "수술상처 dressing 상태임",
-  "수술상처 출혈 있음",
-  "수술상처 출혈 없음"
+  {
+   "s": "Foley",
+   "n": "Foley catheter",
+   "d": [
+    "Foley catheter 유지 중임",
+    "Foley catheter 통해 소변 배출되고 있음"
+   ],
+   "new": false
+  },
+  {
+   "s": "L-tube",
+   "n": "Levin tube",
+   "d": [
+    "Levin tube 유지 중임",
+    "Levin tube 통해 배액됨"
+   ],
+   "new": false
+  },
+  {
+   "s": "CVC",
+   "n": "중심정맥관",
+   "d": [
+    "중심정맥관 유지 중임"
+   ],
+   "new": false
+  },
+  {
+   "s": "A-line",
+   "n": "arterial line",
+   "d": [
+    "arterial line 유지 중임",
+    "arterial line를 통해 혈압 monitor 중임"
+   ],
+   "new": false
+  },
+  {
+   "s": "기관내관",
+   "n": "기관내관",
+   "d": [
+    "기관내관 유지 중임",
+    "비강을 통한 기관내관 유지 중임"
+   ],
+   "new": true
+  },
+  {
+   "s": "인공호흡기",
+   "n": "ventilator",
+   "d": [
+    "ventilator 적용 중임",
+    "home ventilator 적용 중임"
+   ],
+   "new": true
+  },
+  {
+   "s": "Hemovac",
+   "n": "hemovac",
+   "d": [
+    "hemovac 유지 중임",
+    "hemovac 통해 배액됨",
+    "hemovac 삽입부위 oozing 있음",
+    "hemovac 삽입부위 oozing 없음",
+    "hemovac 삽입부위 통증 있음",
+    "hemovac 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "JP drain",
+   "n": "Jackson Pratt drain",
+   "d": [
+    "Jackson Pratt drain 유지 중임",
+    "Jackson Pratt drain 통해 배액됨",
+    "Jackson Pratt drain 삽입부위 oozing 있음",
+    "Jackson Pratt drain 삽입부위 oozing 없음",
+    "Jackson Pratt drain 삽입부위 통증 있음",
+    "Jackson Pratt drain 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "PEG",
+   "n": "gastrostomy tube",
+   "d": [
+    "gastrostomy tube 유지 중임",
+    "gastrostomy tube로 배액됨",
+    "gastrostomy tube 삽입부위 출혈 있음",
+    "gastrostomy tube 삽입부위 출혈 없음",
+    "gastrostomy tube 삽입부위 oozing 있음",
+    "gastrostomy tube 삽입부위 oozing 없음",
+    "gastrostomy tube 삽입부위 통증 있음",
+    "gastrostomy tube 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "흉관",
+   "n": "흉관",
+   "d": [
+    "흉관 유지 중임",
+    "흉관 통해 배액됨"
+   ],
+   "new": false
+  },
+  {
+   "s": "기관절개",
+   "n": "기관절개관",
+   "d": [
+    "기관절개관 유지 중임"
+   ],
+   "new": false
+  },
+  {
+   "s": "Chemoport",
+   "n": "chemoport",
+   "d": [
+    "chemoport 통해 항암제 주입 중임",
+    "chemoport 삽입부위 통증 있음",
+    "chemoport 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "Hickman",
+   "n": "Hickman catheter",
+   "d": [
+    "Hickman catheter 유지 중임",
+    "Hickman catheter 삽입부위 통증 있음",
+    "Hickman catheter 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "PTBD",
+   "n": "Percutaneous Transhepatic Biliary Drainage",
+   "d": [
+    "Percutaneous Transhepatic Biliary Drainage 유지 중임",
+    "Percutaneous Transhepatic Biliary Drainage 통해 배액됨"
+   ],
+   "new": false
+  },
+  {
+   "s": "PTGBD",
+   "n": "Percutaneous Transhepatic Gall bladder Drainage",
+   "d": [
+    "Percutaneous Transhepatic Gall bladder Drainage 통해 배액됨"
+   ],
+   "new": false
+  },
+  {
+   "s": "PCD",
+   "n": "Percutaneous Drainage",
+   "d": [
+    "Percutaneous Drainage 유지 중임",
+    "Percutaneous Drainage 통해 배액됨"
+   ],
+   "new": false
+  },
+  {
+   "s": "penrose",
+   "n": "penrose drain",
+   "d": [
+    "penrose drain 유지 중임",
+    "penrose drain 삽입부위 oozing 있음",
+    "penrose drain 삽입부위 oozing 없음",
+    "penrose drain 삽입부위 통증 있음",
+    "penrose drain 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "PCN",
+   "n": "Percutaneous Nephrostomy tube",
+   "d": [
+    "Percutaneous Nephrostomy tube 유지 중임"
+   ],
+   "new": false
+  },
+  {
+   "s": "방광루",
+   "n": "cystostomy tube",
+   "d": [
+    "cystostomy tube 유지 중임",
+    "cystostomy 유지 중임"
+   ],
+   "new": true
+  },
+  {
+   "s": "장루",
+   "n": "장루",
+   "d": [
+    "장루 통해 변 배출됨",
+    "장루 통해 변 배출 안됨",
+    "장루 통해 gas out 됨",
+    "장루 통해 gas out 안됨"
+   ],
+   "new": false
+  },
+  {
+   "s": "공장루",
+   "n": "jejunostomy tube",
+   "d": [
+    "jejunostomy tube로 유지 중임",
+    "jejunostomy tube로 배액됨",
+    "jejunostomy tube 삽입부위 출혈 있음",
+    "jejunostomy tube 삽입부위 출혈 없음",
+    "jejunostomy tube 삽입부위 통증 있음",
+    "jejunostomy tube 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "EVD",
+   "n": "External Ventricular Drainage",
+   "d": [
+    "External Ventricular Drainage 통해 배액됨",
+    "External Ventricular Drainage 삽입부위 oozing 있음",
+    "External Ventricular Drainage 삽입부위 oozing 없음",
+    "External Ventricular Drainage 삽입부위 통증 있음",
+    "External Ventricular Drainage 삽입부위 통증 없음"
+   ],
+   "new": true
+  },
+  {
+   "s": "경막외PCA",
+   "n": "epidural Patient Controlled Analgesics",
+   "d": [
+    "epidural Patient Controlled Analgesics 유지 중임"
+   ],
+   "new": true
+  },
+  {
+   "s": "상처",
+   "n": "상처부위",
+   "d": [
+    "상처 dressing 상태임"
+   ],
+   "new": false
+  },
+  {
+   "s": "수술",
+   "n": "수술부위",
+   "d": [
+    "수술상처 dressing 상태임",
+    "수술상처 출혈 있음",
+    "수술상처 출혈 없음"
+   ],
+   "new": false
+  }
  ],
  "edu": [
   {
