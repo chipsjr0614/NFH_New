@@ -18,6 +18,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SVC  = os.path.dirname(HERE)                      # 3_서비스/NFH간호기록
 OUT_JS   = os.path.join(SVC, 'app', 'nfh_v6_data.js')
 OUT_WARN = os.path.join(HERE, '_확인필요.txt')
+TEMPLATE = os.path.join(HERE, 'v6_template.html')
+OUT_HTML = os.path.abspath(os.path.join(SVC, '..', '..', 'nursing', 'app', '간호기록V6.html'))
 
 # ── 입력 파일 ────────────────────────────────────────────────
 def newest(pattern):
@@ -238,6 +240,16 @@ with open(OUT_WARN, 'w', encoding='utf-8') as f:
         for _, qids in SPLIT.items():
             f.write(f'  질문「{QBANK[qids[0]]["q"]}」\n')
             for q in qids: f.write(f'      {q}  {QBANK[q]["stmts"]}\n')
+
+# ── 단일 HTML 생성 (데이터 인라인) ──
+if os.path.exists(TEMPLATE):
+    tpl = open(TEMPLATE, encoding='utf-8').read()
+    inline = 'window.NFH_V6 = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';'
+    html = tpl.replace('/*__DATA__*/', inline)
+    os.makedirs(os.path.dirname(OUT_HTML), exist_ok=True)
+    with open(OUT_HTML, 'w', encoding='utf-8') as f:
+        f.write(html)
+    print(f'✅ {OUT_HTML}  ({len(html)//1024} KB · 자체완결 단일 HTML)')
 
 print(f'✅ {OUT_JS}')
 print(f'   경로 {NPATH} · 질문 {len(QBANK)}개 (공통 {sum(1 for v in QBANK.values() if v["core"])}개)')

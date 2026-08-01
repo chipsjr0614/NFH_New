@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NFH 통합 간호기록 V6</title>
+<style>
+:root{
+  --ground:#F2F5F5;--surface:#FFF;--surface2:#E8EDEC;--sunk:#EDF1F0;--line:#D3DCDB;--line2:#E3EAE9;
+  --ink:#0E1516;--ink2:#495858;--ink3:#7A8A8B;--ink4:#A6B3B3;
+  --accent:#0F5F62;--accent-soft:#DEEDEC;--accent-line:#9AC3C1;--on-accent:#FFF;
+  --ae:#1F6FD6;--ae-bg:#E8F1FC;--dx:#D63A4D;--dx-bg:#FCEAEC;--pe:#A8730A;--pe-bg:#F9F1DF;
+  --ok:#15803D;--ok-bg:#E4F2E8;--warn:#C2410C;--warn-bg:#FCEBE1;
+  --shadow:0 1px 2px rgba(15,95,98,.05),0 10px 28px -16px rgba(15,95,98,.22);
+  --f1:12px;--f2:14px;--f3:16px;--f4:19px;
+}
+html[data-t="dark"]{
+  --ground:#0B1011;--surface:#141B1C;--surface2:#1C2526;--sunk:#101718;--line:#2A3637;--line2:#212C2D;
+  --ink:#E6ECEB;--ink2:#A0AEAE;--ink3:#778788;--ink4:#5A6A6B;
+  --accent:#4FB3AE;--accent-soft:#142D2C;--accent-line:#2D5553;--on-accent:#07201F;
+  --ae:#78ADEA;--ae-bg:#142230;--dx:#F2808F;--dx-bg:#2D191D;--pe:#DCA940;--pe-bg:#2A2312;
+  --ok:#5EBE7F;--ok-bg:#14261B;--warn:#F0965C;--warn-bg:#2E1D14;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:var(--f3);line-height:1.6;display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit}
+
+/* ── 게이트 ── */
+.gate{position:fixed;inset:0;z-index:100;background:var(--ground);display:flex;align-items:center;
+  justify-content:center;padding:20px;overflow-y:auto}
+.gate.hide{display:none}
+.gbox{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 24px;
+  width:100%;max-width:470px;box-shadow:var(--shadow)}
+.gbox h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
+.gbox .s{font-size:var(--f2);color:var(--ink3);margin:0 0 20px}
+.fld{display:block;width:100%;border:1.5px solid var(--line);background:var(--sunk);border-radius:11px;
+  padding:14px 15px;font-size:var(--f3);color:var(--ink);margin-bottom:10px;outline:none}
+.fld:focus{border-color:var(--accent)}
+.fld.ok{border-color:var(--ok);background:var(--ok-bg)}
+.chk{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;
+  padding:14px 15px;margin-bottom:10px;background:var(--sunk);cursor:pointer;text-align:left;width:100%}
+.chk.on{border-color:var(--ok);background:var(--ok-bg)}
+.chk .bx{width:25px;height:25px;border-radius:7px;border:2px solid var(--line);flex:none;display:flex;
+  align-items:center;justify-content:center;font-size:14px;font-weight:800;background:var(--surface);color:transparent}
+.chk.on .bx{border-color:var(--ok);background:var(--ok);color:#fff}
+.chk .bd{font-size:var(--f3);line-height:1.8;flex:1;min-width:0}
+.chk .lb{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--pe);margin-bottom:5px}
+.go{display:block;width:100%;text-align:center;border-radius:12px;padding:16px;font-size:17px;
+  font-weight:800;margin-top:6px;border:1px solid var(--line);background:var(--surface2);color:var(--ink4)}
+.go.on{background:var(--ok);color:#fff;border-color:var(--ok)}
+
+/* ── 헤더 ── */
+header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--surface);
+  border-bottom:1px solid var(--line);flex:none}
+header .lg{font-weight:800;font-size:14px}.lg em{font-style:normal;color:var(--accent)}
+header .pt{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink2);margin-left:6px}
+header .sp{margin-left:auto;display:flex;gap:6px}
+header button.ic{border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12px;
+  font-weight:700;color:var(--ink2);background:var(--surface)}
+.saved{font-size:11px;color:var(--ink4);font-family:ui-monospace,Menlo,monospace}
+
+/* ── 단계 ── */
+.steps{display:flex;align-items:center;padding:10px 14px;background:var(--surface);
+  border-bottom:1px solid var(--line);overflow-x:auto;flex:none;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.sp{display:flex;align-items:center;gap:7px;flex:none;background:none;padding:0}
+.sp .cir{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;background:var(--surface2);color:var(--ink4);border:1.5px solid var(--line);flex:none}
+.sp .tx{font-size:var(--f1);font-weight:700;color:var(--ink4);white-space:nowrap}
+.sp.done .cir{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+.sp.done .tx{color:var(--ink3)}
+.sp.now .cir{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.sp.now .tx{color:var(--ink);font-weight:800}
+.spl{width:20px;height:1.5px;background:var(--line);margin:0 8px;flex:none}
+.spl.done{background:var(--accent-line)}
+
+/* ── 2단 ── */
+.main{flex:1;display:grid;grid-template-columns:1.5fr 1fr;min-height:0}
+.work{overflow-y:auto;padding:20px 22px 26px;border-right:1px solid var(--line);-webkit-overflow-scrolling:touch}
+.live{display:flex;flex-direction:column;background:var(--sunk);min-height:0}
+.liveh{padding:11px 15px;border-bottom:1px solid var(--line);background:var(--surface2);font-size:11.5px;
+  font-weight:800;letter-spacing:.06em;color:var(--ink2);display:flex;gap:8px;align-items:center;flex:none}
+.liveh .c{margin-left:auto;font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--ink3)}
+.liveb{flex:1;overflow-y:auto;padding:13px 15px;font-family:ui-monospace,SFMono-Regular,Menlo,"D2Coding",monospace;
+  font-size:12.5px;line-height:1.85;-webkit-overflow-scrolling:touch}
+.rl{display:flex;gap:9px;align-items:baseline}
+.rl .tg{font-weight:800;font-size:9.5px;min-width:32px;flex:none;padding-top:2px}
+.rl.gh{font-weight:800;color:var(--ink);margin-top:10px;font-size:12px}
+.rl.gh:first-child{margin-top:0}
+.rl.ae{color:var(--ae)}.rl.dx{color:var(--dx);font-weight:700}.rl.pe{color:var(--pe)}
+.rl.note{color:var(--ink3)}.rl.ph{color:var(--ink4)}
+.copy{flex:none;padding:11px 15px;border-top:1px solid var(--line);background:var(--surface2)}
+.copy button{width:100%;background:var(--accent);color:var(--on-accent);border-radius:10px;padding:12px;
+  font-size:var(--f2);font-weight:800}
+
+/* ── 작업영역 ── */
+.wt{font-size:var(--f4);font-weight:800;letter-spacing:-.02em;margin:0 0 3px}
+.ws{font-size:var(--f2);color:var(--ink3);margin:0 0 16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.b{display:inline-flex;align-items:center;justify-content:center;background:var(--surface);
+  border:1.5px solid var(--line);border-radius:10px;padding:13px 16px;font-size:var(--f2);
+  font-weight:700;color:var(--ink2);min-height:48px}
+.b.sel{background:var(--surface2);border-color:var(--ink3);color:var(--ink)}
+.b.big{padding:17px 20px;font-size:var(--f3)}
+.b.dash{border-style:dashed;color:var(--accent)}
+.b.wide{flex:1;min-width:150px}
+.gl{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--ink3);margin:18px 0 9px;
+  display:flex;align-items:center;gap:8px}
+.gl::after{content:"";flex:1;height:1px;background:var(--line2)}
+.gl .dot{width:8px;height:8px;border-radius:50%;background:var(--ink4);flex:none}
+.q{background:var(--surface);border:1.5px solid var(--line2);border-radius:11px;padding:12px 14px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.q .qt{font-size:var(--f3);font-weight:700;flex:1;min-width:180px;letter-spacing:-.01em}
+.q .rec{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--ink4)}
+.ans{display:flex;gap:6px;flex:none;flex-wrap:wrap}
+.ab{font-size:var(--f2);font-weight:700;border-radius:8px;padding:10px 16px;border:1.5px solid var(--line);
+  background:var(--surface2);color:var(--ink3);min-height:44px}
+.ab.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.ab.no{background:var(--surface2);border-color:var(--ink3);color:var(--ink)}
+.q.miss{border-style:dashed;border-color:var(--ink4);background:transparent}
+.q.miss .qt{color:var(--ink4)}
+.mt{font-size:11px;font-weight:800;color:var(--warn);border:1px solid var(--warn);border-radius:5px;padding:3px 8px}
+.tin{border:1.5px solid var(--line);background:var(--sunk);border-radius:9px;padding:10px 12px;
+  font-size:var(--f2);color:var(--ink);width:90px;outline:none}
+.tin:focus{border-color:var(--accent)}
+.dxc{border:1.5px solid var(--line);border-left:4px solid var(--dx);border-radius:10px;padding:14px 15px;
+  margin-bottom:9px;background:var(--surface);display:flex;align-items:center;gap:11px;width:100%;text-align:left}
+.dxc.on{background:var(--dx-bg)}
+.dxc .ck{width:22px;height:22px;border-radius:6px;border:2px solid var(--dx);flex:none;display:flex;
+  align-items:center;justify-content:center;color:transparent;font-size:12px;font-weight:800}
+.dxc.on .ck{background:var(--dx);color:#fff}
+.dxc .nm{font-size:var(--f3);font-weight:800;color:var(--dx)}
+.dxc .rc{margin-left:auto;font-size:11px;font-weight:800;color:var(--dx);background:var(--dx-bg);
+  border:1px solid var(--dx);border-radius:6px;padding:3px 8px;flex:none}
+.say{border:1.5px solid var(--line);border-left:4px solid var(--pe);border-radius:10px;padding:13px 15px;
+  margin-bottom:8px;background:var(--surface);width:100%;text-align:left}
+.say .s{font-size:var(--f3);font-weight:700;letter-spacing:-.01em}
+.say .r{font-size:var(--f1);color:var(--pe);margin-top:6px;font-family:ui-monospace,Menlo,monospace}
+.say.on{background:var(--pe-bg);border-color:var(--pe)}
+.nav{display:flex;gap:9px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line2)}
+.nav button{flex:1;text-align:center;border-radius:11px;padding:15px;font-size:var(--f3);font-weight:800;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--ink2)}
+.nav button.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);flex:2}
+.nav button:disabled{opacity:.4}
+details{background:var(--surface);border:1px solid var(--line);border-radius:11px;margin-bottom:12px}
+summary{list-style:none;cursor:pointer;padding:12px 15px;font-size:var(--f2);font-weight:800;display:flex;
+  align-items:center;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary .cv{margin-left:auto;color:var(--ink3);font-size:12px}
+details[open] summary{border-bottom:1px solid var(--line)}
+.refb{padding:14px 15px}
+.ref{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:9px}
+.rc2{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 5px;text-align:center}
+.rc2 .n{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:800;margin-top:6px;color:var(--ink2)}
+.rc2 .t{font-size:10.5px;color:var(--ink3);line-height:1.4;margin-top:2px}
+.warnbar{background:var(--warn-bg);border:1px solid var(--warn);border-radius:9px;padding:10px 13px;
+  font-size:var(--f2);margin-bottom:12px}
+.warnbar b{color:var(--warn)}
+.hint{background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:10px;padding:12px 14px;
+  font-size:var(--f2);color:var(--ink2);margin-bottom:14px}
+textarea.memo{width:100%;border:1.5px solid var(--line);background:var(--sunk);border-radius:10px;
+  padding:11px 13px;font-size:var(--f2);color:var(--ink);min-height:70px;resize:vertical;outline:none;font-family:inherit}
+textarea.memo:focus{border-color:var(--accent)}
+
+/* ── 폰 ── */
+@media (max-width:820px){
+  .main{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  .work{border-right:none;padding:16px 15px 22px}
+  .live{border-top:1px solid var(--line);max-height:45vh}
+  .live.fold .liveb,.live.fold .copy{display:none}
+  .liveh{cursor:pointer}
+  .sp .tx{display:none}.sp.now .tx{display:inline}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+
+<!-- 게이트 -->
+<div class="gate" id="gate"><div class="gbox">
+  <h1>🛡️ 시작 전 — 환자 확인</h1>
+  <p class="s">맞이 시 안전의 첫 단추입니다. 네 가지를 모두 확인해야 시작됩니다.</p>
+  <input class="fld" id="pname" placeholder="환자 이름" autocomplete="off">
+  <input class="fld" id="pid" placeholder="등록번호 (숫자 8자리)" maxlength="8" inputmode="numeric" autocomplete="off">
+  <button class="chk" id="cConf"><span class="bx">✓</span><div class="bd">
+    🧼 손위생 하기<br>🗣️ “성함이 어떻게 되세요?”<br>🏷️ “팔찌 확인하겠습니다”</div></button>
+  <button class="chk" id="cEdu"><span class="bx">✓</span><div class="bd">
+    <div class="lb">📢 맞이 교육 안내</div>
+    💍 귀금속·시계 빼서 보관해 주세요<br>👕 환자복으로 갈아입으실게요<br>🚱 검사를 위해 금식해 주세요</div></button>
+  <button class="go" id="gGo">✅ 간호기록 시작</button>
+</div></div>
+
+<header>
+  <span class="lg">NFH <em>간호기록</em></span><span class="pt" id="ptInfo"></span>
+  <span class="sp"><span class="saved" id="savedAt"></span>
+    <button class="ic" id="themeBtn">🌙</button>
+    <button class="ic" id="newBtn">🔄 새 환자</button></span>
+</header>
+<div class="steps" id="steps"></div>
+<div class="main">
+  <div class="work" id="work"></div>
+  <div class="live" id="live">
+    <div class="liveh" id="liveh">📋 간호기록<span class="c" id="cnt">0줄</span></div>
+    <div class="liveb" id="preview"></div>
+    <div class="copy"><button id="copyBtn">📤 EMR 복사</button></div>
+  </div>
+</div>
+
+<script>
+window.NFH_V6 = {"meta":{"src":"간호기록_원본_260623.xlsx","paths":40,"questions":89},"qbank":{"Q001":{"q":"\"오심이나 구토가 있으세요?\"","fmt":"토글","stmts":["오심, 구토 없음","오심, 구토 있음"],"core":true,"n":15},"Q002":{"q":"\"복부가 불편하신가요?\"","fmt":"토글","stmts":["복부 불편감 있음","복부 불편감 없음"],"core":false,"n":3},"Q003":{"q":"\"배가 아프세요?\"","fmt":"토글","stmts":["복부 통증 있음","복부 통증 없음"],"core":false,"n":5},"Q004":{"q":"\"대변은 보셨나요?\"","fmt":"토글","stmts":["대변 봄","대변 못 봄"],"core":false,"n":1},"Q005":{"q":"\"설사하셨나요?\"","fmt":"토글","stmts":["설사 있음","설사 없음"],"core":false,"n":1},"Q006":{"q":"\"방귀는 나오나요?\"","fmt":"토글","stmts":["gas out 됨","gas out 안됨"],"core":false,"n":1},"Q007":{"q":"\"어지럽거나 핑 도는 느낌이 있으세요?\"","fmt":"토글","stmts":["dizziness 있음","dizziness 없음"],"core":true,"n":26},"Q008":{"q":"\"숨이 차거나 답답하신가요?\"","fmt":"토글","stmts":["호흡곤란 있음","호흡곤란 없음"],"core":true,"n":12},"Q009":{"q":"\"가슴이 아프세요?\"","fmt":"토글","stmts":["흉부 통증 있음","흉부 통증 없음"],"core":false,"n":7},"Q010":{"q":"동공 크기를 확인하세요 (Rt/Lt)","fmt":"값입력","stmts":["동공크기 :"],"core":false,"n":5},"Q011":{"q":"빛 반사를 확인하세요 (prompt/sluggish/hippus)","fmt":"선택","stmts":["빛 반사 확인결과 prompt","sluggish","hippus 함"],"core":false,"n":5},"Q012":{"q":"\"몸에 감각이 이상한 부분이 있으세요?\"","fmt":"토글","stmts":["감각이상 있음","감각이상 없음"],"core":false,"n":3},"Q013":{"q":"\"제 손을 양손으로 꽉 쥐어보시겠어요?\"","fmt":"토글","stmts":["grasp power 강함","grasp power 약함"],"core":false,"n":3},"Q014":{"q":"\"두통이 있으세요?\"","fmt":"토글","stmts":["두통 있음","두통 없음"],"core":false,"n":1},"Q015":{"q":"\"몸이 뜨겁거나 열이 나는 것 같으세요?\"","fmt":"토글","stmts":["열감 있음","열감 없음"],"core":true,"n":12},"Q016":{"q":"\"통증이 있으세요?\"","fmt":"토글","stmts":["통증 있음","통증 없음"],"core":false,"n":6},"Q017":{"q":"\"부어 있나요?\"","fmt":"토글","stmts":["edema 있음","edema 없음"],"core":false,"n":1},"Q018":{"q":"\"저리거나 감각이 둔한가요?\"","fmt":"토글","stmts":["감각이상 있음","감각이상 없음"],"core":false,"n":1},"Q019":{"q":"\"기침이 있으세요?\"","fmt":"토글","stmts":["기침 있음","기침 없음"],"core":false,"n":7},"Q020":{"q":"\"가래가 나오나요?\"","fmt":"토글","stmts":["가래 있음","가래 없음"],"core":false,"n":5},"Q021":{"q":"\"오한(춥고 떨림)이 있으세요?\"","fmt":"토글","stmts":["chilling 있음","chilling 없음"],"core":true,"n":11},"Q022":{"q":"🩺 산소를 흡입 중인지 확인하세요","fmt":"체크","stmts":["산소 흡입 중임"],"core":false,"n":3},"Q023":{"q":"🩺 산소포화도를 확인하세요","fmt":"체크","stmts":["산소포화도 떨어짐"],"core":false,"n":3},"Q024":{"q":"가래 소리가 들리는지 청진하세요","fmt":"체크","stmts":["가래 소리 들림"],"core":false,"n":1},"Q025":{"q":"\"가래를 잘 못 뱉으세요?\"","fmt":"체크","stmts":["가래 잘 뱉지 못함"],"core":false,"n":1},"Q026":{"q":"\"쌕쌕거리는 숨소리가 있으세요?\"","fmt":"토글","stmts":["wheezing 있음","wheezing 없음"],"core":false,"n":1},"Q027":{"q":"\"가슴이 답답하거나 불편하신가요?\"","fmt":"토글","stmts":["흉부 불편감 있음","흉부 불편감 없음"],"core":false,"n":4},"Q028":{"q":"\"다리가 붓는 느낌이 있으세요?\"","fmt":"토글","stmts":["하지부종 있음","하지부종 없음"],"core":false,"n":2},"Q029":{"q":"\"피가 섞인 가래를 뱉으셨나요?\"","fmt":"토글","stmts":["객혈 있음","객혈 없음"],"core":false,"n":2},"Q030":{"q":"\"피를 토하셨나요?\"","fmt":"토글","stmts":["토혈 있음","토혈 없음"],"core":false,"n":2},"Q031":{"q":"\"대변에 피가 섞여 나오셨나요?\"","fmt":"토글","stmts":["혈변 있음","혈변 없음"],"core":false,"n":2},"Q032":{"q":"\"검은색 대변이 나오셨나요?\"","fmt":"토글","stmts":["흑색변 있음","흑색변 없음"],"core":false,"n":2},"Q033":{"q":"\"질 출혈이 있으세요?\"","fmt":"토글","stmts":["질 출혈 있음","질 출혈 없음"],"core":false,"n":2},"Q034":{"q":"\"출혈이 있으세요?\"","fmt":"토글","stmts":["출혈 있음","출혈 없음"],"core":false,"n":2},"Q035":{"q":"\"눈에 보이는 출혈이 있으세요?\"","fmt":"토글","stmts":["출혈 있음","출혈 없음"],"core":false,"n":2},"Q036":{"q":"혈중 Hemoglobin 수치를 확인하세요","fmt":"체크","stmts":["혈중 hemoglobin 수치 정상 이하임"],"core":false,"n":2},"Q037":{"q":"혈소판 수치를 확인하세요","fmt":"체크","stmts":["혈소판 수치  감소함"],"core":false,"n":2},"Q038":{"q":"INR 수치를 확인하세요","fmt":"값입력","stmts":["INR :"],"core":false,"n":2},"Q039":{"q":"CRP 수치를 확인하세요","fmt":"체크","stmts":["C-reactive protein 수치 증가함"],"core":false,"n":1},"Q040":{"q":"체온을 측정하세요","fmt":"체크","stmts":["체온 상승함"],"core":false,"n":3},"Q041":{"q":"체온을 측정하세요","fmt":"체크","stmts":["체온 하강함"],"core":false,"n":1},"Q042":{"q":"심전도(ECG) 결과를 확인하세요","fmt":"체크","stmts":["불규칙 맥박 촉지됨"],"core":false,"n":2},"Q043":{"q":"혈당 수치를 확인하세요","fmt":"체크","stmts":["혈당 증가함"],"core":false,"n":1},"Q044":{"q":"\"갈증이 심하거나 소변이 자주 나오세요?\"","fmt":"토글","stmts":["고혈당 증상 있음","고혈당 증상 없음"],"core":false,"n":1},"Q045":{"q":"혈당 수치를 확인하세요","fmt":"체크","stmts":["혈당 떨어짐"],"core":false,"n":1},"Q046":{"q":"\"식은땀이 나거나 손이 떨리세요?\"","fmt":"토글","stmts":["저혈당 증상 있음","저혈당 증상 없음"],"core":false,"n":1},"Q047":{"q":"발작 양상을 확인하세요","fmt":"체크","stmts":["seizure 있음"],"core":false,"n":1},"Q048":{"q":"\"발작이 멈췄나요?\"","fmt":"토글","stmts":["seizure 멈춤","seizure 없음"],"core":false,"n":1},"Q049":{"q":"\"발작과 비슷한 증상이 있었나요?\"","fmt":"토글","stmts":["seizure 유사증상 있음","seizure 유사증상 없음"],"core":false,"n":1},"Q050":{"q":"확인하세요","fmt":"체크","stmts":["의식 명료함"],"core":false,"n":1},"Q051":{"q":"확인하세요","fmt":"값입력","stmts":["의식수준 :"],"core":false,"n":1},"Q052":{"q":"확인하세요","fmt":"체크","stmts":["보호자 환자 옆에 상주하고 있음"],"core":false,"n":1},"Q053":{"q":"확인하세요","fmt":"체크","stmts":["보호자 동행하지 않음"],"core":false,"n":1},"Q054":{"q":"확인하세요","fmt":"토글","stmts":["obey command 가능함","obey command 가능하지 않음"],"core":false,"n":1},"Q055":{"q":"확인하세요","fmt":"선택","stmts":["시간에 대한 지남력 없음","사람에 대한 지남력 없음","장소에 대한 지남력 없음"],"core":false,"n":1},"Q056":{"q":"확인하세요","fmt":"체크","stmts":["시간, 사람, 장소에 대한 지남력 없음"],"core":false,"n":1},"Q057":{"q":"\"열이 나나요?\"","fmt":"토글","stmts":["열감 있음","열감 없음"],"core":false,"n":2},"Q058":{"q":"\"춥다고 하거나 몸을 떨었나요?\"","fmt":"토글","stmts":["chilling 있음","chilling 없음"],"core":false,"n":1},"Q059":{"q":"🩺 체온을 측정하세요","fmt":"선택","stmts":["체온 상승함","체온 하강함"],"core":false,"n":1},"Q060":{"q":"\"아이가 축 처져 있거나 반응이 느린가요?\"","fmt":"토글","stmts":["lethargy 상태임","의식 명료함"],"core":false,"n":1},"Q061":{"q":"🩺 아이 반응 정도를 확인하세요","fmt":"선택","stmts":["울음소리 좋음","자극 주면 울음","반응 없음"],"core":false,"n":3},"Q062":{"q":"\"토했나요?\"","fmt":"토글","stmts":["구토함","구토 없음"],"core":false,"n":2},"Q063":{"q":"\"메스꺼워 하나요?\"","fmt":"토글","stmts":["오심 있음","오심 없음"],"core":false,"n":1},"Q064":{"q":"\"설사하나요?\"","fmt":"토글","stmts":["설사 있음","설사 없음"],"core":false,"n":1},"Q065":{"q":"\"입술이나 입 안이 말라 있나요?\"","fmt":"토글","stmts":["구강건조 있음","구강건조 없음"],"core":false,"n":1},"Q066":{"q":"\"물을 자꾸 찾나요?\"","fmt":"토글","stmts":["갈증 있음","갈증 없음"],"core":false,"n":1},"Q067":{"q":"🩺 피부를 집었다 놓았을 때 천천히 돌아오나요?","fmt":"체크","stmts":["피부 탄력성 저하됨"],"core":false,"n":1},"Q068":{"q":"\"소변(기저귀)이 평소보다 줄었나요?\"","fmt":"체크","stmts":["소변량 감소함"],"core":false,"n":1},"Q069":{"q":"\"배가 아프다고 하나요?\"","fmt":"토글","stmts":["복부 통증 있음","복부 통증 없음"],"core":false,"n":1},"Q070":{"q":"\"아이가 숨쉬기 힘들어 보이나요?\"","fmt":"토글","stmts":["호흡곤란 있음","호흡곤란 없음"],"core":false,"n":1},"Q071":{"q":"\"숨쉴 때 갈비뼈 사이나 목이 쑥 들어가나요?\"","fmt":"토글","stmts":["chest retraction 있음","chest retraction 없음"],"core":false,"n":1},"Q072":{"q":"\"쌕쌕거리는 숨소리가 나나요?\"","fmt":"토글","stmts":["wheezing 있음","wheezing 없음"],"core":false,"n":1},"Q073":{"q":"\"기침하나요?\"","fmt":"토글","stmts":["기침 있음","기침 없음"],"core":false,"n":1},"Q074":{"q":"\"가래가 끓는데 잘 못 뱉나요?\"","fmt":"토글","stmts":["가래 잘 뱉지 못함","가래 잘 뱉어냄"],"core":false,"n":1},"Q075":{"q":"\"입술이나 얼굴이 파래 보이나요?\"","fmt":"토글","stmts":["청색증 있음","청색증 없음"],"core":false,"n":1},"Q076":{"q":"\"손끝·발끝이 파래 보이나요?\"","fmt":"토글","stmts":["말단 청색증 있음","말단 청색증 없음"],"core":false,"n":1},"Q077":{"q":"\"경련(발작)을 했나요?\"","fmt":"체크","stmts":["경련 있음"],"core":false,"n":1},"Q078":{"q":"🩺 경련과 비슷한 움직임이 있는지 관찰하세요","fmt":"체크","stmts":["경련과 유사한 증상 보임"],"core":false,"n":1},"Q079":{"q":"\"경련 후 축 처져 있나요?\"","fmt":"토글","stmts":["lethargy 상태임","의식 명료함"],"core":false,"n":1},"Q080":{"q":"\"두드러기가 올라왔나요?\"","fmt":"토글","stmts":["urticaria 있음","urticaria 없음"],"core":false,"n":1},"Q081":{"q":"🩺 기저귀 부위 발진을 확인하세요","fmt":"토글","stmts":["기저귀 발진 있음","기저귀 발진 없음"],"core":false,"n":1},"Q082":{"q":"\"가려워하나요?\"","fmt":"토글","stmts":["가려움증 있음","가려움증 없음"],"core":false,"n":1},"Q083":{"q":"🩺 물집이 잡혔는지 확인하세요","fmt":"토글","stmts":["bullae 있음","bullae 없음"],"core":false,"n":1},"Q084":{"q":"🩺 보채는지 관찰하세요","fmt":"토글","stmts":["보챔","보채지 않음"],"core":false,"n":1},"Q085":{"q":"\"평소보다 심하게 보채거나 우나요?\"","fmt":"체크","stmts":["울고 보챔"],"core":false,"n":1},"Q086":{"q":"\"잠을 못 자고 계속 우나요?\"","fmt":"체크","stmts":["잠 안자고 울고 보챔"],"core":false,"n":1},"Q087":{"q":"🩺 팔다리를 자주 움직이며 보채는지 관찰하세요","fmt":"체크","stmts":["자주 사지 움직이며 보챔"],"core":false,"n":1},"Q088":{"q":"\"아파하나요?\"","fmt":"토글","stmts":["통증 있음","통증 없음"],"core":false,"n":1},"Q089":{"q":"\"축 처져 있거나 반응이 느린가요?\"","fmt":"토글","stmts":["lethargy 상태임","의식 명료함"],"core":false,"n":1}},"syms":{"통증":{"id":"pain","icon":"😣","q1":"어디가 아프세요?","q2":""},"호흡곤란":{"id":"breath","icon":"🫁","q1":"호흡 상태를 선택하세요","q2":""},"출혈 (눈에 보임)":{"id":"bleed1","icon":"🩸","q1":"출혈 종류?","q2":"흉통 동반?"},"출혈 (외상·코피)":{"id":"bleed2","icon":"🩹","q1":"통증 동반?","q2":""},"출혈위험":{"id":"bleed3","icon":"⚠️","q1":"통증 동반?","q2":""},"감염":{"id":"infect","icon":"🦠","q1":"","q2":""},"감염위험":{"id":"infectR","icon":"🚨","q1":"","q2":""},"고체온":{"id":"fever","icon":"🌡️","q1":"통증 동반?","q2":""},"저체온":{"id":"cold","icon":"🥶","q1":"","q2":""},"뇌경색/뇌출혈":{"id":"neuro","icon":"🧠","q1":"","q2":""},"심근경색 의심":{"id":"cardiac","icon":"❤️","q1":"흉통 있나요?","q2":""},"고혈당":{"id":"hyper","icon":"🍬","q1":"","q2":""},"저혈당":{"id":"hypo","icon":"💉","q1":"","q2":""},"Seizure":{"id":"seizure","icon":"⚡","q1":"지금 발작 상태?","q2":""},"이상 없음":{"id":"ok","icon":"✅","q1":"","q2":""},"소아":{"id":"peds","icon":"👶","q1":"아이가 어디가 불편해서 왔나요?","q2":""}},"branch":[{"sym":"통증","sel1":"복부","sel2":"","set":"복부통증"},{"sym":"통증","sel1":"흉부","sel2":"","set":"흉부통증"},{"sym":"통증","sel1":"두통","sel2":"","set":"두통(headache)"},{"sym":"통증","sel1":"기타 (상지·하지·목 등)","sel2":"","set":"통증(상지, 하지, 목, 엉덩이, 서혜부 등)"},{"sym":"호흡곤란","sel1":"가래 없거나 적음 / 기타","sel2":"","set":"호흡곤란(가래 없거나 적을떄- 기타 호흡곤란)"},{"sym":"호흡곤란","sel1":"가래 많음 (폐렴 의심)","sel2":"","set":"기도개방유지불능(가래 많을 떄- 폐렴 의심)"},{"sym":"호흡곤란","sel1":"천명음 있음 (천식·기도협착)","sel2":"","set":"기도개방유지불능(기도는 좁을떄- 천식, croup,종양)"},{"sym":"호흡곤란","sel1":"심부전 의심 + 흉통 없음","sel2":"","set":"호흡곤란(심부전 의심 / 흉부통증 없음)"},{"sym":"호흡곤란","sel1":"심부전 의심 + 흉통 있음","sel2":"","set":"호흡곤란(심부전 의심 / 흉부통증 있음)"},{"sym":"출혈 (눈에 보임)","sel1":"객혈 (기침으로 피 뱉음)","sel2":"흉통 없음","set":"객혈 - 흉부통증 없음"},{"sym":"출혈 (눈에 보임)","sel1":"객혈 (기침으로 피 뱉음)","sel2":"흉통 있음","set":"객혈 - 흉부통증 있음"},{"sym":"출혈 (눈에 보임)","sel1":"토혈 (피를 토함)","sel2":"복통 없음","set":"토혈 -복부통증 없음"},{"sym":"출혈 (눈에 보임)","sel1":"토혈 (피를 토함)","sel2":"복통 있음","set":"토혈 -복부통증 있음"},{"sym":"출혈 (눈에 보임)","sel1":"혈변","sel2":"복통 없음","set":"혈변-복부통증 없음"},{"sym":"출혈 (눈에 보임)","sel1":"혈변","sel2":"복통 있음","set":"혈변-복부통증 있음"},{"sym":"출혈 (눈에 보임)","sel1":"질 출혈","sel2":"통증 없음","set":"질출혈- 통증 없음"},{"sym":"출혈 (눈에 보임)","sel1":"질 출혈","sel2":"통증 있음","set":"질 출혈-통증 있음"},{"sym":"출혈 (외상·코피)","sel1":"통증 없음","sel2":"","set":"출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)- 통증없음"},{"sym":"출혈 (외상·코피)","sel1":"통증 있음","sel2":"","set":"출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)- 통증있음"},{"sym":"출혈위험","sel1":"통증 없음","sel2":"","set":"출혈위험 - 통증 없음"},{"sym":"출혈위험","sel1":"통증 있음","sel2":"","set":"출혈위험-통증 있음"},{"sym":"감염","sel1":"","sel2":"","set":"CRP 수치 정상 이상일때"},{"sym":"감염위험","sel1":"","sel2":"","set":"CRP 수치 모를때, 감염 위험성 있을떄(배액관, 있을때, 열감 있을 떄)"},{"sym":"고체온","sel1":"통증 없음","sel2":"","set":"고체온+통증없음"},{"sym":"고체온","sel1":"통증 있음","sel2":"","set":"고체온+통증 있음"},{"sym":"저체온","sel1":"","sel2":"","set":"저체온"},{"sym":"뇌경색/뇌출혈","sel1":"","sel2":"","set":"뇌경색뇌출혈 관련"},{"sym":"심근경색 의심","sel1":"흉통 없음","sel2":"","set":"심근경색의심+통증없음"},{"sym":"심근경색 의심","sel1":"흉통 있음","sel2":"","set":"심근경색의심+통증있음"},{"sym":"고혈당","sel1":"","sel2":"","set":"고혈당"},{"sym":"저혈당","sel1":"","sel2":"","set":"저혈당"},{"sym":"Seizure","sel1":"🚨 지금 Seizure 중","sel2":"","set":"지금 Seizure 할 때"},{"sym":"Seizure","sel1":"발작 멈추고 내원","sel2":"","set":"이미 Seizure를 하고 멈춘뒤 내원할 때"},{"sym":"이상 없음","sel1":"","sel2":"","set":""},{"sym":"소아","sel1":"🌡️ 열나요","sel2":"","set":"소아-발열"},{"sym":"소아","sel1":"🤮💩 토하고 설사","sel2":"","set":"소아-구토설사"},{"sym":"소아","sel1":"🫁 숨쉬기 힘들어요","sel2":"","set":"소아-호흡곤란"},{"sym":"소아","sel1":"⚡ 경련했어요","sel2":"","set":"소아-경련"},{"sym":"소아","sel1":"🧴 발진·두드러기","sel2":"","set":"소아-피부"},{"sym":"소아","sel1":"😖 보채고 처져요","sel2":"","set":"소아-보챔처짐"}],"sets":{"복부통증":{"대분류":"통증","dx":[{"name":"급성통증","ae":["Q001","Q002","Q003","Q004","Q005","Q006"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"흉부통증":{"대분류":"통증","dx":[{"name":"급성통증","ae":["Q007","Q008","Q009"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"두통(headache)":{"대분류":"통증","dx":[{"name":"급성통증","ae":["Q007","Q010","Q011","Q012","Q013","Q014"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함","사지 근력 평가함"]}]},"통증(상지, 하지, 목, 엉덩이, 서혜부 등)":{"대분류":"통증","dx":[{"name":"급성통증","ae":["Q015","Q016","Q017","Q018"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"호흡곤란(가래 없거나 적을떄- 기타 호흡곤란)":{"대분류":"호흡","dx":[{"name":"비효율적호흡양상","ae":["Q019","Q020","Q015","Q021","Q008","Q022","Q023"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함"]}]},"기도개방유지불능(가래 많을 떄- 폐렴 의심)":{"대분류":"호흡","dx":[{"name":"비효율적호흡양상","ae":["Q019","Q020","Q024","Q025","Q015","Q021","Q008","Q022","Q023"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함"]}]},"기도개방유지불능(기도는 좁을떄- 천식, croup,종양)":{"대분류":"호흡","dx":[{"name":"비효율적호흡양상","ae":["Q019","Q020","Q026","Q015","Q021","Q008","Q022","Q023"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함"]}]},"호흡곤란(심부전 의심 / 흉부통증 없음)":{"대분류":"호흡","dx":[{"name":"비효율적호흡양상","ae":["Q019","Q020","Q015","Q021","Q008","Q009","Q027","Q028"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함"]}]},"호흡곤란(심부전 의심 / 흉부통증 있음)":{"대분류":"호흡","dx":[{"name":"비효율적호흡양상","ae":["Q019","Q020","Q015","Q021","Q008","Q027","Q028","Q007"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함"]},{"name":"급성통증","ae":["Q019","Q020","Q015","Q021","Q008","Q009","Q027","Q028","Q007"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함","통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"객혈 - 흉부통증 없음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q019","Q008","Q015","Q021","Q009","Q029"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]}]},"객혈 - 흉부통증 있음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q019","Q008","Q015","Q021","Q029"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]},{"name":"급성통증","ae":["Q007","Q019","Q008","Q015","Q021","Q009"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"토혈 -복부통증 없음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q001","Q003","Q030"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]}]},"토혈 -복부통증 있음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q001","Q030","Q002"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]},{"name":"급성통증","ae":["Q007","Q001","Q002","Q003"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"혈변-복부통증 없음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q001","Q003","Q031","Q032"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]}]},"혈변-복부통증 있음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q001","Q031","Q032","Q002"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]},{"name":"급성통증","ae":["Q007","Q001","Q002","Q003"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"질출혈- 통증 없음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q001","Q033"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]}]},"질 출혈-통증 있음":{"대분류":"출혈(눈에 보이는 출혈양상)","dx":[{"name":"출혈","ae":["Q007","Q001","Q033"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]},{"name":"급성통증","ae":["Q007","Q001","Q016"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)- 통증없음":{"대분류":"출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)","dx":[{"name":"출혈","ae":["Q007","Q001","Q034"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]}]},"출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)- 통증있음":{"대분류":"출혈(기타 외상 출혈-코피, 상처 출혈, 수술 출혈)","dx":[{"name":"출혈","ae":["Q007","Q001","Q034"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]},{"name":"급성통증","ae":["Q007","Q001","Q016"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"출혈위험 - 통증 없음":{"대분류":"출혈위험(눈에 보이지 않지만 Hemoglobin 낮거나 과거 출혈 경향 있을떄","dx":[{"name":"출혈위험","ae":["Q007","Q001","Q035","Q036","Q037","Q038"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]}]},"출혈위험-통증 있음":{"대분류":"출혈위험(눈에 보이지 않지만 Hemoglobin 낮거나 과거 출혈 경향 있을떄","dx":[{"name":"출혈위험","ae":["Q007","Q001","Q035","Q036","Q037","Q038"],"pe":["출혈 증상이 있는지 확인함","출혈양상 확인함"]},{"name":"급성통증","ae":["Q007","Q001","Q016"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"CRP 수치 정상 이상일때":{"대분류":"감염","dx":[{"name":"감염","ae":["Q007","Q001","Q015","Q021","Q039"],"pe":["감염 증상이 있는지 확인함","체온 측정함"]}]},"CRP 수치 모를때, 감염 위험성 있을떄(배액관, 있을때, 열감 있을 떄)":{"대분류":"감염위험","dx":[{"name":"감염위험","ae":["Q007","Q001","Q015","Q021"],"pe":["감염 증상이 있는지 확인함","체온 측정함"]}]},"고체온+통증없음":{"대분류":"고체온","dx":[{"name":"감염","ae":["Q007","Q001","Q015","Q021","Q016","Q040"],"pe":["감염 증상이 있는지 확인함","체온 측정함"]}]},"고체온+통증 있음":{"대분류":"고체온","dx":[{"name":"고체온","ae":["Q007","Q001","Q015","Q021","Q040"],"pe":["감염 증상이 있는지 확인함","체온 측정함"]},{"name":"급성통증","ae":["Q007","Q001","Q016"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]}]},"저체온":{"대분류":"저체온","dx":[{"name":"저체온","ae":["Q007","Q010","Q011","Q012","Q013","Q041"],"pe":["저체온의 초기 증상에 대해 설명함","체온 측정함","담요를 덮어줌","사지 근력 평가함"]}]},"뇌경색뇌출혈 관련":{"대분류":"뇌경색/뇌출혈 의심","dx":[{"name":"조직관류저하:뇌","ae":["Q007","Q010","Q011","Q012","Q013"],"pe":["신경학적 증상이 있는지 확인함","사지 근력 평가함"]}]},"심근경색의심+통증없음":{"대분류":"심근경색 의심","dx":[{"name":"조직관류저하:심폐계","ae":["Q007","Q008","Q027","Q009","Q042"],"pe":["흉부 통증이 있는지 확인함","심전도 변화를 확인함"]}]},"심근경색의심+통증있음":{"대분류":"심근경색 의심","dx":[{"name":"급성통증","ae":["Q009"],"pe":["통증을 인정해줌","통증을 관찰하기로 함","통증 양상을 확인함"]},{"name":"조직관류저하:심폐계","ae":["Q007","Q008","Q027","Q009","Q042"],"pe":["흉부 통증이 있는지 확인함","심전도 변화를 확인함"]}]},"고혈당":{"대분류":"고혈당","dx":[{"name":"고혈당","ae":["Q007","Q008","Q043","Q044"],"pe":["혈당 검사 시행함","처방에 의해 인슐린 투여함"]}]},"저혈당":{"대분류":"저혈당","dx":[{"name":"저혈당","ae":["Q007","Q008","Q045","Q046"],"pe":["혈당 검사 시행함","저혈당 증상(진전, 빈맥, 발한, 감각이상, 의식변화)에 대해 설명함","처방에 의해 D50W 을 투여함"]}]},"지금 Seizure 할 때":{"대분류":"Seizure","dx":[{"name":"신체손상위험","ae":["Q047","Q010","Q011"],"pe":["seizure 양상 확인함","안전간호를 제공함","seizure의 유발요인을 확인함","처방에 의해 Lorazepam 을 투여함"]}]},"이미 Seizure를 하고 멈춘뒤 내원할 때":{"대분류":"Seizure","dx":[{"name":"신체손상위험","ae":["Q007","Q010","Q011","Q048","Q049"],"pe":["seizure 양상 확인함","안전간호를 제공함","seizure의 유발요인을 확인함","사지 근력 평가함"]}]},"의식 및 낙상위험 평가":{"대분류":"의식/낙상 사정","dx":[{"name":"낙상위험","ae":["Q050","Q051","Q052","Q053","Q054","Q055","Q056"],"pe":["낙상방지 교육함","침대 난간을 올려줌","보호자와 같이 있게 함","보호자 동반하도록 설명함","손상을 예방하는 방법에 대해 교육함"]}]},"소아-발열":{"대분류":"소아","dx":[{"name":"고체온","ae":["Q057","Q058","Q059","Q060","Q061","Q062"],"pe":["체온 측정함","미온수 목욕 시행함","처방에 의해 해열제를 투여함"]}]},"소아-구토설사":{"대분류":"소아","dx":[{"name":"체액부족위험","ae":["Q062","Q063","Q064","Q065","Q066","Q067","Q068","Q069"],"pe":["탈수 증상이 있는지 확인함","경구수분섭취 격려함","구토 양상 확인함"]}]},"소아-호흡곤란":{"대분류":"소아","dx":[{"name":"비효율적호흡양상","ae":["Q070","Q071","Q072","Q073","Q074","Q075","Q076"],"pe":["호흡곤란이 있는지 확인함","산소포화도 monitor 함","산소 흡입 시작함"]}]},"소아-경련":{"대분류":"소아","dx":[{"name":"신체손상위험","ae":["Q077","Q078","Q079","Q061","Q040"],"pe":["seizure 양상 확인함","seizure의 유발요인을 확인함","안전간호를 제공함"]}]},"소아-피부":{"대분류":"소아","dx":[{"name":"피부손상위험","ae":["Q080","Q081","Q082","Q083","Q057"],"pe":["피부 상태를 관찰함","긁지 않도록 교육함","소양증 감소 방법에 대해 교육함"]}]},"소아-보챔처짐":{"대분류":"소아","dx":[{"name":"급성통증","ae":["Q084","Q085","Q086","Q087","Q088","Q089","Q061"],"pe":["통증 강도 측정함","통증 양상을 확인함","통증을 인정해줌"]}]}},"cath":[{"s":"Foley","n":"Foley catheter","d":["Foley catheter 유지 중임","Foley catheter 통해 소변 배출되고 있음"],"new":false,"top":true},{"s":"L-tube","n":"Levin tube","d":["Levin tube 유지 중임","Levin tube 통해 배액됨"],"new":false,"top":true},{"s":"CVC","n":"중심정맥관","d":["중심정맥관 유지 중임"],"new":false,"top":true},{"s":"A-line","n":"arterial line","d":["arterial line 유지 중임","arterial line를 통해 혈압 monitor 중임"],"new":false,"top":true},{"s":"기관내관","n":"기관내관","d":["기관내관 유지 중임","비강을 통한 기관내관 유지 중임"],"new":true,"top":true},{"s":"인공호흡기","n":"ventilator","d":["ventilator 적용 중임","home ventilator 적용 중임"],"new":true,"top":true},{"s":"Hemovac","n":"hemovac","d":["hemovac 유지 중임","hemovac 통해 배액됨","hemovac 삽입부위 oozing 있음","hemovac 삽입부위 oozing 없음","hemovac 삽입부위 통증 있음","hemovac 삽입부위 통증 없음"],"new":true,"top":true},{"s":"JP drain","n":"Jackson Pratt drain","d":["Jackson Pratt drain 유지 중임","Jackson Pratt drain 통해 배액됨","Jackson Pratt drain 삽입부위 oozing 있음","Jackson Pratt drain 삽입부위 oozing 없음","Jackson Pratt drain 삽입부위 통증 있음","Jackson Pratt drain 삽입부위 통증 없음"],"new":true,"top":true},{"s":"PEG","n":"gastrostomy tube","d":["gastrostomy tube 유지 중임","gastrostomy tube로 배액됨","gastrostomy tube 삽입부위 출혈 있음","gastrostomy tube 삽입부위 출혈 없음","gastrostomy tube 삽입부위 oozing 있음","gastrostomy tube 삽입부위 oozing 없음","gastrostomy tube 삽입부위 통증 있음","gastrostomy tube 삽입부위 통증 없음"],"new":true,"top":true},{"s":"흉관","n":"흉관","d":["흉관 유지 중임","흉관 통해 배액됨"],"new":false,"top":true},{"s":"기관절개","n":"기관절개관","d":["기관절개관 유지 중임"],"new":false,"top":false},{"s":"Chemoport","n":"chemoport","d":["chemoport 통해 항암제 주입 중임","chemoport 삽입부위 통증 있음","chemoport 삽입부위 통증 없음"],"new":true,"top":false},{"s":"Hickman","n":"Hickman catheter","d":["Hickman catheter 유지 중임","Hickman catheter 삽입부위 통증 있음","Hickman catheter 삽입부위 통증 없음"],"new":true,"top":false},{"s":"PTBD","n":"Percutaneous Transhepatic Biliary Drainage","d":["Percutaneous Transhepatic Biliary Drainage 유지 중임","Percutaneous Transhepatic Biliary Drainage 통해 배액됨"],"new":false,"top":false},{"s":"PTGBD","n":"Percutaneous Transhepatic Gall bladder Drainage","d":["Percutaneous Transhepatic Gall bladder Drainage 통해 배액됨"],"new":false,"top":false},{"s":"PCD","n":"Percutaneous Drainage","d":["Percutaneous Drainage 유지 중임","Percutaneous Drainage 통해 배액됨"],"new":false,"top":false},{"s":"penrose","n":"penrose drain","d":["penrose drain 유지 중임","penrose drain 삽입부위 oozing 있음","penrose drain 삽입부위 oozing 없음","penrose drain 삽입부위 통증 있음","penrose drain 삽입부위 통증 없음"],"new":true,"top":false},{"s":"PCN","n":"Percutaneous Nephrostomy tube","d":["Percutaneous Nephrostomy tube 유지 중임"],"new":false,"top":false},{"s":"방광루","n":"cystostomy tube","d":["cystostomy tube 유지 중임","cystostomy 유지 중임"],"new":true,"top":false},{"s":"장루","n":"장루","d":["장루 통해 변 배출됨","장루 통해 변 배출 안됨","장루 통해 gas out 됨","장루 통해 gas out 안됨"],"new":false,"top":false},{"s":"공장루","n":"jejunostomy tube","d":["jejunostomy tube로 유지 중임","jejunostomy tube로 배액됨","jejunostomy tube 삽입부위 출혈 있음","jejunostomy tube 삽입부위 출혈 없음","jejunostomy tube 삽입부위 통증 있음","jejunostomy tube 삽입부위 통증 없음"],"new":true,"top":false},{"s":"EVD","n":"External Ventricular Drainage","d":["External Ventricular Drainage 통해 배액됨","External Ventricular Drainage 삽입부위 oozing 있음","External Ventricular Drainage 삽입부위 oozing 없음","External Ventricular Drainage 삽입부위 통증 있음","External Ventricular Drainage 삽입부위 통증 없음"],"new":true,"top":false},{"s":"경막외PCA","n":"epidural Patient Controlled Analgesics","d":["epidural Patient Controlled Analgesics 유지 중임"],"new":true,"top":false},{"s":"상처","n":"상처부위","d":["상처 dressing 상태임"],"new":false,"top":false},{"s":"수술","n":"수술부위","d":["수술상처 dressing 상태임","수술상처 출혈 있음","수술상처 출혈 없음"],"new":false,"top":false}],"edu":[{"say":"\"침대에서 내려오실 때는 반드시 간호사를 불러주세요.\"","recs":["낙상방지 교육함"]},{"say":"\"어지러우시면 바로 앉으시고, 보호자나 담당 간호사에게 알려주세요.\"","recs":["손상을 예방하는 방법에 대해 교육함"]},{"say":"\"낙상 위험이 있어서 침대 난간 올려드릴게요.\"","recs":["침대 난간을 올려줌","낙상방지 교육함"]},{"say":"(보호자 있을 때) \"옆에서 계속 함께 있어 주세요. 혼자 두지 마세요.\"","recs":["보호자와 같이 있게 함"]},{"say":"(보호자 없을 때) \"보호자분 오실 수 있으면 연락해 주세요.\"","recs":["보호자 동반하도록 설명함"]}],"closing":[{"sel":"없음","q":"\"그 밖에 더 아프거나 불편한 곳이 있으세요?\"","rec":"불편감 없음","next":"종료 → 의식·낙상으로"},{"sel":"있음","q":"\"그 밖에 더 아프거나 불편한 곳이 있으세요?\"","rec":"불편감 있음","next":"주호소 화면 다시 표시 + 📌비고 입력"}],"explain":{"감염":[{"say":"열이 나거나 오한이 느껴지시면 바로 말씀해 주세요.","pe":"감염 증상이 있는지 확인함"},{"say":"체온 측정해 드릴게요.","pe":"체온 측정함"}],"저체온":[{"say":"체온이 낮은 상태입니다. 따뜻하게 해드릴게요.","pe":"따뜻한 환경 제공함"},{"say":"저체온 증상에 대해 설명해드릴게요.","pe":"저체온의 초기 증상에 대해 설명함"},{"say":"체온 측정해 드릴게요.","pe":"체온 측정함"},{"say":"팔다리 움직임 확인해드릴게요.","pe":"사지 근력 평가함"}],"피부손상위험":[{"say":"긁으면 덧날 수 있어요. 손톱을 짧게 깎아주시고 긁지 않게 해주세요.","pe":"긁지 않도록 교육함"},{"say":"가려움을 줄이는 방법을 알려드릴게요.","pe":"소양증 감소 방법에 대해 교육함"},{"say":"피부 상태를 계속 살펴볼게요.","pe":"피부 상태를 관찰함"}],"낙상위험":[],"체액부족위험":[{"say":"물이나 이온음료를 조금씩 자주 먹여주세요.","pe":"경구수분섭취 격려함"},{"say":"탈수 증상이 있는지 확인해드릴게요.","pe":"탈수 증상이 있는지 확인함"},{"say":"토하는 양상을 함께 확인할게요.","pe":"구토 양상 확인함"}],"저혈당":[{"say":"혈당이 낮아 당분을 보충해드릴게요. 어지럽거나 식은땀이 나면 바로 말씀해 주세요.","pe":"혈당 검사 시행함"},{"say":"저혈당 증상에 대해 설명해드릴게요.","pe":"저혈당 증상(진전, 빈맥, 발한, 감각이상, 의식변화)에 대해 설명함"}],"출혈":[{"say":"지금 출혈 상태를 확인할게요. 증상이 심해지면 바로 알려주세요.","pe":"출혈 증상이 있는지 확인함"},{"say":"출혈 양상을 함께 확인해드릴게요.","pe":"출혈양상 확인함"}],"조직관류저하:심폐계":[{"say":"가슴 통증이 있으시면 바로 말씀해 주세요. 심전도 확인할게요.","pe":"흉부 통증이 있는지 확인함"},{"say":"심전도 변화를 계속 확인할게요.","pe":"심전도 변화를 확인함"}],"급성통증":[{"say":"많이 아프세요? 진통제가 필요하실 만큼 아프신가요?","pe":"통증을 인정해줌"},{"say":"의사 선생님께 확인받고 필요하시면 진통제 처방받아 드릴게요.","pe":"통증 양상을 확인함"},{"say":"참으실 수 있으면 지켜보시고, 너무 아프시면 바로 말씀해 주세요.","pe":"통증을 관찰하기로 함"}],"감염위험":[{"say":"감염 위험이 있어 주의가 필요합니다. 열이 나면 바로 말씀해 주세요.","pe":"감염 증상이 있는지 확인함"},{"say":"체온 측정해 드릴게요.","pe":"체온 측정함"}],"신체손상위험":[{"say":"발작 증상이 있어 안전이 중요합니다. 혼자 일어나거나 침대에서 내려오시면 안 됩니다.","pe":"Seizure시 안전간호 시행함"},{"say":"발작 양상을 확인할게요.","pe":"Seizure 양상을 확인함"},{"say":"발작의 유발요인을 확인해드릴게요.","pe":"seizure의 유발요인을 확인함"}],"조직관류저하:뇌":[{"say":"팔다리 힘이 괜찮으세요? 감각이 이상한 부분은 없으세요?","pe":"신경학적 증상이 있는지 확인함"},{"say":"최대한 안정하시고 증상 변화가 있으면 바로 말씀해 주세요.","pe":"사지 근력 평가함"}],"고혈당":[{"say":"혈당이 높은 상태입니다. 처방에 따라 확인할게요.","pe":"혈당 검사 시행함"}],"출혈위험":[{"say":"출혈 위험이 있어 주의가 필요합니다. 멍이 들거나 피가 나면 바로 알려주세요.","pe":"출혈 증상이 있는지 확인함"},{"say":"출혈 양상을 함께 확인해드릴게요.","pe":"출혈양상 확인함"}],"비효율적호흡양상":[{"say":"숨이 많이 차세요? 산소 수치 확인해 드릴게요.","pe":"호흡곤란이 있는지 확인함"},{"say":"산소포화도를 계속 확인할게요.","pe":"산소포화도 monitor 함"},{"say":"산소 마스크 착용해 드릴게요. 더 힘드시면 바로 말씀해 주세요.","pe":"산소 흡입 시작함"}],"고체온":[{"say":"열이 높으신 상태입니다. 처치를 해드릴게요.","pe":"감염 증상이 있는지 확인함"},{"say":"체온 측정해 드릴게요.","pe":"체온 측정함"}]}};
+
+/* ══════════ 상수 ══════════ */
+const D = window.NFH_V6;
+const STEPS = [
+  {k:'cath', ic:'⓪', t:'도관'},
+  {k:'cc',   ic:'①', t:'주호소'},
+  {k:'ae',   ic:'💬', t:'사정'},
+  {k:'dx',   ic:'🔴', t:'진단'},
+  {k:'pe',   ic:'📢', t:'중재'},
+  {k:'end',  ic:'💬', t:'마무리'},
+  {k:'fix',  ic:'🔒', t:'의식·낙상'},
+];
+const GE=[['4 자발',4],['3 소리',3],['2 통증',2],['1 없음',1]];
+const GV=[['5 지남',5],['4 혼돈',4],['3 부적절',3],['2 이해불가',2],['1 없음',1]];
+const GM=[['6 명령',6],['5 국소',5],['4 회피',4],['3 굴곡',3],['2 신전',2],['1 없음',1]];
+const ORI=[['time','시간','시간에 대한 지남력'],['place','장소','장소에 대한 지남력'],['person','사람','사람에 대한 지남력']];
+const PUPIL_REF=[[1,'pinpoint'],[2,'수축'],[3,'정상'],[4,'정상'],[5,'정상'],[6,'확대'],[7,'확대'],[8,'고도 확대']];
+const KEY='nfh_v6_state';
+
+/* ══════════ 상태 ══════════ */
+let S = blank();
+function blank(){
+  return {pt:{name:'',id:''}, step:0, cath:{}, cathOpen:false,
+          cases:[],            /* {sym,sel1,sel2,set,ans:{},dxOff:[],peOn:{}} */
+          closing:null, memo:'',
+          consc:null, gcs:{E:null,V:null,M:null}, ori:{}, guard:null, edu:{}};
+}
+const el = id => document.getElementById(id);
+let VIEWS = [];   /* 화면 함수 목록 — 아래에서 채움 */
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ══════════ 저장 ══════════ */
+let saveT=null;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{
+      localStorage.setItem(KEY, JSON.stringify({s:S, at:Date.now()}));
+      const d=new Date();
+      el('savedAt').textContent='💾 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    }catch(e){}
+  },400);
+}
+function restore(){
+  try{
+    const raw=localStorage.getItem(KEY); if(!raw) return false;
+    const {s,at}=JSON.parse(raw);
+    if(!s || !s.pt || !s.pt.name) return false;
+    const t=new Date(at), hm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    if(!confirm(`이전 기록이 있습니다.\n\n${s.pt.name} · ${s.pt.id}  (${hm} 저장)\n\n이어서 하시겠어요?`)) return false;
+    S=Object.assign(blank(), s);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ══════════ 게이트 ══════════ */
+let gConf=false, gEdu=false;
+function gval(){
+  const ok = gConf && gEdu && el('pname').value.trim() && /^\d{8}$/.test(el('pid').value.trim());
+  el('gGo').className='go'+(ok?' on':'');
+  el('pname').classList.toggle('ok', !!el('pname').value.trim());
+  el('pid').classList.toggle('ok', /^\d{8}$/.test(el('pid').value.trim()));
+  return ok;
+}
+el('cConf').onclick=()=>{gConf=!gConf; el('cConf').classList.toggle('on',gConf); gval();};
+el('cEdu').onclick =()=>{gEdu=!gEdu;  el('cEdu').classList.toggle('on',gEdu);  gval();};
+['pname','pid'].forEach(i=>el(i).addEventListener('input',gval));
+el('gGo').onclick=()=>{
+  if(!gval()) return;
+  S.pt={name:el('pname').value.trim(), id:el('pid').value.trim()};
+  el('gate').classList.add('hide'); render();
+};
+
+/* ══════════ 헤더 ══════════ */
+el('themeBtn').onclick=()=>{
+  const dark=document.documentElement.dataset.t==='dark';
+  document.documentElement.dataset.t = dark?'light':'dark';
+  el('themeBtn').textContent = dark?'🌙':'☀️';
+  try{localStorage.setItem('nfh_v6_theme',document.documentElement.dataset.t)}catch(e){}
+};
+el('newBtn').onclick=()=>{
+  if(!confirm('새 환자로 시작할까요?\n현재 기록은 지워집니다.')) return;
+  try{localStorage.removeItem(KEY)}catch(e){}
+  location.reload();
+};
+el('liveh').onclick=()=>{ if(window.innerWidth<=820) el('live').classList.toggle('fold'); };
+el('copyBtn').onclick=()=>{
+  const t=buildLines().map(x=>x.c==='gh'?`\n[${x.t}]`:`${x.tg}\t${x.t}`).join('\n').trim();
+  if(!t){alert('기록이 비어 있습니다.');return;}
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject())
+    .then(()=>alert('복사되었습니다.')).catch(()=>prompt('복사하세요:',t));
+};
+
+/* ══════════ 헬퍼 ══════════ */
+const setOf = s => D.sets[s];
+function branchesOf(sym){ return D.branch.filter(b=>b.sym===sym); }
+function stmtOf(qid, v){
+  const q=D.qbank[qid]; if(!q) return null;
+  if(v===undefined||v===null) return null;
+  if(q.fmt==='값입력') return String(v).trim()? q.stmts[0]+' '+String(v).trim() : null;
+  if(q.fmt==='선택')  return q.stmts[v]||null;
+  if(v===true)  return q.stmts[0]||null;
+  if(v===false) return q.stmts[1]||null;
+  return null;
+}
+function caseDx(c){ const st=setOf(c.set); return st?st.dx:[]; }
+function dxOn(c,name){ return !(c.dxOff||[]).includes(name); }
+function recommended(c,dx){ return dx.ae.some(q=>c.ans[q]===true || (D.qbank[q]&&D.qbank[q].fmt!=='토글' && c.ans[q]!==undefined && c.ans[q]!==false)); }
+
+/* ══════════ 기록 생성 ══════════ */
+function buildLines(){
+  const L=[], push=(c,tg,t)=>L.push({c,tg,t});
+  const cs=Object.keys(S.cath).filter(k=>(S.cath[k]||[]).length);
+  if(cs.length){ push('gh','','도관');
+    cs.forEach(k=>S.cath[k].forEach(d=>push('ae','A&E',d))); }
+  S.cases.forEach(c=>{
+    const st=setOf(c.set); if(!st) return;
+    st.dx.forEach(dx=>{
+      if(!dxOn(c,dx.name)) return;
+      const aes=dx.ae.map(q=>stmtOf(q,c.ans[q])).filter(Boolean);
+      const on=(c.peOn||{})[dx.name]||[];
+      const pes=(D.explain[dx.name]&&D.explain[dx.name].length)
+        ? D.explain[dx.name].filter(e=>on.includes(e.pe)).map(e=>e.pe)
+        : dx.pe.filter(p=>on.includes(p));
+      if(!aes.length && !pes.length) return;
+      push('gh','',dx.name);
+      aes.forEach(t=>push('ae','A&E',t));
+      push('dx','D',dx.name);
+      pes.forEach(t=>push('pe','P&E',t));
+    });
+  });
+  if(S.closing){
+    const cl=D.closing.find(x=>x.sel===S.closing);
+    if(cl&&cl.rec){ push('gh','','마무리'); push('ae','A&E',cl.rec); }
+  }
+  const fae=[];
+  if(S.consc==='clear') fae.push('의식 명료함');
+  else if(S.consc==='low'){
+    const g=S.gcs;
+    if(g.E&&g.V&&g.M){ fae.push('Glasgow Coma Scale : '+(g.E+g.V+g.M)); fae.push((g.E+g.V+g.M)===15?'의식 명료함':'의식수준 저하됨'); }
+    else fae.push('의식수준 저하됨');
+    ORI.forEach(([k,,label])=>{ if(S.ori[k]===0) fae.push(label+' 없음'); else if(S.ori[k]===1) fae.push(label+' 있음'); });
+  }
+  if(S.guard) fae.push(S.guard);
+  const fpe=[];
+  Object.keys(S.edu).forEach(i=>{ if(S.edu[i]) (D.edu[i].recs||[]).forEach(r=>{ if(!fpe.includes(r)) fpe.push(r); }); });
+  if(fae.length||fpe.length){
+    push('gh','','의식 · 낙상');
+    fae.forEach(t=>push('ae','A&E',t));
+    push('dx','D','낙상위험');
+    fpe.forEach(t=>push('pe','P&E',t));
+  }
+  if(S.memo.trim()) push('note','📌','비고: '+S.memo.trim());
+  return L;
+}
+function renderLive(){
+  const L=buildLines();
+  const n=L.filter(x=>x.c!=='gh').length;
+  let miss=0;
+  S.cases.forEach(c=>{ const st=setOf(c.set); if(!st) return;
+    new Set(st.dx.flatMap(d=>d.ae)).forEach(q=>{ if(c.ans[q]===undefined) miss++; }); });
+  el('cnt').textContent = n+'줄'+(miss?' · 미응답 '+miss:'');
+  el('preview').innerHTML = L.length
+    ? L.map(x=>x.c==='gh'?`<div class="rl gh">［${esc(x.t)}］</div>`
+        :`<div class="rl ${x.c}"><span class="tg">${esc(x.tg)}</span>${esc(x.t)}</div>`).join('')
+    : '<div class="rl ph">기록이 여기에 쌓입니다.</div>';
+}
+
+/* ══════════ 단계 ══════════ */
+function renderSteps(){
+  el('steps').innerHTML = STEPS.map((s,i)=>{
+    const cls = i<S.step?'done':(i===S.step?'now':'');
+    return `<button class="sp ${cls}" data-go="${i}"><span class="cir">${i<S.step?'✓':s.ic}</span><span class="tx">${s.t}</span></button>`
+      + (i<STEPS.length-1?`<span class="spl ${i<S.step?'done':''}"></span>`:'');
+  }).join('');
+}
+
+/* ══════════ 화면 ══════════ */
+function render(){
+  el('ptInfo').textContent = S.pt.name?`${S.pt.name} · ${S.pt.id}`:'';
+  renderSteps();
+  el('work').innerHTML = VIEWS[S.step]();
+  el('work').scrollTop = 0;
+  renderLive(); save();
+}
+function nav(back,next,disabled){
+  return `<div class="nav">
+    ${back?`<button data-nav="-1">← 이전</button>`:''}
+    <button class="go" data-nav="1" ${disabled?'disabled':''}>${next} →</button></div>`;
+}
+
+/* ⓪ 도관 */
+function vCath(){
+  const list = D.cath.filter(c=>S.cathOpen||c.top);
+  const sel = k => (S.cath[k]||[]).length;
+  const detail = D.cath.filter(c=>sel(c.s)).map(c=>`
+    <div class="gl"><span class="dot"></span>${esc(c.s)}${c.n!==c.s?' · '+esc(c.n):''}</div>
+    <div class="row">${c.d.map(d=>`<button class="b ${S.cath[c.s].includes(d)?'sel':''}" data-cd="${esc(c.s)}" data-v="${esc(d)}">${esc(d)}</button>`).join('')}</div>`).join('');
+  return `<p class="wt">달고 있는 도관이 있나요?</p>
+    <p class="ws">흔한 것부터 나옵니다 · 없으면 바로 다음으로</p>
+    <div class="row">${list.map(c=>`<button class="b ${sel(c.s)?'sel':''}" data-ct="${esc(c.s)}">${esc(c.s)}${sel(c.s)?' ✓':''}</button>`).join('')}</div>
+    ${S.cathOpen?'':`<div class="row"><button class="b dash" data-more="1">＋ 더보기 ${D.cath.length-list.length}종</button></div>`}
+    ${detail}${nav(false,'주호소')}`;
+}
+/* ① 주호소 */
+function vCC(){
+  const syms=Object.keys(D.syms);
+  const picked = s => S.cases.some(c=>c.sym===s);
+  return `<p class="wt">어디가 불편해서 오셨어요?</p>
+    <p class="ws">여러 개 고를 수 있습니다</p>
+    <div class="row">${syms.map(s=>{
+      const y=D.syms[s];
+      return `<button class="b big ${picked(s)?'sel':''}" data-sym="${esc(s)}">${esc(y.icon||'')} ${esc(s)}${picked(s)?' ✓':''}</button>`;
+    }).join('')}</div>
+    ${S.cases.length?`<div class="gl"><span class="dot"></span>고른 주호소 ${S.cases.length}개</div>
+      ${S.cases.map((c,i)=>`<div class="q"><span class="qt">${esc(c.sym)}${c.sel1?' · '+esc(c.sel1):''}${c.sel2?' · '+esc(c.sel2):''}</span>
+        <button class="ab" data-rm="${i}">빼기</button></div>`).join('')}`:''}
+    ${nav(true,'사정', !S.cases.length || S.cases.some(c=>!c.set))}`;
+}
+/* ② 사정 (분기 + 질문) */
+function vAE(){
+  const need = S.cases.filter(c=>!c.set);
+  if(need.length) return vBranch(need[0]);
+  return S.cases.map((c,ci)=>{
+    const st=setOf(c.set); if(!st) return '';
+    const qs=[...new Set(st.dx.flatMap(d=>d.ae))];
+    const core=qs.filter(q=>D.qbank[q].core), rest=qs.filter(q=>!D.qbank[q].core);
+    const blk=(list,label,dot)=> list.length?`<div class="gl"><span class="dot" style="background:${dot}"></span>${label}</div>`+list.map(q=>qRow(q,ci)).join(''):'';
+    return `<p class="wt">${esc(c.sym)}${c.sel1?' · '+esc(c.sel1):''}${c.sel2?' · '+esc(c.sel2):''}</p>
+      <p class="ws">묻고 답을 누르면 그대로 기록됩니다</p>
+      ${blk(core,'공통 문진 — 자리가 항상 같습니다','var(--accent)')}
+      ${blk(rest,'이 경로에만','var(--pe)')}`;
+  }).join('<div style="height:22px"></div>') + nav(true,'진단');
+}
+function vBranch(c){
+  const ci=S.cases.indexOf(c), y=D.syms[c.sym], bs=branchesOf(c.sym);
+  if(!c.sel1 && bs.some(b=>b.sel1)){
+    const o=[...new Set(bs.map(b=>b.sel1).filter(Boolean))];
+    return `<p class="wt">${esc(y.icon||'')} ${esc(c.sym)}</p>
+      <p class="ws">💬 ${esc(y.q1||'선택하세요')}</p>
+      <div class="row">${o.map(v=>`<button class="b big wide" data-br="${ci}" data-k="1" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+  }
+  const cand=bs.filter(b=>!c.sel1||b.sel1===c.sel1);
+  if(!c.sel2 && cand.some(b=>b.sel2)){
+    const o=[...new Set(cand.map(b=>b.sel2).filter(Boolean))];
+    return `<p class="wt">${esc(c.sym)} · ${esc(c.sel1)}</p>
+      <p class="ws">💬 ${esc(y.q2||'선택하세요')}</p>
+      <div class="row">${o.map(v=>`<button class="b big wide" data-br="${ci}" data-k="2" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+  }
+  const hit=cand.find(b=>(!b.sel2)||b.sel2===c.sel2)||cand[0];
+  if(hit){ c.set=hit.set; return vAE(); }
+  return `<p class="wt">경로를 찾을 수 없습니다</p><p class="ws">${esc(c.sym)}</p>${nav(true,'진단')}`;
+}
+function qRow(qid,ci){
+  const q=D.qbank[qid], v=S.cases[ci].ans[qid];
+  const label=esc(q.q||'(질문 없음)');
+  let ans='';
+  if(q.fmt==='값입력'){
+    if(q.stmts[0]&&q.stmts[0].indexOf('동공크기')===0){
+      return pupilRow(qid,ci);
+    }
+    ans=`<input class="tin" data-in="${qid}" data-ci="${ci}" value="${esc(v||'')}" placeholder="입력">`;
+  }else if(q.fmt==='선택'){
+    ans=`<span class="ans">${q.stmts.map((s,i)=>`<button class="ab ${v===i?'on':''}" data-sel="${qid}" data-ci="${ci}" data-i="${i}">${esc(s.length>14?s.slice(0,13)+'…':s)}</button>`).join('')}</span>`;
+  }else if(q.stmts.length>=2){
+    ans=`<span class="ans"><button class="ab ${v===true?'on':''}" data-yn="${qid}" data-ci="${ci}" data-v="1">있음</button>
+      <button class="ab ${v===false?'no':''}" data-yn="${qid}" data-ci="${ci}" data-v="0">없음</button></span>`;
+  }else{
+    ans=`<span class="ans"><button class="ab ${v===true?'on':''}" data-yn="${qid}" data-ci="${ci}" data-v="1">확인함</button></span>`;
+  }
+  const miss = v===undefined;
+  const short = q.stmts[0]? q.stmts[0].replace(/\s*(있음|없음|함|됨|임)$/,'') : '';
+  return `<div class="q ${miss?'miss':''}"><span class="qt">${label}</span>
+    ${miss?'<span class="mt">미응답</span>':`<span class="rec">${esc(short.slice(0,20))}</span>`}${ans}</div>`;
+}
+function pupilRow(qid,ci){
+  const v=S.cases[ci].ans[qid]||{};
+  const btn=(side)=>[1,2,3,4,5,6,7,8].map(n=>
+    `<button class="ab ${v[side]===n?'on':''}" data-pu="${qid}" data-ci="${ci}" data-s="${side}" data-n="${n}">${n}</button>`).join('');
+  return `<details><summary>👁️ 동공 크기 참고표<span class="cv">▾</span></summary><div class="refb">
+      <div class="warnbar">⚠️ <b>화면 그림은 실제 크기가 아닙니다.</b> 측정은 실물 동공자로 하세요.</div>
+      <div class="ref">${PUPIL_REF.map(([n,t])=>`<div class="rc2">
+        <svg width="62" height="40" viewBox="0 0 62 40"><ellipse cx="31" cy="20" rx="28" ry="15" fill="none" stroke="var(--ink3)" stroke-width="1.5"/>
+        <circle cx="31" cy="20" r="12" fill="var(--ink4)" opacity=".5"/><circle cx="31" cy="20" r="${12*n/11}" fill="var(--ink)"/></svg>
+        <div class="n">${n} mm</div><div class="t">${t}</div></div>`).join('')}</div></div></details>
+    <div class="q"><span class="qt">🩺 동공 크기 — Rt</span><span class="ans">${btn('rt')}</span></div>
+    <div class="q"><span class="qt">🩺 동공 크기 — Lt</span><span class="ans">${btn('lt')}</span></div>`;
+}
+/* ③ 진단 */
+function vDx(){
+  return S.cases.map((c,ci)=>{
+    const st=setOf(c.set); if(!st) return '';
+    return `<p class="wt">${esc(c.sym)} — 간호진단</p>
+      <p class="ws">사정 결과로 추천됩니다 · 필요 없으면 끄세요</p>
+      ${st.dx.map(dx=>`<button class="dxc ${dxOn(c,dx.name)?'on':''}" data-dx="${ci}" data-n="${esc(dx.name)}">
+        <span class="ck">✓</span><span class="nm">${esc(dx.name)}</span>
+        ${recommended(c,dx)?'<span class="rc">추천</span>':''}</button>`).join('')}`;
+  }).join('<div style="height:20px"></div>') + nav(true,'중재');
+}
+/* ④ 중재 */
+function vPE(){
+  return S.cases.map((c,ci)=>{
+    const st=setOf(c.set); if(!st) return '';
+    return st.dx.filter(dx=>dxOn(c,dx.name)).map(dx=>{
+      const ex=D.explain[dx.name]||[];
+      const items = ex.length? ex : dx.pe.map(p=>({say:'',pe:p}));
+      const on=(c.peOn||{})[dx.name]||[];
+      return `<div class="gl"><span class="dot" style="background:var(--dx)"></span>${esc(dx.name)}</div>
+        ${items.map(e=>`<button class="say ${on.includes(e.pe)?'on':''}" data-pe="${ci}" data-n="${esc(dx.name)}" data-v="${esc(e.pe)}">
+          <div class="s">${e.say?'📢 “'+esc(e.say)+'”':'▸ '+esc(e.pe)}</div>
+          ${e.say?`<div class="r">→ ${esc(e.pe)}</div>`:''}</button>`).join('')}`;
+    }).join('');
+  }).join('') || '<p class="ws">켜진 진단이 없습니다.</p>';
+}
+function vPEwrap(){ return `<p class="wt">환자에게 이렇게 말해주세요</p>
+  <p class="ws">말한 것을 누르면 중재·평가로 기록됩니다</p>${vPE()}${nav(true,'마무리')}`; }
+/* ⑤ 마무리 */
+function vEnd(){
+  const q=(D.closing[0]||{}).q||'그 밖에 더 아프거나 불편한 곳이 있으세요?';
+  return `<p class="wt">${esc(q.replace(/^"|"$/g,''))}</p>
+    <p class="ws">놓친 것이 없는지 마지막으로 확인합니다</p>
+    <div class="row">
+      <button class="b big wide ${S.closing==='없음'?'sel':''}" data-cl="없음">없 음</button>
+      <button class="b big wide ${S.closing==='있음'?'sel':''}" data-cl="있음">있 음</button></div>
+    ${S.closing==='있음'?`<div class="hint">주호소로 돌아가 추가로 사정하거나, 아래 비고에 적어주세요.</div>
+      <div class="row"><button class="b" data-go="1">① 주호소로 돌아가기</button></div>`:''}
+    <div class="gl"><span class="dot"></span>📌 비고 (자유 기재)</div>
+    <textarea class="memo" id="memo" placeholder="횟수·지속시간·부위 등 정형 진술문으로 남길 수 없는 내용">${esc(S.memo)}</textarea>
+    ${nav(true,'의식·낙상')}`;
+}
+/* ⑥ 의식·낙상 */
+function vFix(){
+  const g=S.gcs, sum=(g.E&&g.V&&g.M)?(g.E+g.V+g.M):null;
+  return `<p class="wt">의식 · 보호자 · 낙상</p>
+    <p class="ws">모든 환자에게 확인합니다</p>
+    <div class="gl"><span class="dot"></span>의식</div>
+    <div class="row">
+      <button class="b big wide ${S.consc==='clear'?'sel':''}" data-cs="clear">GCS 15 · 명료</button>
+      <button class="b big wide ${S.consc==='low'?'sel':''}" data-cs="low">명료하지 않음</button></div>
+    ${S.consc==='low'?`
+      <div class="gl"><span class="dot"></span>GCS ${sum?'· 합계 '+sum:''}</div>
+      ${[['E','눈뜸',GE],['V','언어',GV],['M','운동',GM]].map(([k,lb,arr])=>
+        `<div class="q"><span class="qt" style="min-width:70px;flex:0 0 auto">${lb} ${k}</span><span class="ans">
+        ${arr.map(([t,n])=>`<button class="ab ${g[k]===n?'on':''}" data-g="${k}" data-n="${n}">${t}</button>`).join('')}</span></div>`).join('')}
+      <div class="gl"><span class="dot"></span>지남력</div>
+      ${ORI.map(([k,lb])=>`<div class="q"><span class="qt" style="min-width:70px;flex:0 0 auto">${lb}</span><span class="ans">
+        <button class="ab ${S.ori[k]===1?'on':''}" data-or="${k}" data-v="1">있음</button>
+        <button class="ab ${S.ori[k]===0?'no':''}" data-or="${k}" data-v="0">없음</button></span></div>`).join('')}`:''}
+    <div class="gl"><span class="dot"></span>보호자</div>
+    <div class="row">
+      <button class="b big wide ${S.guard==='보호자 환자 옆에 상주하고 있음'?'sel':''}" data-gd="보호자 환자 옆에 상주하고 있음">상주</button>
+      <button class="b big wide ${S.guard==='보호자 동행하지 않음'?'sel':''}" data-gd="보호자 동행하지 않음">없음</button></div>
+    <div class="gl"><span class="dot" style="background:var(--pe)"></span>낙상 교육 · 말하면 기록됩니다</div>
+    ${D.edu.map((e,i)=>`<button class="say ${S.edu[i]?'on':''}" data-edu="${i}">
+      <div class="s">📢 “${esc((e.say||'').replace(/^"|"$/g,''))}”</div>
+      <div class="r">→ ${esc((e.recs||[]).join(' / '))}</div></button>`).join('')}
+    <div class="nav"><button data-nav="-1">← 이전</button>
+      <button class="go" id="doneBtn">📤 EMR 복사</button></div>`;
+}
+
+/* ══════════ 이벤트 ══════════ */
+el('work').addEventListener('click', e=>{
+  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go]');
+  if(!t) return;
+  const d=t.dataset;
+  if(d.more){ S.cathOpen=true; }
+  else if(d.ct){ if(S.cath[d.ct]) delete S.cath[d.ct]; else S.cath[d.ct]=[]; }
+  else if(d.cd){ const a=S.cath[d.cd]||(S.cath[d.cd]=[]); const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
+  else if(d.sym){
+    const i=S.cases.findIndex(c=>c.sym===d.sym);
+    if(i>=0) S.cases.splice(i,1);
+    else S.cases.push({sym:d.sym, sel1:'', sel2:'', set:'', ans:{}, dxOff:[], peOn:{}});
+  }
+  else if(d.rm!=null){ S.cases.splice(+d.rm,1); }
+  else if(d.br!=null){ const c=S.cases[+d.br]; if(d.k==='1'){c.sel1=d.v;c.sel2='';} else c.sel2=d.v; }
+  else if(d.yn){ const c=S.cases[+d.ci], v=d.v==='1'; c.ans[d.yn] = c.ans[d.yn]===v ? undefined : v; }
+  else if(d.sel){ const c=S.cases[+d.ci], i=+d.i; c.ans[d.sel] = c.ans[d.sel]===i ? undefined : i; }
+  else if(d.pu){ const c=S.cases[+d.ci]; const o=Object.assign({}, c.ans[d.pu]||{});
+    o[d.s] = o[d.s]===+d.n ? undefined : +d.n;
+    c.ans[d.pu] = (o.rt||o.lt) ? ['Rt '+(o.rt||'__'),'Lt '+(o.lt||'__')].join(' / ') : undefined;
+    c.ans['_'+d.pu]=o; }
+  else if(d.dx!=null){ const c=S.cases[+d.dx]; c.dxOff=c.dxOff||[];
+    const i=c.dxOff.indexOf(d.n); i<0?c.dxOff.push(d.n):c.dxOff.splice(i,1); }
+  else if(d.pe!=null){ const c=S.cases[+d.pe]; c.peOn=c.peOn||{};
+    const a=c.peOn[d.n]||(c.peOn[d.n]=[]); const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
+  else if(d.cl){ S.closing = S.closing===d.cl?null:d.cl; }
+  else if(d.cs){ S.consc = S.consc===d.cs?null:d.cs; }
+  else if(d.g){ S.gcs[d.g] = S.gcs[d.g]===+d.n?null:+d.n; }
+  else if(d.or){ S.ori[d.or] = S.ori[d.or]===+d.v?undefined:+d.v; }
+  else if(d.gd){ S.guard = S.guard===d.gd?null:d.gd; }
+  else if(d.edu!=null){ S.edu[d.edu]=!S.edu[d.edu]; }
+  else if(d.nav){ S.step=Math.max(0,Math.min(STEPS.length-1,S.step+ +d.nav)); }
+  else if(d.go!=null){ S.step=+d.go; }
+  render();
+});
+el('steps').addEventListener('click', e=>{
+  const t=e.target.closest('[data-go]'); if(!t) return;
+  S.step=+t.dataset.go; render();
+});
+el('work').addEventListener('input', e=>{
+  const t=e.target;
+  if(t.id==='memo'){ S.memo=t.value; renderLive(); save(); return; }
+  if(t.dataset.in){ const c=S.cases[+t.dataset.ci]; c.ans[t.dataset.in]=t.value; renderLive(); save(); }
+});
+document.addEventListener('click', e=>{ if(e.target.id==='doneBtn') el('copyBtn').click(); });
+
+/* ══════════ 시작 ══════════ */
+VIEWS = [vCath, vCC, vAE, vDx, vPEwrap, vEnd, vFix];
+try{ const th=localStorage.getItem('nfh_v6_theme'); if(th){document.documentElement.dataset.t=th; el('themeBtn').textContent = th==='dark'?'☀️':'🌙';} }catch(e){}
+if(restore()){ el('gate').classList.add('hide'); render(); }
+else { el('pname').focus(); }
+</script>
+</body></html>
