@@ -2178,7 +2178,8 @@ window.NFH_V6 = {
     "Foley catheter 유지 중임",
     "Foley catheter 통해 소변 배출되고 있음"
    ],
-   "new": false
+   "new": false,
+   "top": true
   },
   {
    "s": "L-tube",
@@ -2187,7 +2188,8 @@ window.NFH_V6 = {
     "Levin tube 유지 중임",
     "Levin tube 통해 배액됨"
    ],
-   "new": false
+   "new": false,
+   "top": true
   },
   {
    "s": "CVC",
@@ -2195,7 +2197,8 @@ window.NFH_V6 = {
    "d": [
     "중심정맥관 유지 중임"
    ],
-   "new": false
+   "new": false,
+   "top": true
   },
   {
    "s": "A-line",
@@ -2204,7 +2207,8 @@ window.NFH_V6 = {
     "arterial line 유지 중임",
     "arterial line를 통해 혈압 monitor 중임"
    ],
-   "new": false
+   "new": false,
+   "top": true
   },
   {
    "s": "기관내관",
@@ -2213,7 +2217,8 @@ window.NFH_V6 = {
     "기관내관 유지 중임",
     "비강을 통한 기관내관 유지 중임"
    ],
-   "new": true
+   "new": true,
+   "top": true
   },
   {
    "s": "인공호흡기",
@@ -2222,7 +2227,8 @@ window.NFH_V6 = {
     "ventilator 적용 중임",
     "home ventilator 적용 중임"
    ],
-   "new": true
+   "new": true,
+   "top": true
   },
   {
    "s": "Hemovac",
@@ -2235,7 +2241,8 @@ window.NFH_V6 = {
     "hemovac 삽입부위 통증 있음",
     "hemovac 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": true
   },
   {
    "s": "JP drain",
@@ -2248,7 +2255,8 @@ window.NFH_V6 = {
     "Jackson Pratt drain 삽입부위 통증 있음",
     "Jackson Pratt drain 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": true
   },
   {
    "s": "PEG",
@@ -2263,7 +2271,8 @@ window.NFH_V6 = {
     "gastrostomy tube 삽입부위 통증 있음",
     "gastrostomy tube 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": true
   },
   {
    "s": "흉관",
@@ -2272,7 +2281,8 @@ window.NFH_V6 = {
     "흉관 유지 중임",
     "흉관 통해 배액됨"
    ],
-   "new": false
+   "new": false,
+   "top": true
   },
   {
    "s": "기관절개",
@@ -2280,7 +2290,8 @@ window.NFH_V6 = {
    "d": [
     "기관절개관 유지 중임"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "Chemoport",
@@ -2290,7 +2301,8 @@ window.NFH_V6 = {
     "chemoport 삽입부위 통증 있음",
     "chemoport 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "Hickman",
@@ -2300,7 +2312,8 @@ window.NFH_V6 = {
     "Hickman catheter 삽입부위 통증 있음",
     "Hickman catheter 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "PTBD",
@@ -2309,7 +2322,8 @@ window.NFH_V6 = {
     "Percutaneous Transhepatic Biliary Drainage 유지 중임",
     "Percutaneous Transhepatic Biliary Drainage 통해 배액됨"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "PTGBD",
@@ -2317,7 +2331,8 @@ window.NFH_V6 = {
    "d": [
     "Percutaneous Transhepatic Gall bladder Drainage 통해 배액됨"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "PCD",
@@ -2326,7 +2341,8 @@ window.NFH_V6 = {
     "Percutaneous Drainage 유지 중임",
     "Percutaneous Drainage 통해 배액됨"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "penrose",
@@ -2338,7 +2354,8 @@ window.NFH_V6 = {
     "penrose drain 삽입부위 통증 있음",
     "penrose drain 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "PCN",
@@ -2346,7 +2363,8 @@ window.NFH_V6 = {
    "d": [
     "Percutaneous Nephrostomy tube 유지 중임"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "방광루",
@@ -2355,7 +2373,8 @@ window.NFH_V6 = {
     "cystostomy tube 유지 중임",
     "cystostomy 유지 중임"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "장루",
@@ -2366,7 +2385,8 @@ window.NFH_V6 = {
     "장루 통해 gas out 됨",
     "장루 통해 gas out 안됨"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "공장루",
@@ -2379,7 +2399,8 @@ window.NFH_V6 = {
     "jejunostomy tube 삽입부위 통증 있음",
     "jejunostomy tube 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "EVD",
@@ -2391,7 +2412,8 @@ window.NFH_V6 = {
     "External Ventricular Drainage 삽입부위 통증 있음",
     "External Ventricular Drainage 삽입부위 통증 없음"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "경막외PCA",
@@ -2399,7 +2421,8 @@ window.NFH_V6 = {
    "d": [
     "epidural Patient Controlled Analgesics 유지 중임"
    ],
-   "new": true
+   "new": true,
+   "top": false
   },
   {
    "s": "상처",
@@ -2407,7 +2430,8 @@ window.NFH_V6 = {
    "d": [
     "상처 dressing 상태임"
    ],
-   "new": false
+   "new": false,
+   "top": false
   },
   {
    "s": "수술",
@@ -2417,7 +2441,8 @@ window.NFH_V6 = {
     "수술상처 출혈 있음",
     "수술상처 출혈 없음"
    ],
-   "new": false
+   "new": false,
+   "top": false
   }
  ],
  "edu": [
