@@ -166,13 +166,14 @@ for r in rows('4.도관'):
                  'new': bool(str(r.get('비고') or '').strip()),
                  'top': int(r.get('순서') or 99) <= 10})
 EDU  = [{'say': str(r.get('말할 문구(📢)') or '').strip(),
-         'recs': [canon(x, '낙상교육') for x in str(r.get('기록 진술문(여러개는 | 로 구분)') or '').split('|') if x.strip()]}
+         'recs': list(dict.fromkeys(canon(x, '낙상교육') for x in str(r.get('기록 진술문(여러개는 | 로 구분)') or '').split('|') if x.strip()))}
         for r in rows('5.낙상교육') if r.get('id')]
-EXPL = collections.defaultdict(list)
+# 진단명은 공백 차이가 있어 정규화해 묶는다. P&E도 마스터 원문으로 맞춘다.
+EXPL_RAW = collections.defaultdict(list)
 for r in rows('3.환자설명'):
     if r.get('진단'):
-        EXPL[str(r['진단']).strip()].append({'say': str(r.get('말할 문구(📢)') or '').strip(),
-                                             'pe':  str(r.get('연동 P&E') or '').strip()})
+        EXPL_RAW[nsp(r['진단'])].append({'say': str(r.get('말할 문구(📢)') or '').strip().strip('"'),
+                                         'pe':  canon(r.get('연동 P&E') or '', '환자설명')})
 CLOSING = [{'sel': str(r.get('선택') or '').strip(),
             'q':   str(r.get('질문문구(💬)') or '').strip(),
             'rec': canon(r['진술문(마스터원문)'], '마무리질문') if r.get('진술문(마스터원문)') else '',
@@ -188,7 +189,10 @@ DATA = {
   'sets': {k: {'대분류': v['대분류'],
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
-  'cath': CATH, 'edu': EDU, 'explain': dict(EXPL), 'closing': CLOSING,
+  'cath': CATH, 'edu': EDU, 'closing': CLOSING,
+  # 경로에서 실제 쓰는 진단명 기준으로 환자설명을 붙인다
+  'explain': {n: list({e['pe']: e for e in EXPL_RAW.get(nsp(n), [])}.values())
+              for n in {dx for P in PATHSET.values() for dx in P['dx']}},
 }
 os.makedirs(os.path.dirname(OUT_JS), exist_ok=True)
 with open(OUT_JS, 'w', encoding='utf-8') as f:
@@ -237,6 +241,6 @@ with open(OUT_WARN, 'w', encoding='utf-8') as f:
 
 print(f'✅ {OUT_JS}')
 print(f'   경로 {NPATH} · 질문 {len(QBANK)}개 (공통 {sum(1 for v in QBANK.values() if v["core"])}개)')
-print(f'   도관 {len(CATH)} · 낙상교육 {len(EDU)} · 환자설명 {len(EXPL)} · 마무리 {len(CLOSING)}')
+print(f'   도관 {len(CATH)} · 낙상교육 {len(EDU)} · 환자설명 {len(DATA["explain"])}종 · 마무리 {len(CLOSING)}')
 print(f'📝 {OUT_WARN}')
 for k, n in cnt.most_common(): print(f'   {k:12} {n:4}건')
