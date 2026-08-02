@@ -41,6 +41,13 @@ input{font:inherit}
   padding:14px 15px;font-size:var(--f3);color:var(--ink);margin-bottom:10px;outline:none}
 .fld:focus{border-color:var(--accent)}
 .fld.ok{border-color:var(--ok);background:var(--ok-bg)}
+/* 등록번호는 이제 유일한 입력이다. 크게, 자간을 띄워 자릿수를 세기 쉽게 */
+#pid{font-family:ui-monospace,Menlo,monospace;font-size:26px;font-weight:800;
+  letter-spacing:.20em;text-align:center;padding:16px 15px 14px}
+.cnt8{display:flex;justify-content:center;gap:6px;margin:-2px 0 14px}
+.cnt8 i{width:22px;height:4px;border-radius:2px;background:var(--line);transition:background .12s}
+.cnt8 i.on{background:var(--accent)}
+.cnt8 i.full{background:var(--ok)}
 .chk{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;
   padding:14px 15px;margin-bottom:10px;background:var(--sunk);cursor:pointer;text-align:left;width:100%}
 .chk.on{border-color:var(--ok);background:var(--ok-bg)}
@@ -196,9 +203,9 @@ textarea.memo:focus{border-color:var(--accent)}
 <!-- 게이트 -->
 <div class="gate" id="gate"><div class="gbox">
   <h1>🛡️ 시작 전 — 환자 확인</h1>
-  <p class="s">맞이 시 안전의 첫 단추입니다. 네 가지를 모두 확인해야 시작됩니다.</p>
-  <input class="fld" id="pname" placeholder="환자 이름" autocomplete="off">
-  <input class="fld" id="pid" placeholder="등록번호 (숫자 8자리)" maxlength="8" inputmode="numeric" autocomplete="off">
+  <p class="s">맞이 시 안전의 첫 단추입니다. 세 가지를 모두 확인해야 시작됩니다.</p>
+  <input class="fld" id="pid" placeholder="등록번호 8자리" maxlength="8" inputmode="numeric" autocomplete="off">
+  <div class="cnt8" id="cnt8"></div>
   <button class="chk" id="cConf"><span class="bx">✓</span><div class="bd">
     🧼 손위생 하기<br>🗣️ “성함이 어떻게 되세요?”<br>🏷️ “팔찌 확인하겠습니다”</div></button>
   <button class="chk" id="cEdu"><span class="bx">✓</span><div class="bd">
@@ -247,7 +254,7 @@ const KEY='nfh_v6_state';
 /* ══════════ 상태 ══════════ */
 let S = blank();
 function blank(){
-  return {pt:{name:'',id:''}, step:0, cath:{}, cathOpen:false,
+  return {pt:{id:''}, step:0, cath:{}, cathOpen:false,
           cases:[],            /* {sym,sel1,sel2,set,ans:{},dxMan:{},peMan:{}} */
           closing:null, memo:'',
           consc:null, gcs:{E:null,V:null,M:null}, ori:{}, guard:null, edu:{}};
@@ -272,9 +279,9 @@ function restore(){
   try{
     const raw=localStorage.getItem(KEY); if(!raw) return false;
     const {s,at}=JSON.parse(raw);
-    if(!s || !s.pt || !s.pt.name) return false;
+    if(!s || !s.pt || !s.pt.id) return false;
     const t=new Date(at), hm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-    if(!confirm(`이전 기록이 있습니다.\n\n${s.pt.name} · ${s.pt.id}  (${hm} 저장)\n\n이어서 하시겠어요?`)) return false;
+    if(!confirm(`이전 기록이 있습니다.\n\n등록번호 ${s.pt.id}  (${hm} 저장)\n\n이어서 하시겠어요?`)) return false;
     S=Object.assign(blank(), s);
     return true;
   }catch(e){ return false; }
@@ -283,18 +290,23 @@ function restore(){
 /* ══════════ 게이트 ══════════ */
 let gConf=false, gEdu=false;
 function gval(){
-  const ok = gConf && gEdu && el('pname').value.trim() && /^\d{8}$/.test(el('pid').value.trim());
+  /* 숫자만 남긴다 — 하이픈이나 오타가 섞이면 8자리 판정이 어긋난다 */
+  const f=el('pid'); const only=f.value.replace(/\D/g,'').slice(0,8);
+  if(f.value!==only) f.value=only;
+  const n=only.length;
+  el('cnt8').innerHTML=[0,1,2,3,4,5,6,7].map(i=>
+    `<i class="${i<n?(n===8?'full':'on'):''}"></i>`).join('');
+  const ok = gConf && gEdu && /^\d{8}$/.test(only);
   el('gGo').className='go'+(ok?' on':'');
-  el('pname').classList.toggle('ok', !!el('pname').value.trim());
-  el('pid').classList.toggle('ok', /^\d{8}$/.test(el('pid').value.trim()));
+  f.classList.toggle('ok', n===8);
   return ok;
 }
 el('cConf').onclick=()=>{gConf=!gConf; el('cConf').classList.toggle('on',gConf); gval();};
 el('cEdu').onclick =()=>{gEdu=!gEdu;  el('cEdu').classList.toggle('on',gEdu);  gval();};
-['pname','pid'].forEach(i=>el(i).addEventListener('input',gval));
+el('pid').addEventListener('input',gval);
 el('gGo').onclick=()=>{
   if(!gval()) return;
-  S.pt={name:el('pname').value.trim(), id:el('pid').value.trim()};
+  S.pt={id:el('pid').value.trim()};
   el('gate').classList.add('hide'); render();
 };
 
@@ -509,7 +521,7 @@ function renderSteps(){
 /* ══════════ 화면 ══════════ */
 let lastStep = -1;
 function render(){
-  el('ptInfo').textContent = S.pt.name?`${S.pt.name} · ${S.pt.id}`:'';
+  el('ptInfo').textContent = S.pt.id?`등록번호 ${S.pt.id}`:'';
   renderSteps();
   const top = el('work').scrollTop;
   el('work').innerHTML = VIEWS[S.step]();
@@ -944,6 +956,6 @@ document.addEventListener('click', e=>{ if(e.target.id==='doneBtn') el('copyBtn'
 VIEWS = [vCath, vCC, vAE, vDx, vPEwrap, vEnd, vFix];
 try{ const th=localStorage.getItem('nfh_v6_theme'); if(th){document.documentElement.dataset.t=th; el('themeBtn').textContent = th==='dark'?'☀️':'🌙';} }catch(e){}
 if(restore()){ el('gate').classList.add('hide'); render(); }
-else { el('pname').focus(); }
+else { el('pid').focus(); }
 </script>
 </body></html>
