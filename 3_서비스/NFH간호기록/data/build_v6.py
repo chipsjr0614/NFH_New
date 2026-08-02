@@ -102,14 +102,14 @@ def qkey(q):
     """중복 판정용 질문 키. 앞머리 🩺/💬 표시는 화면 힌트일 뿐이라 무시한다."""
     return nsp(re.sub(r'^[^\w"“\'가-힣]+', '', str(q)))
 
-def qid_for(q, raw, fmt, where):
+def qid_for(q, raw, fmt, where, det=''):
     # 표기 변형을 흡수하려면 「마스터 원문으로 정규화한 뒤」 중복을 판단해야 한다.
     stmts = [canon(x, where) for x in split_stmt(raw)]
-    key = (qkey(q), tuple(stmts))
+    key = (qkey(q), tuple(stmts), det)
     if key in QINDEX: return QINDEX[key]
     qid = f'Q{len(QBANK)+1:03d}'
     QBANK[qid] = {'q': str(q).strip(), 'fmt': str(fmt or '체크').strip(),
-                  'stmts': stmts, 'paths': set()}
+                  'stmts': stmts, 'paths': set(), 'det': det}
     QINDEX[key] = qid
     return qid
 
@@ -128,7 +128,8 @@ for r in rows('2.사정세트'):
             WARN.append(('진단아님', where, name, '마스터 간호진단 목록에 없음'))
         P['dx'].setdefault(name, {'ae': [], 'pe': []})
     elif 과 == 'A&E':
-        qid = qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), where)
+        qid = qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), where,
+                      str(r.get('상세') or '').strip())
         QBANK[qid]['paths'].add(소)
         P['items'].append(('ae', qid, link))
     elif 과 == 'P&E':
@@ -243,6 +244,24 @@ for r in rows('11.평가자동'):
     AUTO_PE.append(canon(t, '평가자동'))
 AUTO_PE = list(dict.fromkeys(AUTO_PE))
 
+# ── 2.78) 외상 부위 (12.외상부위) ───────────────────────────
+# 부위마다 경로를 만들면 7개가 된다. 경로는 하나로 두고 부위를 골라
+# 진술문 뒤에 괄호로 붙인다 — 「신체손상 있음(머리, 가슴)」.
+# 부위를 고르면 그 부위의 문항과 진단이 따라 나온다.
+SITES = collections.OrderedDict()
+for r in rows('12.외상부위'):
+    nm = str(r.get('부위') or '').strip()
+    if not nm: continue
+    S_ = SITES.setdefault(nm, {'v': nm, 'ic': str(r.get('아이콘') or '').strip(),
+                               'dx': str(r.get('진단연결') or '').strip(),
+                               'ae': [], 'pe': []})
+    raw = r.get('진술문(마스터원문)')
+    if raw is None or not str(raw).strip(): continue
+    if str(r.get('과정') or '').strip() == 'A&E':
+        S_['ae'].append(qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), f'외상부위/{nm}'))
+    else:
+        S_['pe'].append(canon(raw, f'외상부위/{nm}'))
+
 # ── 2.8) 후속 사정 (10.후속사정) ────────────────────────────
 # 「신경학적 이상이 보이면 혈당을 재라」처럼, 앞의 답에 따라 뒤에 붙는 문항.
 # 경고 배지가 아니라 「질문이 하나 늘어나는 것」이라 미응답 장치가 그대로 먹는다.
@@ -328,13 +347,15 @@ CLOSING = [{'sel': str(r.get('선택') or '').strip(),
 DATA = {
   'meta': {'src': os.path.basename(SRC), 'paths': NPATH, 'questions': len(QBANK)},
   'qbank': {k: {'q': v['q'], 'fmt': v['fmt'], 'stmts': v['stmts'], 'ab': v.get('ab', 0),
-                'core': v['core'], 'n': len(v['paths'])} for k, v in QBANK.items()},
+                'det': v.get('det', ''), 'core': v['core'], 'n': len(v['paths'])}
+            for k, v in QBANK.items()},
   'syms': SYMS, 'branch': BRANCH,
   'sets': {k: {'대분류': v['대분류'], 'neuro': PATH_NEURO.get(k, []),
                'neuroAll': PATH_NEURO_ALL.get(k, []),
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
   # 이상소견 진술문 원문 — 선택형(빛 반사 등)은 이걸로 이상 여부를 가린다
+  'sites': list(SITES.values()),
   'abnormal': sorted({M_SP.get(a, a) for a in ABN_TEXT}),
   'follow': list(FOLLOW.values()),
   'autoPE': AUTO_PE,

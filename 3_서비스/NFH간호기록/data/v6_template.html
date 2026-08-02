@@ -333,13 +333,23 @@ el('copyBtn').onclick=()=>{
 /* ══════════ 헬퍼 ══════════ */
 const setOf = s => D.sets[s];
 function branchesOf(sym){ return D.branch.filter(b=>b.sym===sym); }
-function stmtOf(qid, v){
+/* 마스터 문장은 한 글자도 안 바꾸고, 상세는 뒤에 괄호로 붙인다.
+   「신체손상 있음」 + 부위 → 「신체손상 있음(머리, 가슴)」
+   마스터 자신도 이 표기를 쓴다 — 「shock 증상 없음(혈압하강, 빈맥…)」 */
+function withDetail(base, det, c){
+  if(!base || !det || !c) return base;
+  const parts = det==='외상부위' ? (c.sites||[])
+              : det==='통증부위' ? painParts(c) : [];
+  return parts.length ? base+'('+parts.join(', ')+')' : base;
+}
+function stmtOf(qid, v, c){
   const q=D.qbank[qid]; if(!q) return null;
   if(v===undefined||v===null) return null;
-  if(q.fmt==='값입력') return String(v).trim()? q.stmts[0]+' '+String(v).trim() : null;
-  if(q.fmt==='선택')  return q.stmts[v]||null;
-  if(v===true)  return q.stmts[0]||null;
-  if(v===false) return q.stmts[1]||null;
+  const wrap = t => withDetail(t, q.det, c);
+  if(q.fmt==='값입력') return String(v).trim()? wrap(q.stmts[0])+' '+String(v).trim() : null;
+  if(q.fmt==='선택')  return q.stmts[v]?wrap(q.stmts[v]):null;
+  if(v===true)  return q.stmts[0]?wrap(q.stmts[0]):null;
+  if(v===false) return q.stmts[1]?wrap(q.stmts[1]):null;
   return null;
 }
 function shortLabels(ss){
@@ -445,7 +455,7 @@ function buildLines(){
       const ext = (isPainDx || isSmcDx) ? painLines(c) : null;
       if(isPainDx) painDone=true;
       if(isSmcDx)  smcDone=true;
-      const aes=dx.ae.map(q=>stmtOf(q,c.ans[q])).filter(Boolean);
+      const aes=dx.ae.map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean);
       /* 중재는 「그 경로가 가진 P&E」가 기준이다.
          📢 문구는 진단명으로만 묶여 있어, explain을 기준으로 삼으면
          남의 경로 중재가 섞여 들어오고(경련 환자에게 안대) 반대로
@@ -460,6 +470,17 @@ function buildLines(){
       aes.forEach(t=>shown[t]=1); pes.forEach(t=>shown[t]=1);
       blk(name, aes.map(AE).concat([DX(name)], pes.map(PE), notes.map(NT)));
     });
+    /* 부위를 고르면 그 부위의 진단이 따라온다 (외상) */
+    if(isTrauma(c)){
+      const sl=siteLines(c);
+      sl.dx.forEach(name=>{
+        const aes=[], pes=[];
+        sitesOf(c).forEach(x=>{ if(x.dx!==name) return;
+          x.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q],c); if(t&&aes.indexOf(t)<0) aes.push(t); });
+          x.pe.forEach(t=>{ if(pes.indexOf(t)<0) pes.push(t); }); });
+        blk(name, aes.map(AE).concat([DX(name)], pes.map(PE)));
+      });
+    }
     /* ── 진단을 껐어도 「물어본 것」은 사라지면 안 된다 ──
        「안 물어봄」과 「물어보고 없음」이 다르듯, 「물어봤는데 기록이 없음」도 안 된다.
        진단이 꺼져 갈 곳을 잃은 답을 여기서 거둔다. 진단(D)은 붙이지 않는다. */
@@ -467,7 +488,7 @@ function buildLines(){
     const keep=(arr,t)=>{ if(t && !shown[t] && arr.indexOf(t)<0) arr.push(t); };
     st.dx.forEach(dx=>dx.ae.forEach(q=>{
       if(seenQ[q]) return; seenQ[q]=1;
-      keep(rAE, stmtOf(q,c.ans[q]));
+      keep(rAE, stmtOf(q,c.ans[q],c));
     }));
     if((isPainCase(c) && !painDone) || (isSmcPath(c) && !smcDone)){
       const ex=painLines(c);
@@ -586,6 +607,7 @@ function vAE(){
       <p class="ws">묻고 답을 누르면 그대로 기록됩니다</p>
       ${blk(core,'공통 문진 — 자리가 항상 같습니다','var(--accent)')}
       ${blk(rest,'이 경로에만','var(--pe)')}
+      ${vSites(c,ci)}
       ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}
       ${vNeuro(c,ci)}
       ${vFollow(c,ci)}`;
@@ -634,7 +656,7 @@ function qRow(qid,ci){
   const miss = v===undefined;
   /* 「무엇이 기록되는가」를 그대로 보여준다. 첫 진술문을 보여주면
      없음을 고른 경우에도 있음처럼 읽혀 오해가 생긴다 */
-  const rec = miss ? '' : (stmtOf(qid,v) || '');
+  const rec = miss ? '' : (stmtOf(qid,v,S.cases[ci]) || '');
   return `<div class="q ${miss?'miss':''}"><span class="qt">${label}</span>
     ${miss?'<span class="mt">미응답</span>':`<span class="rec">${esc(rec.slice(0,24))}</span>`}${ans}</div>`;
 }
@@ -666,6 +688,12 @@ function isSmcPath(c){ const st=setOf(c.set);
 function needSmc(c){ const p=pn(c);
   return isSmcPath(c) || p.parts.some(v=>((P.parts||[]).find(x=>x.v===v)||{}).smc); }
 function isChronic(c){ return !!P.chronic && pn(c).dur===P.chronic; }
+/* 통증 부위를 괄호에 넣을 형태로. 세부 위치가 있으면 함께 */
+function painParts(c){
+  const p=c.pain; if(!p) return [];
+  return (p.parts||[]).map(v=>{ const sub=(p.subs||{})[v]||[];
+    return v+(sub.length?' '+sub.join('·'):''); });
+}
 /* 통증이 실제로 확인됐나 — 강도를 쟀거나, 경로의 통증 사정이 양성이거나 */
 function painFound(c){
   if(pn(c).inten!=null) return true;
@@ -736,6 +764,35 @@ function vPain(c,ci){
   }
   return h;
 }
+/* ══════════ 🤕 외상 부위 ══════════
+   부위마다 경로를 만들면 7개가 된다. 경로는 하나로 두고 부위를 고르면
+   진술문 뒤에 괄호로 붙고(신체손상 있음(머리, 가슴)) 그 부위 문항·진단이 따라 나온다. */
+const SITES = D.sites||[];
+function isTrauma(c){ const st=setOf(c.set); return !!st && st['대분류']==='외상'; }
+function sitesOf(c){ return SITES.filter(x=>(c.sites||[]).indexOf(x.v)>=0); }
+function vSites(c,ci){
+  if(!isTrauma(c)) return '';
+  const on=c.sites||[];
+  let h=`<div class="gl"><span class="dot" style="background:var(--ae)"></span>🤕 다친 곳</div>
+    <p class="ws">고른 부위가 기록에 괄호로 붙습니다 — 「신체손상 있음(머리, 가슴)」</p>
+    <div class="row">${SITES.map(x=>
+      `<button class="b ${on.indexOf(x.v)>=0?'sel':''}" data-site="${ci}" data-v="${esc(x.v)}">${x.ic} ${esc(x.v)}</button>`).join('')}</div>`;
+  sitesOf(c).forEach(x=>{
+    if(!x.ae.length) return;
+    h+=`<div class="pl2">${x.ic} ${esc(x.v)} — 이 부위만 묻는 것</div>`+x.ae.map(q=>qRow(q,ci)).join('');
+  });
+  return h;
+}
+/* 부위를 고르면 그 부위의 진단·중재가 따라온다 */
+function siteLines(c){
+  const out={dx:[], pe:[], ae:[]};
+  sitesOf(c).forEach(x=>{
+    if(x.dx && out.dx.indexOf(x.dx)<0) out.dx.push(x.dx);
+    x.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q],c); if(t) out.ae.push(t); });
+    x.pe.forEach(t=>{ if(out.pe.indexOf(t)<0) out.pe.push(t); });
+  });
+  return out;
+}
 /* ══════════ 🧠 신경학적 평가 ══════════
    경로에 이미 신경학 항목이 있으면 그건 그대로 두고, 빠진 것만 여기서 채운다.
    경로마다 문구·진단연결이 달라 하나로 합치면 임상 내용이 조용히 바뀐다. */
@@ -800,12 +857,12 @@ function vFollow(c,ci){
     + fs.map(f=>f.ae.map(q=>qRow(q,ci)).join('')).join('');
 }
 function neuroLines(c){
-  const ae=neuroOf(c).map(q=>stmtOf(q,c.ans[q])).filter(Boolean), pe=[];
+  const ae=neuroOf(c).map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean), pe=[];
   /* 의식은 환자당 한 번이므로 첫 주호소에만 붙인다 */
   if(S.cases[0]===c) conscLines().reverse().forEach(t=>ae.unshift(t));
   followOf(c).forEach(f=>{
     let done=false;
-    f.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q]); if(t){ ae.push(t); done=true; } });
+    f.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q],c); if(t){ ae.push(t); done=true; } });
     if(done) (f.pe||[]).forEach(t=>{ if(pe.indexOf(t)<0) pe.push(t); });
   });
   return {ae:ae, pe:pe};
@@ -816,7 +873,7 @@ function painLines(c){
   if(isPainCase(c)){
     if(isChronic(c)) condAE('만성').forEach(x=>out.ae.push(x.rec));
     (P.ae||[]).forEach(q=>{ if(!P.grp[q]) return;
-      const t=stmtOf(q,c.ans[q]); if(t) out.ae.push(t); });
+      const t=stmtOf(q,c.ans[q],c); if(t) out.ae.push(t); });
     const hit={부위:p.parts.length>0, 강도:p.inten!=null,
                양상:p.pats.length>0, 투여후강도:p.inten2!=null};
     (P.peCond||[]).forEach(x=>{ if(hit[x.cond]) out.pe.push(x.rec); });
@@ -906,7 +963,7 @@ function vFix(){
 
 /* ══════════ 이벤트 ══════════ */
 el('work').addEventListener('click', e=>{
-  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-popen],[data-nopen]');
+  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-popen],[data-nopen],[data-site]');
   if(!t) return;
   const d=t.dataset;
   if(d.more){ S.cathOpen=true; }
@@ -939,6 +996,8 @@ el('work').addEventListener('click', e=>{
   /* 접힘 상태는 상태값으로 들고 있어야 한다.
      안 그러면 안에서 답을 누를 때마다 다시 그려지며 접혀버린다 */
   else if(d.popen!=null){ e.preventDefault(); const p=pn(S.cases[+d.popen]); p.open=!p.open; }
+  else if(d.site!=null){ const c=S.cases[+d.site]; c.sites=c.sites||[];
+    const i=c.sites.indexOf(d.v); i<0?c.sites.push(d.v):c.sites.splice(i,1); }
   else if(d.nopen!=null){ e.preventDefault(); const c=S.cases[+d.nopen]; c.neuroOpen=!c.neuroOpen; }
   /* 통증 위젯 — 같은 것을 다시 누르면 해제된다 */
   else if(d.pdur!=null){ const p=pn(S.cases[+d.pdur]); p.dur = p.dur===d.v?null:d.v; }
