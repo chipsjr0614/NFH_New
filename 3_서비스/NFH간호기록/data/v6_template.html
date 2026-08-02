@@ -348,8 +348,16 @@ function toggleLabels(ss){
   return broken ? ss.slice() : cut;
 }
 function caseDx(c){ const st=setOf(c.set); return st?st.dx:[]; }
-const pos = (c,q) => c.ans[q]===true ||
-  (D.qbank[q] && D.qbank[q].fmt!=='토글' && c.ans[q]!==undefined && c.ans[q]!==false);
+/* 「있음이면 이상」이라는 규칙은 만들 수 없다.
+   구토는 있는 게 이상이고 지남력은 없는 게 이상인데, 글자는 둘 다 있음/없음이라 똑같다.
+   어느 쪽이 이상소견인지는 엑셀 9.추천근거에서 지정하고 빌드가 ab로 실어준다. */
+function pos(c,q){
+  const qb=D.qbank[q]; if(!qb) return false;
+  const v=c.ans[q];
+  if(v===undefined) return false;
+  if(qb.fmt==='토글') return v === ((qb.ab||0)===0);
+  return v!==false && v!=='';
+}
 /* 그 진단만의 고유 사정이 있으면 그것으로 판단한다.
    dizziness처럼 여러 진단이 함께 쓰는 항목 하나로는 전부 추천되어 버린다. */
 function recommended(c,dx){
@@ -399,6 +407,10 @@ function buildLines(){
       pes.forEach(t=>push('pe','P&E',t));
       notes.forEach(t=>push('note','📌','비고: '+t));
     });
+    /* 신경학은 특정 진단에 매이지 않으므로 따로 묶는다.
+       진단마다 붙이면 같은 줄이 진단 수만큼 반복된다 */
+    const nl=neuroLines(c);
+    if(nl.length){ push('gh','','신경학적 평가'); nl.forEach(t=>push('ae','A&E',t)); }
   });
   if(S.closing){
     const cl=D.closing.find(x=>x.sel===S.closing);
@@ -508,7 +520,8 @@ function vAE(){
       <p class="ws">묻고 답을 누르면 그대로 기록됩니다</p>
       ${blk(core,'공통 문진 — 자리가 항상 같습니다','var(--accent)')}
       ${blk(rest,'이 경로에만','var(--pe)')}
-      ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}`;
+      ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}
+      ${vNeuro(c,ci)}`;
   }).join('<div style="height:22px"></div>') + nav(true,'진단');
 }
 function vBranch(c){
@@ -640,6 +653,21 @@ function vPain(c,ci){
   }
   return h;
 }
+/* ══════════ 🧠 신경학적 평가 ══════════
+   경로에 이미 신경학 항목이 있으면 그건 그대로 두고, 빠진 것만 여기서 채운다.
+   경로마다 문구·진단연결이 달라 하나로 합치면 임상 내용이 조용히 바뀐다. */
+function neuroOf(c){ const st=setOf(c.set); return (st&&st.neuro)||[]; }
+function vNeuro(c,ci){
+  const qs=neuroOf(c); if(!qs.length) return '';
+  const n=qs.filter(q=>c.ans[q]!==undefined).length;
+  return `<details class="pdt" ${c.neuroOpen?'open':''}>
+    <summary data-nopen="${ci}">🧠 신경학적 평가${n?` · ${n}개 기록됨`:''}<span class="cv">▾</span></summary>
+    <div class="refb"><p class="ws">의식이 떨어지거나 마비·경련이 의심되면 여기서 확인하세요</p>
+    ${qs.map(q=>qRow(q,ci)).join('')}</div></details>`;
+}
+function neuroLines(c){
+  return neuroOf(c).map(q=>stmtOf(q,c.ans[q])).filter(Boolean);
+}
 /* 통증 위젯이 만든 기록. 값은 비고로, 「쟀다」는 사실만 P&E로 */
 function painLines(c){
   const p=pn(c), out={ae:[],pe:[],notes:[]}, nb=[];
@@ -743,7 +771,7 @@ function vFix(){
 
 /* ══════════ 이벤트 ══════════ */
 el('work').addEventListener('click', e=>{
-  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-popen]');
+  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-popen],[data-nopen]');
   if(!t) return;
   const d=t.dataset;
   if(d.more){ S.cathOpen=true; }
@@ -775,6 +803,7 @@ el('work').addEventListener('click', e=>{
   /* 접힘 상태는 상태값으로 들고 있어야 한다.
      안 그러면 안에서 답을 누를 때마다 다시 그려지며 접혀버린다 */
   else if(d.popen!=null){ e.preventDefault(); const p=pn(S.cases[+d.popen]); p.open=!p.open; }
+  else if(d.nopen!=null){ e.preventDefault(); const c=S.cases[+d.nopen]; c.neuroOpen=!c.neuroOpen; }
   /* 통증 위젯 — 같은 것을 다시 누르면 해제된다 */
   else if(d.pdur!=null){ const p=pn(S.cases[+d.pdur]); p.dur = p.dur===d.v?null:d.v; }
   else if(d.ppart!=null){ const p=pn(S.cases[+d.ppart]), i=p.parts.indexOf(d.v);

@@ -199,6 +199,35 @@ if PAIN['dxAcute']:
             if qid not in d['ae']: d['ae'].append(qid)
             QBANK[qid]['paths'].add(소)
 
+# ── 2.6) 신경학 공통 (8.신경학공통) ─────────────────────────
+# 기존 경로의 신경학 행은 건드리지 않는다. 문구가 경로마다 다르고 진단연결도 달라서
+# 공통으로 합치면 임상 내용이 조용히 바뀐다. 여기 것은 「항목이 없는 경로」에만 붙인다.
+NEURO = []
+for r in rows('8.신경학공통'):
+    raw = r.get('진술문(마스터원문)')
+    if raw is None: continue
+    NEURO.append(qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), '신경학공통'))
+
+sig = lambda qid: frozenset(nspc(s) for s in QBANK[qid]['stmts'])
+NEURO_SIG = {qid: sig(qid) for qid in NEURO}
+PATH_NEURO = {}
+for 소, P in PATHSET.items():
+    have = {sig(val) for kind, val, _link in P['items'] if kind == 'ae'}
+    PATH_NEURO[소] = [q for q in NEURO if NEURO_SIG[q] not in have]
+
+# ── 2.7) 추천 근거 (9.추천근거) ──────────────────────────────
+# 「있음이 이상」이라는 규칙은 기계로 못 만든다. 구토는 있는 게 이상이고
+# 지남력은 없는 게 이상이라 글자만 봐서는 갈리지 않는다. 칩스가 지정한 것만 쓴다.
+ABNORMAL = set()
+for r in rows('9.추천근거'):
+    s = str(r.get('이상소견 진술문') or '').strip()
+    if not s: continue
+    t = canon(s, '추천근거')
+    ABNORMAL.add(nspc(t))
+for qid, v in QBANK.items():
+    v['ab'] = 1 if (v['fmt'] == '토글' and len(v['stmts']) >= 2
+                    and nspc(v['stmts'][1]) in ABNORMAL) else 0
+
 # 같은 진술문이 두 번 들어가면 기록에 중복으로 찍힌다
 for P in PATHSET.values():
     for d in P['dx'].values():
@@ -253,10 +282,10 @@ CLOSING = [{'sel': str(r.get('선택') or '').strip(),
 # ── 5) 출력 ─────────────────────────────────────────────────
 DATA = {
   'meta': {'src': os.path.basename(SRC), 'paths': NPATH, 'questions': len(QBANK)},
-  'qbank': {k: {'q': v['q'], 'fmt': v['fmt'], 'stmts': v['stmts'],
+  'qbank': {k: {'q': v['q'], 'fmt': v['fmt'], 'stmts': v['stmts'], 'ab': v.get('ab', 0),
                 'core': v['core'], 'n': len(v['paths'])} for k, v in QBANK.items()},
   'syms': SYMS, 'branch': BRANCH,
-  'sets': {k: {'대분류': v['대분류'],
+  'sets': {k: {'대분류': v['대분류'], 'neuro': PATH_NEURO.get(k, []),
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
   'cath': CATH, 'edu': EDU, 'closing': CLOSING, 'pain': PAIN,
@@ -286,10 +315,14 @@ VAGUE = [qid for qid, v in QBANK.items() if len(nsp(v['q'])) <= 6]
 NEG_END = ('없음', '안됨', '않음', '못함', '못 봄', '못봄', '불가함')
 POS_END = ('있음', '됨', '함', '봄')
 ends = lambda s, tup: any(s.endswith(x) for x in tup)
+# 9.추천근거에 적힌 것은 이미 칩스가 본 것이므로 경고에서 뺀다
+reviewed = lambda v: any(nspc(s) in ABNORMAL for s in v['stmts'])
 POLAR = [qid for qid, v in QBANK.items()
-         if v['fmt'] == '토글' and len(v['stmts']) >= 2
+         if v['fmt'] == '토글' and len(v['stmts']) >= 2 and not reviewed(v)
          and ends(v['stmts'][0], NEG_END)
          and ends(v['stmts'][1], POS_END) and not ends(v['stmts'][1], NEG_END)]
+# 전체 감사 목록 — 어느 답이 「추천」을 띄우는지 한눈에 보이게
+AUDIT = [(qid, v) for qid, v in QBANK.items() if v['fmt'] == '토글' and len(v['stmts']) >= 2]
 
 with open(OUT_WARN, 'w', encoding='utf-8') as f:
     f.write(f'간호기록 V6 빌드 리포트\n원본: {os.path.basename(SRC)}\n')
@@ -324,6 +357,14 @@ with open(OUT_WARN, 'w', encoding='utf-8') as f:
             f.write(f'  {qid}  질문「{v["q"]}」  경로 {v["n"] if "n" in v else len(v["paths"])}개\n')
             f.write(f'        추천 근거(현재) : {v["stmts"][0]}\n')
             f.write(f'        반대쪽          : {v["stmts"][1]}\n')
+
+    f.write(f'\n\n[추천 근거 감사] 토글 {len(AUDIT)}문항 — 어느 답이 「추천」을 띄우는가\n' + '-'*70 + '\n')
+    f.write('★ 표시는 9.추천근거 시트에서 칩스가 지정한 것이다.\n')
+    f.write('아래를 훑어보다 「이건 반대인데」 싶은 줄이 있으면 9.추천근거에 진술문을 적으면 된다.\n\n')
+    for qid, v in AUDIT:
+        mark = '★' if v.get('ab', 0) else ' '
+        f.write(f'  {mark}{qid}  추천={v["stmts"][v.get("ab",0)]}\n')
+        f.write(f'         반대={v["stmts"][1-v.get("ab",0)]}   질문「{v["q"][:44]}」\n')
 
     if SPLIT:
         f.write(f'\n\n[선택형 합칠 후보] {len(SPLIT)}건 — 같은 질문인데 진술문이 달라 따로 잡혔다\n' + '-'*70 + '\n')
