@@ -233,7 +233,7 @@ const KEY='nfh_v6_state';
 let S = blank();
 function blank(){
   return {pt:{name:'',id:''}, step:0, cath:{}, cathOpen:false,
-          cases:[],            /* {sym,sel1,sel2,set,ans:{},dxOff:[],peOn:{}} */
+          cases:[],            /* {sym,sel1,sel2,set,ans:{},dxMan:{},peOn:{}} */
           closing:null, memo:'',
           consc:null, gcs:{E:null,V:null,M:null}, ori:{}, guard:null, edu:{}};
 }
@@ -325,8 +325,24 @@ function shortLabels(ss){
   return cut.every(x=>x) ? cut : ss.map(x=>x.length>15?x.slice(0,14)+'…':x);
 }
 function caseDx(c){ const st=setOf(c.set); return st?st.dx:[]; }
-function dxOn(c,name){ return !(c.dxOff||[]).includes(name); }
-function recommended(c,dx){ return dx.ae.some(q=>c.ans[q]===true || (D.qbank[q]&&D.qbank[q].fmt!=='토글' && c.ans[q]!==undefined && c.ans[q]!==false)); }
+const pos = (c,q) => c.ans[q]===true ||
+  (D.qbank[q] && D.qbank[q].fmt!=='토글' && c.ans[q]!==undefined && c.ans[q]!==false);
+/* 그 진단만의 고유 사정이 있으면 그것으로 판단한다.
+   dizziness처럼 여러 진단이 함께 쓰는 항목 하나로는 전부 추천되어 버린다. */
+function recommended(c,dx){
+  const st=setOf(c.set); if(!st) return false;
+  const others=st.dx.filter(d=>d.name!==dx.name);
+  const own=dx.ae.filter(q=>!others.some(o=>o.ae.includes(q)));
+  return (own.length?own:dx.ae).some(q=>pos(c,q));
+}
+/* 기본값은 「추천된 것만 켜짐」. 간호사가 직접 켜고 끄면 그 선택이 우선한다.
+   전부 기본 ON으로 두면 사정하지 않은 진단까지 기록에 들어간다. */
+function dxOn(c,name){
+  const m=(c.dxMan||{});
+  if(name in m) return m[name];
+  const dx=(setOf(c.set)||{dx:[]}).dx.find(d=>d.name===name);
+  return dx ? recommended(c,dx) : false;
+}
 
 /* ══════════ 기록 생성 ══════════ */
 function buildLines(){
@@ -397,11 +413,16 @@ function renderSteps(){
 }
 
 /* ══════════ 화면 ══════════ */
+let lastStep = -1;
 function render(){
   el('ptInfo').textContent = S.pt.name?`${S.pt.name} · ${S.pt.id}`:'';
   renderSteps();
+  const top = el('work').scrollTop;
   el('work').innerHTML = VIEWS[S.step]();
-  el('work').scrollTop = 0;
+  /* 단계가 바뀔 때만 맨 위로. 아니면 보던 자리를 지킨다
+     — 매번 0으로 되돌리면 답할 때마다 화면이 위로 튄다 */
+  el('work').scrollTop = (S.step === lastStep) ? top : 0;
+  lastStep = S.step;
   renderLive(); save();
 }
 function nav(back,next,disabled){
@@ -595,7 +616,7 @@ el('work').addEventListener('click', e=>{
   else if(d.sym){
     const i=S.cases.findIndex(c=>c.sym===d.sym);
     if(i>=0) S.cases.splice(i,1);
-    else S.cases.push({sym:d.sym, sel1:'', sel2:'', set:'', ans:{}, dxOff:[], peOn:{}});
+    else S.cases.push({sym:d.sym, sel1:'', sel2:'', set:'', ans:{}, dxMan:{}, peOn:{}});
   }
   else if(d.rm!=null){ S.cases.splice(+d.rm,1); }
   else if(d.br!=null){ const c=S.cases[+d.br]; if(d.k==='1'){c.sel1=d.v;c.sel2='';} else c.sel2=d.v; }
@@ -605,8 +626,8 @@ el('work').addEventListener('click', e=>{
     o[d.s] = o[d.s]===+d.n ? undefined : +d.n;
     c.ans[d.pu] = (o.rt||o.lt) ? ['Rt '+(o.rt||'__'),'Lt '+(o.lt||'__')].join(' / ') : undefined;
     c.ans['_'+d.pu]=o; }
-  else if(d.dx!=null){ const c=S.cases[+d.dx]; c.dxOff=c.dxOff||[];
-    const i=c.dxOff.indexOf(d.n); i<0?c.dxOff.push(d.n):c.dxOff.splice(i,1); }
+  else if(d.dx!=null){ const c=S.cases[+d.dx]; c.dxMan=c.dxMan||{};
+    c.dxMan[d.n] = !dxOn(c, d.n); }
   else if(d.pe!=null){ const c=S.cases[+d.pe]; c.peOn=c.peOn||{};
     const a=c.peOn[d.n]||(c.peOn[d.n]=[]); const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
   else if(d.cl){ S.closing = S.closing===d.cl?null:d.cl; }
