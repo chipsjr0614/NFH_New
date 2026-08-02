@@ -228,6 +228,16 @@ for qid, v in QBANK.items():
     v['ab'] = 1 if (v['fmt'] == '토글' and len(v['stmts']) >= 2
                     and nspc(v['stmts'][1]) in ABNORMAL) else 0
 
+# ── 2.75) 자동 평가 (11.평가자동) ───────────────────────────
+# 「출혈양상 확인함」은 출혈 사정을 했으면 이미 한 것이다. 또 누르게 할 이유가 없다.
+# 여기 적힌 것은 그 진단의 사정을 하나라도 답하면 자동으로 켜진다 (끌 수는 있다).
+AUTO_PE = []
+for r in rows('11.평가자동'):
+    t = str(r.get('진술문(마스터원문)') or '').strip()
+    if not t or t.startswith('—') or t.startswith('(수동)'): continue
+    AUTO_PE.append(canon(t, '평가자동'))
+AUTO_PE = list(dict.fromkeys(AUTO_PE))
+
 # ── 2.8) 후속 사정 (10.후속사정) ────────────────────────────
 # 「신경학적 이상이 보이면 혈당을 재라」처럼, 앞의 답에 따라 뒤에 붙는 문항.
 # 경고 배지가 아니라 「질문이 하나 늘어나는 것」이라 미응답 장치가 그대로 먹는다.
@@ -322,6 +332,7 @@ DATA = {
   # 이상소견 진술문 원문 — 선택형(빛 반사 등)은 이걸로 이상 여부를 가린다
   'abnormal': sorted({M_SP.get(a, a) for a in ABN_TEXT}),
   'follow': list(FOLLOW.values()),
+  'autoPE': AUTO_PE,
   'cath': CATH, 'edu': EDU, 'closing': CLOSING, 'pain': PAIN,
   # 경로에서 실제 쓰는 진단명 기준으로 환자설명을 붙인다
   'explain': {n: list({e['pe']: e for e in EXPL_RAW.get(nsp(n), [])}.values())
