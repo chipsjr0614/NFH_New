@@ -218,15 +218,45 @@ for 소, P in PATHSET.items():
 # ── 2.7) 추천 근거 (9.추천근거) ──────────────────────────────
 # 「있음이 이상」이라는 규칙은 기계로 못 만든다. 구토는 있는 게 이상이고
 # 지남력은 없는 게 이상이라 글자만 봐서는 갈리지 않는다. 칩스가 지정한 것만 쓴다.
-ABNORMAL = set()
+ABNORMAL, ABN_TEXT = set(), set()
 for r in rows('9.추천근거'):
     s = str(r.get('이상소견 진술문') or '').strip()
     if not s: continue
     t = canon(s, '추천근거')
-    ABNORMAL.add(nspc(t))
+    ABNORMAL.add(nspc(t)); ABN_TEXT.add(t)
 for qid, v in QBANK.items():
     v['ab'] = 1 if (v['fmt'] == '토글' and len(v['stmts']) >= 2
                     and nspc(v['stmts'][1]) in ABNORMAL) else 0
+
+# ── 2.8) 후속 사정 (10.후속사정) ────────────────────────────
+# 「신경학적 이상이 보이면 혈당을 재라」처럼, 앞의 답에 따라 뒤에 붙는 문항.
+# 경고 배지가 아니라 「질문이 하나 늘어나는 것」이라 미응답 장치가 그대로 먹는다.
+FOLLOW = collections.OrderedDict()
+for r in rows('10.후속사정'):
+    trig = str(r.get('발동조건') or '').strip()
+    raw  = r.get('진술문(마스터원문)')
+    if not trig or raw is None: continue
+    F = FOLLOW.setdefault(trig, {'trig': trig, 'skip': str(r.get('생략조건') or '').strip(),
+                                 'ae': [], 'pe': [], 'skipPaths': []})
+    if str(r.get('과정') or '').strip() == 'A&E':
+        F['ae'].append(qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), '후속사정'))
+    else:
+        F['pe'].append(canon(raw, '후속사정/P&E'))
+# 이미 그것을 묻고 있는 경로에서는 뜨지 않는다 (저혈당·고혈당 등)
+for F in FOLLOW.values():
+    if not F['skip']: continue
+    for 소, P in PATHSET.items():
+        if any(F['skip'] in s for kind, val, _l in P['items'] if kind == 'ae'
+               for s in QBANK[val]['stmts']):
+            F['skipPaths'].append(소)
+
+# 신경학 문항 전체 — 경로에 원래 있던 것 + 버튼으로 붙는 것.
+# 발동 판정은 둘 다 봐야 한다 (어지럼처럼 이미 다 있는 경로도 있다).
+PATH_NEURO_ALL = {}
+for 소, P in PATHSET.items():
+    inline = [val for kind, val, _l in P['items']
+              if kind == 'ae' and sig(val) in set(NEURO_SIG.values())]
+    PATH_NEURO_ALL[소] = list(dict.fromkeys(inline + PATH_NEURO[소]))
 
 # 같은 진술문이 두 번 들어가면 기록에 중복으로 찍힌다
 for P in PATHSET.values():
@@ -286,8 +316,12 @@ DATA = {
                 'core': v['core'], 'n': len(v['paths'])} for k, v in QBANK.items()},
   'syms': SYMS, 'branch': BRANCH,
   'sets': {k: {'대분류': v['대분류'], 'neuro': PATH_NEURO.get(k, []),
+               'neuroAll': PATH_NEURO_ALL.get(k, []),
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
+  # 이상소견 진술문 원문 — 선택형(빛 반사 등)은 이걸로 이상 여부를 가린다
+  'abnormal': sorted({M_SP.get(a, a) for a in ABN_TEXT}),
+  'follow': list(FOLLOW.values()),
   'cath': CATH, 'edu': EDU, 'closing': CLOSING, 'pain': PAIN,
   # 경로에서 실제 쓰는 진단명 기준으로 환자설명을 붙인다
   'explain': {n: list({e['pe']: e for e in EXPL_RAW.get(nsp(n), [])}.values())

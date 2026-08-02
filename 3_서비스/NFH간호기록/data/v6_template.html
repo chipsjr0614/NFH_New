@@ -351,12 +351,20 @@ function caseDx(c){ const st=setOf(c.set); return st?st.dx:[]; }
 /* 「있음이면 이상」이라는 규칙은 만들 수 없다.
    구토는 있는 게 이상이고 지남력은 없는 게 이상인데, 글자는 둘 다 있음/없음이라 똑같다.
    어느 쪽이 이상소견인지는 엑셀 9.추천근거에서 지정하고 빌드가 ab로 실어준다. */
+function abnormal(qid,v){
+  const qb=D.qbank[qid]; if(!qb || v===undefined) return false;
+  if(qb.fmt==='토글') return v === ((qb.ab||0)===0);
+  /* 빛 반사는 prompt가 정상이라 「답했다」만으로는 못 가린다 */
+  if(qb.fmt==='선택')  return (D.abnormal||[]).indexOf(qb.stmts[v])>=0;
+  if(qb.fmt==='값입력') return false;   /* 동공 3mm이 정상인지 앱은 모른다 */
+  return v===true;                      /* 체크 — 있을 때만 적는 항목 */
+}
 function pos(c,q){
   const qb=D.qbank[q]; if(!qb) return false;
   const v=c.ans[q];
   if(v===undefined) return false;
-  if(qb.fmt==='토글') return v === ((qb.ab||0)===0);
-  return v!==false && v!=='';
+  if(qb.fmt==='값입력') return v!=='';   /* 값을 넣었으면 사정한 것으로 본다 */
+  return abnormal(q,v);
 }
 /* 그 진단만의 고유 사정이 있으면 그것으로 판단한다.
    dizziness처럼 여러 진단이 함께 쓰는 항목 하나로는 전부 추천되어 버린다. */
@@ -410,7 +418,11 @@ function buildLines(){
     /* 신경학은 특정 진단에 매이지 않으므로 따로 묶는다.
        진단마다 붙이면 같은 줄이 진단 수만큼 반복된다 */
     const nl=neuroLines(c);
-    if(nl.length){ push('gh','','신경학적 평가'); nl.forEach(t=>push('ae','A&E',t)); }
+    if(nl.ae.length||nl.pe.length){
+      push('gh','','신경학적 평가');
+      nl.ae.forEach(t=>push('ae','A&E',t));
+      nl.pe.forEach(t=>push('pe','P&E',t));
+    }
   });
   if(S.closing){
     const cl=D.closing.find(x=>x.sel===S.closing);
@@ -521,7 +533,8 @@ function vAE(){
       ${blk(core,'공통 문진 — 자리가 항상 같습니다','var(--accent)')}
       ${blk(rest,'이 경로에만','var(--pe)')}
       ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}
-      ${vNeuro(c,ci)}`;
+      ${vNeuro(c,ci)}
+      ${vFollow(c,ci)}`;
   }).join('<div style="height:22px"></div>') + nav(true,'진단');
 }
 function vBranch(c){
@@ -665,8 +678,30 @@ function vNeuro(c,ci){
     <div class="refb"><p class="ws">의식이 떨어지거나 마비·경련이 의심되면 여기서 확인하세요</p>
     ${qs.map(q=>qRow(q,ci)).join('')}</div></details>`;
 }
+/* 앞의 답에 따라 뒤에 붙는 문항 (10.후속사정).
+   경고 배지가 아니라 「질문이 하나 늘어나는 것」이다 — 미응답 장치가 그대로 먹는다.
+   이미 그것을 묻는 경로(저혈당·고혈당)에서는 빌드가 skipPaths로 걸러 뜨지 않는다. */
+function trigFired(c,trig){
+  const st=setOf(c.set); if(!st) return false;
+  if(trig==='신경학이상') return (st.neuroAll||[]).some(q=>abnormal(q,c.ans[q]));
+  return false;
+}
+function followOf(c){
+  return (D.follow||[]).filter(f=>f.skipPaths.indexOf(c.set)<0 && trigFired(c,f.trig));
+}
+function vFollow(c,ci){
+  const fs=followOf(c); if(!fs.length) return '';
+  return `<div class="gl"><span class="dot" style="background:var(--warn)"></span>신경학적 이상이 보입니다 — 이것부터 확인하세요</div>`
+    + fs.map(f=>f.ae.map(q=>qRow(q,ci)).join('')).join('');
+}
 function neuroLines(c){
-  return neuroOf(c).map(q=>stmtOf(q,c.ans[q])).filter(Boolean);
+  const ae=neuroOf(c).map(q=>stmtOf(q,c.ans[q])).filter(Boolean), pe=[];
+  followOf(c).forEach(f=>{
+    let done=false;
+    f.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q]); if(t){ ae.push(t); done=true; } });
+    if(done) (f.pe||[]).forEach(t=>{ if(pe.indexOf(t)<0) pe.push(t); });
+  });
+  return {ae:ae, pe:pe};
 }
 /* 통증 위젯이 만든 기록. 값은 비고로, 「쟀다」는 사실만 P&E로 */
 function painLines(c){
