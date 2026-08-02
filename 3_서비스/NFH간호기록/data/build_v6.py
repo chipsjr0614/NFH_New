@@ -135,10 +135,15 @@ for r in rows('2.사정세트'):
         P['items'].append(('pe', canon(raw, where), link))
 
 # 진단별 배치 (진단연결 사용, '공통'은 전 진단에)
+# 진단명은 canon으로 마스터 원문이 되는데(「비효율적 호흡양상」→「비효율적호흡양상」)
+# 진단연결 열은 엑셀 표기 그대로다. 글자로 비교하면 안 맞아 전부 「공통」으로 새어
+# 같은 줄이 진단마다 반복된다. 공백·대소문자를 무시하고 맞춘다.
 for 소, P in PATHSET.items():
     names = list(P['dx'].keys())
+    nmap = {nspc(n): n for n in names}
     for kind, val, link in P['items']:
-        tgt = names if (link == '공통' or link not in names) else [link]
+        hit = nmap.get(nspc(link)) if link else None
+        tgt = names if (link == '공통' or hit is None) else [hit]
         if not names: continue
         for n in tgt: P['dx'][n][kind].append(val)
 
@@ -173,7 +178,7 @@ for r in rows('7.통증공통'):
             if 그 == '만성': PAIN['chronic'] = 값
         elif 구 == '부위':     PAIN['parts'].append({'v': 값, 'ic': 비, 'smc': 그 == 'SMC'})
         elif 구 == '세부부위': PAIN['subs'].setdefault(비, []).append(값)
-        elif 구 == '도구':     PAIN['tools'].append({'v': 값, 'd': 비})
+        elif 구 == '도구':     PAIN['tools'].append({'v': 값, 'd': 비, 'ped': 그 == '소아'})
         elif 구 == '양상':     PAIN['patterns'].append(값)
         elif 구 == '빈도':     PAIN['freqs'].append(값)
         elif 구 == 'SMC':      PAIN['smc'].append(값)

@@ -673,8 +673,12 @@ function vPain(c,ci){
       h+=`<div class="pl2">${esc(v)} — 자세한 위치</div><div class="row">${
         subs.map(s=>chip(cur.indexOf(s)>=0,
           `data-psub="${ci}" data-p="${esc(v)}" data-v="${esc(s)}"`,s)).join('')}</div>`; });
-    h+=`<div class="pl">③ 어떤 도구로 재세요?</div><div class="row">${
-        (P.tools||[]).map(t=>chip(p.tool===t.v,`data-ptool="${ci}" data-v="${esc(t.v)}"`,
+    /* 소아에게 「0~10점 중 몇 점?」은 안 통한다. 소아 경로에서는 소아용을 앞에 둔다 */
+    const ped=(setOf(c.set)||{})['대분류']==='소아';
+    const tools=(P.tools||[]).slice().sort((a,b)=>(ped?(b.ped?1:0)-(a.ped?1:0):0));
+    h+=`<div class="pl">③ 어떤 도구로 재세요?</div>
+      ${ped?'<div class="hint">소아는 <b>FLACC(영유아) · NIPS(신생아) · FPRS(학령전)</b>를 씁니다</div>':''}
+      <div class="row">${tools.map(t=>chip(p.tool===t.v,`data-ptool="${ci}" data-v="${esc(t.v)}"`,
           `${t.v} · ${t.d}`)).join('')}</div>
       <div class="pl">④ 얼마나 아프세요?</div>`;
     h+= p.tool==='FPRS'
