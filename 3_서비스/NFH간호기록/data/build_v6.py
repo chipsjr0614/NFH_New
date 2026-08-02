@@ -356,6 +356,44 @@ CLOSING = [{'sel': str(r.get('선택') or '').strip(),
             'next':str(r.get('다음동작') or '').strip()}
            for r in rows('6.마무리질문') if r.get('선택')]
 
+# ── 4.5) 주호소 묶음 (경로를 없애고 대분류로 합친다) ──────────
+# 경로 60개를 먼저 확정하고 그 경로가 정해준 것만 묻는 구조는
+# 환자가 경로에 안 맞으면 어그러진다. 주호소를 고르면 그 계통 증상을
+# 전부 보여주고, 간호사가 진단을 고르면 그에 맞춰 정렬한다.
+GROUPS = collections.OrderedDict()
+SYM_ICON = {v['id']: v['icon'] for v in SYMS.values()} if SYMS else {}
+ICON_BY_GROUP = {}
+for r in rows('1.주호소트리'):
+    대 = str(r.get('대분류') or '').strip()
+    if 대: ICON_BY_GROUP.setdefault(대, str(r.get('아이콘') or '').strip())
+
+for 소, P in PATHSET.items():
+    대 = P['대분류'] or 소
+    G = GROUPS.setdefault(대, {'v': 대, 'ic': ICON_BY_GROUP.get(대, ''),
+                               'q': [], 'sec': [], 'dx': collections.OrderedDict(),
+                               'det': {}, 'paths': []})
+    G['paths'].append(소)
+    G['det'].update(P.get('det', {}))
+    mine = []
+    for kind, val, link, _o in P['items']:
+        if kind != 'ae': continue
+        if val not in G['q']: G['q'].append(val)
+        if val not in mine: mine.append(val)
+    G['sec'].append({'t': 소, 'q': mine})
+    for name, dd in P['dx'].items():
+        D_ = G['dx'].setdefault(name, {'name': name, 'ae': [], 'pe': []})
+        for q in dd['ae']:
+            if q not in D_['ae']: D_['ae'].append(q)
+        for t in dd['pe']:
+            if t not in D_['pe']: D_['pe'].append(t)
+
+for 대, G in GROUPS.items():
+    # 소분류가 하나뿐이면 소제목이 필요 없다
+    if len(G['sec']) < 2 or len(G['q']) <= 14: G['sec'] = []
+    G['dx'] = list(G['dx'].values())
+    G['neuro'] = PATH_NEURO.get(G['paths'][0], [])
+    G['neuroAll'] = PATH_NEURO_ALL.get(G['paths'][0], [])
+
 # ── 5) 출력 ─────────────────────────────────────────────────
 DATA = {
   'meta': {'src': os.path.basename(SRC), 'paths': NPATH, 'questions': len(QBANK)},
@@ -371,6 +409,7 @@ DATA = {
   'abnormal': sorted({M_SP.get(a, a) for a in ABN_TEXT}),
   'follow': list(FOLLOW.values()),
   'autoPE': AUTO_PE,
+  'groups': list(GROUPS.values()),
   'cath': CATH, 'edu': EDU, 'closing': CLOSING, 'pain': PAIN,
   # 경로에서 실제 쓰는 진단명 기준으로 환자설명을 붙인다
   'explain': {n: list({e['pe']: e for e in EXPL_RAW.get(nsp(n), [])}.values())

@@ -240,7 +240,7 @@ const D = window.NFH_V6;
 const STEPS = [
   {k:'cath', ic:'⓪', t:'도관'},
   {k:'cc',   ic:'①', t:'주호소'},
-  {k:'ae',   ic:'💬', t:'사정'},
+  {k:'ae',   ic:'💬', t:'증상'},
   {k:'dx',   ic:'🔴', t:'진단'},
   {k:'pe',   ic:'📢', t:'중재'},
   {k:'end',  ic:'💬', t:'마무리'},
@@ -257,7 +257,7 @@ const KEY='nfh_v6_state';
 let S = blank();
 function blank(){
   return {pt:{id:''}, step:0, cath:{}, cathOpen:false,
-          cases:[],            /* {sym,sel1,sel2,set,ans:{},dxMan:{},peMan:{}} */
+          cases:[],            /* {grp,ans:{},dxMan:{},peMan:{},det:{},pain} */
           closing:null, memo:'',
           consc:null, gcs:{E:null,V:null,M:null}, ori:{}, guard:null, edu:{}};
 }
@@ -334,6 +334,10 @@ el('copyBtn').onclick=()=>{
 
 /* ══════════ 헬퍼 ══════════ */
 const setOf = s => D.sets[s];
+const GROUPS = D.groups||[];
+const grpOf = c => c && GROUPS.filter(g=>g.v===c.grp)[0];
+/* 고른 주호소들의 진단 후보 */
+function dxsOf(c){ const g=grpOf(c); return g?g.dx:[]; }
 function branchesOf(sym){ return D.branch.filter(b=>b.sym===sym); }
 /* 마스터 문장은 한 글자도 안 바꾸고, 상세는 뒤에 괄호로 붙인다.
    「신체손상 있음」 + 부위 → 「신체손상 있음(머리, 가슴)」
@@ -346,7 +350,7 @@ function withDetail(base, det, c){
 /* 상세는 질문이 아니라 「이 경로에서의 쓰임」이다 */
 function detFor(c, qid){
   if(!c) return '';
-  const st=setOf(c.set);
+  const st=grpOf(c);
   return (st && st.det && st.det[qid]) || '';
 }
 function stmtOf(qid, v, c){
@@ -379,7 +383,7 @@ function toggleLabels(ss){
   const broken = cut.some(x=>x.length<2 || '를을이가은는의에도만'.indexOf(x[0])>=0);
   return broken ? ss.slice() : cut;
 }
-function caseDx(c){ const st=setOf(c.set); return st?st.dx:[]; }
+function caseDx(c){ const st=grpOf(c); return st?st.dx:[]; }
 /* 「있음이면 이상」이라는 규칙은 만들 수 없다.
    구토는 있는 게 이상이고 지남력은 없는 게 이상인데, 글자는 둘 다 있음/없음이라 똑같다.
    어느 쪽이 이상소견인지는 엑셀 9.추천근거에서 지정하고 빌드가 ab로 실어준다. */
@@ -401,7 +405,7 @@ function pos(c,q){
 /* 그 진단만의 고유 사정이 있으면 그것으로 판단한다.
    dizziness처럼 여러 진단이 함께 쓰는 항목 하나로는 전부 추천되어 버린다. */
 function recommended(c,dx){
-  const st=setOf(c.set); if(!st) return false;
+  const st=grpOf(c); if(!st) return false;
   const others=st.dx.filter(d=>d.name!==dx.name);
   const own=dx.ae.filter(q=>!others.some(o=>o.ae.includes(q)));
   return (own.length?own:dx.ae).some(q=>pos(c,q));
@@ -422,7 +426,7 @@ function peOn(c,dx,p){
 function dxOn(c,name){
   const m=(c.dxMan||{});
   if(name in m) return m[name];
-  const dx=(setOf(c.set)||{dx:[]}).dx.find(d=>d.name===name);
+  const dx=(grpOf(c)||{dx:[]}).dx.find(d=>d.name===name);
   return dx ? recommended(c,dx) : false;
 }
 
@@ -450,7 +454,7 @@ function buildLines(){
   const cs=Object.keys(S.cath).filter(k=>(S.cath[k]||[]).length);
   if(cs.length) blk('도관', [].concat.apply([], cs.map(k=>S.cath[k].map(AE))));
   S.cases.forEach(c=>{
-    const st=setOf(c.set); if(!st) return;
+    const st=grpOf(c); if(!st) return;
     /* 고른 부위·상황의 진단. 경로가 이미 가진 진단이면 그 블록에 합친다 —
        따로 찍으면 「저체온」 블록이 두 번 나온다 */
     const sb=siteBlocks(c);
@@ -519,10 +523,7 @@ function buildLines(){
 function renderLive(){
   const L=buildLines();
   const n=L.filter(x=>x.c!=='gh').length;
-  let miss=0;
-  S.cases.forEach(c=>{ const st=setOf(c.set); if(!st) return;
-    new Set(st.dx.flatMap(d=>d.ae)).forEach(q=>{ if(c.ans[q]===undefined) miss++; }); });
-  el('cnt').textContent = n+'줄'+(miss?' · 미응답 '+miss:'');
+  el('cnt').textContent = n+'줄';
   el('preview').innerHTML = L.length
     ? L.map(x=>x.c==='gh'?`<div class="rl gh">［${esc(x.t)}］</div>`
         :`<div class="rl ${x.c}"><span class="tg">${esc(x.tg)}</span>${esc(x.t)}</div>`).join('')
@@ -572,62 +573,29 @@ function vCath(){
     ${S.cathOpen?'':`<div class="row"><button class="b dash" data-more="1">＋ 더보기 ${D.cath.length-list.length}종</button></div>`}
     ${detail}${nav(false,'주호소')}`;
 }
-/* ① 주호소 */
+/* ① 주호소 — 여러 개 고를 수 있다 */
 function vCC(){
-  const syms=Object.keys(D.syms);
-  const picked = s => S.cases.some(c=>c.sym===s);
+  const picked = v => S.cases.some(c=>c.grp===v);
   return `<p class="wt">어디가 불편해서 오셨어요?</p>
     <p class="ws">여러 개 고를 수 있습니다</p>
-    <div class="row">${syms.map(s=>{
-      const y=D.syms[s];
-      return `<button class="b big ${picked(s)?'sel':''}" data-sym="${esc(s)}">${esc(y.icon||'')} ${esc(s)}${picked(s)?' ✓':''}</button>`;
-    }).join('')}</div>
-    ${S.cases.length?`<div class="gl"><span class="dot"></span>고른 주호소 ${S.cases.length}개</div>
-      ${S.cases.map((c,i)=>`<div class="q"><span class="qt">${esc(c.sym)}${c.sel1?' · '+esc(c.sel1):''}${c.sel2?' · '+esc(c.sel2):''}</span>
+    <div class="row">${GROUPS.map(g=>
+      `<button class="b big ${picked(g.v)?'sel':''}" data-sym="${esc(g.v)}">${g.ic} ${esc(g.v)}${picked(g.v)?' ✓':''}</button>`).join('')}</div>
+    ${S.cases.length?`<div class="gl"><span class="dot"></span>고른 것 ${S.cases.length}개</div>
+      ${S.cases.map((c,i)=>`<div class="q"><span class="qt">${esc(c.grp)}</span>
         <button class="ab" data-rm="${i}">빼기</button></div>`).join('')}`:''}
-    ${nav(true,'사정', !S.cases.length)}`;   /* 분기는 다음 화면에서 고른다 */
+    ${nav(true,'증상', !S.cases.length)}`;
 }
-/* ② 사정 (분기 + 질문) */
+/* ② 증상 — 고른 주호소의 증상을 다 보여준다. 해당하는 것만 누른다 */
 function vAE(){
-  /* 경로가 없는 주호소(「이상 없음」)는 분기를 다시 돌리면 안 된다.
-     set이 빈 채로 vBranch→vAE를 오가며 무한 재귀로 앱이 죽었다. */
-  const need = S.cases.filter(c=>!c.set && !c.noSet);
-  if(need.length) return vBranch(need[0]);
-  if(!S.cases.some(c=>setOf(c.set)))
-    return `<p class="wt">사정할 항목이 없습니다</p>
-      <p class="ws">${esc(S.cases.map(c=>c.sym).join(' · '))} — 물어볼 것이 따로 없는 주호소입니다.
-      마무리 질문으로 넘어가세요.</p>${nav(true,'진단')}`;
   return S.cases.map((c,ci)=>{
-    const st=setOf(c.set); if(!st) return '';
-    /* 「공통 문진 / 이 경로에만」으로 나누면 흉통 환자에게 dizziness가 먼저 나온다.
-       엑셀 순서 그대로 한 줄로 보여준다 — 그게 간호사가 묻는 순서다. */
-    const qs=[...new Set(st.dx.flatMap(d=>d.ae))];
-    return `<p class="wt">${esc(c.sym)}${c.sel1?' · '+esc(c.sel1):''}${c.sel2?' · '+esc(c.sel2):''}</p>
-      <p class="ws">묻고 답을 누르면 그대로 기록됩니다</p>
-      ${qs.map(q=>qRow(q,ci)).join('')}
-      ${vSites(c,ci)}
-      ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}
-      ${vFollow(c,ci)}`;
+    const g=grpOf(c); if(!g) return '';
+    const body = g.sec.length
+      ? g.sec.map(x=>`<div class="pl2">${esc(x.t)}</div>`+x.q.map(q=>qRow(q,ci)).join('')).join('')
+      : g.q.map(q=>qRow(q,ci)).join('');
+    return `<p class="wt">${g.ic} ${esc(c.grp)}</p>
+      <p class="ws">해당하는 것만 누르세요 · 안 누른 것은 기록에 안 남습니다</p>
+      ${vSites(c,ci)}${body}`;
   }).join('<div style="height:22px"></div>') + nav(true,'진단');
-}
-function vBranch(c){
-  const ci=S.cases.indexOf(c), y=D.syms[c.sym], bs=branchesOf(c.sym);
-  if(!c.sel1 && bs.some(b=>b.sel1)){
-    const o=[...new Set(bs.map(b=>b.sel1).filter(Boolean))];
-    return `<p class="wt">${esc(y.icon||'')} ${esc(c.sym)}</p>
-      <p class="ws">💬 ${esc(y.q1||'선택하세요')}</p>
-      <div class="row">${o.map(v=>`<button class="b big wide" data-br="${ci}" data-k="1" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
-  }
-  const cand=bs.filter(b=>!c.sel1||b.sel1===c.sel1);
-  if(!c.sel2 && cand.some(b=>b.sel2)){
-    const o=[...new Set(cand.map(b=>b.sel2).filter(Boolean))];
-    return `<p class="wt">${esc(c.sym)} · ${esc(c.sel1)}</p>
-      <p class="ws">💬 ${esc(y.q2||'선택하세요')}</p>
-      <div class="row">${o.map(v=>`<button class="b big wide" data-br="${ci}" data-k="2" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
-  }
-  const hit=cand.find(b=>(!b.sel2)||b.sel2===c.sel2)||cand[0];
-  if(hit){ if(hit.set) c.set=hit.set; else c.noSet=true; return vAE(); }
-  return `<p class="wt">경로를 찾을 수 없습니다</p><p class="ws">${esc(c.sym)}</p>${nav(true,'진단')}`;
 }
 function qRow(qid,ci){
   const q=D.qbank[qid], v=S.cases[ci].ans[qid];
@@ -650,12 +618,11 @@ function qRow(qid,ci){
   }else{
     ans=`<span class="ans"><button class="ab ${v===true?'on':''}" data-yn="${qid}" data-ci="${ci}" data-v="1">확인함</button></span>`;
   }
-  const miss = v===undefined;
-  /* 「무엇이 기록되는가」를 그대로 보여준다. 첫 진술문을 보여주면
-     없음을 고른 경우에도 있음처럼 읽혀 오해가 생긴다 */
-  const rec = miss ? '' : (stmtOf(qid,v,S.cases[ci]) || '');
-  return `<div class="q ${miss?'miss':''}"><span class="qt">${label}</span>
-    ${miss?'<span class="mt">미응답</span>':`<span class="rec">${esc(rec.slice(0,24))}</span>`}${ans}</div>`;
+  /* 안 누른 것은 「미응답」이 아니라 그냥 해당 없는 것이다.
+     증상을 전부 보여주고 해당하는 것만 누르는 구조라 경고할 일이 아니다. */
+  const rec = v===undefined ? '' : (stmtOf(qid,v,S.cases[ci]) || '');
+  return `<div class="q"><span class="qt">${label}</span>
+    ${rec?`<span class="rec">${esc(rec.slice(0,24))}</span>`:''}${ans}</div>`;
 }
 function pupilRow(qid,ci){
   /* 기록용 값(ans[qid])은 「Rt 3 / Lt 5」 문자열이다.
@@ -680,9 +647,9 @@ const FACES = [['😀',0],['🙂',2],['😐',4],['😣',6],['😫',8],['😭',10
 const NRS = [0,1,2,3,4,5,6,7,8,9,10];
 function pn(c){ return c.pain || (c.pain={dur:null,parts:[],subs:{},tool:null,inten:null,
                                           inten2:null,pats:[],freq:null,smc:{},aeq:{},open:false}); }
-function isPainCase(c){ const st=setOf(c.set);
+function isPainCase(c){ const st=grpOf(c);
   return !!st && !!P.dxAcute && st.dx.some(d=>d.name===P.dxAcute); }
-function isSmcPath(c){ const st=setOf(c.set);
+function isSmcPath(c){ const st=grpOf(c);
   return !!st && (P.smcDx||[]).some(n=>st.dx.some(d=>d.name===n)); }
 function needSmc(c){ const p=pn(c);
   return isSmcPath(c) || p.parts.some(v=>((P.parts||[]).find(x=>x.v===v)||{}).smc); }
@@ -696,7 +663,7 @@ function painParts(c){
 /* 통증이 실제로 확인됐나 — 강도를 쟀거나, 경로의 통증 사정이 양성이거나 */
 function painFound(c){
   if(pn(c).inten!=null) return true;
-  const st=setOf(c.set); if(!st) return false;
+  const st=grpOf(c); if(!st) return false;
   const dx=st.dx.filter(d=>d.name===P.dxAcute)[0];
   return !!dx && dx.ae.some(q=>pos(c,q));
 }
@@ -711,18 +678,18 @@ function vPain(c,ci){
   if(pain){
     /* 한 화면에 45개를 펼쳐놓으면 뭘 눌러야 할지 모른다.
        답하면 다음이 나오게 해서 처음엔 「어디가」만 보이게 한다. */
-    const ped=(setOf(c.set)||{})['대분류']==='소아';
+    const ped=c.grp==='소아';
     if(!p.tool) p.tool = ped ? 'FLACC' : 'NRS';          /* 도구는 자동으로 고른다 */
     /* 흉부통증 경로에서 또 「어디가 아프세요?」를 묻는 건 바보 같다.
        경로가 부위를 이미 정했으면 그것을 쓰고 묻지 않는다 (7.통증공통 부위자동) */
     if(!p.parts.length){
-      const st2=setOf(c.set)||{dx:[]};
+      const st2=grpOf(c)||{dx:[]};
       const auto=Object.keys(P.autoPart||{}).filter(k=>
         st2.dx.some(d=>d.ae.some(q=>(D.qbank[q].stmts||[]).some(t=>t.indexOf(k)===0))));
       if(auto.length) p.parts=[P.autoPart[auto[0]]];
     }
     const fixed = p.parts.length===1 && Object.keys(P.autoPart||{}).some(k=>P.autoPart[k]===p.parts[0])
-                  && (setOf(c.set)||{})['대분류']!=='외상';
+                  && c.grp!=='외상';
     const step = p.parts.length ? (p.inten!=null ? 3 : 2) : 1;
 
     if(!fixed)
@@ -787,7 +754,7 @@ function vPain(c,ci){
 const SITES = D.sites||{};
 const LBL = {'외상부위':'🤕 다친 곳','피부상황':'🧴 어떤 피부 문제인가요'};
 function detGroups(c){          /* 이 경로가 쓰는 상세 구분 */
-  const st=setOf(c.set); if(!st) return [];
+  const st=grpOf(c); if(!st) return [];
   const g={};
   Object.keys(st.det||{}).forEach(q=>{ const t=st.det[q]; if(SITES[t]) g[t]=1; });
   return Object.keys(g);
@@ -823,7 +790,7 @@ function siteBlocks(c){
 /* ══════════ 🧠 신경학적 평가 ══════════
    경로에 이미 신경학 항목이 있으면 그건 그대로 두고, 빠진 것만 여기서 채운다.
    경로마다 문구·진단연결이 달라 하나로 합치면 임상 내용이 조용히 바뀐다. */
-function neuroOf(c){ const st=setOf(c.set); return (st&&st.neuro)||[]; }
+function neuroOf(c){ const st=grpOf(c); return (st&&st.neuro)||[]; }
 /* 의식(GCS·지남력)은 여기 있다.
    전에는 마지막 「의식·낙상」 화면에 있었는데, 의식섬망처럼 경로가 이미 묻는 곳과
    겹쳐 한 기록에 「지남력 없음」과 「있음」이 함께 남았다. */
@@ -860,7 +827,7 @@ function vConsc(){
 }
 /* 경로가 이미 의식·지남력을 묻고 있으면 여기서 또 묻지 않는다 */
 function conscAsked(c){
-  const st=setOf(c.set); if(!st) return false;
+  const st=grpOf(c); if(!st) return false;
   return st.dx.some(d=>d.ae.some(q=>(D.qbank[q].stmts||[]).some(
     t=>t.indexOf('의식')>=0 || t.indexOf('지남력')>=0 || t.indexOf('Glasgow')>=0)));
 }
@@ -875,12 +842,12 @@ function vNeuro(c,ci){
    경고 배지가 아니라 「질문이 하나 늘어나는 것」이다 — 미응답 장치가 그대로 먹는다.
    이미 그것을 묻는 경로(저혈당·고혈당)에서는 빌드가 skipPaths로 걸러 뜨지 않는다. */
 function trigFired(c,trig){
-  const st=setOf(c.set); if(!st) return false;
+  const st=grpOf(c); if(!st) return false;
   if(trig==='신경학이상') return (st.neuroAll||[]).some(q=>abnormal(q,c.ans[q]));
   return false;
 }
 function followOf(c){
-  return (D.follow||[]).filter(f=>f.skipPaths.indexOf(c.set)<0 && trigFired(c,f.trig));
+  return (D.follow||[]).filter(f=>(grpOf(c)||{paths:[]}).paths.every(p2=>f.skipPaths.indexOf(p2)<0) && trigFired(c,f.trig));
 }
 function vFollow(c,ci){
   const fs=followOf(c); if(!fs.length) return '';
@@ -930,30 +897,27 @@ function painLines(c){
   }
   return out;
 }
-/* ③ 진단 */
+/* ③ 진단 — 간호사가 고른다. 고른 진단만 기록된다 */
 function vDx(){
   return S.cases.map((c,ci)=>{
-    const st=setOf(c.set); if(!st) return '';
-    return `<p class="wt">${esc(c.sym)} — 간호진단</p>
-      <p class="ws">사정 결과로 추천됩니다 · 필요 없으면 끄세요</p>
-      ${st.dx.map(dx=>`<button class="dxc ${dxOn(c,dx.name)?'on':''}" data-dx="${ci}" data-n="${esc(dx.name)}">
+    const g=grpOf(c); if(!g) return '';
+    return `<p class="wt">${g.ic} ${esc(c.grp)} — 간호진단</p>
+      <p class="ws">사정 결과로 추천됩니다 · 맞는 것을 고르세요</p>
+      ${g.dx.map(dx=>`<button class="dxc ${dxOn(c,dx.name)?'on':''}" data-dx="${ci}" data-n="${esc(dx.name)}">
         <span class="ck">✓</span><span class="nm">${esc(dx.name)}</span>
-        ${recommended(c,dx)?'<span class="rc">추천</span>':''}</button>`).join('')}`;
+        ${recommended(c,dx)?'<span class="rc">추천</span>':''}</button>`).join('')}
+      ${(isPainCase(c)&&dxOn(c,P.dxAcute))?vPain(c,ci):''}`;
   }).join('<div style="height:20px"></div>') + nav(true,'중재');
 }
-/* ④ 중재 */
+/* ④ 중재 — 고른 진단에 맞는 것만 나온다 */
 function vPE(){
   return S.cases.map((c,ci)=>{
-    const st=setOf(c.set); if(!st) return '';
-    return st.dx.filter(dx=>dxOn(c,dx.name)).map(dx=>{
-      /* 경로가 가진 P&E를 다 보여주되, 📢 문구가 있으면 붙여 준다.
-         문구가 없으면 진술문만 보여준다 — 안 보이는 것보다 낫다 */
+    const g=grpOf(c); if(!g) return '';
+    return g.dx.filter(dx=>dxOn(c,dx.name)).map(dx=>{
       const ex=D.explain[dx.name]||[];
-      const items = dx.pe.map(p=>{
-        const e=ex.filter(x=>x.pe===p)[0];
-        return {say: e?e.say:'', pe:p, auto:isAutoPE(p)};
-      });
-      const auto=items.filter(e=>e.auto), man=items.filter(e=>!e.auto);
+      const items=dx.pe.map(t=>{ const e=ex.filter(x=>x.pe===t)[0];
+        return {say:e?e.say:'', pe:t, auto:isAutoPE(t)}; });
+      const man=items.filter(e=>!e.auto), auto=items.filter(e=>e.auto);
       const row=e=>`<button class="say ${peOn(c,dx,e.pe)?'on':''}" data-pe="${ci}" data-n="${esc(dx.name)}" data-v="${esc(e.pe)}">
           <div class="s">${e.auto?'<span class="au">자동</span>':''}${e.say?'📢 “'+esc(e.say)+'”':'▸ '+esc(e.pe)}</div>
           ${e.say?`<div class="r">→ ${esc(e.pe)}</div>`:''}</button>`;
@@ -961,7 +925,7 @@ function vPE(){
         ${man.length?`<div class="pl2">말하고 누르세요</div>`+man.map(row).join(''):''}
         ${auto.length?`<div class="pl2">사정했으니 자동으로 기록됩니다 — 아니면 끄세요</div>`+auto.map(row).join(''):''}`;
     }).join('');
-  }).join('') || '<p class="ws">켜진 진단이 없습니다.</p>';
+  }).join('') || '<p class="ws">고른 진단이 없습니다.</p>';
 }
 function vPEwrap(){ return `<p class="wt">환자에게 이렇게 말해주세요</p>
   <p class="ws">말한 것을 누르면 중재·평가로 기록됩니다</p>${vPE()}${nav(true,'마무리')}`; }
@@ -1001,19 +965,18 @@ function vFix(){
 }
 /* ══════════ 이벤트 ══════════ */
 el('work').addEventListener('click', e=>{
-  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-ptoolopen],[data-popen],[data-nopen],[data-site]');
+  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-ptoolopen],[data-popen],[data-nopen],[data-site]');
   if(!t) return;
   const d=t.dataset;
   if(d.more){ S.cathOpen=true; }
   else if(d.ct){ if(S.cath[d.ct]) delete S.cath[d.ct]; else S.cath[d.ct]=[]; }
   else if(d.cd){ const a=S.cath[d.cd]||(S.cath[d.cd]=[]); const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
   else if(d.sym){
-    const i=S.cases.findIndex(c=>c.sym===d.sym);
+    const i=S.cases.findIndex(c=>c.grp===d.sym);
     if(i>=0) S.cases.splice(i,1);
-    else S.cases.push({sym:d.sym, sel1:'', sel2:'', set:'', ans:{}, dxMan:{}, peMan:{}});
+    else S.cases.push({grp:d.sym, ans:{}, dxMan:{}, peMan:{}, det:{}});
   }
   else if(d.rm!=null){ S.cases.splice(+d.rm,1); }
-  else if(d.br!=null){ const c=S.cases[+d.br]; if(d.k==='1'){c.sel1=d.v;c.sel2='';} else c.sel2=d.v; }
   else if(d.yn){ const c=S.cases[+d.ci], v=d.v==='1'; c.ans[d.yn] = c.ans[d.yn]===v ? undefined : v; }
   else if(d.sel){ const c=S.cases[+d.ci], i=+d.i; c.ans[d.sel] = c.ans[d.sel]===i ? undefined : i; }
   else if(d.pu){ const c=S.cases[+d.ci]; const o=Object.assign({}, c.ans['_'+d.pu]||{});
@@ -1023,7 +986,7 @@ el('work').addEventListener('click', e=>{
   else if(d.dx!=null){ const c=S.cases[+d.dx]; c.dxMan=c.dxMan||{};
     c.dxMan[d.n] = !dxOn(c, d.n); }
   else if(d.pe!=null){ const c=S.cases[+d.pe]; c.peMan=c.peMan||{};
-    const dx=(setOf(c.set)||{dx:[]}).dx.filter(x=>x.name===d.n)[0];
+    const dx=(grpOf(c)||{dx:[]}).dx.filter(x=>x.name===d.n)[0];
     if(dx){ const m=c.peMan[d.n]||(c.peMan[d.n]={}); m[d.v]=!peOn(c,dx,d.v); } }
   else if(d.cl){ S.closing = S.closing===d.cl?null:d.cl; }
   else if(d.cs){ S.consc = S.consc===d.cs?null:d.cs; }
