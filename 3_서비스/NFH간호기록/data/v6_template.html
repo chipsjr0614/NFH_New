@@ -315,6 +315,15 @@ function stmtOf(qid, v){
   if(v===false) return q.stmts[1]||null;
   return null;
 }
+function shortLabels(ss){
+  if(ss.length<2) return ss.slice();
+  let p=0, s0=ss[0];
+  while(p<s0.length && ss.every(x=>x[p]===s0[p])) p++;
+  let q=0;
+  while(q<s0.length-p && ss.every(x=>x[x.length-1-q]===s0[s0.length-1-q])) q++;
+  const cut = ss.map(x=>x.slice(p, x.length-q).trim());
+  return cut.every(x=>x) ? cut : ss.map(x=>x.length>15?x.slice(0,14)+'…':x);
+}
 function caseDx(c){ const st=setOf(c.set); return st?st.dx:[]; }
 function dxOn(c,name){ return !(c.dxOff||[]).includes(name); }
 function recommended(c,dx){ return dx.ae.some(q=>c.ans[q]===true || (D.qbank[q]&&D.qbank[q].fmt!=='토글' && c.ans[q]!==undefined && c.ans[q]!==false)); }
@@ -473,7 +482,10 @@ function qRow(qid,ci){
     }
     ans=`<input class="tin" data-in="${qid}" data-ci="${ci}" value="${esc(v||'')}" placeholder="입력">`;
   }else if(q.fmt==='선택'){
-    ans=`<span class="ans">${q.stmts.map((s,i)=>`<button class="ab ${v===i?'on':''}" data-sel="${qid}" data-ci="${ci}" data-i="${i}">${esc(s.length>14?s.slice(0,13)+'…':s)}</button>`).join('')}</span>`;
+    /* 진술문이 「빛 반사 확인결과 prompt 함 ★」처럼 앞뒤가 같으면
+       다른 부분만 버튼에 보여준다 → prompt / sluggish / hippus */
+    const lab = shortLabels(q.stmts);
+    ans=`<span class="ans">${q.stmts.map((s,i)=>`<button class="ab ${v===i?'on':''}" data-sel="${qid}" data-ci="${ci}" data-i="${i}">${esc(lab[i])}</button>`).join('')}</span>`;
   }else if(q.stmts.length>=2){
     ans=`<span class="ans"><button class="ab ${v===true?'on':''}" data-yn="${qid}" data-ci="${ci}" data-v="1">있음</button>
       <button class="ab ${v===false?'no':''}" data-yn="${qid}" data-ci="${ci}" data-v="0">없음</button></span>`;
