@@ -399,10 +399,27 @@ function dxOn(c,name){
 
 /* ══════════ 기록 생성 ══════════ */
 function buildLines(){
-  const L=[], push=(c,tg,t)=>L.push({c,tg,t});
+  /* 같은 진술문은 기록 전체에서 한 번만 찍는다.
+     「공통」으로 둔 사정은 진단마다 복사되는데, EMR에 두 번 나오면
+     두 번 사정한 것으로 읽힌다. 먼저 나온 자리에 남기고 뒤는 접는다.
+     진단(D)과 비고는 블록의 뼈대라 그대로 둔다. */
+  const L=[], seen={};
+  /* 블록 단위로 모아 찍는다. 중복을 걸러낸 뒤 남는 줄이 없으면
+     제목도 찍지 않는다 — 안 그러면 빈 블록만 덩그러니 남는다. */
+  const blk=(title, rows)=>{
+    const keep=rows.filter(r=>{
+      if(!r || r.t===undefined || r.t===null || r.t==='') return false;
+      if(r.c==='ae'||r.c==='pe'||r.c==='dx'){ if(seen[r.t]) return false; seen[r.t]=1; }
+      return true;
+    });
+    if(!keep.length) return;
+    L.push({c:'gh',tg:'',t:title});
+    keep.forEach(r=>L.push(r));
+  };
+  const AE=t=>({c:'ae',tg:'A&E',t}), PE=t=>({c:'pe',tg:'P&E',t}),
+        DX=t=>({c:'dx',tg:'D',t}), NT=t=>({c:'note',tg:'📌',t:'비고: '+t});
   const cs=Object.keys(S.cath).filter(k=>(S.cath[k]||[]).length);
-  if(cs.length){ push('gh','','도관');
-    cs.forEach(k=>S.cath[k].forEach(d=>push('ae','A&E',d))); }
+  if(cs.length) blk('도관', [].concat.apply([], cs.map(k=>S.cath[k].map(AE))));
   S.cases.forEach(c=>{
     const st=setOf(c.set); if(!st) return;
     const shown={};                      /* 이미 어느 블록엔가 실린 진술문 */
@@ -428,11 +445,8 @@ function buildLines(){
       if(!aes.length && !pes.length && !notes.length) return;
       /* 3개월 이상이면 급성통증이 아니라 만성통증이다 */
       const name=(dx.name===P.dxAcute && isChronic(c) && P.dxChronic) ? P.dxChronic : dx.name;
-      push('gh','',name);
-      aes.forEach(t=>{ shown[t]=1; push('ae','A&E',t); });
-      push('dx','D',name);
-      pes.forEach(t=>{ shown[t]=1; push('pe','P&E',t); });
-      notes.forEach(t=>{ shown[t]=1; push('note','📌','비고: '+t); });
+      aes.forEach(t=>shown[t]=1); pes.forEach(t=>shown[t]=1);
+      blk(name, aes.map(AE).concat([DX(name)], pes.map(PE), notes.map(NT)));
     });
     /* ── 진단을 껐어도 「물어본 것」은 사라지면 안 된다 ──
        「안 물어봄」과 「물어보고 없음」이 다르듯, 「물어봤는데 기록이 없음」도 안 된다.
@@ -449,43 +463,25 @@ function buildLines(){
       ex.pe.forEach(t=>keep(rPE,t));
       ex.notes.forEach(t=>keep(rNote,t));
     }
-    if(rAE.length||rPE.length||rNote.length){
-      push('gh','','사정 — 진단 미선택');
-      rAE.forEach(t=>push('ae','A&E',t));
-      rPE.forEach(t=>push('pe','P&E',t));
-      rNote.forEach(t=>push('note','📌','비고: '+t));
-    }
+    blk('사정 — 진단 미선택', rAE.map(AE).concat(rPE.map(PE), rNote.map(NT)));
     /* 신경학은 특정 진단에 매이지 않으므로 따로 묶는다.
        진단마다 붙이면 같은 줄이 진단 수만큼 반복된다 */
     const nl=neuroLines(c);
-    if(nl.ae.length||nl.pe.length){
-      push('gh','','신경학적 평가');
-      nl.ae.forEach(t=>push('ae','A&E',t));
-      nl.pe.forEach(t=>push('pe','P&E',t));
-    }
+    blk('의식 · 신경학적 평가', nl.ae.map(AE).concat(nl.pe.map(PE)));
   });
   if(S.closing){
     const cl=D.closing.find(x=>x.sel===S.closing);
-    if(cl&&cl.rec){ push('gh','','마무리'); push('ae','A&E',cl.rec); }
+    if(cl&&cl.rec) blk('마무리', [AE(cl.rec)]);
   }
-  const fae=[];
-  if(S.consc==='clear') fae.push('의식 명료함');
-  else if(S.consc==='low'){
-    const g=S.gcs;
-    if(g.E&&g.V&&g.M){ fae.push('Glasgow Coma Scale : '+(g.E+g.V+g.M)); fae.push((g.E+g.V+g.M)===15?'의식 명료함':'의식수준 저하됨'); }
-    else fae.push('의식수준 저하됨');
-    ORI.forEach(([k,,label])=>{ if(S.ori[k]===0) fae.push(label+' 없음'); else if(S.ori[k]===1) fae.push(label+' 있음'); });
-  }
-  if(S.guard) fae.push(S.guard);
+  /* 의식은 🧠 블록이 낸다. 여기서 또 내면 경로가 묻는 지남력과 겹쳐
+     한 기록에 「지남력 없음」과 「있음」이 함께 남는다 */
   const fpe=[];
   Object.keys(S.edu).forEach(i=>{ if(S.edu[i]) (D.edu[i].recs||[]).forEach(r=>{ if(!fpe.includes(r)) fpe.push(r); }); });
-  if(fae.length||fpe.length){
-    push('gh','','의식 · 낙상');
-    fae.forEach(t=>push('ae','A&E',t));
-    push('dx','D','낙상위험');
-    fpe.forEach(t=>push('pe','P&E',t));
-  }
-  if(S.memo.trim()) push('note','📌','비고: '+S.memo.trim());
+  /* 보호자도 교육도 안 골랐으면 낙상위험 진단만 덩그러니 남는다 — 안 찍는다 */
+  if(S.guard || fpe.length)
+    blk('보호자 · 낙상',
+        (S.guard?[AE(S.guard)]:[]).concat([DX('낙상위험')], fpe.map(PE)));
+  if(S.memo.trim()) L.push({c:'note',tg:'📌',t:'비고: '+S.memo.trim()});
   return L;
 }
 function renderLive(){
@@ -714,13 +710,46 @@ function vPain(c,ci){
    경로에 이미 신경학 항목이 있으면 그건 그대로 두고, 빠진 것만 여기서 채운다.
    경로마다 문구·진단연결이 달라 하나로 합치면 임상 내용이 조용히 바뀐다. */
 function neuroOf(c){ const st=setOf(c.set); return (st&&st.neuro)||[]; }
+/* 의식(GCS·지남력)은 여기 있다.
+   전에는 마지막 「의식·낙상」 화면에 있었는데, 의식섬망처럼 경로가 이미 묻는 곳과
+   겹쳐 한 기록에 「지남력 없음」과 「있음」이 함께 남았다. */
+function conscLines(){
+  const out=[];
+  if(S.consc==='clear') out.push('의식 명료함');
+  else if(S.consc==='low'){
+    const g=S.gcs, sum=(g.E&&g.V&&g.M)?(g.E+g.V+g.M):null;
+    if(sum){ out.push('Glasgow Coma Scale : '+sum);
+             out.push(sum===15?'의식 명료함':'의식수준 저하됨'); }
+    else out.push('의식수준 저하됨');
+    ORI.forEach(([k,,label])=>{ if(S.ori[k]===0) out.push(label+' 없음');
+                                else if(S.ori[k]===1) out.push(label+' 있음'); });
+  }
+  return out;
+}
+function vConsc(){
+  const g=S.gcs, sum=(g.E&&g.V&&g.M)?(g.E+g.V+g.M):null;
+  return `<div class="pl2">의식</div>
+    <div class="row">
+      <button class="b big wide ${S.consc==='clear'?'sel':''}" data-cs="clear">GCS 15 · 명료</button>
+      <button class="b big wide ${S.consc==='low'?'sel':''}" data-cs="low">명료하지 않음</button></div>
+    ${S.consc==='low'?`
+      <div class="pl2">GCS ${sum?'· 합계 '+sum:''}</div>
+      ${[['E','눈뜸',GE],['V','언어',GV],['M','운동',GM]].map(([k,lb,arr])=>
+        `<div class="q"><span class="qt" style="min-width:70px;flex:0 0 auto">${lb} ${k}</span><span class="ans">
+        ${arr.map(([t,n])=>`<button class="ab ${g[k]===n?'on':''}" data-g="${k}" data-n="${n}">${t}</button>`).join('')}</span></div>`).join('')}
+      <div class="pl2">지남력</div>
+      ${ORI.map(([k,lb])=>`<div class="q"><span class="qt" style="min-width:70px;flex:0 0 auto">${lb}</span><span class="ans">
+        <button class="ab ${S.ori[k]===1?'on':''}" data-or="${k}" data-v="1">있음</button>
+        <button class="ab ${S.ori[k]===0?'no':''}" data-or="${k}" data-v="0">없음</button></span></div>`).join('')}`:''}`;
+}
 function vNeuro(c,ci){
-  const qs=neuroOf(c); if(!qs.length) return '';
-  const n=qs.filter(q=>c.ans[q]!==undefined).length;
+  const qs=neuroOf(c);
+  const n=qs.filter(q=>c.ans[q]!==undefined).length + (S.consc?1:0);
   return `<details class="pdt" ${c.neuroOpen?'open':''}>
-    <summary data-nopen="${ci}">🧠 신경학적 평가${n?` · ${n}개 기록됨`:''}<span class="cv">▾</span></summary>
+    <summary data-nopen="${ci}">🧠 의식 · 신경학적 평가${n?` · ${n}개 기록됨`:''}<span class="cv">▾</span></summary>
     <div class="refb"><p class="ws">의식이 떨어지거나 마비·경련이 의심되면 여기서 확인하세요</p>
-    ${qs.map(q=>qRow(q,ci)).join('')}</div></details>`;
+    ${vConsc()}
+    ${qs.length?`<div class="pl2">신경학</div>`+qs.map(q=>qRow(q,ci)).join(''):''}</div></details>`;
 }
 /* 앞의 답에 따라 뒤에 붙는 문항 (10.후속사정).
    경고 배지가 아니라 「질문이 하나 늘어나는 것」이다 — 미응답 장치가 그대로 먹는다.
@@ -740,6 +769,8 @@ function vFollow(c,ci){
 }
 function neuroLines(c){
   const ae=neuroOf(c).map(q=>stmtOf(q,c.ans[q])).filter(Boolean), pe=[];
+  /* 의식은 환자당 한 번이므로 첫 주호소에만 붙인다 */
+  if(S.cases[0]===c) conscLines().reverse().forEach(t=>ae.unshift(t));
   followOf(c).forEach(f=>{
     let done=false;
     f.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q]); if(t){ ae.push(t); done=true; } });
@@ -827,22 +858,8 @@ function vEnd(){
 }
 /* ⑥ 의식·낙상 */
 function vFix(){
-  const g=S.gcs, sum=(g.E&&g.V&&g.M)?(g.E+g.V+g.M):null;
-  return `<p class="wt">의식 · 보호자 · 낙상</p>
-    <p class="ws">모든 환자에게 확인합니다</p>
-    <div class="gl"><span class="dot"></span>의식</div>
-    <div class="row">
-      <button class="b big wide ${S.consc==='clear'?'sel':''}" data-cs="clear">GCS 15 · 명료</button>
-      <button class="b big wide ${S.consc==='low'?'sel':''}" data-cs="low">명료하지 않음</button></div>
-    ${S.consc==='low'?`
-      <div class="gl"><span class="dot"></span>GCS ${sum?'· 합계 '+sum:''}</div>
-      ${[['E','눈뜸',GE],['V','언어',GV],['M','운동',GM]].map(([k,lb,arr])=>
-        `<div class="q"><span class="qt" style="min-width:70px;flex:0 0 auto">${lb} ${k}</span><span class="ans">
-        ${arr.map(([t,n])=>`<button class="ab ${g[k]===n?'on':''}" data-g="${k}" data-n="${n}">${t}</button>`).join('')}</span></div>`).join('')}
-      <div class="gl"><span class="dot"></span>지남력</div>
-      ${ORI.map(([k,lb])=>`<div class="q"><span class="qt" style="min-width:70px;flex:0 0 auto">${lb}</span><span class="ans">
-        <button class="ab ${S.ori[k]===1?'on':''}" data-or="${k}" data-v="1">있음</button>
-        <button class="ab ${S.ori[k]===0?'no':''}" data-or="${k}" data-v="0">없음</button></span></div>`).join('')}`:''}
+  return `<p class="wt">보호자 · 낙상</p>
+    <p class="ws">모든 환자에게 확인합니다 · 의식은 🧠 블록에서 봅니다</p>
     <div class="gl"><span class="dot"></span>보호자</div>
     <div class="row">
       <button class="b big wide ${S.guard==='보호자 환자 옆에 상주하고 있음'?'sel':''}" data-gd="보호자 환자 옆에 상주하고 있음">상주</button>
