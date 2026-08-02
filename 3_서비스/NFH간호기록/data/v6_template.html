@@ -413,7 +413,9 @@ function nav(back,next,disabled){
 /* ⓪ 도관 */
 function vCath(){
   const list = D.cath.filter(c=>S.cathOpen||c.top);
-  const sel = k => (S.cath[k]||[]).length;
+  /* 선택 여부는 「키가 있는가」로 본다. 진술문 개수로 보면
+     막 고른 도관(빈 배열)이 선택 안 된 것으로 잡힌다. */
+  const sel = k => S.cath[k] !== undefined;
   const detail = D.cath.filter(c=>sel(c.s)).map(c=>`
     <div class="gl"><span class="dot"></span>${esc(c.s)}${c.n!==c.s?' · '+esc(c.n):''}</div>
     <div class="row">${c.d.map(d=>`<button class="b ${S.cath[c.s].includes(d)?'sel':''}" data-cd="${esc(c.s)}" data-v="${esc(d)}">${esc(d)}</button>`).join('')}</div>`).join('');
@@ -436,7 +438,7 @@ function vCC(){
     ${S.cases.length?`<div class="gl"><span class="dot"></span>고른 주호소 ${S.cases.length}개</div>
       ${S.cases.map((c,i)=>`<div class="q"><span class="qt">${esc(c.sym)}${c.sel1?' · '+esc(c.sel1):''}${c.sel2?' · '+esc(c.sel2):''}</span>
         <button class="ab" data-rm="${i}">빼기</button></div>`).join('')}`:''}
-    ${nav(true,'사정', !S.cases.length || S.cases.some(c=>!c.set))}`;
+    ${nav(true,'사정', !S.cases.length)}`;   /* 분기는 다음 화면에서 고른다 */
 }
 /* ② 사정 (분기 + 질문) */
 function vAE(){
