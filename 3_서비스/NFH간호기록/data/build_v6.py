@@ -244,23 +244,25 @@ for r in rows('11.평가자동'):
     AUTO_PE.append(canon(t, '평가자동'))
 AUTO_PE = list(dict.fromkeys(AUTO_PE))
 
-# ── 2.78) 외상 부위 (12.외상부위) ───────────────────────────
-# 부위마다 경로를 만들면 7개가 된다. 경로는 하나로 두고 부위를 골라
+# ── 2.78) 부위·상황 (12.부위상세) ───────────────────────────
+# 부위마다 경로를 만들면 끝이 없다. 경로는 하나로 두고 부위·상황을 골라
 # 진술문 뒤에 괄호로 붙인다 — 「신체손상 있음(머리, 가슴)」.
-# 부위를 고르면 그 부위의 문항과 진단이 따라 나온다.
+# 고르면 그 부위의 문항과 진단이 따라 나온다. 구분(외상부위·피부상황)으로 묶는다.
 SITES = collections.OrderedDict()
-for r in rows('12.외상부위'):
-    nm = str(r.get('부위') or '').strip()
-    if not nm: continue
-    S_ = SITES.setdefault(nm, {'v': nm, 'ic': str(r.get('아이콘') or '').strip(),
-                               'dx': str(r.get('진단연결') or '').strip(),
-                               'ae': [], 'pe': []})
+for r in rows('12.부위상세'):
+    grp = str(r.get('구분') or '').strip()
+    nm  = str(r.get('값') or '').strip()
+    if not grp or not nm: continue
+    G = SITES.setdefault(grp, collections.OrderedDict())
+    S_ = G.setdefault(nm, {'v': nm, 'ic': str(r.get('아이콘') or '').strip(),
+                           'dx': str(r.get('진단연결') or '').strip(),
+                           'ae': [], 'pe': [], 'note': str(r.get('비고') or '').strip()})
     raw = r.get('진술문(마스터원문)')
     if raw is None or not str(raw).strip(): continue
     if str(r.get('과정') or '').strip() == 'A&E':
-        S_['ae'].append(qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), f'외상부위/{nm}'))
+        S_['ae'].append(qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), f'{grp}/{nm}'))
     else:
-        S_['pe'].append(canon(raw, f'외상부위/{nm}'))
+        S_['pe'].append(canon(raw, f'{grp}/{nm}'))
 
 # ── 2.8) 후속 사정 (10.후속사정) ────────────────────────────
 # 「신경학적 이상이 보이면 혈당을 재라」처럼, 앞의 답에 따라 뒤에 붙는 문항.
@@ -355,7 +357,7 @@ DATA = {
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
   # 이상소견 진술문 원문 — 선택형(빛 반사 등)은 이걸로 이상 여부를 가린다
-  'sites': list(SITES.values()),
+  'sites': {g: list(v.values()) for g, v in SITES.items()},
   'abnormal': sorted({M_SP.get(a, a) for a in ABN_TEXT}),
   'follow': list(FOLLOW.values()),
   'autoPE': AUTO_PE,
