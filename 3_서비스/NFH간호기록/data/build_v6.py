@@ -356,43 +356,61 @@ CLOSING = [{'sel': str(r.get('선택') or '').strip(),
             'next':str(r.get('다음동작') or '').strip()}
            for r in rows('6.마무리질문') if r.get('선택')]
 
-# ── 4.5) 주호소 묶음 (경로를 없애고 대분류로 합친다) ──────────
-# 경로 60개를 먼저 확정하고 그 경로가 정해준 것만 묻는 구조는
-# 환자가 경로에 안 맞으면 어그러진다. 주호소를 고르면 그 계통 증상을
-# 전부 보여주고, 간호사가 진단을 고르면 그에 맞춰 정렬한다.
+# ── 4.5) 주호소 묶음 ────────────────────────────────────────
+# 경로 60개를 분기 질문으로 좁히는 구조는 버렸다. 다만 「선택1」(부위·종류)은
+# 임상적으로 의미가 있으니 살린다 — 통증이면 부위, 출혈이면 종류를 고른다.
+# 「선택2」(통증 유무)는 없앤다. 통증 증상을 누르면 저절로 정해진다.
 GROUPS = collections.OrderedDict()
-SYM_ICON = {v['id']: v['icon'] for v in SYMS.values()} if SYMS else {}
-ICON_BY_GROUP = {}
+ICON_BY_GROUP, KIND_OF, ORDER = {}, {}, []
 for r in rows('1.주호소트리'):
     대 = str(r.get('대분류') or '').strip()
-    if 대: ICON_BY_GROUP.setdefault(대, str(r.get('아이콘') or '').strip())
+    소 = str(r.get('소분류') or '').strip()
+    if not 대 or not 소: continue
+    ICON_BY_GROUP.setdefault(대, str(r.get('아이콘') or '').strip())
+    KIND_OF[소] = str(r.get('선택1') or '').strip()
+    if 대 not in ORDER: ORDER.append(대)
 
+YN = re.compile(r'(없음|있음)\s*$')
 for 소, P in PATHSET.items():
     대 = P['대분류'] or 소
     G = GROUPS.setdefault(대, {'v': 대, 'ic': ICON_BY_GROUP.get(대, ''),
-                               'q': [], 'sec': [], 'dx': collections.OrderedDict(),
-                               'det': {}, 'paths': []})
+                               'kinds': collections.OrderedDict(), 'det': {}, 'paths': []})
     G['paths'].append(소)
     G['det'].update(P.get('det', {}))
-    mine = []
+    k = KIND_OF.get(소, '') or 소
+    K = G['kinds'].setdefault(k, {'k': k, 'q': [], 'dx': collections.OrderedDict()})
     for kind, val, link, _o in P['items']:
-        if kind != 'ae': continue
-        if val not in G['q']: G['q'].append(val)
-        if val not in mine: mine.append(val)
-    G['sec'].append({'t': 소, 'q': mine})
+        if kind == 'ae' and val not in K['q']: K['q'].append(val)
     for name, dd in P['dx'].items():
-        D_ = G['dx'].setdefault(name, {'name': name, 'ae': [], 'pe': []})
+        D_ = K['dx'].setdefault(name, {'name': name, 'ae': [], 'pe': []})
         for q in dd['ae']:
             if q not in D_['ae']: D_['ae'].append(q)
         for t in dd['pe']:
             if t not in D_['pe']: D_['pe'].append(t)
 
 for 대, G in GROUPS.items():
-    # 소분류가 하나뿐이면 소제목이 필요 없다
-    if len(G['sec']) < 2 or len(G['q']) <= 14: G['sec'] = []
-    G['dx'] = list(G['dx'].values())
+    ks = list(G['kinds'].values())
+    # 갈래가 「통증 있음/없음」 같은 쌍뿐이면 나눌 이유가 없다 — 합친다
+    if len(ks) > 1 and all(YN.search(x['k']) for x in ks):
+        merged = {'k': 대, 'q': [], 'dx': collections.OrderedDict()}
+        for x in ks:
+            for q in x['q']:
+                if q not in merged['q']: merged['q'].append(q)
+            for n, dd in x['dx'].items():
+                D_ = merged['dx'].setdefault(n, {'name': n, 'ae': [], 'pe': []})
+                for q in dd['ae']:
+                    if q not in D_['ae']: D_['ae'].append(q)
+                for t in dd['pe']:
+                    if t not in D_['pe']: D_['pe'].append(t)
+        ks = [merged]
+    for x in ks: x['dx'] = list(x['dx'].values())
+    G['kinds'] = ks
+    G['one'] = len(ks) == 1          # 갈래가 하나면 바로 증상으로
     G['neuro'] = PATH_NEURO.get(G['paths'][0], [])
     G['neuroAll'] = PATH_NEURO_ALL.get(G['paths'][0], [])
+
+GROUPS = collections.OrderedDict(
+    sorted(GROUPS.items(), key=lambda x: ORDER.index(x[0]) if x[0] in ORDER else 99))
 
 # ── 5) 출력 ─────────────────────────────────────────────────
 DATA = {
