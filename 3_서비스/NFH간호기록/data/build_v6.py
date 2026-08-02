@@ -394,6 +394,46 @@ POLAR = [qid for qid, v in QBANK.items()
          if v['fmt'] == '토글' and len(v['stmts']) >= 2 and not reviewed(v)
          and ends(v['stmts'][0], NEG_END)
          and ends(v['stmts'][1], POS_END) and not ends(v['stmts'][1], NEG_END)]
+# ── 어휘 표준 검사 ─────────────────────────────────────────
+# 같은 뜻인데 경로마다 다른 표현을 쓰면 EMR 어휘가 흩어진다.
+# 「N경로가 쓰는 표준 표현이 이미 있다」를 알려 자주 쓰는 쪽으로 모이게 한다.
+import itertools as _it
+_core = lambda t: re.sub(r'\s*(있음|없음|함|됨|보임|호소함|상태임)$', '', t).strip()
+_key  = lambda t: re.sub(r'[\s,·]', '', _core(t))
+_neg  = lambda t: re.search(r'(없음|안됨)$', t)
+
+USE = collections.Counter()
+PATH_POS = {}
+for 소, P in PATHSET.items():
+    seen = set()
+    for kind, val, _l in P['items']:
+        if kind != 'ae': continue
+        for st in QBANK[val]['stmts']:
+            if not _neg(st): seen.add(st)
+    PATH_POS[소] = list(seen)
+    for st in seen: USE[st] += 1
+
+_grp = collections.defaultdict(set)
+for t in USE: _grp[_key(t)].add(t)
+
+STD = []      # 드문 표현 → 표준 후보
+for 소, ss in PATH_POS.items():
+    for t in ss:
+        if USE[t] > 2: continue
+        for kk, alts in _grp.items():
+            if kk == _key(t) or len(kk) < 2: continue
+            if kk in _key(t) or _key(t) in kk:
+                best = max(alts, key=lambda x: USE[x])
+                if USE[best] >= 5: STD.append((소, t, USE[t], best, USE[best]))
+                break
+
+SAME = []     # 한 경로 안에서 뜻이 겹치는 짝
+for 소, ss in PATH_POS.items():
+    for a, b in _it.combinations(sorted(ss), 2):
+        ka, kb = _key(a), _key(b)
+        if len(ka) < 2 or len(kb) < 2 or ka == kb: continue
+        if ka in kb or kb in ka: SAME.append((소, a, USE[a], b, USE[b]))
+
 # 전체 감사 목록 — 어느 답이 「추천」을 띄우는지 한눈에 보이게
 AUDIT = [(qid, v) for qid, v in QBANK.items() if v['fmt'] == '토글' and len(v['stmts']) >= 2]
 
@@ -430,6 +470,23 @@ with open(OUT_WARN, 'w', encoding='utf-8') as f:
             f.write(f'  {qid}  질문「{v["q"]}」  경로 {v["n"] if "n" in v else len(v["paths"])}개\n')
             f.write(f'        추천 근거(현재) : {v["stmts"][0]}\n')
             f.write(f'        반대쪽          : {v["stmts"][1]}\n')
+
+    f.write(f'\n\n[어휘 표준] 자주 쓰는 표현 상위 12\n' + '-'*70 + '\n')
+    f.write('여러 경로가 함께 쓰는 표현이다. 새 문항을 넣을 때 이 어휘를 먼저 쓴다.\n\n')
+    for t, n in USE.most_common(12): f.write(f'  {n:>3}경로  {t}\n')
+
+    if STD:
+        f.write(f'\n\n[어휘 표준] 표준으로 모을 후보 {len(STD)}건\n' + '-'*70 + '\n')
+        f.write('드문 표현을 쓰는데 같은 뜻으로 여러 경로가 쓰는 표준이 있다.\n')
+        f.write('부위·정도가 임상적으로 다르면 그대로 두는 게 맞다. 판단이 필요하다.\n\n')
+        for 소, t, n, best, bn in STD:
+            f.write(f'  [{소[:22]}] 「{t}」({n}경로)  →  표준 「{best}」({bn}경로)\n')
+
+    if SAME:
+        f.write(f'\n\n[어휘 표준] 한 경로 안에서 뜻이 겹치는 짝 {len(SAME)}건\n' + '-'*70 + '\n')
+        f.write('간호사가 비슷한 것을 두 번 묻는다. 정도·부위가 다르면 그대로 둔다.\n\n')
+        for 소, a, na, b, nb in SAME:
+            f.write(f'  [{소[:22]}] 「{a}」({na})  ↔  「{b}」({nb})\n')
 
     f.write(f'\n\n[추천 근거 감사] 토글 {len(AUDIT)}문항 — 어느 답이 「추천」을 띄우는가\n' + '-'*70 + '\n')
     f.write('★ 표시는 9.추천근거 시트에서 칩스가 지정한 것이다.\n')
