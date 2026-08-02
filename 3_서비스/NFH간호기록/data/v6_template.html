@@ -569,8 +569,14 @@ function vCC(){
 }
 /* ② 사정 (분기 + 질문) */
 function vAE(){
-  const need = S.cases.filter(c=>!c.set);
+  /* 경로가 없는 주호소(「이상 없음」)는 분기를 다시 돌리면 안 된다.
+     set이 빈 채로 vBranch→vAE를 오가며 무한 재귀로 앱이 죽었다. */
+  const need = S.cases.filter(c=>!c.set && !c.noSet);
   if(need.length) return vBranch(need[0]);
+  if(!S.cases.some(c=>setOf(c.set)))
+    return `<p class="wt">사정할 항목이 없습니다</p>
+      <p class="ws">${esc(S.cases.map(c=>c.sym).join(' · '))} — 물어볼 것이 따로 없는 주호소입니다.
+      마무리 질문으로 넘어가세요.</p>${nav(true,'진단')}`;
   return S.cases.map((c,ci)=>{
     const st=setOf(c.set); if(!st) return '';
     const qs=[...new Set(st.dx.flatMap(d=>d.ae))];
@@ -601,7 +607,7 @@ function vBranch(c){
       <div class="row">${o.map(v=>`<button class="b big wide" data-br="${ci}" data-k="2" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
   }
   const hit=cand.find(b=>(!b.sel2)||b.sel2===c.sel2)||cand[0];
-  if(hit){ c.set=hit.set; return vAE(); }
+  if(hit){ if(hit.set) c.set=hit.set; else c.noSet=true; return vAE(); }
   return `<p class="wt">경로를 찾을 수 없습니다</p><p class="ws">${esc(c.sym)}</p>${nav(true,'진단')}`;
 }
 function qRow(qid,ci){
