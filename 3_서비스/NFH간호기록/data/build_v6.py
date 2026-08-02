@@ -102,14 +102,14 @@ def qkey(q):
     """중복 판정용 질문 키. 앞머리 🩺/💬 표시는 화면 힌트일 뿐이라 무시한다."""
     return nsp(re.sub(r'^[^\w"“\'가-힣]+', '', str(q)))
 
-def qid_for(q, raw, fmt, where, det=''):
+def qid_for(q, raw, fmt, where):
     # 표기 변형을 흡수하려면 「마스터 원문으로 정규화한 뒤」 중복을 판단해야 한다.
     stmts = [canon(x, where) for x in split_stmt(raw)]
-    key = (qkey(q), tuple(stmts), det)
+    key = (qkey(q), tuple(stmts))
     if key in QINDEX: return QINDEX[key]
     qid = f'Q{len(QBANK)+1:03d}'
     QBANK[qid] = {'q': str(q).strip(), 'fmt': str(fmt or '체크').strip(),
-                  'stmts': stmts, 'paths': set(), 'det': det}
+                  'stmts': stmts, 'paths': set()}
     QINDEX[key] = qid
     return qid
 
@@ -119,7 +119,8 @@ for r in rows('2.사정세트'):
     raw = r.get('진술문(마스터원문)')
     if not 소 or not 과 or raw is None: continue
     link = str(r.get('진단연결') or '').strip()
-    P = PATHSET.setdefault(소, {'대분류': 대, 'dx': collections.OrderedDict(), 'items': []})
+    P = PATHSET.setdefault(소, {'대분류': 대, 'dx': collections.OrderedDict(),
+                                'items': [], 'det': {}})
     where = f'{소}/{과}'
 
     if 과 == 'D':
@@ -128,9 +129,12 @@ for r in rows('2.사정세트'):
             WARN.append(('진단아님', where, name, '마스터 간호진단 목록에 없음'))
         P['dx'].setdefault(name, {'ae': [], 'pe': []})
     elif 과 == 'A&E':
-        qid = qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), where,
-                      str(r.get('상세') or '').strip())
+        qid = qid_for(r.get('질문문구(💬)') or '', raw, r.get('입력형식'), where)
         QBANK[qid]['paths'].add(소)
+        # 상세(괄호로 붙일 것)는 질문이 아니라 「경로에서의 쓰임」이다.
+        # 질문 키에 넣으면 같은 질문이 상세 유무로 갈려 질문은행이 부푼다.
+        det = str(r.get('상세') or '').strip()
+        if det: P.setdefault('det', {})[qid] = det
         P['items'].append(('ae', qid, link))
     elif 과 == 'P&E':
         P['items'].append(('pe', canon(raw, where), link))
@@ -349,11 +353,10 @@ CLOSING = [{'sel': str(r.get('선택') or '').strip(),
 DATA = {
   'meta': {'src': os.path.basename(SRC), 'paths': NPATH, 'questions': len(QBANK)},
   'qbank': {k: {'q': v['q'], 'fmt': v['fmt'], 'stmts': v['stmts'], 'ab': v.get('ab', 0),
-                'det': v.get('det', ''), 'core': v['core'], 'n': len(v['paths'])}
-            for k, v in QBANK.items()},
+                'core': v['core'], 'n': len(v['paths'])} for k, v in QBANK.items()},
   'syms': SYMS, 'branch': BRANCH,
   'sets': {k: {'대분류': v['대분류'], 'neuro': PATH_NEURO.get(k, []),
-               'neuroAll': PATH_NEURO_ALL.get(k, []),
+               'neuroAll': PATH_NEURO_ALL.get(k, []), 'det': v.get('det', {}),
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
   # 이상소견 진술문 원문 — 선택형(빛 반사 등)은 이걸로 이상 여부를 가린다

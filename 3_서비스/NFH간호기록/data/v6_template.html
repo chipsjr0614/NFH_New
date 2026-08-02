@@ -341,10 +341,16 @@ function withDetail(base, det, c){
   const parts = det==='통증부위' ? painParts(c) : detOn(c, det);
   return parts.length ? base+'('+parts.join(', ')+')' : base;
 }
+/* 상세는 질문이 아니라 「이 경로에서의 쓰임」이다 */
+function detFor(c, qid){
+  if(!c) return '';
+  const st=setOf(c.set);
+  return (st && st.det && st.det[qid]) || '';
+}
 function stmtOf(qid, v, c){
   const q=D.qbank[qid]; if(!q) return null;
   if(v===undefined||v===null) return null;
-  const wrap = t => withDetail(t, q.det, c);
+  const wrap = t => withDetail(t, detFor(c,qid), c);
   if(q.fmt==='값입력') return String(v).trim()? wrap(q.stmts[0])+' '+String(v).trim() : null;
   if(q.fmt==='선택')  return q.stmts[v]?wrap(q.stmts[v]):null;
   if(v===true)  return q.stmts[0]?wrap(q.stmts[0]):null;
@@ -771,7 +777,7 @@ const LBL = {'외상부위':'🤕 다친 곳','피부상황':'🧴 어떤 피부
 function detGroups(c){          /* 이 경로가 쓰는 상세 구분 */
   const st=setOf(c.set); if(!st) return [];
   const g={};
-  st.dx.forEach(d=>d.ae.forEach(q=>{ const t=(D.qbank[q]||{}).det; if(t&&SITES[t]) g[t]=1; }));
+  Object.keys(st.det||{}).forEach(q=>{ const t=st.det[q]; if(SITES[t]) g[t]=1; });
   return Object.keys(g);
 }
 function detOn(c,grp){ return ((c.det||{})[grp])||[]; }
