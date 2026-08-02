@@ -445,6 +445,9 @@ function buildLines(){
     const st=setOf(c.set); if(!st) return;
     const shown={};                      /* 이미 어느 블록엔가 실린 진술문 */
     let painDone=false, smcDone=false;
+    /* 고른 부위·상황의 진단. 경로가 이미 가진 진단이면 그 블록에 합친다 —
+       따로 찍으면 「저체온」 블록이 두 번 나온다 */
+    const sb=siteBlocks(c);
     st.dx.forEach(dx=>{
       if(!dxOn(c,dx.name)) return;
       /* 통증 위젯 결과는 급성통증 블록에 붙는다.
@@ -462,6 +465,10 @@ function buildLines(){
       const pes=dx.pe.filter(p=>peOn(c,dx,p));
       if(ext){ ext.ae.forEach(t=>{ if(aes.indexOf(t)<0) aes.push(t); });
                ext.pe.forEach(t=>{ if(pes.indexOf(t)<0) pes.push(t); }); }
+      const sx=sb[dx.name];
+      if(sx){ sx.ae.forEach(t=>{ if(aes.indexOf(t)<0) aes.push(t); });
+              sx.pe.forEach(t=>{ if(pes.indexOf(t)<0) pes.push(t); });
+              delete sb[dx.name]; }
       const notes=ext?ext.notes:[];
       if(!aes.length && !pes.length && !notes.length) return;
       /* 3개월 이상이면 급성통증이 아니라 만성통증이다 */
@@ -469,8 +476,7 @@ function buildLines(){
       aes.forEach(t=>shown[t]=1); pes.forEach(t=>shown[t]=1);
       blk(name, aes.map(AE).concat([DX(name)], pes.map(PE), notes.map(NT)));
     });
-    /* 고른 부위·상황의 진단이 따라온다 */
-    const sb=siteBlocks(c);
+    /* 경로에 없던 진단만 새 블록으로 */
     Object.keys(sb).forEach(name=>{
       blk(name, sb[name].ae.map(AE).concat([DX(name)], sb[name].pe.map(PE)));
     });
