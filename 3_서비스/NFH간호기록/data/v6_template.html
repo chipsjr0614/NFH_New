@@ -721,8 +721,10 @@ function conscLines(){
     if(sum){ out.push('Glasgow Coma Scale : '+sum);
              out.push(sum===15?'의식 명료함':'의식수준 저하됨'); }
     else out.push('의식수준 저하됨');
-    ORI.forEach(([k,,label])=>{ if(S.ori[k]===0) out.push(label+' 없음');
-                                else if(S.ori[k]===1) out.push(label+' 있음'); });
+    /* 셋 다 없으면 마스터에 있는 합본 한 줄로 쓴다 — 세 줄보다 읽기 낫다 */
+    if(ORI.every(([k])=>S.ori[k]===0)) out.push('시간, 사람, 장소에 대한 지남력 없음');
+    else ORI.forEach(([k,,label])=>{ if(S.ori[k]===0) out.push(label+' 없음');
+                                     else if(S.ori[k]===1) out.push(label+' 있음'); });
   }
   return out;
 }
