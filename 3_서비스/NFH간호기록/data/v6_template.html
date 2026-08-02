@@ -181,6 +181,8 @@ details[open] summary{border-bottom:1px solid var(--line)}
 .fc.on{background:var(--ae-bg);border-color:var(--ae)}
 .fc.on span{color:var(--ae)}
 .pdt{margin-top:14px}
+.pl .lnk{background:none;border:none;color:var(--accent);font-size:var(--f1);font-weight:700;
+  text-decoration:underline;cursor:pointer;margin-left:8px;padding:0}
 .say .au{display:inline-block;font-size:10.5px;font-weight:800;color:var(--ok);
   background:var(--ok-bg);border:1px solid var(--ok);border-radius:5px;
   padding:1px 6px;margin-right:7px;vertical-align:1px}
@@ -717,11 +719,13 @@ function vPain(c,ci){
     `<button class="ab ${cur===n?'on':''}" ${attr} data-v="${n}">${n}</button>`).join('')}</span>`;
   let h=`<div class="gl"><span class="dot" style="background:var(--ae)"></span>😣 통증 사정</div>`;
   if(pain){
-    h+=`<p class="ws">아파도 참는 환자가 많습니다 · 빠짐없이 물어주세요</p>
-      <div class="pl">① 언제부터 아프셨어요?</div><div class="row">${
-        (P.durs||[]).map(v=>chip(p.dur===v,`data-pdur="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>`;
-    if(isChronic(c)) h+=`<div class="hint">${P.months}개월 이상이라 간호진단이 <b>${esc(P.dxChronic)}</b>으로 넘어갑니다</div>`;
-    h+=`<div class="pl">② 어디가 아프세요? <small>여러 곳</small></div><div class="row">${
+    /* 한 화면에 45개를 펼쳐놓으면 뭘 눌러야 할지 모른다.
+       답하면 다음이 나오게 해서 처음엔 「어디가」만 보이게 한다. */
+    const ped=(setOf(c.set)||{})['대분류']==='소아';
+    if(!p.tool) p.tool = ped ? 'FLACC' : 'NRS';          /* 도구는 자동으로 고른다 */
+    const step = p.parts.length ? (p.inten!=null ? 3 : 2) : 1;
+
+    h+=`<div class="pl">어디가 아프세요? <small>여러 곳</small></div><div class="row">${
       (P.parts||[]).map(x=>chip(p.parts.indexOf(x.v)>=0,
         `data-ppart="${ci}" data-v="${esc(x.v)}"`,`${x.ic} ${x.v}`)).join('')}</div>`;
     p.parts.forEach(v=>{ const subs=(P.subs||{})[v]; if(!subs) return;
@@ -729,26 +733,30 @@ function vPain(c,ci){
       h+=`<div class="pl2">${esc(v)} — 자세한 위치</div><div class="row">${
         subs.map(s=>chip(cur.indexOf(s)>=0,
           `data-psub="${ci}" data-p="${esc(v)}" data-v="${esc(s)}"`,s)).join('')}</div>`; });
-    /* 소아에게 「0~10점 중 몇 점?」은 안 통한다. 소아 경로에서는 소아용을 앞에 둔다 */
-    const ped=(setOf(c.set)||{})['대분류']==='소아';
-    const tools=(P.tools||[]).slice().sort((a,b)=>(ped?(b.ped?1:0)-(a.ped?1:0):0));
-    h+=`<div class="pl">③ 어떤 도구로 재세요?</div>
-      ${ped?'<div class="hint">소아는 <b>FLACC(영유아) · NIPS(신생아) · FPRS(학령전)</b>를 씁니다</div>':''}
-      <div class="row">${tools.map(t=>chip(p.tool===t.v,`data-ptool="${ci}" data-v="${esc(t.v)}"`,
-          `${t.v} · ${t.d}`)).join('')}</div>
-      <div class="pl">④ 얼마나 아프세요?</div>`;
-    h+= p.tool==='FPRS'
-      ? `<div class="row">${FACES.map(([f,n])=>`<button class="fc ${p.inten===n?'on':''}" data-pint="${ci}" data-v="${n}">${f}<span>${n}</span></button>`).join('')}</div>`
-      : nrsRow(p.inten, `data-pint="${ci}"`);
-    h+=`<div class="pl">⑤ 어떻게 아프세요? <small>여러 개</small></div><div class="row">${
-        (P.patterns||[]).map(v=>chip(p.pats.indexOf(v)>=0,`data-ppat="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>
-      <div class="pl">⑥ 계속 아프세요, 가끔 아프세요?</div><div class="row">${
-        (P.freqs||[]).map(v=>chip(p.freq===v,`data-pfreq="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>`;
-    /* 진통제는 통증이 확인됐을 때만 묻는다.
-       통증 없는 환자에게 「진통제 맞고 싶으세요?」는 이상하다 */
-    const now=(P.ae||[]).filter(q=>P.grp[q]==='통증있음');
-    if(painFound(c) && now.length)
-      h+=`<div class="pl">⑦ 진통제</div>`+now.map(q=>qRow(q,ci)).join('');
+
+    if(step>=2){
+      const tool=(P.tools||[]).filter(t=>t.v===p.tool)[0]||{v:p.tool,d:''};
+      h+=`<div class="pl">얼마나 아프세요?
+            <small>${esc(tool.v)} · ${esc(tool.d)}</small>
+            <button class="lnk" data-ptoolopen="${ci}">도구 바꾸기</button></div>`;
+      if(p.toolOpen)
+        h+=`<div class="row">${(P.tools||[]).map(t=>chip(p.tool===t.v,
+             `data-ptool="${ci}" data-v="${esc(t.v)}"`,`${t.v} · ${t.d}`)).join('')}</div>`;
+      h+= p.tool==='FPRS'
+        ? `<div class="row">${FACES.map(([f,n])=>`<button class="fc ${p.inten===n?'on':''}" data-pint="${ci}" data-v="${n}">${f}<span>${n}</span></button>`).join('')}</div>`
+        : nrsRow(p.inten, `data-pint="${ci}"`);
+    }
+    if(step>=3){
+      h+=`<div class="pl">어떻게 아프세요? <small>여러 개</small></div><div class="row">${
+          (P.patterns||[]).map(v=>chip(p.pats.indexOf(v)>=0,`data-ppat="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>
+        <div class="pl">계속 아프세요, 가끔 아프세요?</div><div class="row">${
+          (P.freqs||[]).map(v=>chip(p.freq===v,`data-pfreq="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>
+        <div class="pl">언제부터 아프셨어요?</div><div class="row">${
+          (P.durs||[]).map(v=>chip(p.dur===v,`data-pdur="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>`;
+      if(isChronic(c)) h+=`<div class="hint">${P.months}개월 이상이라 간호진단이 <b>${esc(P.dxChronic)}</b>으로 넘어갑니다</div>`;
+      const now=(P.ae||[]).filter(q=>P.grp[q]==='통증있음');
+      if(painFound(c) && now.length) h+=now.map(q=>qRow(q,ci)).join('');
+    }
   }
   if(needSmc(c)){
     h+=`<div class="pl">${pain?'⑧ ':''}🩺 감각 · 운동 · 순환 (SMC)</div>`;
@@ -762,8 +770,9 @@ function vPain(c,ci){
     h+=`<div class="hint">등급은 마스터에 없어 📌비고로 남습니다</div>`;
   }
   /* 도착 직후엔 아직 안 한 일이라 접어둔다. 투여한 뒤에 열어 기록한다 */
+  /* 투여·재평가는 통증이 확인된 뒤에나 할 일이다 */
   const later=(P.ae||[]).filter(q=>P.grp[q]==='투여후');
-  if(pain && later.length){
+  if(pain && painFound(c) && later.length){
     h+=`<details class="pdt" ${p.open?'open':''}><summary data-popen="${ci}">💊 진통제 투여 · 재평가<span class="cv">▾</span></summary><div class="refb">
       <p class="ws">진통제를 투여한 뒤에 다시 열어 기록하세요</p>
       ${later.map(q=>qRow(q,ci)).join('')}
@@ -980,7 +989,7 @@ function vFix(){
 
 /* ══════════ 이벤트 ══════════ */
 el('work').addEventListener('click', e=>{
-  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-popen],[data-nopen],[data-site]');
+  const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-ptoolopen],[data-popen],[data-nopen],[data-site]');
   if(!t) return;
   const d=t.dataset;
   if(d.more){ S.cathOpen=true; }
@@ -1023,6 +1032,7 @@ el('work').addEventListener('click', e=>{
     if(i<0) p.parts.push(d.v); else { p.parts.splice(i,1); delete p.subs[d.v]; } }
   else if(d.psub!=null){ const p=pn(S.cases[+d.psub]), a=p.subs[d.p]||(p.subs[d.p]=[]);
     const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
+  else if(d.ptoolopen!=null){ const p=pn(S.cases[+d.ptoolopen]); p.toolOpen=!p.toolOpen; }
   else if(d.ptool!=null){ const p=pn(S.cases[+d.ptool]); p.tool = p.tool===d.v?null:d.v; }
   else if(d.pint!=null){ const p=pn(S.cases[+d.pint]); p.inten = p.inten===+d.v?null:+d.v; }
   else if(d.pint2!=null){ const p=pn(S.cases[+d.pint2]); p.inten2 = p.inten2===+d.v?null:+d.v; }
