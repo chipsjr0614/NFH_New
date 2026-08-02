@@ -404,9 +404,11 @@ function buildLines(){
       if(isSmcDx)  smcDone=true;
       const aes=dx.ae.map(q=>stmtOf(q,c.ans[q])).filter(Boolean);
       const on=(c.peOn||{})[dx.name]||[];
-      const pes=(D.explain[dx.name]&&D.explain[dx.name].length)
-        ? D.explain[dx.name].filter(e=>on.includes(e.pe)).map(e=>e.pe)
-        : dx.pe.filter(p=>on.includes(p));
+      /* 중재는 「그 경로가 가진 P&E」가 기준이다.
+         📢 문구는 진단명으로만 묶여 있어, explain을 기준으로 삼으면
+         남의 경로 중재가 섞여 들어오고(경련 환자에게 안대) 반대로
+         📢가 없는 제 경로 중재는 영영 안 보인다(발열에 해열제). */
+      const pes=dx.pe.filter(p=>on.includes(p));
       if(ext){ ext.ae.forEach(t=>{ if(aes.indexOf(t)<0) aes.push(t); });
                ext.pe.forEach(t=>{ if(pes.indexOf(t)<0) pes.push(t); }); }
       const notes=ext?ext.notes:[];
@@ -773,8 +775,13 @@ function vPE(){
   return S.cases.map((c,ci)=>{
     const st=setOf(c.set); if(!st) return '';
     return st.dx.filter(dx=>dxOn(c,dx.name)).map(dx=>{
+      /* 경로가 가진 P&E를 다 보여주되, 📢 문구가 있으면 붙여 준다.
+         문구가 없으면 진술문만 보여준다 — 안 보이는 것보다 낫다 */
       const ex=D.explain[dx.name]||[];
-      const items = ex.length? ex : dx.pe.map(p=>({say:'',pe:p}));
+      const items = dx.pe.map(p=>{
+        const e=ex.filter(x=>x.pe===p)[0];
+        return {say: e?e.say:'', pe:p};
+      });
       const on=(c.peOn||{})[dx.name]||[];
       return `<div class="gl"><span class="dot" style="background:var(--dx)"></span>${esc(dx.name)}</div>
         ${items.map(e=>`<button class="say ${on.includes(e.pe)?'on':''}" data-pe="${ci}" data-n="${esc(dx.name)}" data-v="${esc(e.pe)}">
