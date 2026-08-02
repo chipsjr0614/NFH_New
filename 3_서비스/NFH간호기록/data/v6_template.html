@@ -391,13 +391,17 @@ function buildLines(){
     cs.forEach(k=>S.cath[k].forEach(d=>push('ae','A&E',d))); }
   S.cases.forEach(c=>{
     const st=setOf(c.set); if(!st) return;
+    const shown={};                      /* 이미 어느 블록엔가 실린 진술문 */
+    let painDone=false, smcDone=false;
     st.dx.forEach(dx=>{
       if(!dxOn(c,dx.name)) return;
       /* 통증 위젯 결과는 급성통증 블록에 붙는다.
          골절·외상처럼 통증 경로가 아닌 곳에서는 SMC만 해당 진단에 붙는다 */
-      const ext = (dx.name===P.dxAcute) ? painLines(c)
-                : (!isPainCase(c) && (P.smcDx||[]).indexOf(dx.name)>=0) ? painLines(c)
-                : null;
+      const isPainDx = dx.name===P.dxAcute;
+      const isSmcDx  = !isPainCase(c) && (P.smcDx||[]).indexOf(dx.name)>=0;
+      const ext = (isPainDx || isSmcDx) ? painLines(c) : null;
+      if(isPainDx) painDone=true;
+      if(isSmcDx)  smcDone=true;
       const aes=dx.ae.map(q=>stmtOf(q,c.ans[q])).filter(Boolean);
       const on=(c.peOn||{})[dx.name]||[];
       const pes=(D.explain[dx.name]&&D.explain[dx.name].length)
@@ -410,11 +414,32 @@ function buildLines(){
       /* 3개월 이상이면 급성통증이 아니라 만성통증이다 */
       const name=(dx.name===P.dxAcute && isChronic(c) && P.dxChronic) ? P.dxChronic : dx.name;
       push('gh','',name);
-      aes.forEach(t=>push('ae','A&E',t));
+      aes.forEach(t=>{ shown[t]=1; push('ae','A&E',t); });
       push('dx','D',name);
-      pes.forEach(t=>push('pe','P&E',t));
-      notes.forEach(t=>push('note','📌','비고: '+t));
+      pes.forEach(t=>{ shown[t]=1; push('pe','P&E',t); });
+      notes.forEach(t=>{ shown[t]=1; push('note','📌','비고: '+t); });
     });
+    /* ── 진단을 껐어도 「물어본 것」은 사라지면 안 된다 ──
+       「안 물어봄」과 「물어보고 없음」이 다르듯, 「물어봤는데 기록이 없음」도 안 된다.
+       진단이 꺼져 갈 곳을 잃은 답을 여기서 거둔다. 진단(D)은 붙이지 않는다. */
+    const rAE=[], rPE=[], rNote=[], seenQ={};
+    const keep=(arr,t)=>{ if(t && !shown[t] && arr.indexOf(t)<0) arr.push(t); };
+    st.dx.forEach(dx=>dx.ae.forEach(q=>{
+      if(seenQ[q]) return; seenQ[q]=1;
+      keep(rAE, stmtOf(q,c.ans[q]));
+    }));
+    if((isPainCase(c) && !painDone) || (isSmcPath(c) && !smcDone)){
+      const ex=painLines(c);
+      ex.ae.forEach(t=>keep(rAE,t));
+      ex.pe.forEach(t=>keep(rPE,t));
+      ex.notes.forEach(t=>keep(rNote,t));
+    }
+    if(rAE.length||rPE.length||rNote.length){
+      push('gh','','사정 — 진단 미선택');
+      rAE.forEach(t=>push('ae','A&E',t));
+      rPE.forEach(t=>push('pe','P&E',t));
+      rNote.forEach(t=>push('note','📌','비고: '+t));
+    }
     /* 신경학은 특정 진단에 매이지 않으므로 따로 묶는다.
        진단마다 붙이면 같은 줄이 진단 수만큼 반복된다 */
     const nl=neuroLines(c);
