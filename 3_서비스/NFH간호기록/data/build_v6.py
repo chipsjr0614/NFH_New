@@ -135,18 +135,24 @@ for r in rows('2.사정세트'):
         # 질문 키에 넣으면 같은 질문이 상세 유무로 갈려 질문은행이 부푼다.
         det = str(r.get('상세') or '').strip()
         if det: P.setdefault('det', {})[qid] = det
-        P['items'].append(('ae', qid, link))
+        try: ordv = int(r.get('순서') or 99)
+        except (TypeError, ValueError): ordv = 99
+        P['items'].append(('ae', qid, link, ordv))
     elif 과 == 'P&E':
-        P['items'].append(('pe', canon(raw, where), link))
+        P['items'].append(('pe', canon(raw, where), link, 99))
 
 # 진단별 배치 (진단연결 사용, '공통'은 전 진단에)
 # 진단명은 canon으로 마스터 원문이 되는데(「비효율적 호흡양상」→「비효율적호흡양상」)
 # 진단연결 열은 엑셀 표기 그대로다. 글자로 비교하면 안 맞아 전부 「공통」으로 새어
 # 같은 줄이 진단마다 반복된다. 공백·대소문자를 무시하고 맞춘다.
+# 화면에 나오는 순서는 엑셀 「순서」 열을 따른다. 시트 행 순서가 아니다 —
+# 흉통 환자에게 dizziness가 먼저 나오던 이유가 이것이었다.
 for 소, P in PATHSET.items():
+    ae = sorted([x for x in P['items'] if x[0] == 'ae'], key=lambda x: x[3])
+    P['items'] = ae + [x for x in P['items'] if x[0] != 'ae']
     names = list(P['dx'].keys())
     nmap = {nspc(n): n for n in names}
-    for kind, val, link in P['items']:
+    for kind, val, link, _o in P['items']:
         hit = nmap.get(nspc(link)) if link else None
         tgt = names if (link == '공통' or hit is None) else [hit]
         if not names: continue
@@ -157,7 +163,7 @@ for 소, P in PATHSET.items():
 # 진통제 문항을 21개 경로에 중복으로 적지 않도록, 여기 한 번만 적고 빌드가 붙인다.
 PAIN = {'ae': [], 'grp': {}, 'aeCond': [], 'peCond': [], 'parts': [], 'subs': {},
         'tools': [], 'patterns': [], 'freqs': [], 'durs': [], 'chronic': '',
-        'smc': [], 'smcDx': [], 'dxAcute': '', 'dxChronic': '', 'months': 3}
+        'smc': [], 'smcDx': [], 'autoPart': {}, 'dxAcute': '', 'dxChronic': '', 'months': 3}
 for r in rows('7.통증공통'):
     과 = str(r.get('과정') or '').strip()
     구 = str(r.get('구분') or '').strip()
@@ -187,6 +193,7 @@ for r in rows('7.통증공통'):
         elif 구 == '양상':     PAIN['patterns'].append(값)
         elif 구 == '빈도':     PAIN['freqs'].append(값)
         elif 구 == 'SMC':      PAIN['smc'].append(값)
+        elif 구 == '부위자동':  PAIN.setdefault('autoPart', {})[비] = 값
         elif 구 == 'SMC진단':  PAIN['smcDx'].append(값)
         elif 구 == '기간기준':
             try: PAIN['months'] = int(float(값))
@@ -222,7 +229,7 @@ sig = lambda qid: frozenset(nspc(s) for s in QBANK[qid]['stmts'])
 NEURO_SIG = {qid: sig(qid) for qid in NEURO}
 PATH_NEURO = {}
 for 소, P in PATHSET.items():
-    have = {sig(val) for kind, val, _link in P['items'] if kind == 'ae'}
+    have = {sig(val) for kind, val, *_x in P['items'] if kind == 'ae'}
     PATH_NEURO[소] = [q for q in NEURO if NEURO_SIG[q] not in have]
 
 # ── 2.7) 추천 근거 (9.추천근거) ──────────────────────────────
@@ -286,7 +293,7 @@ for r in rows('10.후속사정'):
 for F in FOLLOW.values():
     if not F['skip']: continue
     for 소, P in PATHSET.items():
-        if any(F['skip'] in s for kind, val, _l in P['items'] if kind == 'ae'
+        if any(F['skip'] in s for kind, val, *_x in P['items'] if kind == 'ae'
                for s in QBANK[val]['stmts']):
             F['skipPaths'].append(소)
 
@@ -294,7 +301,7 @@ for F in FOLLOW.values():
 # 발동 판정은 둘 다 봐야 한다 (어지럼처럼 이미 다 있는 경로도 있다).
 PATH_NEURO_ALL = {}
 for 소, P in PATHSET.items():
-    inline = [val for kind, val, _l in P['items']
+    inline = [val for kind, val, *_x in P['items']
               if kind == 'ae' and sig(val) in set(NEURO_SIG.values())]
     PATH_NEURO_ALL[소] = list(dict.fromkeys(inline + PATH_NEURO[소]))
 
@@ -417,7 +424,7 @@ def _rep(qid):
     return None
 for 소, P in PATHSET.items():
     seen = []
-    for kind, val, _l in P['items']:
+    for kind, val, *_x in P['items']:
         if kind != 'ae': continue
         t = _rep(val)
         if t and t not in seen: seen.append(t)

@@ -599,13 +599,12 @@ function vAE(){
       마무리 질문으로 넘어가세요.</p>${nav(true,'진단')}`;
   return S.cases.map((c,ci)=>{
     const st=setOf(c.set); if(!st) return '';
+    /* 「공통 문진 / 이 경로에만」으로 나누면 흉통 환자에게 dizziness가 먼저 나온다.
+       엑셀 순서 그대로 한 줄로 보여준다 — 그게 간호사가 묻는 순서다. */
     const qs=[...new Set(st.dx.flatMap(d=>d.ae))];
-    const core=qs.filter(q=>D.qbank[q].core), rest=qs.filter(q=>!D.qbank[q].core);
-    const blk=(list,label,dot)=> list.length?`<div class="gl"><span class="dot" style="background:${dot}"></span>${label}</div>`+list.map(q=>qRow(q,ci)).join(''):'';
     return `<p class="wt">${esc(c.sym)}${c.sel1?' · '+esc(c.sel1):''}${c.sel2?' · '+esc(c.sel2):''}</p>
       <p class="ws">묻고 답을 누르면 그대로 기록됩니다</p>
-      ${blk(core,'공통 문진 — 자리가 항상 같습니다','var(--accent)')}
-      ${blk(rest,'이 경로에만','var(--pe)')}
+      ${qs.map(q=>qRow(q,ci)).join('')}
       ${vSites(c,ci)}
       ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}
       ${vFollow(c,ci)}`;
@@ -714,11 +713,22 @@ function vPain(c,ci){
        답하면 다음이 나오게 해서 처음엔 「어디가」만 보이게 한다. */
     const ped=(setOf(c.set)||{})['대분류']==='소아';
     if(!p.tool) p.tool = ped ? 'FLACC' : 'NRS';          /* 도구는 자동으로 고른다 */
+    /* 흉부통증 경로에서 또 「어디가 아프세요?」를 묻는 건 바보 같다.
+       경로가 부위를 이미 정했으면 그것을 쓰고 묻지 않는다 (7.통증공통 부위자동) */
+    if(!p.parts.length){
+      const st2=setOf(c.set)||{dx:[]};
+      const auto=Object.keys(P.autoPart||{}).filter(k=>
+        st2.dx.some(d=>d.ae.some(q=>(D.qbank[q].stmts||[]).some(t=>t.indexOf(k)===0))));
+      if(auto.length) p.parts=[P.autoPart[auto[0]]];
+    }
+    const fixed = p.parts.length===1 && Object.keys(P.autoPart||{}).some(k=>P.autoPart[k]===p.parts[0])
+                  && (setOf(c.set)||{})['대분류']!=='외상';
     const step = p.parts.length ? (p.inten!=null ? 3 : 2) : 1;
 
-    h+=`<div class="pl">어디가 아프세요? <small>여러 곳</small></div><div class="row">${
-      (P.parts||[]).map(x=>chip(p.parts.indexOf(x.v)>=0,
-        `data-ppart="${ci}" data-v="${esc(x.v)}"`,`${x.ic} ${x.v}`)).join('')}</div>`;
+    if(!fixed)
+      h+=`<div class="pl">어디가 아프세요? <small>여러 곳</small></div><div class="row">${
+        (P.parts||[]).map(x=>chip(p.parts.indexOf(x.v)>=0,
+          `data-ppart="${ci}" data-v="${esc(x.v)}"`,`${x.ic} ${x.v}`)).join('')}</div>`;
     p.parts.forEach(v=>{ const subs=(P.subs||{})[v]; if(!subs) return;
       const cur=p.subs[v]||[];
       h+=`<div class="pl2">${esc(v)} — 자세한 위치</div><div class="row">${
