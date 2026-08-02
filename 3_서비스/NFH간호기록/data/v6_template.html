@@ -666,6 +666,13 @@ function isSmcPath(c){ const st=setOf(c.set);
 function needSmc(c){ const p=pn(c);
   return isSmcPath(c) || p.parts.some(v=>((P.parts||[]).find(x=>x.v===v)||{}).smc); }
 function isChronic(c){ return !!P.chronic && pn(c).dur===P.chronic; }
+/* 통증이 실제로 확인됐나 — 강도를 쟀거나, 경로의 통증 사정이 양성이거나 */
+function painFound(c){
+  if(pn(c).inten!=null) return true;
+  const st=setOf(c.set); if(!st) return false;
+  const dx=st.dx.filter(d=>d.name===P.dxAcute)[0];
+  return !!dx && dx.ae.some(q=>pos(c,q));
+}
 const condAE = cond => (P.aeCond||[]).filter(x=>x.cond===cond);
 
 function vPain(c,ci){
@@ -702,6 +709,11 @@ function vPain(c,ci){
         (P.patterns||[]).map(v=>chip(p.pats.indexOf(v)>=0,`data-ppat="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>
       <div class="pl">⑥ 계속 아프세요, 가끔 아프세요?</div><div class="row">${
         (P.freqs||[]).map(v=>chip(p.freq===v,`data-pfreq="${ci}" data-v="${esc(v)}"`,v)).join('')}</div>`;
+    /* 진통제는 통증이 확인됐을 때만 묻는다.
+       통증 없는 환자에게 「진통제 맞고 싶으세요?」는 이상하다 */
+    const now=(P.ae||[]).filter(q=>P.grp[q]==='통증있음');
+    if(painFound(c) && now.length)
+      h+=`<div class="pl">⑦ 진통제</div>`+now.map(q=>qRow(q,ci)).join('');
   }
   if(needSmc(c)){
     h+=`<div class="pl">${pain?'⑧ ':''}🩺 감각 · 운동 · 순환 (SMC)</div>`;
