@@ -481,7 +481,13 @@ function buildLines(){
       const isPainDx = dx.name===P.dxAcute;
       const isSmcDx  = !isPainCase(c) && (P.smcDx||[]).indexOf(dx.name)>=0;
       const ext = (isPainDx || isSmcDx) ? painLines(c) : null;
-      const aes=dx.ae.map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean);
+      let aes=dx.ae.map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean);
+      /* 그 진단의 이름이 가리키는 증상이 맨 위에 와야 읽힌다.
+         통증 진단이면 통증 문장이 진단 바로 위에 오도록 앞으로 뺀다. */
+      if(dx.name===P.dxAcute || dx.name===P.dxChronic){
+        const isPain=t=>/통증|두통|불편감/.test(t);
+        aes = aes.filter(isPain).concat(aes.filter(t=>!isPain(t)));
+      }
       /* 중재는 「그 경로가 가진 P&E」가 기준이다.
          📢 문구는 진단명으로만 묶여 있어, explain을 기준으로 삼으면
          남의 경로 중재가 섞여 들어오고(경련 환자에게 안대) 반대로
