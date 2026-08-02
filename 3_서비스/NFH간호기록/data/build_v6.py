@@ -404,13 +404,21 @@ _neg  = lambda t: re.search(r'(없음|안됨)$', t)
 
 USE = collections.Counter()
 PATH_POS = {}
+# 문항 하나에서 한 진술문만 센다. 토글의 양쪽이나 선택형 4지를
+# 따로 세면 「한 문항 안에서 겹친다」는 오탐이 난다.
+def _rep(qid):
+    v = QBANK[qid]
+    i = v.get('ab', 0) if v['fmt'] == '토글' else 0
+    for j in ([i] + list(range(len(v['stmts'])))):
+        if j < len(v['stmts']) and not _neg(v['stmts'][j]): return v['stmts'][j]
+    return None
 for 소, P in PATHSET.items():
-    seen = set()
+    seen = []
     for kind, val, _l in P['items']:
         if kind != 'ae': continue
-        for st in QBANK[val]['stmts']:
-            if not _neg(st): seen.add(st)
-    PATH_POS[소] = list(seen)
+        t = _rep(val)
+        if t and t not in seen: seen.append(t)
+    PATH_POS[소] = seen
     for st in seen: USE[st] += 1
 
 _grp = collections.defaultdict(set)
