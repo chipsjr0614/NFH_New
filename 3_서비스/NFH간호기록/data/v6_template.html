@@ -666,7 +666,9 @@ function qRow(qid,ci){
     ${miss?'<span class="mt">미응답</span>':`<span class="rec">${esc(rec.slice(0,24))}</span>`}${ans}</div>`;
 }
 function pupilRow(qid,ci){
-  const v=S.cases[ci].ans[qid]||{};
+  /* 기록용 값(ans[qid])은 「Rt 3 / Lt 5」 문자열이다.
+     좌우 각각의 숫자는 ans['_'+qid]에 따로 들고 있다 — 그걸 읽어야 한다. */
+  const v=S.cases[ci].ans['_'+qid]||{};
   const btn=(side)=>[1,2,3,4,5,6,7,8].map(n=>
     `<button class="ab ${v[side]===n?'on':''}" data-pu="${qid}" data-ci="${ci}" data-s="${side}" data-n="${n}">${n}</button>`).join('');
   return `<details><summary>👁️ 동공 크기 참고표<span class="cv">▾</span></summary><div class="refb">
@@ -993,7 +995,7 @@ el('work').addEventListener('click', e=>{
   else if(d.br!=null){ const c=S.cases[+d.br]; if(d.k==='1'){c.sel1=d.v;c.sel2='';} else c.sel2=d.v; }
   else if(d.yn){ const c=S.cases[+d.ci], v=d.v==='1'; c.ans[d.yn] = c.ans[d.yn]===v ? undefined : v; }
   else if(d.sel){ const c=S.cases[+d.ci], i=+d.i; c.ans[d.sel] = c.ans[d.sel]===i ? undefined : i; }
-  else if(d.pu){ const c=S.cases[+d.ci]; const o=Object.assign({}, c.ans[d.pu]||{});
+  else if(d.pu){ const c=S.cases[+d.ci]; const o=Object.assign({}, c.ans['_'+d.pu]||{});
     o[d.s] = o[d.s]===+d.n ? undefined : +d.n;
     c.ans[d.pu] = (o.rt||o.lt) ? ['Rt '+(o.rt||'__'),'Lt '+(o.lt||'__')].join(' / ') : undefined;
     c.ans['_'+d.pu]=o; }
