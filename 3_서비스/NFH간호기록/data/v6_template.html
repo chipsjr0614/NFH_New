@@ -432,7 +432,7 @@ function buildLines(){
      「공통」으로 둔 사정은 진단마다 복사되는데, EMR에 두 번 나오면
      두 번 사정한 것으로 읽힌다. 먼저 나온 자리에 남기고 뒤는 접는다.
      진단(D)과 비고는 블록의 뼈대라 그대로 둔다. */
-  const L=[], seen={};
+  const L=[], seen={}, FIX_AE=[], FIX_PE=[];
   /* 블록 단위로 모아 찍는다. 중복을 걸러낸 뒤 남는 줄이 없으면
      제목도 찍지 않는다 — 안 그러면 빈 블록만 덩그러니 남는다. */
   const blk=(title, rows)=>{
@@ -451,8 +451,6 @@ function buildLines(){
   if(cs.length) blk('도관', [].concat.apply([], cs.map(k=>S.cath[k].map(AE))));
   S.cases.forEach(c=>{
     const st=setOf(c.set); if(!st) return;
-    const shown={};                      /* 이미 어느 블록엔가 실린 진술문 */
-    let painDone=false, smcDone=false;
     /* 고른 부위·상황의 진단. 경로가 이미 가진 진단이면 그 블록에 합친다 —
        따로 찍으면 「저체온」 블록이 두 번 나온다 */
     const sb=siteBlocks(c);
@@ -463,8 +461,6 @@ function buildLines(){
       const isPainDx = dx.name===P.dxAcute;
       const isSmcDx  = !isPainCase(c) && (P.smcDx||[]).indexOf(dx.name)>=0;
       const ext = (isPainDx || isSmcDx) ? painLines(c) : null;
-      if(isPainDx) painDone=true;
-      if(isSmcDx)  smcDone=true;
       const aes=dx.ae.map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean);
       /* 중재는 「그 경로가 가진 P&E」가 기준이다.
          📢 문구는 진단명으로만 묶여 있어, explain을 기준으로 삼으면
@@ -481,33 +477,28 @@ function buildLines(){
       if(!aes.length && !pes.length && !notes.length) return;
       /* 3개월 이상이면 급성통증이 아니라 만성통증이다 */
       const name=(dx.name===P.dxAcute && isChronic(c) && P.dxChronic) ? P.dxChronic : dx.name;
-      aes.forEach(t=>shown[t]=1); pes.forEach(t=>shown[t]=1);
       blk(name, aes.map(AE).concat([DX(name)], pes.map(PE), notes.map(NT)));
     });
     /* 경로에 없던 진단만 새 블록으로 */
     Object.keys(sb).forEach(name=>{
       blk(name, sb[name].ae.map(AE).concat([DX(name)], sb[name].pe.map(PE)));
     });
-    /* ── 진단을 껐어도 「물어본 것」은 사라지면 안 된다 ──
-       「안 물어봄」과 「물어보고 없음」이 다르듯, 「물어봤는데 기록이 없음」도 안 된다.
-       진단이 꺼져 갈 곳을 잃은 답을 여기서 거둔다. 진단(D)은 붙이지 않는다. */
-    const rAE=[], rPE=[], rNote=[], seenQ={};
-    const keep=(arr,t)=>{ if(t && !shown[t] && arr.indexOf(t)<0) arr.push(t); };
-    st.dx.forEach(dx=>dx.ae.forEach(q=>{
-      if(seenQ[q]) return; seenQ[q]=1;
-      keep(rAE, stmtOf(q,c.ans[q],c));
-    }));
-    if((isPainCase(c) && !painDone) || (isSmcPath(c) && !smcDone)){
-      const ex=painLines(c);
-      ex.ae.forEach(t=>keep(rAE,t));
-      ex.pe.forEach(t=>keep(rPE,t));
-      ex.notes.forEach(t=>keep(rNote,t));
-    }
-    blk('사정 — 진단 미선택', rAE.map(AE).concat(rPE.map(PE), rNote.map(NT)));
-    /* 신경학은 특정 진단에 매이지 않으므로 따로 묶는다.
-       진단마다 붙이면 같은 줄이 진단 수만큼 반복된다 */
+    /* 진단이 기록의 단위다. 진단을 끄면 그 근거 사정도 같이 빠진다.
+       전에는 갈 곳 없는 답을 「사정 — 진단 미선택」으로 거뒀는데,
+       진단 없는 블록은 EMR에서 섬이 된다. 규칙을 하나로 둔다 —
+       「진단이 없으면 기록도 없다.」 잘못 껐으면 다시 켜면 된다. */
+    /* 신경학 이상이 있으면 진단을 낸다. 진단 없는 블록은 만들지 않는다 */
     const nl=neuroLines(c);
-    blk('의식 · 신경학적 평가', nl.ae.map(AE).concat(nl.pe.map(PE)));
+    if(nl.ae.length||nl.pe.length){
+      if(nl.bad){
+        const ex=(D.explain[NEURO_DX]||[]).map(e=>e.pe);
+        blk(NEURO_DX, nl.ae.map(AE).concat([DX(NEURO_DX)],
+            nl.pe.concat(ex.filter(t=>isAutoPE(t))).filter((t,i,a2)=>a2.indexOf(t)===i).map(PE)));
+      } else {
+        /* 이상이 없으면 낙상위험의 근거로 붙는다 (아래 블록에서) */
+        nl.ae.forEach(t=>FIX_AE.push(t)); nl.pe.forEach(t=>FIX_PE.push(t));
+      }
+    }
   });
   if(S.closing){
     const cl=D.closing.find(x=>x.sel===S.closing);
@@ -515,12 +506,13 @@ function buildLines(){
   }
   /* 의식은 🧠 블록이 낸다. 여기서 또 내면 경로가 묻는 지남력과 겹쳐
      한 기록에 「지남력 없음」과 「있음」이 함께 남는다 */
-  const fpe=[];
+  const fpe=FIX_PE.slice();
   Object.keys(S.edu).forEach(i=>{ if(S.edu[i]) (D.edu[i].recs||[]).forEach(r=>{ if(!fpe.includes(r)) fpe.push(r); }); });
-  /* 보호자도 교육도 안 골랐으면 낙상위험 진단만 덩그러니 남는다 — 안 찍는다 */
-  if(S.guard || fpe.length)
-    blk('보호자 · 낙상',
-        (S.guard?[AE(S.guard)]:[]).concat([DX('낙상위험')], fpe.map(PE)));
+  /* 의식은 낙상위험의 근거다. 진단 없이 따로 떠 있으면 섬이 된다 */
+  const fae=conscLines().concat(FIX_AE);
+  if(S.guard) fae.push(S.guard);
+  if(fae.length || fpe.length)
+    blk('의식 · 보호자 · 낙상', fae.map(AE).concat([DX('낙상위험')], fpe.map(PE)));
   if(S.memo.trim()) L.push({c:'note',tg:'📌',t:'비고: '+S.memo.trim()});
   return L;
 }
@@ -616,7 +608,6 @@ function vAE(){
       ${blk(rest,'이 경로에만','var(--pe)')}
       ${vSites(c,ci)}
       ${(isPainCase(c)||isSmcPath(c))?vPain(c,ci):''}
-      ${vNeuro(c,ci)}
       ${vFollow(c,ci)}`;
   }).join('<div style="height:22px"></div>') + nav(true,'진단');
 }
@@ -857,14 +848,18 @@ function vConsc(){
         <button class="ab ${S.ori[k]===1?'on':''}" data-or="${k}" data-v="1">있음</button>
         <button class="ab ${S.ori[k]===0?'no':''}" data-or="${k}" data-v="0">없음</button></span></div>`).join('')}`:''}`;
 }
+/* 경로가 이미 의식·지남력을 묻고 있으면 여기서 또 묻지 않는다 */
+function conscAsked(c){
+  const st=setOf(c.set); if(!st) return false;
+  return st.dx.some(d=>d.ae.some(q=>(D.qbank[q].stmts||[]).some(
+    t=>t.indexOf('의식')>=0 || t.indexOf('지남력')>=0 || t.indexOf('Glasgow')>=0)));
+}
+/* 신경학은 의식이 명료하지 않을 때만 묻는다 — 딱 필요한 환자만 */
+function neuroNeeded(){ return S.consc==='low'; }
 function vNeuro(c,ci){
-  const qs=neuroOf(c);
-  const n=qs.filter(q=>c.ans[q]!==undefined).length + (S.consc?1:0);
-  return `<details class="pdt" ${c.neuroOpen?'open':''}>
-    <summary data-nopen="${ci}">🧠 의식 · 신경학적 평가${n?` · ${n}개 기록됨`:''}<span class="cv">▾</span></summary>
-    <div class="refb"><p class="ws">의식이 떨어지거나 마비·경련이 의심되면 여기서 확인하세요</p>
-    ${vConsc()}
-    ${qs.length?`<div class="pl2">신경학</div>`+qs.map(q=>qRow(q,ci)).join(''):''}</div></details>`;
+  if(!neuroNeeded()) return '';
+  const qs=neuroOf(c); if(!qs.length) return '';
+  return `<div class="pl2">신경학</div>`+qs.map(q=>qRow(q,ci)).join('');
 }
 /* 앞의 답에 따라 뒤에 붙는 문항 (10.후속사정).
    경고 배지가 아니라 「질문이 하나 늘어나는 것」이다 — 미응답 장치가 그대로 먹는다.
@@ -882,16 +877,19 @@ function vFollow(c,ci){
   return `<div class="gl"><span class="dot" style="background:var(--warn)"></span>신경학적 이상이 보입니다 — 이것부터 확인하세요</div>`
     + fs.map(f=>f.ae.map(q=>qRow(q,ci)).join('')).join('');
 }
+/* 의식·신경학 결과. 의식은 낙상위험의 근거이고,
+   신경학 이상은 그 자체로 진단(조직관류저하:뇌)이 된다.
+   진단 없이 떠 있는 블록(섬)을 만들지 않는다. */
+const NEURO_DX = '조직관류저하:뇌';
 function neuroLines(c){
-  const ae=neuroOf(c).map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean), pe=[];
-  /* 의식은 환자당 한 번이므로 첫 주호소에만 붙인다 */
-  if(S.cases[0]===c) conscLines().reverse().forEach(t=>ae.unshift(t));
+  const ae=(neuroNeeded()?neuroOf(c):[]).map(q=>stmtOf(q,c.ans[q],c)).filter(Boolean), pe=[];
+  let bad=(neuroNeeded()?neuroOf(c):[]).some(q=>abnormal(q,c.ans[q]));
   followOf(c).forEach(f=>{
     let done=false;
     f.ae.forEach(q=>{ const t=stmtOf(q,c.ans[q],c); if(t){ ae.push(t); done=true; } });
     if(done) (f.pe||[]).forEach(t=>{ if(pe.indexOf(t)<0) pe.push(t); });
   });
-  return {ae:ae, pe:pe};
+  return {ae:ae, pe:pe, bad:bad};
 }
 /* 통증 위젯이 만든 기록. 값은 비고로, 「쟀다」는 사실만 P&E로 */
 function painLines(c){
@@ -973,8 +971,13 @@ function vEnd(){
 }
 /* ⑥ 의식·낙상 */
 function vFix(){
-  return `<p class="wt">보호자 · 낙상</p>
-    <p class="ws">모든 환자에게 확인합니다 · 의식은 🧠 블록에서 봅니다</p>
+  const c=S.cases[0], ci=0;
+  const asked = c ? conscAsked(c) : false;
+  const fpe=[];
+  return `<p class="wt">의식 · 보호자 · 낙상</p>
+    <p class="ws">모든 환자에게 확인합니다</p>
+    ${asked ? `<div class="hint">의식은 앞의 사정에서 이미 확인했습니다</div>`
+            : vConsc() + (c?vNeuro(c,ci):'')}
     <div class="gl"><span class="dot"></span>보호자</div>
     <div class="row">
       <button class="b big wide ${S.guard==='보호자 환자 옆에 상주하고 있음'?'sel':''}" data-gd="보호자 환자 옆에 상주하고 있음">상주</button>
@@ -986,7 +989,6 @@ function vFix(){
     <div class="nav"><button data-nav="-1">← 이전</button>
       <button class="go" id="doneBtn">📤 EMR 복사</button></div>`;
 }
-
 /* ══════════ 이벤트 ══════════ */
 el('work').addEventListener('click', e=>{
   const t = e.target.closest('[data-ct],[data-cd],[data-more],[data-sym],[data-rm],[data-br],[data-yn],[data-sel],[data-pu],[data-dx],[data-pe],[data-cl],[data-cs],[data-g],[data-or],[data-gd],[data-edu],[data-nav],[data-go],[data-pdur],[data-ppart],[data-psub],[data-ptool],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-psmc],[data-paeq],[data-ptoolopen],[data-popen],[data-nopen],[data-site]');
