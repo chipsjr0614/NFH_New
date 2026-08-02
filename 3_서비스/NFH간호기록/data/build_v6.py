@@ -11,7 +11,7 @@
 
 실행:  python3 build_v6.py
 """
-import os, re, glob, json, collections
+import os, re, json, fnmatch, collections, unicodedata
 import openpyxl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -22,11 +22,16 @@ TEMPLATE = os.path.join(HERE, 'v6_template.html')
 OUT_HTML = os.path.abspath(os.path.join(SVC, '..', '..', 'nursing', 'app', '간호기록V6.html'))
 
 # ── 입력 파일 ────────────────────────────────────────────────
+# macOS 파일명은 자소분리(NFD)로 저장되는데 이 소스의 한글은 NFC라
+# glob 패턴이 그냥은 안 맞는다. 양쪽을 NFC로 맞춰놓고 비교한다.
+nfc = lambda s: unicodedata.normalize('NFC', s)
+
 def newest(pattern):
-    c = sorted(glob.glob(os.path.join(HERE, pattern)))
-    c = [x for x in c if '백업' not in os.path.basename(x)]
+    pat = nfc(pattern)
+    c = sorted((f for f in os.listdir(HERE)
+                if fnmatch.fnmatch(nfc(f), pat) and '백업' not in nfc(f)), key=nfc)
     if not c: raise SystemExit(f'입력 파일 없음: {pattern}')
-    return c[-1]
+    return os.path.join(HERE, c[-1])
 
 SRC    = newest('간호기록_원본_*.xlsx')
 MASTER = os.path.join(SVC, 'Nr.statement_1023_Final.xlsx')
@@ -137,6 +142,69 @@ for 소, P in PATHSET.items():
         if not names: continue
         for n in tgt: P['dx'][n][kind].append(val)
 
+# ── 2.5) 통증 공통 (7.통증공통) ──────────────────────────────
+# 통증 위젯이 쓰는 문항·값을 코드가 아니라 엑셀에서 읽는다.
+# 진통제 문항을 21개 경로에 중복으로 적지 않도록, 여기 한 번만 적고 빌드가 붙인다.
+PAIN = {'ae': [], 'grp': {}, 'aeCond': [], 'peCond': [], 'parts': [], 'subs': {},
+        'tools': [], 'patterns': [], 'freqs': [], 'durs': [], 'chronic': '',
+        'smc': [], 'smcDx': [], 'dxAcute': '', 'dxChronic': '', 'months': 3}
+for r in rows('7.통증공통'):
+    과 = str(r.get('과정') or '').strip()
+    구 = str(r.get('구분') or '').strip()
+    값 = str(r.get('값') or '').strip()
+    비 = str(r.get('비고') or '').strip()
+    그 = str(r.get('그룹') or '').strip()
+    if 과 == 'A&E':
+        qid = qid_for(r.get('질문문구(💬)') or '', r.get('진술문(마스터원문)'),
+                      r.get('입력형식'), '통증공통/A&E')
+        PAIN['ae'].append(qid)
+        if 그: PAIN['grp'][qid] = 그
+    elif 과 == 'A&E조건':
+        PAIN['aeCond'].append({'cond': str(r.get('조건') or '').strip(),
+                               'rec': canon(r.get('진술문(마스터원문)'), '통증공통/A&E조건'),
+                               'q':   str(r.get('질문문구(💬)') or '').strip(),
+                               'fmt': str(r.get('입력형식') or '').strip()})
+    elif 과 == 'P&E조건':
+        PAIN['peCond'].append({'cond': str(r.get('조건') or '').strip(),
+                               'rec': canon(r.get('진술문(마스터원문)'), '통증공통/P&E')})
+    elif 과 == '값':
+        if   구 == '기간':
+            PAIN['durs'].append(값)
+            if 그 == '만성': PAIN['chronic'] = 값
+        elif 구 == '부위':     PAIN['parts'].append({'v': 값, 'ic': 비, 'smc': 그 == 'SMC'})
+        elif 구 == '세부부위': PAIN['subs'].setdefault(비, []).append(값)
+        elif 구 == '도구':     PAIN['tools'].append({'v': 값, 'd': 비})
+        elif 구 == '양상':     PAIN['patterns'].append(값)
+        elif 구 == '빈도':     PAIN['freqs'].append(값)
+        elif 구 == 'SMC':      PAIN['smc'].append(값)
+        elif 구 == 'SMC진단':  PAIN['smcDx'].append(값)
+        elif 구 == '기간기준':
+            try: PAIN['months'] = int(float(값))
+            except ValueError: WARN.append(('마스터없음', '통증공통/기간기준', 값, ''))
+        elif 구 == '통증진단':
+            name = canon(값, '통증공통/진단')
+            if nspc(name) not in DX_SET:
+                WARN.append(('진단아님', '통증공통/진단', name, '마스터 간호진단 목록에 없음'))
+            if str(r.get('순서') or '1').strip() == '1': PAIN['dxAcute'] = name
+            else: PAIN['dxChronic'] = name
+
+# 그룹이 없는 문항(진통제 원함)만 경로 질문으로 붙인다.
+# 「투여후」·「SMC」 그룹은 통증 위젯 안에서만 쓰이므로 경로 질문에 넣지 않는다.
+if PAIN['dxAcute']:
+    for 소, P in PATHSET.items():
+        d = P['dx'].get(PAIN['dxAcute'])
+        if d is None: continue
+        for qid in PAIN['ae']:
+            if PAIN['grp'].get(qid): continue
+            if qid not in d['ae']: d['ae'].append(qid)
+            QBANK[qid]['paths'].add(소)
+
+# 같은 진술문이 두 번 들어가면 기록에 중복으로 찍힌다
+for P in PATHSET.values():
+    for d in P['dx'].values():
+        d['ae'] = list(dict.fromkeys(d['ae']))
+        d['pe'] = list(dict.fromkeys(d['pe']))
+
 # ── 2) 공통 질문(core) 판정 — 경로 절반 이상 등장 ──────────────
 NPATH = len(PATHSET)
 for qid, v in QBANK.items():
@@ -191,7 +259,7 @@ DATA = {
   'sets': {k: {'대분류': v['대분류'],
                'dx': [{'name': n, 'ae': d['ae'], 'pe': d['pe']} for n, d in v['dx'].items()]}
            for k, v in PATHSET.items()},
-  'cath': CATH, 'edu': EDU, 'closing': CLOSING,
+  'cath': CATH, 'edu': EDU, 'closing': CLOSING, 'pain': PAIN,
   # 경로에서 실제 쓰는 진단명 기준으로 환자설명을 붙인다
   'explain': {n: list({e['pe']: e for e in EXPL_RAW.get(nsp(n), [])}.values())
               for n in {dx for P in PATHSET.values() for dx in P['dx']}},
@@ -213,12 +281,23 @@ for qid, v in QBANK.items(): SPLIT[qkey(v['q'])].append(qid)
 SPLIT = {k: v for k, v in SPLIT.items() if len(v) > 1}
 VAGUE = [qid for qid, v in QBANK.items() if len(nsp(v['q'])) <= 6]
 
+# 토글 극성 — 첫 진술문이 음성인 행. 기록 자체는 앱이 진술문 글씨를 버튼에
+# 그대로 박아 안전하지만, 「진단 추천 근거」는 여전히 첫 진술문이라 확인이 필요하다.
+NEG_END = ('없음', '안됨', '않음', '못함', '못 봄', '못봄', '불가함')
+POS_END = ('있음', '됨', '함', '봄')
+ends = lambda s, tup: any(s.endswith(x) for x in tup)
+POLAR = [qid for qid, v in QBANK.items()
+         if v['fmt'] == '토글' and len(v['stmts']) >= 2
+         and ends(v['stmts'][0], NEG_END)
+         and ends(v['stmts'][1], POS_END) and not ends(v['stmts'][1], NEG_END)]
+
 with open(OUT_WARN, 'w', encoding='utf-8') as f:
     f.write(f'간호기록 V6 빌드 리포트\n원본: {os.path.basename(SRC)}\n')
     f.write('='*70 + '\n')
     for k, n in cnt.most_common(): f.write(f'  {k:12} {n:4}건\n')
     f.write(f'  {"질문문구없음":12} {len(VAGUE):4}건\n')
     f.write(f'  {"선택형합칠후보":12} {len(SPLIT):4}건\n')
+    f.write(f'  {"토글극성확인":12} {len(POLAR):4}건\n')
     f.write('='*70 + '\n')
     f.write('\n※ 자동 교정(띄어쓰기·대소문자)은 빌드가 이미 마스터 원문으로 맞췄다. 엑셀은 고치지 않아도 된다.\n')
     f.write('※ 「마스터없음」은 AI가 지어내지 않고 그대로 두었다. 칩스 판단이 필요하다.\n')
@@ -234,6 +313,17 @@ with open(OUT_WARN, 'w', encoding='utf-8') as f:
         f.write(f'\n\n[질문문구없음] {len(VAGUE)}건 — 간호사가 뭘 물어야 할지 알 수 없음\n' + '-'*70 + '\n')
         for qid in VAGUE:
             f.write(f'  {qid}  질문「{QBANK[qid]["q"]}」  진술문 {QBANK[qid]["stmts"]}\n')
+
+    if POLAR:
+        f.write(f'\n\n[토글 극성 확인] {len(POLAR)}건 — 첫 진술문이 음성이다\n' + '-'*70 + '\n')
+        f.write('기록은 안전하다. 앱이 버튼에 진술문 글씨를 그대로 박으므로 누른 대로 남는다.\n')
+        f.write('확인이 필요한 것은 「진단 추천」이다. 추천은 아직 첫 진술문을 근거로 삼는다.\n')
+        f.write('아래에서 이상소견(추천 근거가 되어야 할 쪽)이 어느 것인지 봐주세요.\n\n')
+        for qid in POLAR:
+            v = QBANK[qid]
+            f.write(f'  {qid}  질문「{v["q"]}」  경로 {v["n"] if "n" in v else len(v["paths"])}개\n')
+            f.write(f'        추천 근거(현재) : {v["stmts"][0]}\n')
+            f.write(f'        반대쪽          : {v["stmts"][1]}\n')
 
     if SPLIT:
         f.write(f'\n\n[선택형 합칠 후보] {len(SPLIT)}건 — 같은 질문인데 진술문이 달라 따로 잡혔다\n' + '-'*70 + '\n')
