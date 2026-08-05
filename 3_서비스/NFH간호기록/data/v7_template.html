@@ -324,7 +324,7 @@ function blocks(){
     const ae=[];
     const g=gcsSum();
     /* 점수가 곧 근거다. 15점 미만을 눌렀어도 합계가 15면 「명료함」으로 적는다 */
-    if(S.consc==='의식 명료함'){ ae.push('Glasgow Coma Scale : 15','의식 명료함'); }
+    if(S.consc==='의식 명료함'){ ae.push('의식 명료함'); }
     else if(S.consc==='의식수준 저하됨'){
       if(g!==null) ae.push('Glasgow Coma Scale : '+g);
       ae.push(g===15 ? '의식 명료함' : '의식수준 저하됨');
@@ -411,7 +411,7 @@ function view(){
   h.push(`<div class="sec"><p class="lb">⓪ 의식 · 보호자</p>
     <div class="two">
       <div><p class="lb2">의식</p><div class="row">
-        <button class="b wide ${S.consc==='의식 명료함'?'on':''}" data-cs="의식 명료함">명료 · GCS 15</button>
+        <button class="b wide ${S.consc==='의식 명료함'?'on':''}" data-cs="의식 명료함">명료</button>
         <button class="b wide ${S.consc==='의식수준 저하됨'?'on':''}" data-cs="의식수준 저하됨">15점 미만</button>
       </div></div>
       <div><p class="lb2">보호자</p><div class="row">
