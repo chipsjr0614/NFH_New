@@ -25,6 +25,10 @@ body,.modal,.sheet,.mod,.card,.opt,.chip,.ccb,.dxc,.iv,.mchk,.tin{transition:bac
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:38vh;font-size:16px;line-height:1.5}
 header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
+/* 아이폰 고무줄(바운스) 스크롤 막기 (260805) — 빈 공간을 치거나 끝에서 당길 때
+   화면이 통째로 흔들리는 것을 막는다. 더블탭 확대도 끈다. */
+html{overscroll-behavior:none}
+body{overscroll-behavior:none;touch-action:manipulation}
 /* 아이폰 노치·홈바 대응 (260805) — 전체화면으로 띄웠을 때 헤더가 노치에,
    하단 시트가 홈 인디케이터에 가리는 것을 막는다 */
 header{padding-top:calc(11px + env(safe-area-inset-top));
