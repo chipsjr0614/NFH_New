@@ -273,9 +273,12 @@ function blocks(){
   if(S.edu || S.consc || S.guard){
     const ae=[];
     const g=gcsSum();
-    if(S.consc==='의식 명료함') ae.push('Glasgow Coma Scale : 15');
-    else if(g!==null)           ae.push('Glasgow Coma Scale : '+g);
-    if(S.consc) ae.push(S.consc);
+    /* 점수가 곧 근거다. 15점 미만을 눌렀어도 합계가 15면 「명료함」으로 적는다 */
+    if(S.consc==='의식 명료함'){ ae.push('Glasgow Coma Scale : 15','의식 명료함'); }
+    else if(S.consc==='의식수준 저하됨'){
+      if(g!==null) ae.push('Glasgow Coma Scale : '+g);
+      ae.push(g===15 ? '의식 명료함' : '의식수준 저하됨');
+    }
     ORI.forEach(([k])=>{ if(S.ori[k]!==undefined)
       ae.push(`${ORINM[k]}에 대한 지남력 ${S.ori[k]===1?'있음':'없음'}`); });
     if(S.guard) ae.push(S.guard);
