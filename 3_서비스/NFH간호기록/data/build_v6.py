@@ -19,6 +19,7 @@ SVC  = os.path.dirname(HERE)                      # 3_서비스/NFH간호기록
 OUT_JS   = os.path.join(SVC, 'app', 'nfh_v6_data.js')
 OUT_WARN = os.path.join(HERE, '_확인필요.txt')
 TEMPLATE = os.path.join(HERE, 'v6_template.html')
+TPL_QUICK = os.path.join(HERE, 'quick_template.html')
 OUT_HTML = os.path.abspath(os.path.join(SVC, '..', '..', 'nursing', 'app', '간호기록V6.html'))
 
 # ── 입력 파일 ────────────────────────────────────────────────
@@ -586,6 +587,14 @@ if os.path.exists(TEMPLATE):
     with open(OUT_HTML, 'w', encoding='utf-8') as f:
         f.write(html)
     print(f'✅ {OUT_HTML}  ({len(html)//1024} KB · 자체완결 단일 HTML)')
+
+# ── 빠른기록 (한 화면) ──
+if os.path.exists(TPL_QUICK):
+    q = open(TPL_QUICK, encoding='utf-8').read().replace('/*__DATA__*/', inline)
+    out_q = os.path.abspath(os.path.join(SVC, '..', '..', 'nursing', 'app', '간호기록_빠른기록.html'))
+    with open(out_q, 'w', encoding='utf-8') as f:
+        f.write(q)
+    print(f'✅ {out_q}  ({len(q)//1024} KB)')
 
 print(f'✅ {OUT_JS}')
 print(f'   경로 {NPATH} · 질문 {len(QBANK)}개 (공통 {sum(1 for v in QBANK.values() if v["core"])}개)')
