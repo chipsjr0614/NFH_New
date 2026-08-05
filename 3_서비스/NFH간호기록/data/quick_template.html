@@ -22,14 +22,24 @@
   --ac:#4FB3AE;--acs:#142D2C;--ace:#2D5553;--on:#07201F;
   --ae:#78ADEA;--dx:#F2808F;--dxb:#2D191D;--pe:#DCA940;--peb:#2A2312;--ok:#5EBE7F;}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
+/* ── 아이폰 고무줄(바운스) 스크롤 막기 (260805) ──
+   빈 공간을 치거나 끝까지 넘기면 화면이 통째로 흔들리는 걸 막는다.
+   사파리·Documents·홈화면 앱 모두에서 동일하게 적용된다. */
+html{height:100%;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.55;
   font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  height:100%;overflow:hidden;overscroll-behavior:none;
+  touch-action:manipulation;              /* 더블탭 확대로 인한 흔들림 방지 */
+  display:flex;flex-direction:column}
+/* 스크롤은 이 안에서만 일어난다 — 페이지 전체가 움직이지 않는다 */
+#scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
   padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input{font:inherit}
 
 /* 상단 고정 */
-.top{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--line);
+.top{flex:none;background:var(--card);border-bottom:1px solid var(--line);
   padding:calc(9px + env(safe-area-inset-top)) 12px 9px;display:flex;gap:8px;align-items:center}
 .top input{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--sunk);border-radius:9px;
   padding:10px 11px;font-size:15px;color:var(--ink);outline:none}
@@ -106,7 +116,7 @@ details summary::-webkit-details-marker{display:none}
   <button class="cp" id="cp">📤 복사</button>
 </div>
 
-<div class="w" id="w"></div>
+<div id="scroll"><div class="w" id="w"></div></div>
 
 <script>
 /*__DATA__*/
@@ -308,7 +318,7 @@ $('hm').onclick=()=>{
   if(!confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.')) return;
   S={nm:'',id:'',sym:'',s1:'',s2:'',set:'',ans:{},off:[],fall:true,cath:{},memo:''};
   try{localStorage.removeItem(KEY)}catch(e){}
-  $('nm').value=''; $('id').value=''; window.scrollTo(0,0); view();
+  $('nm').value=''; $('id').value=''; $('scroll').scrollTop=0; view();
 };
 $('nm').value=S.nm; $('id').value=S.id;
 view();
