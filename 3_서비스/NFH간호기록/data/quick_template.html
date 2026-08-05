@@ -38,6 +38,8 @@ input{font:inherit}
 .cp{background:var(--ac);color:var(--on);border-radius:10px;padding:11px 15px;font-size:15px;
   font-weight:800;white-space:nowrap;flex:none}
 .cp.done{background:var(--ok)}
+.hm{border:1.5px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 11px;
+  font-size:17px;flex:none;line-height:1}
 
 .w{max-width:640px;margin:0 auto;padding:14px 12px}
 .sec{margin-bottom:16px}
@@ -52,14 +54,14 @@ input{font:inherit}
 .b.gh{border-style:dashed;color:var(--ac)}
 
 /* 질문 */
-.q{background:var(--card);border:1.5px solid var(--line2);border-radius:11px;padding:11px 12px;
-  margin-bottom:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.q .t{flex:1;min-width:150px;font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.q{background:var(--card);border:1.5px solid var(--line2);border-radius:12px;padding:14px 14px;
+  margin-bottom:9px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.q .t{flex:1;min-width:160px;font-size:17px;font-weight:700;letter-spacing:-.015em;line-height:1.45}
 .q.miss{border-style:dashed;border-color:var(--ink4)}
 .q.miss .t{color:var(--ink4)}
 .yn{display:flex;gap:5px;flex:none}
-.yn button{border:1.5px solid var(--line);background:var(--sunk);color:var(--ink3);border-radius:8px;
-  padding:9px 14px;font-size:14px;font-weight:700;min-height:42px}
+.yn button{border:1.5px solid var(--line);background:var(--sunk);color:var(--ink3);border-radius:9px;
+  padding:11px 17px;font-size:15px;font-weight:700;min-height:46px}
 .yn button.y{background:var(--ink);border-color:var(--ink);color:var(--card)}
 .yn button.n{background:var(--sunk);border-color:var(--ink3);color:var(--ink)}
 .tin{border:1.5px solid var(--line);background:var(--sunk);border-radius:8px;padding:9px 10px;
@@ -84,8 +86,10 @@ input{font:inherit}
 
 /* 기록 */
 .rec{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden;margin-top:16px}
-.rec .h{padding:10px 13px;background:var(--sunk);border-bottom:1px solid var(--line);
-  font-size:11.5px;font-weight:800;letter-spacing:.06em;color:var(--ink3);display:flex}
+.rec summary.h{padding:13px;background:var(--sunk);font-size:13px;font-weight:800;
+  color:var(--ink2);display:flex;cursor:pointer;list-style:none;align-items:center}
+.rec summary.h::-webkit-details-marker{display:none}
+.rec[open] summary.h{border-bottom:1px solid var(--line)}
 .rec .h span{margin-left:auto;font-family:ui-monospace,Menlo,monospace}
 .rec pre{margin:0;padding:13px;font-family:ui-monospace,SFMono-Regular,Menlo,"D2Coding",monospace;
   font-size:12.5px;line-height:1.75;white-space:pre-wrap;color:var(--ink2);overflow-x:auto}
@@ -96,6 +100,7 @@ details summary::-webkit-details-marker{display:none}
 </style></head><body>
 
 <div class="top">
+  <button class="hm" id="hm" title="새 환자">🏠</button>
   <input id="nm" placeholder="이름" autocomplete="off">
   <input id="id" class="id" placeholder="등록번호" inputmode="numeric" maxlength="8" autocomplete="off">
   <button class="cp" id="cp">📤 복사</button>
@@ -149,9 +154,13 @@ function blocks(){
   const cs=Object.keys(S.cath).filter(k=>(S.cath[k]||[]).length);
   if(cs.length) out.push({t:'도관', ae:cs.flatMap(k=>S.cath[k]), dx:'', pe:[]});
   const st=setOf(S.set);
+  /* 같은 사정이 여러 진단에 걸려 있으면 앞 블록에만 넣는다.
+     안 그러면 dizziness·기침이 진단마다 반복돼 읽기 어렵다 */
+  const used=new Set();
   if(st) st.dx.forEach(dx=>{
     if(!on(dx.name)) return;
-    const ae=dx.ae.map(q=>stmt(q,S.ans[q])).filter(Boolean);
+    const ae=dx.ae.map(q=>stmt(q,S.ans[q])).filter(Boolean).filter(x=>!used.has(x));
+    ae.forEach(x=>used.add(x));
     const pe=peOf(dx).map(x=>x.pe);
     if(ae.length||pe.length) out.push({t:dx.name, ae, dx:dx.name, pe});
   });
@@ -255,8 +264,9 @@ function view(){
 
   /* 기록 */
   const t=text();
-  h.push(`<div class="rec"><div class="h">📋 복사될 내용 <span>${t?t.split('\n').filter(Boolean).length:0}줄</span></div>
-    <pre>${esc(t||'주호소를 고르고 답하면 여기에 만들어집니다.')}</pre></div>
+  const n=t?t.split('\n').filter(Boolean).length:0;
+  h.push(`<details class="rec"><summary class="h">📋 복사될 내용 보기 <span>${n}줄</span></summary>
+    <pre>${esc(t||'주호소를 고르고 답하면 여기에 만들어집니다.')}</pre></details>
     <p class="hint">위 <b>📤 복사</b>를 누르면 그대로 복사됩니다. 카톡·네이버웍스·EMR 어디든 붙여넣으세요.</p>`);
 
   $('w').innerHTML=h.join('');
@@ -293,6 +303,12 @@ $('cp').onclick=()=>{
     setTimeout(()=>{b.textContent='📤 복사';b.classList.remove('done')},1600);};
   if(navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(()=>prompt('길게 눌러 복사:',t));
   else prompt('길게 눌러 복사:',t);
+};
+$('hm').onclick=()=>{
+  if(!confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.')) return;
+  S={nm:'',id:'',sym:'',s1:'',s2:'',set:'',ans:{},off:[],fall:true,cath:{},memo:''};
+  try{localStorage.removeItem(KEY)}catch(e){}
+  $('nm').value=''; $('id').value=''; window.scrollTo(0,0); view();
 };
 $('nm').value=S.nm; $('id').value=S.id;
 view();
