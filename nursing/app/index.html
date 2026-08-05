@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NFH 간호기록</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="간호기록">
+<meta name="theme-color" content="#0F5F62">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230F5F62'/%3E%3Ctext x='90' y='86' font-size='64' text-anchor='middle'%3E%F0%9F%A9%BA%3C/text%3E%3Ctext x='90' y='138' font-size='32' font-family='-apple-system,sans-serif' font-weight='800' fill='%23fff' text-anchor='middle'%3ENFH%3C/text%3E%3C/svg%3E">
+<style>
+  :root{--bg:#F2F5F5;--card:#FFF;--line:#D3DCDB;--ink:#0E1516;--ink2:#495858;--ink3:#7A8A8B;
+    --accent:#0F5F62;--soft:#DEEDEC;--edge:#9AC3C1;--warn:#C2410C;--warn-bg:#FCEBE1}
+  @media(prefers-color-scheme:dark){:root{--bg:#0B1011;--card:#141B1C;--line:#2A3637;--ink:#E6ECEB;
+    --ink2:#A0AEAE;--ink3:#778788;--accent:#4FB3AE;--soft:#142D2C;--edge:#2D5553;--warn:#F0965C;--warn-bg:#2E1D14}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .w{max-width:560px;margin:0 auto;padding:34px 18px 60px}
+  h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
+  h1 em{font-style:normal;color:var(--accent)}
+  .s{color:var(--ink3);font-size:14px;margin:0 0 26px}
+  a.item{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:18px 18px;margin-bottom:11px;text-decoration:none;color:inherit;
+    box-shadow:0 1px 2px rgba(15,95,98,.05),0 8px 22px -14px rgba(15,95,98,.2)}
+  a.item .ic{width:46px;height:46px;border-radius:12px;background:var(--soft);border:1px solid var(--edge);
+    display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+  a.item .b{flex:1;min-width:0}
+  a.item .t{font-size:17px;font-weight:800;letter-spacing:-.015em}
+  a.item .d{font-size:13px;color:var(--ink3);margin-top:2px}
+  a.item .go{color:var(--ink3);font-size:20px;flex:none}
+  a.item.main .ic{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tip{background:var(--warn-bg);border:1px solid var(--warn);border-radius:12px;padding:15px 17px;
+    margin-top:26px;font-size:14px}
+  .tip b{color:var(--warn)}
+  .tip ol{margin:9px 0 0;padding-left:19px}
+  .tip li{margin-bottom:4px}
+  footer{margin-top:28px;text-align:center;font-size:12px;color:var(--ink3)}
+</style></head><body>
+<div class="w">
+  <h1>NFH <em>간호기록</em></h1>
+  <p class="s">쓸 것을 고르세요</p>
+
+  <a class="item main" href="간호기록V4.html">
+    <span class="ic">🩺</span>
+    <span class="b"><span class="t">간호기록 V4</span>
+      <span class="d">주호소 18종 · 도관 13종 · 통증 사정 · 의식/낙상</span></span>
+    <span class="go">›</span></a>
+
+  <a class="item" href="간호기록V6.html">
+    <span class="ic">🧪</span>
+    <span class="b"><span class="t">간호기록 V6 <small style="color:var(--warn);font-size:11px">시험 중</small></span>
+      <span class="d">질문으로 좁혀가기 51경로 · 도관 25종 · 소아 6갈래</span></span>
+    <span class="go">›</span></a>
+
+  <div class="tip">
+    <b>📱 홈 화면에 추가하면 앱처럼 씁니다</b>
+    <ol>
+      <li><b>아이폰</b> — 아래 공유 <b>⬆️</b> → 「홈 화면에 추가」</li>
+      <li><b>갤럭시</b> — 오른쪽 위 <b>⋮</b> → 「홈 화면에 추가」</li>
+    </ol>
+  </div>
+
+  <footer>병원 내부망 전용 · 인터넷 연결 없이 동작합니다</footer>
+</div>
+</body></html>
