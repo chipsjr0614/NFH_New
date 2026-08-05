@@ -134,8 +134,12 @@ details summary::-webkit-details-marker{display:none}
 /*__DATA__*/
 const D=window.NFH_V6, $=i=>document.getElementById(i);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const KEY='nfh_quick';
-let S={nm:'',id:'',edu:false,consc:null,guard:null,
+const KEY='nfh_v7';
+const ORI=[['person','사람','"제가 누구인지, 옆에 계신 분이 누구인지 아시겠어요?"'],
+           ['time','시간','"오늘이 며칠인지, 지금이 낮인지 밤인지 아시겠어요?"'],
+           ['place','장소','"여기가 어디인지 아시겠어요?"']];
+const ORINM={person:'사람',time:'시간',place:'장소'};
+let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},
        sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
 
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
@@ -191,6 +195,8 @@ function blocks(){
   if(S.edu || S.consc || S.guard){
     const ae=[];
     if(S.consc) ae.push(S.consc);
+    ORI.forEach(([k])=>{ if(S.ori[k]!==undefined)
+      ae.push(`${ORINM[k]}에 대한 지남력 ${S.ori[k]===1?'있음':'없음'}`); });
     if(S.guard) ae.push(S.guard);
     out.push({t:'의식 · 낙상', ae,
       dx:'낙상위험',
@@ -220,6 +226,8 @@ function missing(){
   if(!S.edu)       m.push('맞이 안내');
   if(!S.consc)     m.push('의식');
   if(!S.guard)     m.push('보호자');
+  if(S.consc==='의식수준 저하됨')
+    ORI.forEach(([k,lb])=>{ if(S.ori[k]===undefined) m.push('지남력 — '+lb); });
   const st=setOf(S.set);
   if(!st) m.push('주호소 선택');
   else [...new Set(st.dx.flatMap(d=>d.ae))].forEach(q=>{
@@ -247,7 +255,19 @@ function view(){
         <button class="b wide ${S.guard==='보호자 환자 옆에 상주하고 있음'?'on':''}" data-gd="보호자 환자 옆에 상주하고 있음">상주</button>
         <button class="b wide ${S.guard==='보호자 동행하지 않음'?'on':''}" data-gd="보호자 동행하지 않음">없음</button>
       </div></div>
-    </div></div>`);
+    </div>`);
+  /* 의식이 저하되면 지남력 3가지를 반드시 사정한다 */
+  if(S.consc==='의식수준 저하됨'){
+    h.push(`<p class="lb" style="margin-top:14px">🧠 지남력 — 의식 저하 시 필수</p>`);
+    ORI.forEach(([k,lb,q])=>{
+      const v=S.ori[k];
+      h.push(`<div class="q ${v===undefined?'miss':''}"><span class="t">💬 ${esc(q)}</span>
+        <span class="yn">
+          <button class="${v===1?'y':''}" data-or="${k}" data-v="1">있음</button>
+          <button class="${v===0?'n':''}" data-or="${k}" data-v="0">없음</button></span></div>`);
+    });
+  }
+  h.push(`</div>`);
 
   /* 주호소 */
   if(!S.sym){
@@ -336,7 +356,7 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-ct],[data-cd],[data-reset]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-ct],[data-cd],[data-reset]');
   if(!b) return; const d=b.dataset;
   if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; }
   else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; }
@@ -348,6 +368,7 @@ document.addEventListener('click',e=>{
   else if(d.edu){ S.edu=!S.edu; }
   else if(d.cs){ S.consc = S.consc===d.cs?null:d.cs; }
   else if(d.gd){ S.guard = S.guard===d.gd?null:d.gd; }
+  else if(d.or){ const v=+d.v; S.ori[d.or] = S.ori[d.or]===v?undefined:v; }
   else if(d.ct){ S.cath[d.ct]?delete S.cath[d.ct]:S.cath[d.ct]=[]; }
   else if(d.cd){ const a=S.cath[d.cd]||(S.cath[d.cd]=[]); const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
   view();
@@ -371,7 +392,7 @@ $('cp').onclick=()=>{
 };
 $('hm').onclick=()=>{
   if(!confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.')) return;
-  S={nm:'',id:'',edu:false,consc:null,guard:null,sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
+  S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
   try{localStorage.removeItem(KEY)}catch(e){}
   $('nm').value=''; $('id').value=''; $('scroll').scrollTop=0; view();
 };
