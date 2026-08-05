@@ -2,8 +2,21 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>NFH 통합 간호기록 V4 (260627)</title>
+
+<!-- ── 아이폰/안드로이드 「홈 화면에 추가」용 (260805) ──
+     아이폰 Safari는 로컬 file:// 을 못 열고, 홈 화면 추가도 http 주소에서만 된다.
+     내부망 서버에 올린 뒤 Safari → 공유 → [홈 화면에 추가] 하면 앱처럼 전체화면으로 뜬다. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="간호기록">
+<meta name="application-name" content="간호기록">
+<meta name="theme-color" content="#0a0e14">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230a0e14'/%3E%3Ctext x='90' y='84' font-size='64' text-anchor='middle'%3E%F0%9F%A9%BA%3C/text%3E%3Ctext x='90' y='136' font-size='34' font-family='-apple-system,sans-serif' font-weight='800' fill='%232ecc71' text-anchor='middle'%3ENFH%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%F0%9F%A9%BA%3C/text%3E%3C/svg%3E">
 <!-- V4: 17주호소 사정-진단-평가 + 도관13 + 의식/낙상. 다크/라이트·하단 드래그·표정척도(FPRS)·갤탭 가로. 진술문=마스터 원문. 데이터 정본=통합간호기록_사정진단평가_260626.xlsx -->
 <style>
 :root{--bg:#0a0e14;--panel:#12181f;--card:#1a212b;--card2:#222b38;--line:#2a3441;--tx:#e6edf3;--tx2:#8b97a7;--pos:#ff4d5e;--ok:#2ecc71;--ae:#4aa8ff;--d:#ff6b6b;--pe:#ffc857;}
@@ -12,6 +25,13 @@ body,.modal,.sheet,.mod,.card,.opt,.chip,.ccb,.dxc,.iv,.mchk,.tin{transition:bac
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;padding-bottom:38vh;font-size:16px;line-height:1.5}
 header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding:11px 16px;display:flex;align-items:center;gap:10px}
+/* 아이폰 노치·홈바 대응 (260805) — 전체화면으로 띄웠을 때 헤더가 노치에,
+   하단 시트가 홈 인디케이터에 가리는 것을 막는다 */
+header{padding-top:calc(11px + env(safe-area-inset-top));
+       padding-left:calc(16px + env(safe-area-inset-left));
+       padding-right:calc(16px + env(safe-area-inset-right))}
+.sheet{padding-bottom:env(safe-area-inset-bottom)}
+.modal{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 header .logo{font-weight:800;font-size:16px}.logo em{color:var(--ok);font-style:normal}.pat{font-size:12px;color:var(--tx2);margin-left:auto}
 main{max-width:520px;margin:0 auto;padding:14px}.sec{margin-bottom:18px}.sec-h{font-size:16px;font-weight:800;margin:4px 2px 10px}.sub{font-size:13px;color:var(--tx2);margin:-4px 2px 6px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px}
