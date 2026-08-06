@@ -430,8 +430,10 @@ function siteBlocks(){
    다만 신경학 경로에서는 답과 무관하게 6문을 다 띄운다 — 의식이 명료한
    뇌경색 환자에게 동공을 안 보면 안 되기 때문이다. */
 const BASE_C  = ['Q007','Q008','Q001'];                 /* 어지럼 · 호흡곤란 · 오심구토 */
-const NEU_ALW = ['Q174','Q013'];                        /* 의식수준 · 악력 */
-const NEU_MOR = ['Q010','Q011','Q012','Q101'];          /* 동공 · 빛반사 · 감각 · 명령수행 */
+/* 의식은 마무리 「의식 · 보호자」가 이미 묻는다(명료/15점 미만 → GCS → 지남력).
+   여기서 또 물으면 기록에 「의식수준 : alert」와 「의식 명료함」이 같이 남는다.
+   그래서 신경학 묶음에서 의식수준(Q174)을 뺐다. */
+const NEU_FULL = ['Q013','Q010','Q011','Q012','Q101'];  /* 악력 · 동공 · 빛반사 · 감각 · 명령수행 */
 const NEU_SET = ['두통(headache)','뇌경색뇌출혈 관련','지금 Seizure 할 때',
                  '이미 Seizure를 하고 멈춘뒤 내원할 때','어지럼','중독','의식섬망'];
 const stmtKey = q => ((D.qbank[q]||{}).stmts||[]).join('|');
@@ -444,17 +446,14 @@ function pickQ(canon){
   return canon;
 }
 const baseQs = ()=>BASE_C.map(pickQ);
-function neuroOpen(){                       /* 나머지 4문을 펼칠 때 */
-  if(NEU_SET.indexOf(S.set)>=0) return true;                  /* 신경학 경로는 무조건 */
-  const loc=S.ans[pickQ('Q174')];                             /* alert 아니면 이상 */
-  if(loc!==undefined && String(loc).trim() && String(loc).trim().toLowerCase()!=='alert') return true;
-  return NEU_ALW.some(c=>{ const q=pickQ(c); return q!==pickQ('Q174') && abnormal(q); });
-}
-const neuroQs = ()=>NEU_ALW.map(pickQ).concat(neuroOpen()?NEU_MOR.map(pickQ):[]);
+const isNeuroPath = ()=>NEU_SET.indexOf(S.set)>=0;
+/* 신경학 사정을 띄울 때 — 경로가 신경학이거나, 마무리에서 의식 저하를 눌렀을 때 */
+function neuroOpen(){ return isNeuroPath() || S.consc==='의식수준 저하됨'; }
+const neuroQs = ()=>neuroOpen()? NEU_FULL.map(pickQ) : [];
 /* 기본·신경학으로 올라간 문항은 경로 사정에서 빼 중복을 없앤다 */
 function symQs(){
   const st=setOf(S.set); if(!st) return [];
-  const up=new Set(baseQs().concat(NEU_ALW.map(pickQ),NEU_MOR.map(pickQ)));
+  const up=new Set(baseQs().concat(NEU_FULL.map(pickQ)));
   return [...new Set(st.dx.flatMap(d=>d.ae))].filter(q=>!up.has(q));
 }
 
@@ -548,7 +547,7 @@ function blocks(){
   if(st){
     /* 그 경로의 진단 근거인 문항은 진단 블록에 남긴다. 안 그러면 진단만 있고 사정이 빈다 */
     const dxq=new Set(st.dx.flatMap(d=>d.ae));
-    const bn=baseQs().concat(neuroQs()).filter(q=>!dxq.has(q))
+    const bn=baseQs().filter(q=>!dxq.has(q))
                      .map(q=>stmt(q,S.ans[q])).filter(Boolean);
     if(S.closing){ const c=(D.closing||[]).find(x=>x.sel===S.closing); if(c&&c.rec) bn.push(c.rec); }
     if(bn.length) out.push({t:'기본 사정', ae:[...new Set(bn)], dx:'', pe:[]});
@@ -591,7 +590,11 @@ function blocks(){
   });
   /* 진단이 안 붙은 「사정」 블록은 하나로 합친다 */
   for(let i=out.length-1;i>0;i--){
-    if(!out[i].dx && !out[i-1].dx){ out[i-1].ae=out[i-1].ae.concat(out[i].ae); out.splice(i,1); }
+    if(!out[i].dx && !out[i-1].dx){
+      out[i-1].ae=out[i-1].ae.concat(out[i].ae);
+      if(out[i-1].t!==out[i].t) out[i-1].t='사정';   /* 「기본 사정」에 경로 사정이 섞이면 그냥 사정 */
+      out.splice(i,1);
+    }
   }
   /* 맞이교육 + 의식 + 보호자 → 낙상위험. 항상 기록 맨 끝에 온다 */
   if(S.edu || S.consc || S.guard){
@@ -603,6 +606,10 @@ function blocks(){
       if(g!==null) ae.push('Glasgow Coma Scale : '+g);
       ae.push(g===15 ? '의식 명료함' : '의식수준 저하됨');
     }
+    /* 신경학 소견 — 진단 근거인 것은 그 진단 블록에 이미 들어갔다 */
+    const dxq2=new Set(st? st.dx.flatMap(d=>d.ae) : []);
+    neuroQs().filter(q=>!dxq2.has(q)).forEach(q=>{
+      const t=stmt(q,S.ans[q]); if(t && !used.has(t)){ used.add(t); ae.push(t); } });
     ORI.forEach(([k])=>{ if(S.ori[k]!==undefined)
       ae.push(`${ORINM[k]}에 대한 지남력 ${S.ori[k]===1?'있음':'없음'}`); });
     if(S.guard) ae.push(S.guard);
@@ -707,6 +714,11 @@ function view(){
         <button class="b wide ${S.guard==='보호자 동행하지 않음'?'on':''}" data-gd="보호자 동행하지 않음">없음</button>
       </div></div>
     </div>`);
+  /* 의식이 떨어졌으면 여기서 신경학을 본다. 경로가 신경학이면 위에서 이미 물었다 */
+  if(S.consc==='의식수준 저하됨' && !isNeuroPath() && st){
+    h.push(`<p class="lb hot" style="margin-top:14px">🧠 신경학 — 의식이 떨어져 확인합니다</p>`);
+    NEU_FULL.map(pickQ).forEach(q=>h.push(qRow(q)));
+  }
   /* 15점 미만이면 GCS 점수를 매긴다 — 한 줄 목록, 고른 것만 설명이 펼쳐진다 */
   if(S.consc==='의식수준 저하됨'){
     const sum=gcsSum();
@@ -778,12 +790,12 @@ function view(){
     const sq=symQs();
     if(sq.length){ h.push(`<p class="lb" style="margin-top:14px">${esc(S.s1||S.sym)}</p>`);
                    sq.forEach(q=>h.push(qRow(q))); }
-    /* 신경학 — 평소 2문, 이상하거나 신경학 경로면 6문 */
-    const nOpen=neuroOpen(), fixed=NEU_SET.indexOf(S.set)>=0;
-    h.push(`<p class="lb ${nOpen?'hot':''}" style="margin-top:14px">🧠 신경학${
-      fixed?' — 이 경로는 항상 6문':(nOpen?' — 이상이 보입니다':'')}</p>`);
-    neuroQs().forEach(q=>h.push(qRow(q)));
-    if(!nOpen) h.push(`<p class="hint">둘 다 정상이라 동공 · 빛반사 · 감각 · 명령수행은 뜨지 않습니다</p>`);
+    /* 신경학 — 이 경로가 신경학일 때만 여기서 묻는다.
+       그 외에는 마무리에서 의식 저하를 누를 때 거기서 뜬다 */
+    if(isNeuroPath()){
+      h.push(`<p class="lb" style="margin-top:14px">🧠 신경학 — 이 경로는 항상 확인합니다</p>`);
+      NEU_FULL.map(pickQ).forEach(q=>h.push(qRow(q)));
+    }
     /* 🤕 부위 · 상황 — 고른 것이 진단·문항을 데려온다 */
     detGroups().forEach(g=>{
       const on=detOn(g);
