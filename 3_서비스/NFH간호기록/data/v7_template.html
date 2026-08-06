@@ -1336,6 +1336,9 @@ $('bk').onclick=()=>{
   $('scroll').scrollTop=0; view();
 };
 $('cclose').onclick=()=>$('csheet').classList.add('hide');
+/* 오프라인 캐시 — https 일 때만 켜진다. 맥미니가 꺼져도 앱이 열린다 */
+if('serviceWorker' in navigator && window.isSecureContext)
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 $('nm').value=S.nm; $('id').value=S.id;
 $('gedu').classList.toggle('on', !!S.edu); gval();
 if(S.nm && S.id && S.edu) $('gate').classList.add('hide');
