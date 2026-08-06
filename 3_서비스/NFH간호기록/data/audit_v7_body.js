@@ -32,7 +32,7 @@ function 다답(mode){ let i=0;
   if(needSmc())['s','m','c'].forEach(k=>{if(!p.smc[k]){click({psmc:'1',k,v:'양호함'});hit=true;}});
   if(!S.closing&&(D.closing||[]).length){click({cl:D.closing[0].sel});hit=true;}
   if(!hit)break; } }
-const 꼬리=/(있음|없음|됨|안됨|함|못함|못 봄|봄|증가함|감소함|변화 없음|상승함|하강함|저하됨|약함|강함)$/;
+const 꼬리=/(있음|없음|됨|안됨|함|못함|못 봄|봄|증가함|증가됨|감소함|감소됨|변화 없음|상승함|상승됨|하강함|하강됨|저하됨|저하함|떨어짐|약함|강함|촉지됨|보임)$/;
 const 뿌리=t=>t.replace(꼬리,'').replace(/[\s:,]+$/,'').trim();
 const 기록사정=()=>blocks().flatMap(b=>b.ae||[]).map(x=>x.replace(/\([^)]*\)$/,'').trim());
 const R={모순:[],중복:[],글씨:[],누락:[],빈진단:[],순서:[],오류:[],미완:[]};
