@@ -96,6 +96,12 @@ input{font:inherit}
   details.extra>summary{cursor:pointer;font-size:14px;font-weight:800;color:var(--ac);list-style:none}
   details.extra>summary::-webkit-details-marker{display:none}
   details.extra>summary b{background:var(--ac);color:var(--on);border-radius:20px;padding:1px 8px;font-size:12px}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));
+    z-index:300;background:var(--ink);color:var(--card);border-radius:12px;padding:13px 18px;
+    font-size:15px;font-weight:700;max-width:86vw;text-align:center;line-height:1.5;white-space:pre-line;
+    box-shadow:0 8px 26px -8px rgba(0,0,0,.5)}
+  .toast.hide{display:none}
+  .toast.warn{background:var(--warn);color:#fff}
   .sch{width:100%;border:1.5px solid var(--line);background:var(--sunk);border-radius:11px;
     padding:12px 13px;font-size:16px;font-family:inherit;color:var(--ink);outline:none}
   .sch:focus{border-color:var(--ac);background:var(--card)}
@@ -238,6 +244,18 @@ details summary::-webkit-details-marker{display:none}
 
 <div id="scroll"><div class="w" id="w"></div></div>
 
+<div class="toast hide" id="toast"></div>
+
+<div class="gate hide" id="ask">
+  <div class="gbox" style="max-width:380px">
+    <h1 id="askmsg" style="font-size:18px;line-height:1.5;white-space:pre-line"></h1>
+    <div style="display:flex;gap:9px;margin-top:16px">
+      <button class="ggo" id="askno" style="flex:1">아니오</button>
+      <button class="ggo on" id="askyes" style="flex:1">예</button>
+    </div>
+  </div>
+</div>
+
 <div class="gate hide" id="csheet">
   <div class="gbox" style="max-width:520px">
     <h1>📋 길게 눌러 복사</h1>
@@ -252,6 +270,18 @@ details summary::-webkit-details-marker{display:none}
 const D=window.NFH_V6, $=i=>document.getElementById(i);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const KEY='nfh_v7', HKEY='nfh_v7_hist', HMAX=10;
+/* Documents 같은 앱 내장 브라우저는 alert()·confirm() 을 무시하거나
+   confirm() 이 undefined 를 돌려준다. undefined 는 「취소」로 읽혀 홈버튼이 안 먹었다.
+   네이티브 창을 쓰지 않고 화면 안에서 처리한다 */
+function toast(msg, kind){
+  const t=$('toast'); if(!t) return;
+  t.textContent=msg; t.className='toast'+(kind?' '+kind:'');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>{ t.className='toast hide'; }, 2800);
+}
+function ask(msg, yes){
+  const w=$('ask'); if(!w){ yes(); return; }
+  $('askmsg').textContent=msg; w.classList.remove('hide'); ask._yes=yes;
+}
 /* 이름 가리기 — 가운데를 O로. 두 글자는 끝자, 네 글자 이상은 앞 두 글자와 끝자만 남긴다 */
 function maskName(n){
   n=String(n||'').trim(); if(!n) return '';
@@ -1161,7 +1191,7 @@ document.addEventListener('click',e=>{
   else if(d.go){ S.sym=d.go; S.s1=d.g1||''; S.s2=d.g2||''; S.set='';
                  S.ans={}; S.pain=PAIN0(); S.closing=''; S.q=''; }
   else if(d.hist){ const x=hist()[+d.hist];
-    if(x) copyText(x.t, ()=>alert(x.nm+' '+x.id+'\n다시 복사했습니다.')); }
+    if(x) copyText(x.t, ()=>toast(x.nm+' '+x.id+'\n다시 복사했습니다.')); }
   else if(d.cl){ S.closing = S.closing===d.cl?'':d.cl; }
   else if(d.site){ tog(S.det[d.site]||(S.det[d.site]=[]), d.v); }
   else if(d.ppart){ const p=pn(); tog(p.parts,d.v); if(p.parts.indexOf(d.v)<0) delete p.subs[d.v]; }
@@ -1226,9 +1256,9 @@ document.addEventListener('input',e=>{
 });
 $('cp').onclick=()=>{
   const m=missing();
-  if(m.length){ alert('아직 '+m.length+'개 남았습니다.\n\n'+m.slice(0,8).join('\n')+(m.length>8?'\n…':'')); return; }
+  if(m.length){ toast('아직 '+m.length+'개 남았습니다\n'+m.slice(0,4).join(' · ')+(m.length>4?' …':''),'warn'); return; }
   const t=text();
-  if(!t){alert('아직 기록이 없습니다.');return;}
+  if(!t){toast('아직 기록이 없습니다','warn');return;}
   const done=()=>{const b=$('cp');b.textContent='✅ 복사됨';b.classList.add('done');
     setTimeout(()=>{b.textContent='📤 복사';b.classList.remove('done')},1600);};
   histSave({nm:maskName(S.nm), id:S.id, t:t,
@@ -1283,20 +1313,19 @@ $('ggo').onclick=()=>{
   S.nm=$('nm').value.trim(); S.id=$('id').value.trim();
   $('gate').classList.add('hide'); view();
 };
-$('hm').onclick=()=>{
-  let ok=true;
-  try{ ok=confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.'); }
-  catch(e){ ok=true; }          /* 아이폰 홈 화면 앱에서 confirm 이 막히면 그냥 진행 */
-  if(!ok) return;
+$('hm').onclick=()=>ask('새 환자로 시작할까요?\n지금 기록은 지워집니다.', ()=>{
   S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:'',
       pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',q:'',cathDone:false,cathAll:false};
   try{localStorage.removeItem(KEY)}catch(e){}
   $('csheet').classList.add('hide');
   $('nm').value=''; $('id').value=''; $('scroll').scrollTop=0;
   $('gate').classList.remove('hide'); $('gedu').classList.remove('on'); gval(); $('nm').focus(); view();
-};
+});
+$('askyes').onclick=()=>{ $('ask').classList.add('hide'); const f=ask._yes; ask._yes=null; if(f) f(); };
+$('askno').onclick =()=>{ $('ask').classList.add('hide'); ask._yes=null; };
 /* 뒤로 — 한 단계씩 되짚는다. 처음이면 도관 화면으로 */
 $('bk').onclick=()=>{
+  if(!$('ask').classList.contains('hide')){ $('ask').classList.add('hide'); ask._yes=null; return; }
   if(!$('csheet').classList.contains('hide')){ $('csheet').classList.add('hide'); return; }
   if(S.s2)          S.s2='';
   else if(S.s1)   { S.s1=''; S.set=''; }
