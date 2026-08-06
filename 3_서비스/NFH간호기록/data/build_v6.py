@@ -141,7 +141,9 @@ for r in rows('2.사정세트'):
         except (TypeError, ValueError): ordv = 99
         P['items'].append(('ae', qid, link, ordv))
     elif 과 == 'P&E':
-        P['items'].append(('pe', canon(raw, where), link, 99))
+        try: pord = int(r.get('순서') or 99)
+        except (TypeError, ValueError): pord = 99
+        P['items'].append(('pe', canon(raw, where), link, pord))
 
 # 진단별 배치 (진단연결 사용, '공통'은 전 진단에)
 # 진단명은 canon으로 마스터 원문이 되는데(「비효율적 호흡양상」→「비효율적호흡양상」)
@@ -151,7 +153,8 @@ for r in rows('2.사정세트'):
 # 흉통 환자에게 dizziness가 먼저 나오던 이유가 이것이었다.
 for 소, P in PATHSET.items():
     ae = sorted([x for x in P['items'] if x[0] == 'ae'], key=lambda x: x[3])
-    P['items'] = ae + [x for x in P['items'] if x[0] != 'ae']
+    pe = sorted([x for x in P['items'] if x[0] != 'ae'], key=lambda x: x[3])
+    P['items'] = ae + pe
     names = list(P['dx'].keys())
     nmap = {nspc(n): n for n in names}
     for kind, val, link, _o in P['items']:
