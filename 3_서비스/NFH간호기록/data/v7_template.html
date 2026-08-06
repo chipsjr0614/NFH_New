@@ -762,7 +762,7 @@ function view(){
     Object.keys(D.syms).forEach(s=>{
       const y=D.syms[s], key=y.cat||'기타';
       let c=cats.find(x=>x.k===key);
-      if(!c){ c={k:key, ic:y.catIc||'', no:y.catNo||99, list:[]}; cats.push(c); }
+      if(!c){ c={k:key, ic:y.catIc||'', no:(y.catNo==null?99:y.catNo), list:[]}; cats.push(c); }
       c.list.push(s);
     });
     cats.sort((a,b)=>a.no-b.no);
