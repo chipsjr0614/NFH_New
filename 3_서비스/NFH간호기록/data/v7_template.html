@@ -90,6 +90,10 @@ input{font:inherit}
 .lb.hot{color:var(--warn)}
   .warn3{background:var(--warnb,#FBEAE1);border:1px solid var(--warn,#B03A0B);border-radius:10px;
     padding:11px 13px;font-size:13.5px;line-height:1.5;margin-bottom:9px}
+  details.extra{border:1.5px dashed var(--line);border-radius:11px;padding:10px 12px;margin-top:14px}
+  details.extra>summary{cursor:pointer;font-size:14px;font-weight:800;color:var(--ac);list-style:none}
+  details.extra>summary::-webkit-details-marker{display:none}
+  details.extra>summary b{background:var(--ac);color:var(--on);border-radius:20px;padding:1px 8px;font-size:12px}
   .cat{font-size:12.5px;font-weight:800;letter-spacing:-.01em;color:var(--ink2);
     margin:15px 0 7px;display:flex;align-items:center;gap:7px}
   .cat:first-of-type{margin-top:2px}
@@ -343,7 +347,8 @@ const shortLab=ss=>{
 const P=D.pain||{}, SITES=D.sites||{}, ABN=D.abnormal||[];
 const NRS=[0,1,2,3,4,5,6,7,8,9,10];
 const FACES=[['😀',0],['🙂',2],['😐',4],['😣',6],['😫',8],['😭',10]];  /* Wong-Baker */
-const SITELB={'외상부위':'🤕 어디를 다치셨어요?','피부상황':'🧴 어떤 피부 문제인가요?',
+const SITELB={'외상부위':'🤕 어디를 다치셨어요?','피부상황':'🧴 피부에 뭐가 있나요?',
+              '추가상태':'🟡 그 밖에 확인된 것',
               '온열노출':'🥵 어떤 상황이었나요?','한랭노출':'🧊 어떤 상황이었나요?',
               '노출경로':'☠️ 어떻게 노출됐나요?'};
 const pn=()=>S.pain||(S.pain=PAIN0());
@@ -370,9 +375,14 @@ function detGroups(){ const st=setOf(S.set); if(!st) return [];
   const g={}; Object.keys(st.det||{}).forEach(q=>{ const t=st.det[q]; if(SITES[t]) g[t]=1; });
   return Object.keys(g); }
 const detOn=g=>S.det[g]||[];
+/* 경로와 무관하게 늘 열 수 있는 묶음. 배가 아파서 온 환자가 뱀에 물렸을 수도 있다.
+   경로가 이미 그 묶음을 쓰고 있으면 두 번 보여주지 않는다. */
+const EXTRA=['피부상황','추가상태'];
+const extraGroups = ()=>EXTRA.filter(g=>SITES[g] && detGroups().indexOf(g)<0);
 const sitesOf=g=>(SITES[g]||[]).filter(x=>detOn(g).indexOf(x.v)>=0);
 /* 고른 부위·상황이 데려오는 사정 문항 */
-function detQs(){ return detGroups().flatMap(g=>sitesOf(g).flatMap(x=>x.ae||[])); }
+const allDetGroups = ()=>detGroups().concat(extraGroups());
+function detQs(){ return allDetGroups().flatMap(g=>sitesOf(g).flatMap(x=>x.ae||[])); }
 /* 앞의 답이 신경학적으로 이상하면 뒤에 문항이 하나 붙는다 (10.후속사정) */
 const abnormal=q=>{ const t=stmt(q,S.ans[q]); return !!t&&ABN.indexOf(t)>=0; };
 function followOf(){
@@ -418,9 +428,9 @@ function painLines(){
 /* 고른 부위·상황의 진단·중재가 따라온다 */
 function siteBlocks(){
   const by={};
-  detGroups().forEach(g=>sitesOf(g).forEach(x=>{
-    if(!x.dx) return;
-    const b=by[x.dx]||(by[x.dx]={ae:[],pe:[],site:x.v});
+  allDetGroups().forEach(g=>sitesOf(g).forEach(x=>{
+    const key=x.dx||'';                       /* 진단 없는 항목은 사정만 */
+    const b=by[key]||(by[key]={ae:[],pe:[],site:(g==='추가상태'?'':x.v)});
     (x.ae||[]).forEach(q=>{ const t=stmt(q,S.ans[q]); if(t&&b.ae.indexOf(t)<0) b.ae.push(t); });
     (x.pe||[]).forEach(t=>{ if(b.pe.indexOf(t)<0) b.pe.push(t); });
   }));
@@ -582,20 +592,21 @@ function blocks(){
   /* 고른 부위·상황이 데려온 진단 — 진술문 뒤에 (부위)를 붙인다 */
   const sb=siteBlocks();
   Object.keys(sb).forEach(nm=>{
-    if(!on(nm)) return;
+    if(nm && !on(nm)) return;
     const b=sb[nm];
-    const ae=b.ae.map(t=>t+'('+b.site+')').filter(t=>!used.has(t));
+    const ae=b.ae.map(t=>b.site? t+'('+b.site+')' : t).filter(t=>!used.has(t));
     ae.forEach(t=>used.add(t));
-    if(ae.length||b.pe.length){
-      const ex=out.find(x=>x.dx===nm);
-      if(ex){ ex.ae=ex.ae.concat(ae); b.pe.forEach(t=>{ if(ex.pe.indexOf(t)<0) ex.pe.push(t); }); }
-      else out.push({t:nm,ae,dx:nm,pe:b.pe});
-    }
+    if(!ae.length && !b.pe.length) return;
+    if(!nm){ out.push({t:'사정', ae, dx:'', pe:b.pe}); return; }  /* 황달처럼 진단이 없는 것 */
+    const ex=out.find(x=>x.dx===nm);
+    if(ex){ ex.ae=ex.ae.concat(ae); b.pe.forEach(t=>{ if(ex.pe.indexOf(t)<0) ex.pe.push(t); }); }
+    else out.push({t:nm,ae,dx:nm,pe:b.pe});
   });
   /* 진단이 안 붙은 「사정」 블록은 하나로 합친다 */
   for(let i=out.length-1;i>0;i--){
     if(!out[i].dx && !out[i-1].dx){
       out[i-1].ae=out[i-1].ae.concat(out[i].ae);
+      (out[i].pe||[]).forEach(t=>{ if((out[i-1].pe||[]).indexOf(t)<0) (out[i-1].pe=out[i-1].pe||[]).push(t); });
       if(out[i-1].t!==out[i].t) out[i-1].t='사정';   /* 「기본 사정」에 경로 사정이 섞이면 그냥 사정 */
       out.splice(i,1);
     }
@@ -688,6 +699,7 @@ function missing(){
     allQs().forEach(q=>{ if(S.ans[q]===undefined)
       m.push((D.qbank[q]||{q:q}).q.replace(/^["“]|["”]$/g,'').slice(0,22)); });
     detGroups().forEach(g=>{ if(!detOn(g).length) m.push(SITELB[g]||g); });
+    /* 추가 상태는 고르면 그 문항만 필수, 안 고르면 요구하지 않는다 */
     /* 통증이 확인되면 다 물어봐야 한다 — 놓치면 HIS 기록이 빈다 */
     if(isPainCase()&&painFound()){
       const p=pn();
@@ -806,6 +818,22 @@ function view(){
     const sq=symQs();
     if(sq.length){ h.push(`<p class="lb" style="margin-top:14px">${esc(S.s1||S.sym)}</p>`);
                    sq.forEach(q=>h.push(qRow(q))); }
+    /* ＋ 다른 것도 있어요 — 어느 경로에서나. 필수가 아니라 접어둔다 */
+    const eg=extraGroups();
+    if(eg.length){
+      const picked=eg.reduce((a,g)=>a+detOn(g).length,0);
+      h.push(`<details class="extra" ${picked?'open':''}><summary>＋ 다른 것도 있어요${
+        picked?` <b>${picked}</b>`:''}</summary><div style="padding-top:6px">`);
+      eg.forEach(g=>{
+        const on2=detOn(g);
+        h.push(`<p class="hint" style="margin:8px 0 6px">${esc(SITELB[g]||g)}</p><div class="row">`
+          +(SITES[g]||[]).map(x=>`<button class="b ${on2.indexOf(x.v)>=0?'on':''}" data-site="${esc(g)}" data-v="${esc(x.v)}">${x.ic} ${esc(x.v)}</button>`).join('')+`</div>`);
+        sitesOf(g).forEach(x=>{ if(!(x.ae||[]).length) return;
+          h.push(`<p class="hint" style="margin:10px 0 6px">${x.ic} ${esc(x.v)}</p>`);
+          x.ae.forEach(q=>h.push(qRow(q))); });
+      });
+      h.push(`</div></details>`);
+    }
     /* 신경학 — 이 경로가 신경학일 때만 여기서 묻는다.
        그 외에는 마무리에서 의식 저하를 누를 때 거기서 뜬다 */
     if(isNeuroPath()){
