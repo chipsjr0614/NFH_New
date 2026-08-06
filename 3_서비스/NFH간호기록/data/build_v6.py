@@ -327,7 +327,11 @@ for r in rows('1.주호소트리'):
     if not nm: continue
     SYMS.setdefault(nm, {'id': sid, 'icon': str(r.get('아이콘') or '').strip(),
                          'q1': str(r.get('질문1') or '').strip(),
-                         'q2': str(r.get('질문2') or '').strip()})
+                         'q2': str(r.get('질문2') or '').strip(),
+                         # 화면에서 주호소를 묶는 표시용 분류. 대분류(사정세트 연결 키)와 다르다
+                         'cat': str(r.get('카테고리') or '').strip(),
+                         'catIc': str(r.get('카테고리아이콘') or '').strip(),
+                         'catNo': int(r.get('카테고리순서') or 99)})
     BRANCH.append({'sym': nm,
                    'sel1': str(r.get('선택1') or '').strip(),
                    'sel2': str(r.get('선택2') or '').strip(),
