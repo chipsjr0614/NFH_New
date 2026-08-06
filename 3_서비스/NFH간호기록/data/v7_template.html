@@ -966,11 +966,25 @@ function view(){
           if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
         if(bag.join(' ').toLowerCase().indexOf(kw)>=0)
           hit.push({b,path,dx:st.dx.map(d=>d.name).join(' + ')}); });
-      h.push(`<div class="sec">`+(hit.length
-        ? `<p class="lb">🔍 ${hit.length}개 찾음</p><div class="col">`
-          + hit.slice(0,20).map(x=>`<button class="bv" data-go="${esc(x.b.sym)}" data-g1="${esc(x.b.sel1||'')}" data-g2="${esc(x.b.sel2||'')}"><b>${esc(x.path)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.dx)}</span></button>`).join('')
-          + `</div>`
-        : `<p class="hint">찾는 것이 없습니다. 아래에서 골라주세요.</p>`)+`</div>`);
+      /* 부위·상황·추가상태도 찾는다. 「벌에 쏘였다」가 경로에는 없고 여기 있다 */
+      const hit2=[];
+      Object.keys(SITES).forEach(g=>SITES[g].forEach(x=>{
+        const bag=[g,x.v,x.note||'',x.dx||''];
+        (x.ae||[]).forEach(q=>{ const v=D.qbank[q]; if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
+        (x.pe||[]).forEach(t=>bag.push(t));
+        if(bag.join(' ').toLowerCase().indexOf(kw)>=0) hit2.push({g,x});
+      }));
+      h.push(`<div class="sec">`+((hit.length||hit2.length)? '' : `<p class="hint">찾는 것이 없습니다. 아래에서 골라주세요.</p>`)
+        + (hit2.length
+          ? `<p class="lb">🔍 이런 것이 있나요? ${hit2.length}개</p><div class="col">`
+            + hit2.slice(0,12).map(({g,x})=>`<button class="bv ${(S.det[g]||[]).includes(x.v)?'on':''}" data-pick="${esc(g)}" data-v="${esc(x.v)}">
+                 <b>${x.ic} ${esc(x.v)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(SITELB[g]||g)}${x.dx?' · '+esc(x.dx):''}${x.note?' · '+esc(String(x.note).split('(')[0].trim()):''}</span></button>`).join('')
+            + `</div>` : '')
+        + (hit.length
+          ? `<p class="lb" style="margin-top:14px">🩺 주호소 ${hit.length}개</p><div class="col">`
+            + hit.slice(0,20).map(x=>`<button class="bv" data-go="${esc(x.b.sym)}" data-g1="${esc(x.b.sel1||'')}" data-g2="${esc(x.b.sel2||'')}"><b>${esc(x.path)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.dx)}</span></button>`).join('')
+            + `</div>` : '')
+        + `</div>`);
     }
     /* 지난 환자 — 복사한 기록을 10명까지 남겨 다시 꺼낼 수 있다 */
     { const hs=hist();
@@ -978,6 +992,9 @@ function view(){
         + hs.map((x,i)=>`<button class="bv" data-hist="${i}"><b>${esc(x.nm)} ${esc(x.id)}</b>
              <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.sym||'')} · ${esc(x.at||'')}</span></button>`).join('')
         + `</div></details>`); }
+    { const picked=Object.keys(S.det).flatMap(g=>(S.det[g]||[]).map(v=>({g,v})));
+      if(picked.length) h.push(`<div class="sec"><p class="hint" style="background:var(--soft);border:1px solid var(--edge);border-radius:10px;padding:10px 12px">
+        ✅ ${picked.map(x=>esc(x.v)).join(' · ')} 켜뒀습니다 — 주호소를 고르면 함께 기록됩니다</p></div>`); }
     h.push(`<div class="sec"><p class="lb">어디가 불편해서 오셨어요?</p>`
       + cats.map(c=>`<p class="cat">${esc(c.ic)} ${esc(c.k)}</p><div class="row">`
           + c.list.map(s=>`<button class="b" data-sym="${esc(s)}">${esc(D.syms[s].icon||'')} ${esc(s)}</button>`).join('')
@@ -1120,12 +1137,14 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-cdone],[data-ct],[data-cd],[data-reset],[data-cl],[data-go],[data-hist],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-cdone],[data-ct],[data-cd],[data-reset],[data-cl],[data-go],[data-pick],[data-hist],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
   if(!b) return; const d=b.dataset;
   const tog=(arr,v)=>{ const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1); return arr; };
   if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
+  else if(d.pick){ const a=S.det[d.pick]||(S.det[d.pick]=[]);
+                   const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
   else if(d.go){ S.sym=d.go; S.s1=d.g1||''; S.s2=d.g2||''; S.set='';
-                 S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; S.q=''; }
+                 S.ans={}; S.pain=PAIN0(); S.closing=''; S.q=''; }
   else if(d.hist){ const x=hist()[+d.hist];
     if(x){ if(navigator.clipboard) navigator.clipboard.writeText(x.t).catch(()=>prompt('길게 눌러 복사:',x.t));
            else prompt('길게 눌러 복사:',x.t);
@@ -1147,7 +1166,7 @@ document.addEventListener('click',e=>{
   else if(d.pclr){ pn().parts=[]; pn().subs={}; }
   else if(d.pw){ const w=S.power||(S.power={arm:null,leg:null}); w[d.pw]= w[d.pw]===d.v?null:d.v; }
   else if(d.sd){ S.stoolD = S.stoolD===d.sd?'':d.sd; }
-  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
+  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
   else if(d.s1){ S.s1=d.s1; S.s2=''; }
   else if(d.s2){ S.s2=d.s2; }
   else if(d.ck){ S.ans[d.ck] = S.ans[d.ck]===true?undefined:true; }
