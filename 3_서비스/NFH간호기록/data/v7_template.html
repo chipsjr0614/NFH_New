@@ -87,7 +87,10 @@ input{font:inherit}
 .b{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:11px 13px;
   font-size:14.5px;font-weight:700;color:var(--ink2);min-height:46px;display:inline-flex;align-items:center}
 .b.on{background:var(--ink);border-color:var(--ink);color:var(--card)}
-.nrs .b{flex:1;min-width:0;padding:11px 4px;justify-content:center;font-variant-numeric:tabular-nums}
+.lb.hot{color:var(--warn)}
+  .warn3{background:var(--warnb,#FBEAE1);border:1px solid var(--warn,#B03A0B);border-radius:10px;
+    padding:11px 13px;font-size:13.5px;line-height:1.5;margin-bottom:9px}
+  .nrs .b{flex:1;min-width:0;padding:11px 4px;justify-content:center;font-variant-numeric:tabular-nums}
   .b.wide{flex:1;min-width:132px;justify-content:center}
 .b.gh{border-style:dashed;color:var(--ac)}
 /* 분기 선택지 — 문장이 길어 가로로 잘리므로 한 줄에 하나씩 */
@@ -378,7 +381,7 @@ function followOf(){
 function allQs(){
   const st=setOf(S.set); if(!st) return [];
   return [...new Set([].concat(
-    st.dx.flatMap(d=>d.ae), detQs(),
+    baseQs(), symQs(), neuroQs(), detQs(),
     followOf().flatMap(f=>f.ae||[]),
     painFound()?(P.ae||[]).filter(q=>P.grp[q]!=='투여후'):[] ))];
 }
@@ -418,6 +421,41 @@ function siteBlocks(){
     (x.pe||[]).forEach(t=>{ if(b.pe.indexOf(t)<0) b.pe.push(t); });
   }));
   return by;
+}
+
+/* ══════ 기본 3문 · 신경학 ══════
+   어지럼·호흡곤란·오심구토는 60개 세트 중 30·14·15곳이 이미 따로 묻고 있었다.
+   흩어져 있던 것을 위로 올려 누구에게나 한 번만 묻는다.
+   신경학은 평소 2문(의식수준·악력)만 묻고, 이상하면 나머지 4문이 따라 나온다.
+   다만 신경학 경로에서는 답과 무관하게 6문을 다 띄운다 — 의식이 명료한
+   뇌경색 환자에게 동공을 안 보면 안 되기 때문이다. */
+const BASE_C  = ['Q007','Q008','Q001'];                 /* 어지럼 · 호흡곤란 · 오심구토 */
+const NEU_ALW = ['Q174','Q013'];                        /* 의식수준 · 악력 */
+const NEU_MOR = ['Q010','Q011','Q012','Q101'];          /* 동공 · 빛반사 · 감각 · 명령수행 */
+const NEU_SET = ['두통(headache)','뇌경색뇌출혈 관련','지금 Seizure 할 때',
+                 '이미 Seizure를 하고 멈춘뒤 내원할 때','어지럼','중독','의식섬망'];
+const stmtKey = q => ((D.qbank[q]||{}).stmts||[]).join('|');
+/* 같은 진술문을 쓰는 문항이 경로에 이미 있으면 그것을 쓴다.
+   문구가 경로마다 달라(「어지러우세요?」/「어지럽거나 핑 도는…」) 통합하면 임상 문구가 바뀐다 */
+function pickQ(canon){
+  const st=setOf(S.set);
+  if(st){ const k=stmtKey(canon);
+    for(const d of st.dx) for(const q of d.ae) if(stmtKey(q)===k) return q; }
+  return canon;
+}
+const baseQs = ()=>BASE_C.map(pickQ);
+function neuroOpen(){                       /* 나머지 4문을 펼칠 때 */
+  if(NEU_SET.indexOf(S.set)>=0) return true;                  /* 신경학 경로는 무조건 */
+  const loc=S.ans[pickQ('Q174')];                             /* alert 아니면 이상 */
+  if(loc!==undefined && String(loc).trim() && String(loc).trim().toLowerCase()!=='alert') return true;
+  return NEU_ALW.some(c=>{ const q=pickQ(c); return q!==pickQ('Q174') && abnormal(q); });
+}
+const neuroQs = ()=>NEU_ALW.map(pickQ).concat(neuroOpen()?NEU_MOR.map(pickQ):[]);
+/* 기본·신경학으로 올라간 문항은 경로 사정에서 빼 중복을 없앤다 */
+function symQs(){
+  const st=setOf(S.set); if(!st) return [];
+  const up=new Set(baseQs().concat(NEU_ALW.map(pickQ),NEU_MOR.map(pickQ)));
+  return [...new Set(st.dx.flatMap(d=>d.ae))].filter(q=>!up.has(q));
 }
 
 /* 문항 한 줄 — 경로 사정 · 부위상세 · 후속사정 · 통증이 모두 이 모양을 쓴다 */
@@ -506,9 +544,18 @@ function blocks(){
   const cs=Object.keys(S.cath).filter(k=>(S.cath[k]||[]).length);
   if(cs.length) out.push({t:'도관', ae:cs.flatMap(k=>S.cath[k]), dx:'', pe:[]});
   const st=setOf(S.set);
+  /* 기본 3문 · 신경학은 특정 진단의 것이 아니라 누구에게나 묻는 것이라 따로 앞에 둔다 */
+  if(st){
+    /* 그 경로의 진단 근거인 문항은 진단 블록에 남긴다. 안 그러면 진단만 있고 사정이 빈다 */
+    const dxq=new Set(st.dx.flatMap(d=>d.ae));
+    const bn=baseQs().concat(neuroQs()).filter(q=>!dxq.has(q))
+                     .map(q=>stmt(q,S.ans[q])).filter(Boolean);
+    if(S.closing){ const c=(D.closing||[]).find(x=>x.sel===S.closing); if(c&&c.rec) bn.push(c.rec); }
+    if(bn.length) out.push({t:'기본 사정', ae:[...new Set(bn)], dx:'', pe:[]});
+  }
   /* 같은 사정이 여러 진단에 걸려 있으면 앞 블록에만 넣는다.
      안 그러면 dizziness·기침이 진단마다 반복돼 읽기 어렵다 */
-  const used=new Set();
+  const used=new Set(out.flatMap(b=>b.ae));
   if(st) st.dx.forEach(dx=>{
     if(!on(dx.name)) return;
     const ae=dx.ae.map(q=>stmt(q,S.ans[q])).filter(Boolean).filter(x=>!used.has(x));
@@ -546,9 +593,6 @@ function blocks(){
   for(let i=out.length-1;i>0;i--){
     if(!out[i].dx && !out[i-1].dx){ out[i-1].ae=out[i-1].ae.concat(out[i].ae); out.splice(i,1); }
   }
-  /* 마무리질문 답 */
-  if(S.closing){ const c=(D.closing||[]).find(x=>x.sel===S.closing);
-    if(c&&c.rec&&!used.has(c.rec)){ used.add(c.rec); out.push({t:'사정',ae:[c.rec],dx:'',pe:[]}); } }
   /* 맞이교육 + 의식 + 보호자 → 낙상위험. 항상 기록 맨 끝에 온다 */
   if(S.edu || S.consc || S.guard){
     const ae=[];
@@ -729,8 +773,17 @@ function view(){
   if(st){
     const path=[S.sym,S.s1,S.s2].filter(Boolean).join(' › ');
     h.push(`<div class="sec"><p class="lb">${esc(path)} <button class="b gh" data-reset="1" style="padding:4px 9px;min-height:0;font-size:12px">바꾸기</button></p>`);
-    const qs=[...new Set(st.dx.flatMap(d=>d.ae))];
-    qs.forEach(q=>h.push(qRow(q)));
+    h.push(`<p class="lb">기본 — 누구에게나</p>`);
+    baseQs().forEach(q=>h.push(qRow(q)));
+    const sq=symQs();
+    if(sq.length){ h.push(`<p class="lb" style="margin-top:14px">${esc(S.s1||S.sym)}</p>`);
+                   sq.forEach(q=>h.push(qRow(q))); }
+    /* 신경학 — 평소 2문, 이상하거나 신경학 경로면 6문 */
+    const nOpen=neuroOpen(), fixed=NEU_SET.indexOf(S.set)>=0;
+    h.push(`<p class="lb ${nOpen?'hot':''}" style="margin-top:14px">🧠 신경학${
+      fixed?' — 이 경로는 항상 6문':(nOpen?' — 이상이 보입니다':'')}</p>`);
+    neuroQs().forEach(q=>h.push(qRow(q)));
+    if(!nOpen) h.push(`<p class="hint">둘 다 정상이라 동공 · 빛반사 · 감각 · 명령수행은 뜨지 않습니다</p>`);
     /* 🤕 부위 · 상황 — 고른 것이 진단·문항을 데려온다 */
     detGroups().forEach(g=>{
       const on=detOn(g);
@@ -765,6 +818,10 @@ function view(){
     h.push(`<div class="auto"><div class="hd">▼ 여기부터 자동입니다</div>`);
     const shown=st.dx.filter(d=>rec(d));
     if(!shown.length) h.push(`<div class="none">사정에 답하면 간호진단이 나옵니다.</div>`);
+    /* 개수로 자르면 외상의 출혈·심근경색의 부정맥이 잘린다. 알려만 주고 빼는 건 간호사가 한다 */
+    const onCnt=shown.filter(d=>on(d.name)).length;
+    if(onCnt>=3) h.push(`<div class="warn3">⚠️ 간호진단이 ${onCnt}개입니다 — 낙상위험까지 ${onCnt+1}개가 됩니다.<br>
+      꼭 필요한 것만 남기고 「빼기」를 눌러주세요.</div>`);
     shown.forEach(dx=>{
       h.push(`<div class="dxc ${on(dx.name)?'':'off'}"><div class="h">
         <span class="nm">${esc(dx.name)}</span>
