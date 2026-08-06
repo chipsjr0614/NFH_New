@@ -16,7 +16,12 @@ function 다답(mode){ let i=0;
     const want = mode==='pos'? false : mode==='neg'? true : (i++%2===0);
     const t=(want? o[q].find(([,x])=>음(x)) : o[q].find(([,x])=>!음(x))) || o[q][0];
     click(t[0]==='yn'?{yn:q,i:String(t[1])}:{sel:q,i:String(t[1])}); hit=true; }
-  const ck=/data-ck="(Q\d+)"/g; while((m=ck.exec(h))) if(S.ans[m[1]]===undefined){click({ck:m[1]});hit=true;}
+  if(mode==='pos'){ const ck=/data-ck="(Q\d+)"/g; const 뿌={};
+    while((m=ck.exec(h))){ const q=m[1]; if(S.ans[q]!==undefined) continue;
+      const t=(D.qbank[q].stmts||[])[0]||'';
+      const r=t.replace(/(상승됨|저하됨|증가함|떨어짐|하강함|감소함)$/,'').trim();
+      if(뿌[r]) continue; 뿌[r]=1;            /* 서로 반대인 체크는 하나만 */
+      click({ck:q}); hit=true; } }
   const vb=/data-vb="(Q\d+)" data-k="([^"]*)" data-v="([^"]*)"/g,vs={};
   while((m=vb.exec(h))){const k=m[1]+'/'+m[2];if(vs[k])continue;vs[k]=1;const c=S.ans[m[1]];
     if((m[2]==='v')?c===undefined:!(c&&c[m[2]])){click({vb:m[1],k:m[2],v:m[3]});hit=true;}}

@@ -48,8 +48,10 @@ input{font:inherit}
 .cp{background:var(--ac);color:var(--on);border-radius:10px;padding:11px 15px;font-size:15px;
   font-weight:800;white-space:nowrap;flex:none}
 .cp.done{background:var(--ok)}
-.hm{border:1.5px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 11px;
-  font-size:17px;flex:none;line-height:1}
+.hm{border:1.5px solid var(--line);background:var(--sunk);border-radius:10px;
+  min-width:44px;min-height:44px;padding:0 10px;font-size:19px;flex:none;line-height:1;
+  display:flex;align-items:center;justify-content:center;color:var(--ink)}
+  .hm:active{background:var(--soft);border-color:var(--edge)}
 .who{flex:1;min-width:0;font-size:15px;font-weight:800;letter-spacing:-.01em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who small{font-family:ui-monospace,Menlo,monospace;font-weight:600;color:var(--ink3);margin-left:6px}
@@ -228,6 +230,7 @@ details summary::-webkit-details-marker{display:none}
 </div></div>
 
 <div class="top">
+  <button class="hm" id="bk" title="뒤로">←</button>
   <button class="hm" id="hm" title="새 환자">🏠</button>
   <span class="who" id="who"></span>
   <button class="cp" id="cp">📤 복사</button>
@@ -427,8 +430,11 @@ function detQs(){ return allDetGroups().flatMap(g=>sitesOf(g).flatMap(x=>x.ae||[
 const abnormal=q=>{ const t=stmt(q,ansOf(q)); return !!t&&ABN.indexOf(t)>=0; };
 function followOf(){
   const st=setOf(S.set); if(!st) return [];
+  /* 세트에 paths 열이 없어 판정이 늘 통과했다. 세트 이름·대분류로 본다.
+     저혈당 경로에서 「혈당 떨어짐」과 후속사정의 「혈당 증가함」이 같이 남았다 */
+  const nm=[S.set||'', st.대분류||''];
   return (D.follow||[]).filter(f=>
-    (st.paths||[]).every(p2=>(f.skipPaths||[]).indexOf(p2)<0)
+    !(f.skipPaths||[]).some(p2=>nm.some(x=>x.indexOf(p2)>=0))
     && (st.neuroAll||[]).some(abnormal));
 }
 /* 이 화면에서 반드시 답해야 하는 문항 전체 */
@@ -858,8 +864,11 @@ function missing(){
   const st=setOf(S.set);
   if(!st) m.push('주호소 선택');
   else {
-    allQs().forEach(q=>{ if(ansOf(q)===undefined)
-      m.push((D.qbank[q]||{q:q}).q.replace(/^["“]|["”]$/g,'').slice(0,22)); });
+    /* 체크형은 「아니다」를 말할 방법이 없다. 필수로 두면 사실이 아닌 양성을
+       강제로 적게 된다 — 혈압 80/40 환자에게 「혈압 상승됨」까지 눌러야 넘어갔다 */
+    allQs().forEach(q=>{ if((D.qbank[q]||{}).fmt==='체크') return;
+      if(ansOf(q)===undefined)
+        m.push((D.qbank[q]||{q:q}).q.replace(/^["“]|["”]$/g,'').slice(0,22)); });
     detGroups().forEach(g=>{ if(!detOn(g).length) m.push(SITELB[g]||g); });
     /* 추가 상태는 고르면 그 문항만 필수, 안 고르면 요구하지 않는다 */
     /* 통증이 확인되면 다 물어봐야 한다 — 놓치면 HIS 기록이 빈다 */
@@ -1173,7 +1182,18 @@ document.addEventListener('click',e=>{
   else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
   else if(d.s1){ S.s1=d.s1; S.s2=''; }
   else if(d.s2){ S.s2=d.s2; }
-  else if(d.ck){ S.ans[d.ck] = S.ans[d.ck]===true?undefined:true; }
+  else if(d.ck){
+    S.ans[d.ck] = S.ans[d.ck]===true?undefined:true;
+    /* 「혈압 상승됨」과 「혈압 저하됨」이 함께 켜지면 안 된다.
+       체크는 반대말이 없어 서로 다른 문항으로 나뉘어 있다 */
+    if(S.ans[d.ck]===true){
+      const 뿌=t=>String(t||'').replace(/(상승됨|저하됨|증가함|증가됨|떨어짐|하강함|감소함)$/,'').trim();
+      const me=뿌(((D.qbank[d.ck]||{}).stmts||[])[0]);
+      if(me) allQs().forEach(q=>{ if(q===d.ck) return;
+        const v=D.qbank[q]; if(!v||v.fmt!=='체크') return;
+        if(뿌(v.stmts[0])===me && S.ans[q]===true) S.ans[q]=undefined; });
+    }
+  }
   else if(d.yn){ const i=+d.i; S.ans[d.yn] = S.ans[d.yn]===i ? undefined : i; }
   else if(d.sel){ const i=+d.i; S.ans[d.sel]=S.ans[d.sel]===i?undefined:i; }
   else if(d.off){ const i=S.off.indexOf(d.off); i<0?S.off.push(d.off):S.off.splice(i,1); }
@@ -1274,6 +1294,17 @@ $('hm').onclick=()=>{
   $('csheet').classList.add('hide');
   $('nm').value=''; $('id').value=''; $('scroll').scrollTop=0;
   $('gate').classList.remove('hide'); $('gedu').classList.remove('on'); gval(); $('nm').focus(); view();
+};
+/* 뒤로 — 한 단계씩 되짚는다. 처음이면 도관 화면으로 */
+$('bk').onclick=()=>{
+  if(!$('csheet').classList.contains('hide')){ $('csheet').classList.add('hide'); return; }
+  if(S.s2)          S.s2='';
+  else if(S.s1)   { S.s1=''; S.set=''; }
+  else if(S.sym)  { S.sym=''; S.set=''; S.ans={}; S.pain=PAIN0(); S.closing=''; }
+  else if(S.q)      S.q='';
+  else              S.cathDone=false;
+  S.set = S.sym? S.set : '';
+  $('scroll').scrollTop=0; view();
 };
 $('cclose').onclick=()=>$('csheet').classList.add('hide');
 $('nm').value=S.nm; $('id').value=S.id;
