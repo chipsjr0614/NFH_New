@@ -287,7 +287,7 @@ function stmt(qid,v){
 function pos(q){
   const v=S.ans[q], b=D.qbank[q]; if(!b||v===undefined) return false;
   if(v===true) return true;
-  if(typeof v==='number') return !NEGP.test(b.stmts[v]||'');
+  if(typeof v==='number'){ const t=b.stmts[v]||''; return !NEGP.test(t) && !NORMP.test(t); }
   return true;                       /* 값입력 등 */
 }
 function rec(dx){          /* 그 진단만의 고유 사정으로 추천 판정 */
@@ -303,6 +303,8 @@ function peOf(dx){         /* 평가 2개 — 📢 문구 있는 것 우선 */
   return ex.concat(rest).slice(0,2);
 }
 const NEGP=/(없음|안됨|않음|못함|못 봄|아님)$/;
+/* 「정상」을 뜻하는 진술문. 이걸 골랐다고 진단이 추천되면 안 된다 */
+const NORMP=/^(normal sinus rhythm 임|의식 명료함|혈당 정상 범위임|sensory, motor, circulation intact 함|빛 반사 확인결과 prompt 함 ★)$/;
 /* 버튼 글씨를 진술문에서 만든다. 공통 앞머리를 「띄어쓰기 단위」로만 떼어
    「대변 못 봄」이 「봄」으로 잘리는 일을 막는다 */
 function tglLabels(ss){
@@ -337,9 +339,15 @@ function blocks(){
     if(!on(dx.name)) return;
     const ae=dx.ae.map(q=>stmt(q,S.ans[q])).filter(Boolean).filter(x=>!used.has(x));
     ae.forEach(x=>used.add(x));
-    const pe=peOf(dx).map(x=>x.pe);
-    if(ae.length||pe.length) out.push({t:dx.name, ae, dx:dx.name, pe});
+    /* 사정 근거가 없으면 진단·평가는 적지 않는다. 다만 물어본 것은 음성이라도 남긴다 */
+    const ok=rec(dx);
+    const pe=ok? peOf(dx).map(x=>x.pe) : [];
+    if(ae.length||pe.length) out.push({t: ok?dx.name:'사정', ae, dx: ok?dx.name:'', pe});
   });
+  /* 진단이 안 붙은 「사정」 블록은 하나로 합친다 */
+  for(let i=out.length-1;i>0;i--){
+    if(!out[i].dx && !out[i-1].dx){ out[i-1].ae=out[i-1].ae.concat(out[i].ae); out.splice(i,1); }
+  }
   /* 맞이교육 + 의식 + 보호자 → 낙상위험. 항상 기록 맨 끝에 온다 */
   if(S.edu || S.consc || S.guard){
     const ae=[];
