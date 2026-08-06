@@ -283,6 +283,20 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 /* ── 헬퍼 ── */
 const setOf=k=>D.sets[k];
 const brOf=s=>D.branch.filter(b=>b.sym===s);
+/* 같은 진술문을 쓰는 문항이 여러 개다(「숨이 차세요?」/「숨쉬기 힘드세요?」).
+   따로 물으면 한 기록에 「호흡곤란 있음」과 「없음」이 같이 남는다.
+   한 번만 묻고 답을 나눠 쓴다. 진술문 순서가 다를 수 있어 글자로 맞춘다 */
+function ansOf(q){
+  if(S.ans[q]!==undefined) return S.ans[q];
+  const st=(D.qbank[q]||{}).stmts||[];
+  for(const o of (BY_SIG[stmtKey(q)]||[])){
+    if(o===q || S.ans[o]===undefined) continue;
+    if(typeof S.ans[o]==='number'){ const t=(D.qbank[o].stmts||[])[S.ans[o]];
+      const i=st.indexOf(t); if(i>=0) return i; continue; }
+    return S.ans[o];
+  }
+  return undefined;
+}
 function stmt(qid,v){
   const q=D.qbank[qid]; if(!q||v===undefined||v===null) return null;
   if(q.fmt==='값입력'){
@@ -299,7 +313,7 @@ function stmt(qid,v){
 }
 /* 고른 진술문 자체를 보고 양성인지 판단한다 */
 function pos(q){
-  const v=S.ans[q], b=D.qbank[q]; if(!b||v===undefined) return false;
+  const v=ansOf(q), b=D.qbank[q]; if(!b||v===undefined) return false;
   if(v===true) return true;
   if(typeof v==='number'){ const t=b.stmts[v]||''; return !NEGP.test(t) && !NORMP.test(t); }
   return true;                       /* 값입력 등 */
@@ -384,7 +398,7 @@ const sitesOf=g=>(SITES[g]||[]).filter(x=>detOn(g).indexOf(x.v)>=0);
 const allDetGroups = ()=>detGroups().concat(extraGroups());
 function detQs(){ return allDetGroups().flatMap(g=>sitesOf(g).flatMap(x=>x.ae||[])); }
 /* 앞의 답이 신경학적으로 이상하면 뒤에 문항이 하나 붙는다 (10.후속사정) */
-const abnormal=q=>{ const t=stmt(q,S.ans[q]); return !!t&&ABN.indexOf(t)>=0; };
+const abnormal=q=>{ const t=stmt(q,ansOf(q)); return !!t&&ABN.indexOf(t)>=0; };
 function followOf(){
   const st=setOf(S.set); if(!st) return [];
   return (D.follow||[]).filter(f=>
@@ -394,17 +408,19 @@ function followOf(){
 /* 이 화면에서 반드시 답해야 하는 문항 전체 */
 function allQs(){
   const st=setOf(S.set); if(!st) return [];
-  return [...new Set([].concat(
+  const uniq=qs=>{ const k=new Set(); return qs.filter(q=>{const x=stmtKey(q);
+    if(k.has(x)) return false; k.add(x); return true;}); };
+  return uniq([...new Set([].concat(
     baseQs(), respQs(), symQs(), neuroQs(), detQs(),
     followOf().flatMap(f=>f.ae||[]),
-    painFound()?(P.ae||[]).filter(q=>P.grp[q]!=='투여후'):[] ))];
+    painFound()?(P.ae||[]).filter(q=>P.grp[q]!=='투여후'):[] ))]);
 }
 /* 통증 위젯이 만든 기록 */
 function painLines(){
   const p=pn(), out={ae:[],pe:[],notes:[]}, nb=[];
   if(isPainCase()&&painFound()){
     if(isChronic()) condAE('만성').forEach(x=>out.ae.push(x.rec));
-    (P.ae||[]).forEach(q=>{ const t=stmt(q,S.ans[q]); if(t) out.ae.push(t); });
+    (P.ae||[]).forEach(q=>{ const t=stmt(q,ansOf(q)); if(t) out.ae.push(t); });
     const hit={부위:p.parts.length>0,강도:p.inten!=null,양상:p.pats.length>0,투여후강도:p.inten2!=null};
     (P.peCond||[]).forEach(x=>{ if(hit[x.cond]&&out.pe.indexOf(x.rec)<0) out.pe.push(x.rec); });
     if(p.dur) nb.push('기간 '+p.dur);
@@ -431,7 +447,7 @@ function siteBlocks(){
   allDetGroups().forEach(g=>sitesOf(g).forEach(x=>{
     const key=x.dx||'';                       /* 진단 없는 항목은 사정만 */
     const b=by[key]||(by[key]={ae:[],pe:[],site:(g==='추가상태'?'':x.v)});
-    (x.ae||[]).forEach(q=>{ const t=stmt(q,S.ans[q]); if(t&&b.ae.indexOf(t)<0) b.ae.push(t); });
+    (x.ae||[]).forEach(q=>{ const t=stmt(q,ansOf(q)); if(t&&b.ae.indexOf(t)<0) b.ae.push(t); });
     /* 「부정맥 없음」을 눌렀는데 진단 「부정맥」이 붙었다. 양성일 때만 진단·중재를 붙인다 */
     if((x.ae||[]).some(pos)) (x.pe||[]).forEach(t=>{ if(b.pe.indexOf(t)<0) b.pe.push(t); });
     else b.noDx=true;
@@ -513,6 +529,15 @@ const NEU_FULL=['grasp','pupil','light','sensory','obey'];
 const NEU_SET=['두통(headache)','뇌경색뇌출혈 관련','지금 Seizure 할 때',
                '이미 Seizure를 하고 멈춘뒤 내원할 때','어지럼','중독','의식섬망'];
 const isNeuroPath = ()=>NEU_SET.indexOf(S.set)>=0;
+/* 경로가 이미 그 지남력을 묻고 있으면 마무리에서 또 묻지 않는다.
+   의식섬망이 「사람에 대한 지남력」을 묻는데 마무리도 물어
+   한 기록에 「지남력 있음」과 「없음」이 같이 남았다 */
+function oriAsked(k){
+  const st=setOf(S.set); if(!st) return false;
+  const nm=(ORINM[k]||'')+'에 대한 지남력';
+  return st.dx.some(d=>d.ae.some(q=>((D.qbank[q]||{}).stmts||[]).some(t=>t.indexOf(nm)===0)));
+}
+const oriList = ()=>ORI.filter(([k])=>!oriAsked(k));
 function neuroOpen(){ return isNeuroPath() || S.consc==='의식수준 저하됨'; }
 /* 사지 근력 — 마스터에 등급(0~V) 진술문이 없다. 「사지 근력 평가함」만 원문으로 남기고
    값은 괄호 비고로 보낸다. 동공 크기·NRS 점수와 같은 방식이다 */
@@ -541,8 +566,12 @@ function symQs(){
   return [...new Set(st.dx.flatMap(d=>d.ae))].filter(q=>!up.has(q));
 }
 /* 문항 한 줄 — 경로 사정 · 부위상세 · 후속사정 · 통증이 모두 이 모양을 쓴다 */
+let _rk=null;   /* 이번 화면에서 이미 그린 진술문 */
 function qRow(q){
   const v=D.qbank[q]; if(!v) return '';
+  /* 「숨이 차세요?」와 「숨쉬기 힘드세요?」는 같은 진술문이다. 둘 다 그리면
+     각각 답을 받아 한 기록에 「호흡곤란 있음」과 「없음」이 같이 남는다 */
+  if(_rk){ const k=stmtKey(q); if(_rk.has(k)) return ''; _rk.add(k); }
   const a=S.ans[q], miss=a===undefined;
   let ans;
   if(v.fmt==='값입력'){ ans=valBtns(q,v,a); }
@@ -636,17 +665,24 @@ function blocks(){
   if(st){
     /* 그 경로의 진단 근거인 문항은 진단 블록에 남긴다. 안 그러면 진단만 있고 사정이 빈다 */
     const dxq=new Set(st.dx.flatMap(d=>d.ae));
-    const bn=baseQs().concat(respQs()).filter(q=>!dxq.has(q))
-                     .map(q=>stmt(q,S.ans[q])).filter(Boolean);
+    const siteClaim=new Set();
+    allDetGroups().forEach(g=>sitesOf(g).forEach(x=>{ if(!x.dx) return;
+      (x.ae||[]).forEach(q=>{ const t=stmt(q,ansOf(q)); if(t) siteClaim.add(t); }); }));
+    const bn=baseQs().concat(respQs(), followOf().flatMap(f=>f.ae||[])).filter(q=>!dxq.has(q))
+                     .map(q=>stmt(q,ansOf(q))).filter(Boolean)
+                     .filter(t=>!siteClaim.has(t));
     if(S.closing){ const c=(D.closing||[]).find(x=>x.sel===S.closing); if(c&&c.rec) bn.push(c.rec); }
-    if(bn.length) out.push({t:'기본 사정', ae:[...new Set(bn)], dx:'', pe:[]});
+    const fpe0=[];
+    followOf().forEach(f=>{ if((f.ae||[]).some(q=>ansOf(q)!==undefined))
+      (f.pe||[]).forEach(t=>{ if(fpe0.indexOf(t)<0) fpe0.push(t); }); });
+    if(bn.length) out.push({t:'기본 사정', ae:[...new Set(bn)], dx:'', pe:fpe0});
   }
   /* 같은 사정이 여러 진단에 걸려 있으면 앞 블록에만 넣는다.
      안 그러면 dizziness·기침이 진단마다 반복돼 읽기 어렵다 */
   const used=new Set(out.flatMap(b=>b.ae));
   if(st) st.dx.forEach(dx=>{
     if(!on(dx.name)) return;
-    const ae=dx.ae.map(q=>stmt(q,S.ans[q])).filter(Boolean).filter(x=>!used.has(x));
+    const ae=dx.ae.map(q=>stmt(q,ansOf(q))).filter(Boolean).filter(x=>!used.has(x));
     ae.forEach(x=>used.add(x));
     /* 사정 근거가 없으면 진단·평가는 적지 않는다. 다만 물어본 것은 음성이라도 남긴다 */
     const ok=rec(dx);
@@ -670,7 +706,8 @@ function blocks(){
   Object.keys(sb).forEach(nm=>{
     if(nm && !on(nm)) return;
     const b=sb[nm];
-    const ae=b.ae.map(t=>b.site? t+'('+b.site+')' : t).filter(t=>!used.has(t));
+    const ae=b.ae.filter(t=>!used.has(t)).map(t=>b.site? t+'('+b.site+')' : t)
+                 .filter(t=>!used.has(t));
     ae.forEach(t=>used.add(t));
     if(!ae.length && !b.pe.length) return;
     if(!nm || b.noDx){ out.push({t:'사정', ae, dx:'', pe:b.pe}); return; }  /* 진단 없음 · 사정이 음성 */
@@ -707,8 +744,8 @@ function blocks(){
     /* 신경학 소견 — 진단 근거인 것은 그 진단 블록에 이미 들어갔다 */
     const dxq2=new Set(st? st.dx.flatMap(d=>d.ae) : []);
     neuroQs().filter(q=>!dxq2.has(q)).forEach(q=>{
-      const t=stmt(q,S.ans[q]); if(t && !used.has(t)){ used.add(t); ae.push(t); } });
-    ORI.forEach(([k])=>{ if(S.ori[k]!==undefined)
+      const t=stmt(q,ansOf(q)); if(t && !used.has(t)){ used.add(t); ae.push(t); } });
+    oriList().forEach(([k])=>{ if(S.ori[k]!==undefined)
       ae.push(`${ORINM[k]}에 대한 지남력 ${S.ori[k]===1?'있음':'없음'}`); });
     if(S.guard) ae.push(S.guard);
     const fpe=['낙상방지 교육함','침대 난간을 올려줌','도난방지 교육함'];
@@ -790,12 +827,12 @@ function missing(){
   if(!S.guard)     m.push('보호자');
   if(S.consc==='의식수준 저하됨'){
     ['E','V','M'].forEach(k=>{ if(!S.gcs[k]) m.push('GCS '+k+' '+GCSNM[k]); });
-    ORI.forEach(([k,lb])=>{ if(S.ori[k]===undefined) m.push('지남력 — '+lb); });
+    oriList().forEach(([k,lb])=>{ if(S.ori[k]===undefined) m.push('지남력 — '+lb); });
   }
   const st=setOf(S.set);
   if(!st) m.push('주호소 선택');
   else {
-    allQs().forEach(q=>{ if(S.ans[q]===undefined)
+    allQs().forEach(q=>{ if(ansOf(q)===undefined)
       m.push((D.qbank[q]||{q:q}).q.replace(/^["“]|["”]$/g,'').slice(0,22)); });
     detGroups().forEach(g=>{ if(!detOn(g).length) m.push(SITELB[g]||g); });
     /* 추가 상태는 고르면 그 문항만 필수, 안 고르면 요구하지 않는다 */
@@ -818,6 +855,7 @@ function missing(){
 }
 /* ── 화면 ── */
 function view(){
+  _rk=new Set();
   const st=setOf(S.set), h=[];
 
   /* ⓪ 맞이 — 한 번 안내하고 클릭. 기록은 맨 끝에 붙는다 */
@@ -860,7 +898,7 @@ function view(){
   /* 의식이 저하되면 지남력 3가지를 반드시 사정한다 */
   if(S.consc==='의식수준 저하됨'){
     h.push(`<p class="lb" style="margin-top:14px">🧠 지남력 — 의식 저하 시 필수</p>`);
-    ORI.forEach(([k,lb,q])=>{
+    oriList().forEach(([k,lb,q])=>{
       const v=S.ori[k];
       h.push(`<div class="q ${v===undefined?'miss':''}"><span class="t">💬 ${esc(q)}</span>
         <span class="yn">
