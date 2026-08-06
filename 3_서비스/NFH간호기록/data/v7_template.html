@@ -235,6 +235,15 @@ details summary::-webkit-details-marker{display:none}
 
 <div id="scroll"><div class="w" id="w"></div></div>
 
+<div class="gate hide" id="csheet">
+  <div class="gbox" style="max-width:520px">
+    <h1>📋 길게 눌러 복사</h1>
+    <p class="gs">이 기기는 자동 복사가 막혀 있습니다. 아래 글을 길게 눌러 <b>전체 선택 → 복사</b>하세요.</p>
+    <textarea id="ctext" class="gin" style="height:46vh;font-family:ui-monospace,Menlo,monospace;font-size:13px;line-height:1.7" readonly></textarea>
+    <button class="ggo on" id="cclose">닫기</button>
+  </div>
+</div>
+
 <script>
 /*__DATA__*/
 const D=window.NFH_V6, $=i=>document.getElementById(i);
@@ -1146,9 +1155,7 @@ document.addEventListener('click',e=>{
   else if(d.go){ S.sym=d.go; S.s1=d.g1||''; S.s2=d.g2||''; S.set='';
                  S.ans={}; S.pain=PAIN0(); S.closing=''; S.q=''; }
   else if(d.hist){ const x=hist()[+d.hist];
-    if(x){ if(navigator.clipboard) navigator.clipboard.writeText(x.t).catch(()=>prompt('길게 눌러 복사:',x.t));
-           else prompt('길게 눌러 복사:',x.t);
-           alert(x.nm+' '+x.id+'\n다시 복사했습니다.'); } }
+    if(x) copyText(x.t, ()=>alert(x.nm+' '+x.id+'\n다시 복사했습니다.')); }
   else if(d.cl){ S.closing = S.closing===d.cl?'':d.cl; }
   else if(d.site){ tog(S.det[d.site]||(S.det[d.site]=[]), d.v); }
   else if(d.ppart){ const p=pn(); tog(p.parts,d.v); if(p.parts.indexOf(d.v)<0) delete p.subs[d.v]; }
@@ -1210,9 +1217,40 @@ $('cp').onclick=()=>{
              sym:[S.sym,S.s1,S.s2].filter(Boolean).join(' › '),
              at:new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})});
   view();
-  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(()=>prompt('길게 눌러 복사:',t));
-  else prompt('길게 눌러 복사:',t);
+  copyText(t, done);
 };
+/* iOS Safari는 http:// 에서 navigator.clipboard 를 주지 않는다(보안 컨텍스트 아님).
+   내부망은 https가 아니라 늘 그렇다. prompt()는 한 줄이라 긴 기록이 잘린다.
+   ① clipboard → ② execCommand → ③ 전체화면 복사판 순으로 떨어뜨린다 */
+function copyText(t, done){
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(t).then(done).catch(()=>{ if(!execCopy(t)) sheet(t); else done(); });
+    return;
+  }
+  if(execCopy(t)) done(); else sheet(t);
+}
+function execCopy(t){
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=t; ta.readOnly=false; ta.contentEditable='true';
+    ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px';
+    document.body.appendChild(ta);
+    const r=document.createRange(); r.selectNodeContents(ta);
+    const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    ta.setSelectionRange(0, t.length);
+    const ok=document.execCommand('copy');
+    sel.removeAllRanges(); document.body.removeChild(ta);
+    return ok;
+  }catch(e){ return false; }
+}
+/* 그래도 안 되면 전체화면으로 띄워 길게 눌러 복사하게 한다. prompt 보다 낫다 */
+function sheet(t){
+  const w=document.getElementById('csheet');
+  document.getElementById('ctext').value=t;
+  w.classList.remove('hide');
+  const ta=document.getElementById('ctext');
+  ta.focus(); ta.setSelectionRange(0, t.length);
+}
 function gval(){
   const ok = $('nm').value.trim() && /^\d{8}$/.test($('id').value.trim()) && S.edu;
   $('ggo').className='ggo'+(ok?' on':'');
@@ -1228,13 +1266,18 @@ $('ggo').onclick=()=>{
   $('gate').classList.add('hide'); view();
 };
 $('hm').onclick=()=>{
-  if(!confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.')) return;
+  let ok=true;
+  try{ ok=confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.'); }
+  catch(e){ ok=true; }          /* 아이폰 홈 화면 앱에서 confirm 이 막히면 그냥 진행 */
+  if(!ok) return;
   S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:'',
       pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',q:'',cathDone:false,cathAll:false};
   try{localStorage.removeItem(KEY)}catch(e){}
+  $('csheet').classList.add('hide');
   $('nm').value=''; $('id').value=''; $('scroll').scrollTop=0;
   $('gate').classList.remove('hide'); $('gedu').classList.remove('on'); gval(); $('nm').focus(); view();
 };
+$('cclose').onclick=()=>$('csheet').classList.add('hide');
 $('nm').value=S.nm; $('id').value=S.id;
 $('gedu').classList.toggle('on', !!S.edu); gval();
 if(S.nm && S.id && S.edu) $('gate').classList.add('hide');
