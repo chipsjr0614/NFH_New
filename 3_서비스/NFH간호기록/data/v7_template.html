@@ -94,6 +94,9 @@ input{font:inherit}
   details.extra>summary{cursor:pointer;font-size:14px;font-weight:800;color:var(--ac);list-style:none}
   details.extra>summary::-webkit-details-marker{display:none}
   details.extra>summary b{background:var(--ac);color:var(--on);border-radius:20px;padding:1px 8px;font-size:12px}
+  .sch{width:100%;border:1.5px solid var(--line);background:var(--sunk);border-radius:11px;
+    padding:12px 13px;font-size:16px;font-family:inherit;color:var(--ink);outline:none}
+  .sch:focus{border-color:var(--ac);background:var(--card)}
   .cat{font-size:12.5px;font-weight:800;letter-spacing:-.01em;color:var(--ink2);
     margin:15px 0 7px;display:flex;align-items:center;gap:7px}
   .cat:first-of-type{margin-top:2px}
@@ -236,7 +239,21 @@ details summary::-webkit-details-marker{display:none}
 /*__DATA__*/
 const D=window.NFH_V6, $=i=>document.getElementById(i);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const KEY='nfh_v7';
+const KEY='nfh_v7', HKEY='nfh_v7_hist', HMAX=10;
+/* 이름 가리기 — 가운데를 O로. 두 글자는 끝자, 네 글자 이상은 앞 두 글자와 끝자만 남긴다 */
+function maskName(n){
+  n=String(n||'').trim(); if(!n) return '';
+  if(n.length===1) return n;
+  if(n.length===2) return n[0]+'O';
+  if(n.length===3) return n[0]+'O'+n[2];
+  return n.slice(0,2)+'O'.repeat(n.length-3)+n.slice(-1);
+}
+/* 복사한 기록을 10명까지 남긴다. 환자가 몰리면 앞 환자 것을 다시 꺼내 붙여야 한다 */
+function hist(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]'); }catch(e){ return []; } }
+function histSave(rec){
+  const h=hist().filter(x=>!(x.id===rec.id && x.t===rec.t));
+  h.unshift(rec); try{ localStorage.setItem(HKEY, JSON.stringify(h.slice(0,HMAX))); }catch(e){}
+}
 const ORI=[['person','사람','"제가 누구인지, 옆에 계신 분이 누구인지 아시겠어요?"'],
            ['time','시간','"오늘이 며칠인지, 지금이 낮인지 밤인지 아시겠어요?"'],
            ['place','장소','"여기가 어디인지 아시겠어요?"']];
@@ -274,7 +291,7 @@ function fig(kind,w){
 const gcsSum=()=> (S.gcs.E&&S.gcs.V&&S.gcs.M)? S.gcs.E+S.gcs.V+S.gcs.M : null;
 const PAIN0=()=>({parts:[],subs:{},tool:null,toolOpen:false,inten:null,inten2:null,
                   pats:[],freq:null,dur:null,smc:{},aeq:{},open:false});
-let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',
+let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',q:'',
        sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
 
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
@@ -768,7 +785,7 @@ function blocks(){
 }
 function text(){
   const L=[];
-  const who=[S.nm.trim(),S.id.trim()].filter(Boolean).join(' ');
+  const who=[maskName(S.nm),S.id.trim()].filter(Boolean).join(' ');
   if(who) L.push('['+who+']','');
   blocks().forEach(b=>{
     L.push('■ '+b.t);
@@ -919,6 +936,29 @@ function view(){
       c.list.push(s);
     });
     cats.sort((a,b)=>a.no-b.no);
+    /* 아픈 곳으로 찾기 — 주호소·분기·질문·진술문을 다 훑는다 */
+    h.push(`<div class="sec"><input class="sch" id="sch" placeholder="🔍 아픈 곳 찾기 — 배, 숨, 피, 열…" value="${esc(S.q||'')}"></div>`);
+    if((S.q||'').trim()){
+      const kw=S.q.trim().toLowerCase(), hit=[];
+      D.branch.forEach(b=>{ if(!b.set) return; const st=D.sets[b.set]; if(!st) return;
+        const path=b.sym+(b.sel1?' › '+b.sel1:'')+(b.sel2?' › '+b.sel2:'');
+        const bag=[path,b.set,st.dx.map(d=>d.name).join(' ')];
+        [...new Set(st.dx.flatMap(d=>d.ae))].forEach(q=>{ const v=D.qbank[q];
+          if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
+        if(bag.join(' ').toLowerCase().indexOf(kw)>=0)
+          hit.push({b,path,dx:st.dx.map(d=>d.name).join(' + ')}); });
+      h.push(`<div class="sec">`+(hit.length
+        ? `<p class="lb">🔍 ${hit.length}개 찾음</p><div class="col">`
+          + hit.slice(0,20).map(x=>`<button class="bv" data-go="${esc(x.b.sym)}" data-g1="${esc(x.b.sel1||'')}" data-g2="${esc(x.b.sel2||'')}"><b>${esc(x.path)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.dx)}</span></button>`).join('')
+          + `</div>`
+        : `<p class="hint">찾는 것이 없습니다. 아래에서 골라주세요.</p>`)+`</div>`);
+    }
+    /* 지난 환자 — 복사한 기록을 10명까지 남겨 다시 꺼낼 수 있다 */
+    { const hs=hist();
+      if(hs.length) h.push(`<details class="extra" style="margin-bottom:14px"><summary>🗂️ 지난 환자 <b>${hs.length}</b></summary><div class="col" style="padding-top:8px">`
+        + hs.map((x,i)=>`<button class="bv" data-hist="${i}"><b>${esc(x.nm)} ${esc(x.id)}</b>
+             <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.sym||'')} · ${esc(x.at||'')}</span></button>`).join('')
+        + `</div></details>`); }
     h.push(`<div class="sec"><p class="lb">어디가 불편해서 오셨어요?</p>`
       + cats.map(c=>`<p class="cat">${esc(c.ic)} ${esc(c.k)}</p><div class="row">`
           + c.list.map(s=>`<button class="b" data-sym="${esc(s)}">${esc(D.syms[s].icon||'')} ${esc(s)}</button>`).join('')
@@ -1052,7 +1092,7 @@ function view(){
     : `<div class="lock ok">✅ 다 채웠습니다 — 위 <b>📤 복사</b>를 누르세요</div>`);
 
   $('w').innerHTML=h.join('');
-  $('who').innerHTML = S.nm? esc(S.nm)+'<small>'+esc(S.id)+'</small>' : '';
+  $('who').innerHTML = S.nm? esc(maskName(S.nm))+'<small>'+esc(S.id)+'</small>' : '';
   const cp=$('cp');
   cp.textContent = m.length? `🔒 ${m.length}` : '📤 복사';
   cp.classList.toggle('lockd', m.length>0);
@@ -1061,10 +1101,16 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-go],[data-hist],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
   if(!b) return; const d=b.dataset;
   const tog=(arr,v)=>{ const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1); return arr; };
   if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
+  else if(d.go){ S.sym=d.go; S.s1=d.g1||''; S.s2=d.g2||''; S.set='';
+                 S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; S.q=''; }
+  else if(d.hist){ const x=hist()[+d.hist];
+    if(x){ if(navigator.clipboard) navigator.clipboard.writeText(x.t).catch(()=>prompt('길게 눌러 복사:',x.t));
+           else prompt('길게 눌러 복사:',x.t);
+           alert(x.nm+' '+x.id+'\n다시 복사했습니다.'); } }
   else if(d.cl){ S.closing = S.closing===d.cl?'':d.cl; }
   else if(d.site){ tog(S.det[d.site]||(S.det[d.site]=[]), d.v); }
   else if(d.ppart){ const p=pn(); tog(p.parts,d.v); if(p.parts.indexOf(d.v)<0) delete p.subs[d.v]; }
@@ -1110,6 +1156,8 @@ document.addEventListener('input',e=>{
   if(t.id==='nm'){S.nm=t.value;save();return;}
   if(t.id==='id'){S.id=t.value;save();return;}
   if(t.id==='memo'){S.memo=t.value;save();return;}
+  if(t.id==='sch'){ S.q=t.value; save(); const p=t.selectionStart; view();
+                    const n=$('sch'); if(n){ n.focus(); try{n.setSelectionRange(p,p)}catch(e){} } return; }
   if(t.dataset.in){S.ans[t.dataset.in]=t.value;save();}
 });
 $('cp').onclick=()=>{
@@ -1119,6 +1167,10 @@ $('cp').onclick=()=>{
   if(!t){alert('아직 기록이 없습니다.');return;}
   const done=()=>{const b=$('cp');b.textContent='✅ 복사됨';b.classList.add('done');
     setTimeout(()=>{b.textContent='📤 복사';b.classList.remove('done')},1600);};
+  histSave({nm:maskName(S.nm), id:S.id, t:t,
+             sym:[S.sym,S.s1,S.s2].filter(Boolean).join(' › '),
+             at:new Date().toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})});
+  view();
   if(navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(()=>prompt('길게 눌러 복사:',t));
   else prompt('길게 눌러 복사:',t);
 };
