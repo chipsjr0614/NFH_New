@@ -446,6 +446,10 @@ function siteBlocks(){
    다만 신경학 경로에서는 답과 무관하게 6문을 다 띄운다 — 의식이 명료한
    뇌경색 환자에게 동공을 안 보면 안 되기 때문이다. */
 const BASE_C  = ['Q007','Q008','Q001'];                 /* 어지럼 · 호흡곤란 · 오심구토 */
+/* 아기에게 「어지럽거나 핑 도는 느낌이 있으세요?」는 물을 수 없다.
+   소아는 같은 뜻을 아이 말로 묻는다 — 축 처지나 · 숨쉬기 힘들어 보이나 · 토했나 */
+const BASE_PED = ['Q053','Q063','Q055'];
+const isPedPath = ()=>/^소아-/.test(S.set||'');
 /* 의식은 마무리 「의식 · 보호자」가 이미 묻는다(명료/15점 미만 → GCS → 지남력).
    여기서 또 물으면 기록에 「의식수준 : alert」와 「의식 명료함」이 같이 남는다.
    그래서 신경학 묶음에서 의식수준(Q174)을 뺐다. */
@@ -463,15 +467,16 @@ function pickQ(canon){
     for(const d of st.dx) for(const q of d.ae) if(stmtKey(q)===k) return q; }
   return canon;
 }
-const baseQs = ()=>BASE_C.map(pickQ);
+const baseQs = ()=>(isPedPath()?BASE_PED:BASE_C).map(pickQ);
 /* 숨차니? → 기침? → 가래? 는 한 세트다. 호흡곤란을 묻는 14경로 중 9곳이
    기침·가래를 안 물어, 「있음」을 누르면 따라 나오게 했다 */
 /* 기침 · 가래 · 산소포화도 · 산소 흡입 · 청색증.
    산소는 호흡곤란 5경로 중 3곳에만, 청색증은 소아·아나필락시스에만 있었다.
    저산소증은 따로 만들 것이 아니라 호흡곤란에 묶여야 한다 */
 const RESP_MORE=['Q019','Q020','Q023','Q022','Q068'];
+const qBreath = ()=>pickQ(isPedPath()?'Q063':'Q008');
 function respOpen(){
-  const q=pickQ('Q008'), v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
+  const q=qBreath(), v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
   return typeof v==='number' && !NEGP.test(ss[v]||'');
 }
 const respQs = ()=>respOpen()? RESP_MORE.map(pickQ) : [];
