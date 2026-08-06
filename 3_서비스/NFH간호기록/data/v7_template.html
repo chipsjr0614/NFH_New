@@ -87,7 +87,8 @@ input{font:inherit}
 .b{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:11px 13px;
   font-size:14.5px;font-weight:700;color:var(--ink2);min-height:46px;display:inline-flex;align-items:center}
 .b.on{background:var(--ink);border-color:var(--ink);color:var(--card)}
-.b.wide{flex:1;min-width:132px;justify-content:center}
+.nrs .b{flex:1;min-width:0;padding:11px 4px;justify-content:center;font-variant-numeric:tabular-nums}
+  .b.wide{flex:1;min-width:132px;justify-content:center}
 .b.gh{border-style:dashed;color:var(--ac)}
 /* 분기 선택지 — 문장이 길어 가로로 잘리므로 한 줄에 하나씩 */
 .col{display:flex;flex-direction:column;gap:8px}
@@ -260,7 +261,9 @@ function fig(kind,w){
     <line x1="38" y1="38" x2="30" y2="52" ${S2}/><line x1="38" y1="38" x2="46" y2="52" ${S2}/></svg>`;
 }
 const gcsSum=()=> (S.gcs.E&&S.gcs.V&&S.gcs.M)? S.gcs.E+S.gcs.V+S.gcs.M : null;
-let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},
+const PAIN0=()=>({parts:[],subs:{},tool:null,toolOpen:false,inten:null,inten2:null,
+                  pats:[],freq:null,dur:null,smc:{},aeq:{},open:false});
+let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',
        sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
 
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
@@ -326,6 +329,177 @@ const shortLab=ss=>{
   return c.every(Boolean)?c:ss;
 };
 
+
+/* ══════ 😣 통증 사정 · 🤕 부위·상황 · 후속사정 — V6에서 가져옴 ══════
+   값(NRS 7점·substernal·쥐어짜는)은 마스터에 없으므로 진술문이 아니다 → 괄호 비고로 간다.
+   「쟀다」는 사실만 마스터 원문 평가로 남는다. */
+const P=D.pain||{}, SITES=D.sites||{}, ABN=D.abnormal||[];
+const NRS=[0,1,2,3,4,5,6,7,8,9,10];
+const FACES=[['😀',0],['🙂',2],['😐',4],['😣',6],['😫',8],['😭',10]];  /* Wong-Baker */
+const SITELB={'외상부위':'🤕 어디를 다치셨어요?','피부상황':'🧴 어떤 피부 문제인가요?',
+              '온열노출':'🥵 어떤 상황이었나요?','한랭노출':'🧊 어떤 상황이었나요?',
+              '노출경로':'☠️ 어떻게 노출됐나요?'};
+const pn=()=>S.pain||(S.pain=PAIN0());
+const condAE=c=>(P.aeCond||[]).filter(x=>x.cond===c);
+function isPainCase(){ const st=setOf(S.set); return !!st&&!!P.dxAcute&&st.dx.some(d=>d.name===P.dxAcute); }
+function isSmcPath(){ const st=setOf(S.set); return !!st&&(P.smcDx||[]).some(n=>st.dx.some(d=>d.name===n)); }
+function needSmc(){ return isSmcPath()||pn().parts.some(v=>((P.parts||[]).find(x=>x.v===v)||{}).smc); }
+function isChronic(){ return !!P.chronic&&pn().dur===P.chronic; }
+/* 통증이 실제로 확인됐나 — 강도를 쟀거나, 경로의 통증 사정이 양성이거나 */
+function painFound(){
+  if(pn().inten!=null) return true;
+  const st=setOf(S.set); if(!st) return false;
+  const dx=st.dx.find(d=>d.name===P.dxAcute);
+  return !!dx&&dx.ae.some(pos);
+}
+/* 흉부통증 경로에서 또 「어디가 아프세요?」를 묻는 건 바보 같다. 경로가 정했으면 쓴다 */
+function autoPart(){
+  const st=setOf(S.set); if(!st) return null;
+  const k=Object.keys(P.autoPart||{}).find(k=>
+    st.dx.some(d=>d.ae.some(q=>((D.qbank[q]||{}).stmts||[]).some(t=>t.indexOf(k)===0))));
+  return k?P.autoPart[k]:null;
+}
+function detGroups(){ const st=setOf(S.set); if(!st) return [];
+  const g={}; Object.keys(st.det||{}).forEach(q=>{ const t=st.det[q]; if(SITES[t]) g[t]=1; });
+  return Object.keys(g); }
+const detOn=g=>S.det[g]||[];
+const sitesOf=g=>(SITES[g]||[]).filter(x=>detOn(g).indexOf(x.v)>=0);
+/* 고른 부위·상황이 데려오는 사정 문항 */
+function detQs(){ return detGroups().flatMap(g=>sitesOf(g).flatMap(x=>x.ae||[])); }
+/* 앞의 답이 신경학적으로 이상하면 뒤에 문항이 하나 붙는다 (10.후속사정) */
+const abnormal=q=>{ const t=stmt(q,S.ans[q]); return !!t&&ABN.indexOf(t)>=0; };
+function followOf(){
+  const st=setOf(S.set); if(!st) return [];
+  return (D.follow||[]).filter(f=>
+    (st.paths||[]).every(p2=>(f.skipPaths||[]).indexOf(p2)<0)
+    && (st.neuroAll||[]).some(abnormal));
+}
+/* 이 화면에서 반드시 답해야 하는 문항 전체 */
+function allQs(){
+  const st=setOf(S.set); if(!st) return [];
+  return [...new Set([].concat(
+    st.dx.flatMap(d=>d.ae), detQs(),
+    followOf().flatMap(f=>f.ae||[]),
+    painFound()?(P.ae||[]).filter(q=>P.grp[q]!=='투여후'):[] ))];
+}
+/* 통증 위젯이 만든 기록 */
+function painLines(){
+  const p=pn(), out={ae:[],pe:[],notes:[]}, nb=[];
+  if(isPainCase()&&painFound()){
+    if(isChronic()) condAE('만성').forEach(x=>out.ae.push(x.rec));
+    (P.ae||[]).forEach(q=>{ const t=stmt(q,S.ans[q]); if(t) out.ae.push(t); });
+    const hit={부위:p.parts.length>0,강도:p.inten!=null,양상:p.pats.length>0,투여후강도:p.inten2!=null};
+    (P.peCond||[]).forEach(x=>{ if(hit[x.cond]&&out.pe.indexOf(x.rec)<0) out.pe.push(x.rec); });
+    if(p.dur) nb.push('기간 '+p.dur);
+    if(p.parts.length) nb.push('부위 '+p.parts.map(v=>{
+      const sb=p.subs[v]||[]; return v+(sb.length?'('+sb.join(', ')+')':''); }).join(' / '));
+    if(p.tool) nb.push('사정도구 '+p.tool);
+    if(p.inten!=null) nb.push('통증강도 '+p.inten+'점');
+    if(p.pats.length) nb.push('양상 '+p.pats.join(', '));
+    if(p.freq) nb.push('빈도 '+p.freq);
+    if(p.inten2!=null) nb.push('투여 후 강도 '+p.inten2+'점');
+    if(nb.length) out.notes.push('통증 — '+nb.join(' / '));
+  }
+  if(needSmc()){
+    condAE('SMC정상').forEach(x=>{ if(p.aeq[x.rec]===true) out.ae.push(x.rec); });
+    const sm=[]; [['s','Sensory'],['m','Motor'],['c','Circulation']].forEach(([k,lb])=>{
+      if(p.smc[k]) sm.push(lb+' '+p.smc[k]); });
+    if(sm.length) out.notes.push('SMC — '+sm.join(' / '));
+  }
+  return out;
+}
+/* 고른 부위·상황의 진단·중재가 따라온다 */
+function siteBlocks(){
+  const by={};
+  detGroups().forEach(g=>sitesOf(g).forEach(x=>{
+    if(!x.dx) return;
+    const b=by[x.dx]||(by[x.dx]={ae:[],pe:[],site:x.v});
+    (x.ae||[]).forEach(q=>{ const t=stmt(q,S.ans[q]); if(t&&b.ae.indexOf(t)<0) b.ae.push(t); });
+    (x.pe||[]).forEach(t=>{ if(b.pe.indexOf(t)<0) b.pe.push(t); });
+  }));
+  return by;
+}
+
+/* 문항 한 줄 — 경로 사정 · 부위상세 · 후속사정 · 통증이 모두 이 모양을 쓴다 */
+function qRow(q){
+  const v=D.qbank[q]; if(!v) return '';
+  const a=S.ans[q], miss=a===undefined;
+  let ans;
+  if(v.fmt==='값입력'){ ans=valBtns(q,v,a); }
+  else if(v.fmt==='선택'){ const lb=shortLab(v.stmts);
+    ans=`<span class="yn">`+v.stmts.map((x,i)=>`<button class="${a===i?'y':''}" data-sel="${q}" data-i="${i}">${esc(lb[i])}</button>`).join('')+`</span>`; }
+  else if(v.stmts.length>=2){
+    const od=tglOrder(v.stmts), lb=tglLabels(v.stmts);
+    ans=`<span class="yn">`+od.map(i=>
+      `<button class="${a===i?(NEGP.test(v.stmts[i])?'n':'y'):''}" data-yn="${q}" data-i="${i}">${esc(lb[i])}</button>`).join('')+`</span>`;
+  }
+  else ans=`<span class="yn"><button class="${a===true?'y':''}" data-ck="${q}">${esc(tglLabels([v.stmts[0],''])[0]||'확인함')}</button></span>`;
+  return `<div class="q ${miss?'miss':''}"><span class="t">${esc(v.q||'(질문 없음)')}</span>${ans}</div>`;
+}
+/* 😣 통증 사정 — 한 화면에 40개를 펼치면 뭘 눌러야 할지 모른다.
+   답하면 다음이 나오게 해서 처음엔 「어디가」만 보이게 한다. */
+function vPain(){
+  const p=pn(); let h='';
+  if(!isPainCase()&&!needSmc()) return '';
+  const chip=(on,attr,txt)=>`<button class="b ${on?'on':''}" ${attr}>${esc(txt)}</button>`;
+  const nrsRow=(cur,attr)=>`<div class="row nrs">`+NRS.map(n=>
+    `<button class="b ${cur===n?'on':''}" ${attr} data-v="${n}">${n}</button>`).join('')+`</div>`;
+  if(isPainCase()){
+    h+=`<p class="lb" style="margin-top:14px">😣 통증 사정</p>`;
+    if(!p.tool) p.tool='NRS';
+    if(!p.parts.length){ const ap=autoPart(); if(ap) p.parts=[ap]; }
+    const fixed=p.parts.length===1&&Object.keys(P.autoPart||{}).some(k=>P.autoPart[k]===p.parts[0]);
+    const step=p.parts.length?(p.inten!=null?3:2):1;
+    if(fixed) h+=`<p class="hint" style="margin:0 0 8px">부위 — <b>${esc(p.parts[0])}</b> (경로에서 정해짐) <button class="b gh" data-pclr="1" style="padding:4px 9px;min-height:0;font-size:12px">바꾸기</button></p>`;
+    else h+=`<div class="q"><span class="t">어디가 아프세요? <small style="color:var(--ink3);font-weight:600">여러 곳</small></span></div>
+      <div class="row">`+(P.parts||[]).map(x=>chip(p.parts.indexOf(x.v)>=0,
+        `data-ppart="1" data-v="${esc(x.v)}"`,`${x.ic} ${x.v}`)).join('')+`</div>`;
+    p.parts.forEach(v=>{ const sb=(P.subs||{})[v]; if(!sb) return; const cur=p.subs[v]||[];
+      h+=`<p class="hint" style="margin:10px 0 6px">${esc(v)} — 자세한 위치</p><div class="row">`
+        +sb.map(x=>chip(cur.indexOf(x)>=0,`data-psub="1" data-p="${esc(v)}" data-v="${esc(x)}"`,x)).join('')+`</div>`; });
+    if(step>=2){
+      const tool=(P.tools||[]).find(t=>t.v===p.tool)||{v:p.tool,d:''};
+      h+=`<div class="q" style="margin-top:10px"><span class="t">얼마나 아프세요?
+          <small style="color:var(--ink3);font-weight:600">${esc(tool.v)} · ${esc(tool.d)}</small></span>
+          <span class="yn"><button data-ptoolopen="1">도구 바꾸기</button></span></div>`;
+      if(p.toolOpen) h+=`<div class="row">`+(P.tools||[]).map(t=>chip(p.tool===t.v,
+        `data-ptool="1" data-v="${esc(t.v)}"`,`${t.v} · ${t.d}`)).join('')+`</div>`;
+      h+= p.tool==='FPRS'
+        ? `<div class="row">`+FACES.map(([f,n])=>`<button class="b ${p.inten===n?'on':''}" data-pint="1" data-v="${n}" style="flex-direction:column;font-size:22px;line-height:1.1">${f}<span style="font-size:12px;font-weight:800">${n}</span></button>`).join('')+`</div>`
+        : nrsRow(p.inten,`data-pint="1"`);
+    }
+    if(step>=3){
+      h+=`<div class="q" style="margin-top:10px"><span class="t">어떻게 아프세요? <small style="color:var(--ink3);font-weight:600">여러 개</small></span></div>
+        <div class="row">`+(P.patterns||[]).map(v=>chip(p.pats.indexOf(v)>=0,`data-ppat="1" data-v="${esc(v)}"`,v)).join('')+`</div>
+        <div class="q" style="margin-top:10px"><span class="t">계속 아프세요, 가끔 아프세요?</span></div>
+        <div class="row">`+(P.freqs||[]).map(v=>chip(p.freq===v,`data-pfreq="1" data-v="${esc(v)}"`,v)).join('')+`</div>
+        <div class="q" style="margin-top:10px"><span class="t">언제부터 아프셨어요?</span></div>
+        <div class="row">`+(P.durs||[]).map(v=>chip(p.dur===v,`data-pdur="1" data-v="${esc(v)}"`,v)).join('')+`</div>`;
+      if(isChronic()) h+=`<p class="hint">${P.months}개월 이상이라 간호진단이 <b>${esc(P.dxChronic)}</b>으로 넘어갑니다</p>`;
+      (P.ae||[]).filter(q=>P.grp[q]!=='투여후').forEach(q=>h+=qRow(q));
+    }
+  }
+  if(needSmc()){
+    h+=`<p class="lb" style="margin-top:14px">🩺 감각 · 운동 · 순환 (SMC)</p>`;
+    condAE('SMC정상').forEach(x=>{ const on=p.aeq[x.rec]===true;
+      h+=`<div class="q ${on?'':'miss'}"><span class="t">${esc(x.q||x.rec)}</span>
+        <span class="yn"><button class="${on?'y':''}" data-paeq="1" data-v="${esc(x.rec)}">확인함</button></span></div>`; });
+    [['s','감각'],['m','운동'],['c','순환']].forEach(([k,lb])=>{
+      h+=`<div class="q"><span class="t" style="min-width:70px">${lb}</span><span class="yn">`
+        +(P.smc||[]).map(o=>`<button class="${p.smc[k]===o?'y':''}" data-psmc="1" data-k="${k}" data-v="${esc(o)}">${esc(o)}</button>`).join('')+`</span></div>`; });
+    h+=`<p class="hint">등급은 마스터에 없어 괄호 비고로 남습니다</p>`;
+  }
+  /* 투여·재평가는 통증이 확인된 뒤에나 할 일이다 */
+  const later=(P.ae||[]).filter(q=>P.grp[q]==='투여후');
+  if(isPainCase()&&painFound()&&later.length){
+    h+=`<details ${p.open?'open':''} style="margin-top:12px"><summary data-popen="1" style="cursor:pointer;font-size:14px;font-weight:800;padding:10px 2px">💊 진통제 투여 · 재평가</summary>
+      <p class="hint">진통제를 투여한 뒤에 다시 열어 기록하세요</p>`
+      +later.map(qRow).join('')
+      +`<p class="hint" style="margin:10px 0 6px">투여 후 통증 강도</p>`+nrsRow(p.inten2,`data-pint2="1"`)+`</details>`;
+  }
+  return h;
+}
+
 /* ── 기록 만들기 ── */
 function blocks(){
   const out=[];
@@ -344,10 +518,37 @@ function blocks(){
     const pe=ok? peOf(dx).map(x=>x.pe) : [];
     if(ae.length||pe.length) out.push({t: ok?dx.name:'사정', ae, dx: ok?dx.name:'', pe});
   });
+  /* 통증 — 늘 맨 뒤. 만성이면 진단명이 바뀐다 (3개월 이상) */
+  const pl=painLines();
+  if(pl.ae.length||pl.pe.length){
+    const nm=isChronic()&&P.dxChronic?P.dxChronic:P.dxAcute;
+    const b=out.find(x=>x.dx===P.dxAcute);
+    if(b){ b.t=b.dx=nm;
+           pl.ae.forEach(t=>{ if(b.ae.indexOf(t)<0&&!used.has(t)){ b.ae.push(t); used.add(t); } });
+           pl.pe.forEach(t=>{ if(b.pe.indexOf(t)<0) b.pe.push(t); }); }
+    else if(painFound()) out.push({t:nm,ae:pl.ae.filter(t=>!used.has(t)),dx:nm,pe:pl.pe});
+    else out.push({t:'사정',ae:pl.ae.filter(t=>!used.has(t)),dx:'',pe:[]});
+  }
+  /* 고른 부위·상황이 데려온 진단 — 진술문 뒤에 (부위)를 붙인다 */
+  const sb=siteBlocks();
+  Object.keys(sb).forEach(nm=>{
+    if(!on(nm)) return;
+    const b=sb[nm];
+    const ae=b.ae.map(t=>t+'('+b.site+')').filter(t=>!used.has(t));
+    ae.forEach(t=>used.add(t));
+    if(ae.length||b.pe.length){
+      const ex=out.find(x=>x.dx===nm);
+      if(ex){ ex.ae=ex.ae.concat(ae); b.pe.forEach(t=>{ if(ex.pe.indexOf(t)<0) ex.pe.push(t); }); }
+      else out.push({t:nm,ae,dx:nm,pe:b.pe});
+    }
+  });
   /* 진단이 안 붙은 「사정」 블록은 하나로 합친다 */
   for(let i=out.length-1;i>0;i--){
     if(!out[i].dx && !out[i-1].dx){ out[i-1].ae=out[i-1].ae.concat(out[i].ae); out.splice(i,1); }
   }
+  /* 마무리질문 답 */
+  if(S.closing){ const c=(D.closing||[]).find(x=>x.sel===S.closing);
+    if(c&&c.rec&&!used.has(c.rec)){ used.add(c.rec); out.push({t:'사정',ae:[c.rec],dx:'',pe:[]}); } }
   /* 맞이교육 + 의식 + 보호자 → 낙상위험. 항상 기록 맨 끝에 온다 */
   if(S.edu || S.consc || S.guard){
     const ae=[];
@@ -378,7 +579,8 @@ function text(){
     if(b.pe.length) L.push('평가) '+b.pe.join(', '));
     L.push('');
   });
-  if(S.memo.trim()) L.push('('+S.memo.trim()+')');
+  const nt=painLines().notes.concat(S.memo.trim()?[S.memo.trim()]:[]);
+  if(nt.length) L.push('('+nt.join(' / ')+')');
   return L.join('\n').trim();
 }
 
@@ -427,9 +629,22 @@ function missing(){
   }
   const st=setOf(S.set);
   if(!st) m.push('주호소 선택');
-  else [...new Set(st.dx.flatMap(d=>d.ae))].forEach(q=>{
-    if(S.ans[q]===undefined) m.push(D.qbank[q].q.replace(/^["“]|["”]$/g,'').slice(0,22));
-  });
+  else {
+    allQs().forEach(q=>{ if(S.ans[q]===undefined)
+      m.push((D.qbank[q]||{q:q}).q.replace(/^["“]|["”]$/g,'').slice(0,22)); });
+    detGroups().forEach(g=>{ if(!detOn(g).length) m.push(SITELB[g]||g); });
+    /* 통증이 확인되면 다 물어봐야 한다 — 놓치면 HIS 기록이 빈다 */
+    if(isPainCase()&&painFound()){
+      const p=pn();
+      if(!p.parts.length) m.push('통증 부위');
+      if(p.inten==null)   m.push('통증 강도');
+      if(!p.pats.length)  m.push('통증 양상');
+      if(!p.freq)         m.push('통증 빈도');
+      if(!p.dur)          m.push('통증 기간');
+    }
+    if((D.closing||[]).length && !S.closing) m.push('더 불편한 곳');
+    if(needSmc()) ['s','m','c'].forEach((k,i)=>{ if(!pn().smc[k]) m.push('SMC '+['감각','운동','순환'][i]); });
+  }
   return m;
 }
 /* ── 화면 ── */
@@ -515,21 +730,35 @@ function view(){
     const path=[S.sym,S.s1,S.s2].filter(Boolean).join(' › ');
     h.push(`<div class="sec"><p class="lb">${esc(path)} <button class="b gh" data-reset="1" style="padding:4px 9px;min-height:0;font-size:12px">바꾸기</button></p>`);
     const qs=[...new Set(st.dx.flatMap(d=>d.ae))];
-    qs.forEach(q=>{
-      const v=D.qbank[q], a=S.ans[q], miss=a===undefined;
-      let ans;
-      if(v.fmt==='값입력'){ ans=valBtns(q,v,a); }
-      else if(v.fmt==='선택'){ const lb=shortLab(v.stmts);
-        ans=`<span class="yn">`+v.stmts.map((s,i)=>`<button class="${a===i?'y':''}" data-sel="${q}" data-i="${i}">${esc(lb[i])}</button>`).join('')+`</span>`; }
-      else if(v.stmts.length>=2){
-        const od=tglOrder(v.stmts), lb=tglLabels(v.stmts);
-        ans=`<span class="yn">`+od.map(i=>
-          `<button class="${a===i?(NEGP.test(v.stmts[i])?'n':'y'):''}" data-yn="${q}" data-i="${i}">${esc(lb[i])}</button>`
-        ).join('')+`</span>`;
-      }
-      else ans=`<span class="yn"><button class="${a===true?'y':''}" data-ck="${q}">${esc(tglLabels([v.stmts[0],''])[0]||'확인함')}</button></span>`;
-      h.push(`<div class="q ${miss?'miss':''}"><span class="t">${esc(v.q||'(질문 없음)')}</span>${ans}</div>`);
+    qs.forEach(q=>h.push(qRow(q)));
+    /* 🤕 부위 · 상황 — 고른 것이 진단·문항을 데려온다 */
+    detGroups().forEach(g=>{
+      const on=detOn(g);
+      h.push(`<p class="lb" style="margin-top:14px">${esc(SITELB[g]||g)}</p>
+        <p class="hint" style="margin:0 0 8px">고른 것이 기록에 괄호로 붙습니다 — 「피부 손상 있음(물림)」</p>
+        <div class="row">`+(SITES[g]||[]).map(x=>
+          `<button class="b ${on.indexOf(x.v)>=0?'on':''}" data-site="${esc(g)}" data-v="${esc(x.v)}">${x.ic} ${esc(x.v)}</button>`).join('')+`</div>`);
+      sitesOf(g).forEach(x=>{ if(!(x.ae||[]).length) return;
+        h.push(`<p class="hint" style="margin:10px 0 6px">${x.ic} ${esc(x.v)} — 이것만 묻는 것</p>`);
+        x.ae.forEach(q=>h.push(qRow(q)));
+      });
     });
+    /* 신경학적 이상이 보이면 문항이 하나 붙는다 */
+    const fs=followOf();
+    if(fs.length){
+      h.push(`<p class="lb" style="margin-top:14px">⚠️ 신경학적 이상이 보입니다 — 이것부터 확인하세요</p>`);
+      fs.forEach(f=>(f.ae||[]).forEach(q=>h.push(qRow(q))));
+    }
+    /* 😣 통증 사정 — 기록 순서상 늘 맨 뒤에 온다 */
+    h.push(vPain());
+    /* 마무리 — 놓친 곳이 없는지 마지막으로 한 번 더 묻는다 (6.마무리질문) */
+    if((D.closing||[]).length){
+      const cq=(D.closing[0]||{}).q||'그 밖에 더 아프거나 불편한 곳이 있으세요?';
+      h.push(`<div class="q ${S.closing?'':'miss'}"><span class="t">${esc(cq)}</span><span class="yn">`
+        +D.closing.map(c=>`<button class="${S.closing===c.sel?(c.sel==='있음'?'y':'n'):''}" data-cl="${esc(c.sel)}">${esc(c.sel)}</button>`).join('')
+        +`</span></div>`);
+      if(S.closing==='있음') h.push(`<p class="hint">주호소를 다시 골라 더 사정하거나, 아래 비고에 적어주세요.</p>`);
+    }
     h.push(`</div>`);
 
     /* 자동 — 진단 · 평가 */
@@ -576,10 +805,26 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
   if(!b) return; const d=b.dataset;
-  if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; }
-  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; }
+  const tog=(arr,v)=>{ const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1); return arr; };
+  if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; }
+  else if(d.cl){ S.closing = S.closing===d.cl?'':d.cl; }
+  else if(d.site){ tog(S.det[d.site]||(S.det[d.site]=[]), d.v); }
+  else if(d.ppart){ const p=pn(); tog(p.parts,d.v); if(p.parts.indexOf(d.v)<0) delete p.subs[d.v]; }
+  else if(d.psub){ const p=pn(); tog(p.subs[d.p]||(p.subs[d.p]=[]), d.v); }
+  else if(d.ptoolopen){ pn().toolOpen=!pn().toolOpen; }
+  else if(d.ptool){ pn().tool=d.v; pn().toolOpen=false; }
+  else if(d.pint){ const p=pn(); p.inten = p.inten===+d.v?null:+d.v; }
+  else if(d.pint2){ const p=pn(); p.inten2 = p.inten2===+d.v?null:+d.v; }
+  else if(d.ppat){ tog(pn().pats,d.v); }
+  else if(d.pfreq){ const p=pn(); p.freq = p.freq===d.v?null:d.v; }
+  else if(d.pdur){ const p=pn(); p.dur = p.dur===d.v?null:d.v; }
+  else if(d.psmc){ const p=pn(); p.smc[d.k] = p.smc[d.k]===d.v?undefined:d.v; }
+  else if(d.paeq){ const p=pn(); p.aeq[d.v] = p.aeq[d.v]===true?undefined:true; }
+  else if(d.popen){ pn().open=!pn().open; }
+  else if(d.pclr){ pn().parts=[]; pn().subs={}; }
+  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; }
   else if(d.s1){ S.s1=d.s1; S.s2=''; }
   else if(d.s2){ S.s2=d.s2; }
   else if(d.ck){ S.ans[d.ck] = S.ans[d.ck]===true?undefined:true; }
