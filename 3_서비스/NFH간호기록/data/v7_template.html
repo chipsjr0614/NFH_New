@@ -274,7 +274,7 @@ function fig(kind,w){
 const gcsSum=()=> (S.gcs.E&&S.gcs.V&&S.gcs.M)? S.gcs.E+S.gcs.V+S.gcs.M : null;
 const PAIN0=()=>({parts:[],subs:{},tool:null,toolOpen:false,inten:null,inten2:null,
                   pats:[],freq:null,dur:null,smc:{},aeq:{},open:false});
-let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},
+let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',
        sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
 
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
@@ -395,7 +395,7 @@ function followOf(){
 function allQs(){
   const st=setOf(S.set); if(!st) return [];
   return [...new Set([].concat(
-    baseQs(), symQs(), neuroQs(), detQs(),
+    baseQs(), respQs(), symQs(), neuroQs(), detQs(),
     followOf().flatMap(f=>f.ae||[]),
     painFound()?(P.ae||[]).filter(q=>P.grp[q]!=='투여후'):[] ))];
 }
@@ -464,6 +464,20 @@ function pickQ(canon){
   return canon;
 }
 const baseQs = ()=>BASE_C.map(pickQ);
+/* 숨차니? → 기침? → 가래? 는 한 세트다. 호흡곤란을 묻는 14경로 중 9곳이
+   기침·가래를 안 물어, 「있음」을 누르면 따라 나오게 했다 */
+const RESP_MORE=['Q019','Q020'];                       /* 기침 · 가래 */
+function respOpen(){
+  const q=pickQ('Q008'), v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
+  return typeof v==='number' && !NEGP.test(ss[v]||'');
+}
+const respQs = ()=>respOpen()? RESP_MORE.map(pickQ) : [];
+/* 대변을 못 봤으면 며칠째인지. 마스터에 기간 진술문이 없어 괄호 비고로 간다 */
+const STOOL_D=['1일','2일','3일','4일','5일 이상'];
+function stoolOpen(){
+  const q=pickQ('Q004'), v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
+  return typeof v==='number' && /못 봄$/.test(ss[v]||'');
+}
 const isNeuroPath = ()=>NEU_SET.indexOf(S.set)>=0;
 /* 사지 근력 — 마스터에 등급(0~V) 진술문이 없다. 「사지 근력 평가함」만 원문으로 남기고
    값은 괄호 비고로 보낸다. 동공 크기·NRS 점수와 같은 방식이다 */
@@ -491,7 +505,7 @@ const neuroQs = ()=>neuroOpen()? NEU_FULL.map(pickQ) : [];
 /* 기본·신경학으로 올라간 문항은 경로 사정에서 빼 중복을 없앤다 */
 function symQs(){
   const st=setOf(S.set); if(!st) return [];
-  const up=new Set(baseQs().concat(NEU_FULL.map(pickQ)));
+  const up=new Set(baseQs().concat(RESP_MORE.map(pickQ), NEU_FULL.map(pickQ)));
   return [...new Set(st.dx.flatMap(d=>d.ae))].filter(q=>!up.has(q));
 }
 
@@ -509,7 +523,13 @@ function qRow(q){
       `<button class="${a===i?(NEGP.test(v.stmts[i])?'n':'y'):''}" data-yn="${q}" data-i="${i}">${esc(lb[i])}</button>`).join('')+`</span>`;
   }
   else ans=`<span class="yn"><button class="${a===true?'y':''}" data-ck="${q}">${esc(tglLabels([v.stmts[0],''])[0]||'확인함')}</button></span>`;
-  return `<div class="q ${miss?'miss':''}"><span class="t">${esc(v.q||'(질문 없음)')}</span>${ans}</div>`;
+  let extra='';
+  if(q===pickQ('Q004') && stoolOpen()){
+    extra=`<div class="q ${S.stoolD?'':'miss'}"><span class="t" style="min-width:120px">며칠째 못 보셨어요?</span><span class="yn">`
+      +STOOL_D.map(d=>`<button class="${S.stoolD===d?'y':''}" data-sd="${esc(d)}">${d}</button>`).join('')
+      +`</span></div>`;
+  }
+  return `<div class="q ${miss?'miss':''}"><span class="t">${esc(v.q||'(질문 없음)')}</span>${ans}</div>`+extra;
 }
 /* 😣 통증 사정 — 한 화면에 40개를 펼치면 뭘 눌러야 할지 모른다.
    답하면 다음이 나오게 해서 처음엔 「어디가」만 보이게 한다. */
@@ -683,7 +703,10 @@ function text(){
     L.push('');
   });
   const pw=[]; if(S.power){ if(S.power.arm) pw.push('상지 '+S.power.arm); if(S.power.leg) pw.push('하지 '+S.power.leg); }
-  const nt=painLines().notes.concat(pw.length?['근력 — '+pw.join(' / ')]:[], S.memo.trim()?[S.memo.trim()]:[]);
+  const nt=painLines().notes.concat(
+      pw.length?['근력 — '+pw.join(' / ')]:[],
+      (stoolOpen()&&S.stoolD)?['배변 — '+S.stoolD+'째 못 봄']:[],
+      S.memo.trim()?[S.memo.trim()]:[]);
   if(nt.length) L.push('('+nt.join(' / ')+')');
   return L.join('\n').trim();
 }
@@ -747,6 +770,7 @@ function missing(){
       if(!p.freq)         m.push('통증 빈도');
       if(!p.dur)          m.push('통증 기간');
     }
+    if(stoolOpen() && !S.stoolD) m.push('며칠째 못 봤는지');
     if(neuroOpen()){ if(!(S.power&&S.power.arm)) m.push('근력 — 상지');
                      if(!(S.power&&S.power.leg)) m.push('근력 — 하지'); }
     if((D.closing||[]).length && !S.closing) m.push('더 불편한 곳');
@@ -856,6 +880,7 @@ function view(){
     h.push(`<div class="sec"><p class="lb">${esc(path)} <button class="b gh" data-reset="1" style="padding:4px 9px;min-height:0;font-size:12px">바꾸기</button></p>`);
     h.push(`<p class="lb">기본 — 누구에게나</p>`);
     baseQs().forEach(q=>h.push(qRow(q)));
+    respQs().forEach(q=>h.push(qRow(q)));      /* 숨차다고 하면 기침·가래까지 */
     const sq=symQs();
     if(sq.length){ h.push(`<p class="lb" style="margin-top:14px">${esc(S.s1||S.sym)}</p>`);
                    sq.forEach(q=>h.push(qRow(q))); }
@@ -960,10 +985,10 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-pw],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
   if(!b) return; const d=b.dataset;
   const tog=(arr,v)=>{ const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1); return arr; };
-  if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; }
+  if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
   else if(d.cl){ S.closing = S.closing===d.cl?'':d.cl; }
   else if(d.site){ tog(S.det[d.site]||(S.det[d.site]=[]), d.v); }
   else if(d.ppart){ const p=pn(); tog(p.parts,d.v); if(p.parts.indexOf(d.v)<0) delete p.subs[d.v]; }
@@ -980,7 +1005,8 @@ document.addEventListener('click',e=>{
   else if(d.popen){ pn().open=!pn().open; }
   else if(d.pclr){ pn().parts=[]; pn().subs={}; }
   else if(d.pw){ const w=S.power||(S.power={arm:null,leg:null}); w[d.pw]= w[d.pw]===d.v?null:d.v; }
-  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; }
+  else if(d.sd){ S.stoolD = S.stoolD===d.sd?'':d.sd; }
+  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
   else if(d.s1){ S.s1=d.s1; S.s2=''; }
   else if(d.s2){ S.s2=d.s2; }
   else if(d.ck){ S.ans[d.ck] = S.ans[d.ck]===true?undefined:true; }
