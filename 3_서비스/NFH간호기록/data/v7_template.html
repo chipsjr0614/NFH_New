@@ -246,7 +246,7 @@ function maskName(n){
   if(n.length===1) return n;
   if(n.length===2) return n[0]+'O';
   if(n.length===3) return n[0]+'O'+n[2];
-  return n.slice(0,2)+'O'.repeat(n.length-3)+n.slice(-1);
+  return n.slice(0,2)+'O'.repeat(n.length-2);   /* 네 글자 이상은 앞 두 글자만 남긴다 */
 }
 /* 복사한 기록을 10명까지 남긴다. 환자가 몰리면 앞 환자 것을 다시 꺼내 붙여야 한다 */
 function hist(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]'); }catch(e){ return []; } }
