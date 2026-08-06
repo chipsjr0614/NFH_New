@@ -623,7 +623,8 @@ function blocks(){
     /* 사정 근거가 없으면 진단·평가는 적지 않는다. 다만 물어본 것은 음성이라도 남긴다 */
     const ok=rec(dx);
     const pe=ok? peOf(dx).map(x=>x.pe) : [];
-    if(ae.length||pe.length) out.push({t: ok?dx.name:'사정', ae, dx: ok?dx.name:'', pe});
+    if(ae.length||pe.length) out.push({t: ok?dx.name:'사정', ae, dx: ok?dx.name:'', pe,
+                                       peAll: ok? dx.pe.slice() : []});
   });
   /* 통증 — 늘 맨 뒤. 만성이면 진단명이 바뀐다 (3개월 이상) */
   const pl=painLines();
@@ -691,7 +692,13 @@ function blocks(){
   /* 같은 평가가 두 블록에 겹치면 앞 블록만 남긴다.
      「사지 근력 평가함」이 경로 진단과 의식·낙상에 모두 붙어 두 번 나왔다 */
   { const seenPe=new Set();
-    out.forEach(b=>{ b.pe=(b.pe||[]).filter(t=>!seenPe.has(t)&&(seenPe.add(t),true)); }); }
+    out.forEach(b=>{
+      b.pe=(b.pe||[]).filter(t=>!seenPe.has(t)&&(seenPe.add(t),true));
+      /* 중복으로 빠져 2개가 안 되면 그 진단의 남은 평가로 채운다.
+         혈압 경로에서 「혈압 측정함」이 고혈압에 먼저 쓰여 조직관류저하에 1개만 남았다 */
+      (b.peAll||[]).forEach(t=>{ if(b.pe.length<2 && !seenPe.has(t)){ b.pe.push(t); seenPe.add(t); } });
+      delete b.peAll;
+    }); }
   return out;
 }
 function text(){
