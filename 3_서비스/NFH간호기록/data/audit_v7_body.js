@@ -4,7 +4,7 @@ const H=document._l.click[0];
 const click=a=>H({target:{dataset:a,closest:()=>({dataset:a})},preventDefault(){}});
 function html(){ let s=''; for(const k in __reg) s+=(__reg[k].innerHTML||''); return s; }
 function 준비(b,의식){ S.sym=S.s1=S.s2=S.set='';S.ans={};S.off=[];S.pain=PAIN0();S.det={};S.closing='';
-  S.power={arm:null,leg:null};S.stoolD='';S.q='';S.consc=null;S.gcs={E:null,V:null,M:null};S.ori={};
+  S.power={arm:null,leg:null};S.stoolD='';S.q='';S.cathDone=true;S.consc=null;S.gcs={E:null,V:null,M:null};S.ori={};
   S.nm='홍길동';S.id='12345678';S.edu=true;S.guard='보호자 환자 옆에 상주하고 있음';S.memo='';
   click({sym:b.sym}); if(b.sel1)click({s1:b.sel1}); if(b.sel2)click({s2:b.sel2}); click({cs:의식||'의식 명료함'}); }
 function 다답(mode){ let i=0;

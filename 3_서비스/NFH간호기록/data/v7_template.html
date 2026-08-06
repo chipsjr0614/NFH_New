@@ -291,7 +291,7 @@ function fig(kind,w){
 const gcsSum=()=> (S.gcs.E&&S.gcs.V&&S.gcs.M)? S.gcs.E+S.gcs.V+S.gcs.M : null;
 const PAIN0=()=>({parts:[],subs:{},tool:null,toolOpen:false,inten:null,inten2:null,
                   pats:[],freq:null,dur:null,smc:{},aeq:{},open:false});
-let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',q:'',
+let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',q:'',cathDone:false,
        sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
 
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
@@ -871,8 +871,31 @@ function missing(){
   return m;
 }
 /* ── 화면 ── */
+/* 도관은 주호소를 고른 뒤 접힌 채로 있어 잘 안 보였다.
+   이름·번호 다음에 한 번 확인하고 넘어가게 한다 */
+function vCath(){
+  const on=Object.keys(S.cath);
+  const h=[`<div class="sec"><p class="lb">🔌 도관 · 튜브</p>
+    <p style="font-size:17px;font-weight:800;margin:0 0 4px">몸에 들어가 있는 관이 있나요?</p>
+    <p class="hint" style="margin:0 0 12px">없으면 아래 「없음」을 누르고 넘어가세요.</p>
+    <div class="row">`
+    + D.cath.filter(c=>S.cathAll||c.top).map(c=>
+        `<button class="b ${S.cath[c.s]?'on':''}" data-ct="${esc(c.s)}" title="${esc(c.n)}">${esc(c.s)}</button>`).join('')
+    + (S.cathAll?'':`<button class="b gh" data-cmore="1">＋ 더보기 ${D.cath.length-D.cath.filter(c=>c.top).length}종</button>`)
+    + `</div>`];
+  D.cath.filter(c=>S.cath[c.s]).forEach(c=>{
+    h.push(`<p class="lb" style="margin-top:14px">${esc(c.s)} — ${esc(c.n)}</p><div class="col">`
+      + c.d.map(d=>`<button class="bv ${(S.cath[c.s]||[]).includes(d)?'on':''}" data-cd="${esc(c.s)}" data-v="${esc(d)}">${esc(d)}</button>`).join('')
+      + `</div>`);
+  });
+  h.push(`</div><div class="sec"><div class="row">`
+    + `<button class="b wide" data-cdone="1">${on.length?'다음 →':'도관 없음 · 넘어가기'}</button>`
+    + `</div></div>`);
+  return h.join('');
+}
 function view(){
   _rk=new Set();
+  if(!S.cathDone){ $('w').innerHTML=vCath(); save(); return; }
   const st=setOf(S.set), h=[];
 
   /* ⓪ 맞이 — 한 번 안내하고 클릭. 기록은 맨 끝에 붙는다 */
@@ -1072,8 +1095,8 @@ function view(){
     });
     h.push(`</div>`);
 
-    /* 도관 · 비고 */
-    h.push(`<details><summary>＋ 도관 · 비고</summary><div class="sec" style="margin-top:8px">
+    /* 도관 · 비고 — 처음에 확인했지만 여기서도 고칠 수 있다 */
+    h.push(`<details><summary>＋ 도관 고치기 · 비고</summary><div class="sec" style="margin-top:8px">
       <div class="row">`+D.cath.filter(c=>S.cathAll||c.top).map(c=>
         `<button class="b ${S.cath[c.s]?'on':''}" data-ct="${esc(c.s)}">${esc(c.s)}</button>`).join('')
       + (S.cathAll?'':`<button class="b gh2" data-cmore="1">＋ 더보기 ${D.cath.length-D.cath.filter(c=>c.top).length}종</button>`)+`</div>`
@@ -1101,7 +1124,7 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-go],[data-hist],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-cdone],[data-ct],[data-cd],[data-reset],[data-cl],[data-go],[data-hist],[data-pw],[data-sd],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
   if(!b) return; const d=b.dataset;
   const tog=(arr,v)=>{ const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1); return arr; };
   if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; S.stoolD=''; }
@@ -1146,6 +1169,7 @@ document.addEventListener('click',e=>{
     else { const o=Object.assign({}, (typeof S.ans[d.vb]==='object'&&S.ans[d.vb])||{});
       o[d.k] = String(o[d.k])===d.v ? undefined : d.v;
       S.ans[d.vb] = (o.rt||o.lt||o.sbp||o.dbp) ? o : undefined; } }
+  else if(d.cdone){ S.cathDone=true; $('scroll').scrollTop=0; }
   else if(d.cmore){ S.cathAll=true; }
   else if(d.ct){ S.cath[d.ct]?delete S.cath[d.ct]:S.cath[d.ct]=[]; }
   else if(d.cd){ const a=S.cath[d.cd]||(S.cath[d.cd]=[]); const i=a.indexOf(d.v); i<0?a.push(d.v):a.splice(i,1); }
@@ -1190,7 +1214,8 @@ $('ggo').onclick=()=>{
 };
 $('hm').onclick=()=>{
   if(!confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.')) return;
-  S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
+  S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:'',
+      pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},stoolD:'',q:'',cathDone:false,cathAll:false};
   try{localStorage.removeItem(KEY)}catch(e){}
   $('nm').value=''; $('id').value=''; $('scroll').scrollTop=0;
   $('gate').classList.remove('hide'); $('gedu').classList.remove('on'); gval(); $('nm').focus(); view();
