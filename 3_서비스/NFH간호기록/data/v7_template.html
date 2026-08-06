@@ -318,7 +318,7 @@ function peOf(dx){         /* 평가 2개 — 📢 문구 있는 것 우선 */
 }
 const NEGP=/(없음|안됨|않음|못함|못 봄|아님)$/;
 /* 「정상」을 뜻하는 진술문. 이걸 골랐다고 진단이 추천되면 안 된다 */
-const NORMP=/^(normal sinus rhythm 임|의식 명료함|혈당 정상 범위임|sensory, motor, circulation intact 함|빛 반사 확인결과 prompt 함 ★)$/;
+const NORMP=/^(normal sinus rhythm 임|의식 명료함|혈당 정상 범위임|sensory, motor, circulation intact 함|빛 반사 확인결과 prompt 함 ★|울음소리 좋음)$/;
 /* 버튼 글씨를 진술문에서 만든다. 공통 앞머리를 「띄어쓰기 단위」로만 떼어
    「대변 못 봄」이 「봄」으로 잘리는 일을 막는다 */
 function tglLabels(ss){
@@ -445,48 +445,75 @@ function siteBlocks(){
    신경학은 평소 2문(의식수준·악력)만 묻고, 이상하면 나머지 4문이 따라 나온다.
    다만 신경학 경로에서는 답과 무관하게 6문을 다 띄운다 — 의식이 명료한
    뇌경색 환자에게 동공을 안 보면 안 되기 때문이다. */
-const BASE_C  = ['Q007','Q008','Q001'];                 /* 어지럼 · 호흡곤란 · 오심구토 */
-/* 아기에게 「어지럽거나 핑 도는 느낌이 있으세요?」는 물을 수 없다.
-   소아는 같은 뜻을 아이 말로 묻는다 — 축 처지나 · 숨쉬기 힘들어 보이나 · 토했나 */
-const BASE_PED = ['Q053','Q063','Q055'];
+/* ══════ 문항 묶음 ══════
+   ★ 문항 ID(Q001…)는 빌드마다 다시 매겨진다. 엑셀 행이 하나만 바뀌어도
+     번호가 밀린다. 그래서 ID가 아니라 「진술문」으로 문항을 찾는다. */
+const SIG={
+  dizzy:['dizziness 있음','dizziness 없음'],
+  dyspnea:['호흡곤란 있음','호흡곤란 없음'],
+  nausea:['오심, 구토 있음','오심, 구토 없음'],
+  cough:['기침 있음','기침 없음'],
+  sputum:['가래 있음','가래 없음'],
+  spo2:['산소포화도 떨어짐'],
+  o2:['산소 흡입 중임'],
+  cyanosis:['청색증 있음','청색증 없음'],
+  pupil:['동공크기 :'],
+  light:['빛 반사 확인결과 prompt 함 ★','빛 반사 확인결과 sluggish 함 ★','빛 반사 확인결과 hippus 함 ★'],
+  sensory:['감각이상 있음','감각이상 없음'],
+  grasp:['grasp power 강함','grasp power 약함'],
+  obey:['obey command 가능함','obey command 가능하지 않음'],
+  stool:['대변 봄','대변 못 봄'],
+  pedReact:['울음소리 좋음','자극 주면 울음','반응 없음'],
+  pedVomit:['구토함','구토 없음'],
+};
+const keyOf = a => a.slice().sort().join('|');
+const stmtKey = q => keyOf((D.qbank[q]||{}).stmts||[]);
+const BY_SIG={};                       /* 진술문 → 그 진술문을 쓰는 문항들 */
+Object.keys(D.qbank).forEach(q=>{ (BY_SIG[stmtKey(q)]=BY_SIG[stmtKey(q)]||[]).push(q); });
+const PED_SET=new Set();               /* 소아 경로가 쓰는 문항 — 아이 말투 */
+Object.keys(D.sets).forEach(sn=>{ if(/^소아-/.test(sn))
+  D.sets[sn].dx.forEach(d=>d.ae.forEach(q=>PED_SET.add(q))); });
 const isPedPath = ()=>/^소아-/.test(S.set||'');
-/* 의식은 마무리 「의식 · 보호자」가 이미 묻는다(명료/15점 미만 → GCS → 지남력).
-   여기서 또 물으면 기록에 「의식수준 : alert」와 「의식 명료함」이 같이 남는다.
-   그래서 신경학 묶음에서 의식수준(Q174)을 뺐다. */
-const NEU_FULL = ['Q013','Q010','Q011','Q012','Q101'];  /* 악력 · 동공 · 빛반사 · 감각 · 명령수행 */
-const NEU_SET = ['두통(headache)','뇌경색뇌출혈 관련','지금 Seizure 할 때',
-                 '이미 Seizure를 하고 멈춘뒤 내원할 때','어지럼','중독','의식섬망'];
-/* Q013 ['강함','약함'] 과 Q098 ['약함','강함'] 처럼 순서만 다른 것을 따로 물어
-   한 기록에 「grasp power 약함」과 「강함」이 같이 남았다. 순서를 무시하고 맞춘다 */
-const stmtKey = q => ((D.qbank[q]||{}).stmts||[]).slice().sort().join('|');
-/* 같은 진술문을 쓰는 문항이 경로에 이미 있으면 그것을 쓴다.
-   문구가 경로마다 달라(「어지러우세요?」/「어지럽거나 핑 도는…」) 통합하면 임상 문구가 바뀐다 */
-function pickQ(canon){
+/* 경로가 이미 그 문항을 갖고 있으면 그것을 쓴다. 문구가 경로마다 달라
+   (「어지러우세요?」/「어지럽거나 핑 도는…」) 통합하면 임상 문구가 바뀐다.
+   소아 경로면 아이 말투 문항을 먼저 고른다 */
+function pickSig(name){
+  const cand=BY_SIG[keyOf(SIG[name]||[])]||[];
+  if(!cand.length) return null;
   const st=setOf(S.set);
-  if(st){ const k=stmtKey(canon);
-    for(const d of st.dx) for(const q of d.ae) if(stmtKey(q)===k) return q; }
-  return canon;
+  if(st){ const own=new Set(st.dx.flatMap(d=>d.ae));
+    const hit=cand.find(q=>own.has(q)); if(hit) return hit; }
+  if(isPedPath()){ const ped=cand.find(q=>PED_SET.has(q)); if(ped) return ped; }
+  return cand[0];
 }
-const baseQs = ()=>(isPedPath()?BASE_PED:BASE_C).map(pickQ);
-/* 숨차니? → 기침? → 가래? 는 한 세트다. 호흡곤란을 묻는 14경로 중 9곳이
-   기침·가래를 안 물어, 「있음」을 누르면 따라 나오게 했다 */
-/* 기침 · 가래 · 산소포화도 · 산소 흡입 · 청색증.
-   산소는 호흡곤란 5경로 중 3곳에만, 청색증은 소아·아나필락시스에만 있었다.
-   저산소증은 따로 만들 것이 아니라 호흡곤란에 묶여야 한다 */
-const RESP_MORE=['Q019','Q020','Q023','Q022','Q068'];
-const qBreath = ()=>pickQ(isPedPath()?'Q063':'Q008');
+const pickQ = pickSig;                 /* 예전 이름 유지 */
+const BASE_C  = ['dizzy','dyspnea','nausea'];
+/* 아기에게 「어지럽거나 핑 도는 느낌이 있으세요?」는 물을 수 없다.
+   축 처짐은 「반응 정도」와 같은 축이라 하나로 합쳤다 — 관찰이 더 정확하다 */
+const BASE_PED = ['pedReact','dyspnea','pedVomit'];
+const baseQs = ()=>(isPedPath()?BASE_PED:BASE_C).map(pickSig).filter(Boolean);
+/* 숨차니? → 기침 · 가래 · 산소포화도 · 산소 흡입 · 청색증 */
+const RESP_MORE=['cough','sputum','spo2','o2','cyanosis'];
+const qBreath = ()=>pickSig('dyspnea');
 function respOpen(){
-  const q=qBreath(), v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
+  const q=qBreath(); if(!q) return false;
+  const v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
   return typeof v==='number' && !NEGP.test(ss[v]||'');
 }
-const respQs = ()=>respOpen()? RESP_MORE.map(pickQ) : [];
+const respQs = ()=>respOpen()? RESP_MORE.map(pickSig).filter(Boolean) : [];
 /* 대변을 못 봤으면 며칠째인지. 마스터에 기간 진술문이 없어 괄호 비고로 간다 */
 const STOOL_D=['1일','2일','3일','4일','5일 이상'];
 function stoolOpen(){
-  const q=pickQ('Q004'), v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
+  const q=pickSig('stool'); if(!q) return false;
+  const v=S.ans[q], ss=(D.qbank[q]||{}).stmts||[];
   return typeof v==='number' && /못 봄$/.test(ss[v]||'');
 }
+/* 의식은 마무리 「의식 · 보호자」가 이미 묻는다. 여기서 또 물으면 기록이 겹친다 */
+const NEU_FULL=['grasp','pupil','light','sensory','obey'];
+const NEU_SET=['두통(headache)','뇌경색뇌출혈 관련','지금 Seizure 할 때',
+               '이미 Seizure를 하고 멈춘뒤 내원할 때','어지럼','중독','의식섬망'];
 const isNeuroPath = ()=>NEU_SET.indexOf(S.set)>=0;
+function neuroOpen(){ return isNeuroPath() || S.consc==='의식수준 저하됨'; }
 /* 사지 근력 — 마스터에 등급(0~V) 진술문이 없다. 「사지 근력 평가함」만 원문으로 남기고
    값은 괄호 비고로 보낸다. 동공 크기·NRS 점수와 같은 방식이다 */
 const MRC=[['0','전혀 못 움직임'],['I','근육만 꿈틀'],['II','바닥에서 밀기만'],
@@ -495,8 +522,7 @@ const MRC=[['0','전혀 못 움직임'],['I','근육만 꿈틀'],['II','바닥�
 const PWR_NA='평가불가';
 const PWR_PE='사지 근력 평가함';
 const pwrDone = ()=>!!(S.power&&S.power.arm&&S.power.leg);
-/* 실제로 등급을 매긴 것이 하나라도 있어야 「평가함」이라 적을 수 있다.
-   둘 다 평가불가인데 「사지 근력 평가함」을 적으면 안 한 걸 했다고 적는 것이다 */
+/* 실제로 등급을 매긴 것이 하나라도 있어야 「평가함」이라 적을 수 있다 */
 const pwrGraded = ()=>!!(S.power&&((S.power.arm&&S.power.arm!==PWR_NA)||(S.power.leg&&S.power.leg!==PWR_NA)));
 function vPower(){
   const w=S.power||(S.power={arm:null,leg:null});
@@ -507,16 +533,13 @@ function vPower(){
     + row('arm','상지') + row('leg','하지')
     + `<p class="hint">등급은 마스터에 없어 괄호 비고로 남습니다</p>`;
 }
-/* 신경학 사정을 띄울 때 — 경로가 신경학이거나, 마무리에서 의식 저하를 눌렀을 때 */
-function neuroOpen(){ return isNeuroPath() || S.consc==='의식수준 저하됨'; }
-const neuroQs = ()=>neuroOpen()? NEU_FULL.map(pickQ) : [];
-/* 기본·신경학으로 올라간 문항은 경로 사정에서 빼 중복을 없앤다 */
+const neuroQs = ()=>neuroOpen()? NEU_FULL.map(pickSig).filter(Boolean) : [];
+/* 기본·호흡·신경학으로 올라간 문항은 경로 사정에서 뺀다 */
 function symQs(){
   const st=setOf(S.set); if(!st) return [];
-  const up=new Set(baseQs().concat(RESP_MORE.map(pickQ), NEU_FULL.map(pickQ)));
+  const up=new Set(baseQs().concat(RESP_MORE.map(pickSig), NEU_FULL.map(pickSig)).filter(Boolean));
   return [...new Set(st.dx.flatMap(d=>d.ae))].filter(q=>!up.has(q));
 }
-
 /* 문항 한 줄 — 경로 사정 · 부위상세 · 후속사정 · 통증이 모두 이 모양을 쓴다 */
 function qRow(q){
   const v=D.qbank[q]; if(!v) return '';
@@ -532,7 +555,7 @@ function qRow(q){
   }
   else ans=`<span class="yn"><button class="${a===true?'y':''}" data-ck="${q}">${esc(tglLabels([v.stmts[0],''])[0]||'확인함')}</button></span>`;
   let extra='';
-  if(q===pickQ('Q004') && stoolOpen()){
+  if(q===pickSig('stool') && stoolOpen()){
     extra=`<div class="q ${S.stoolD?'':'miss'}"><span class="t" style="min-width:120px">며칠째 못 보셨어요?</span><span class="yn">`
       +STOOL_D.map(d=>`<button class="${S.stoolD===d?'y':''}" data-sd="${esc(d)}">${d}</button>`).join('')
       +`</span></div>`;
