@@ -468,13 +468,18 @@ const isNeuroPath = ()=>NEU_SET.indexOf(S.set)>=0;
 /* 사지 근력 — 마스터에 등급(0~V) 진술문이 없다. 「사지 근력 평가함」만 원문으로 남기고
    값은 괄호 비고로 보낸다. 동공 크기·NRS 점수와 같은 방식이다 */
 const MRC=[['0','전혀 못 움직임'],['I','근육만 꿈틀'],['II','바닥에서 밀기만'],
-           ['III','중력 이겨 듦'],['IV','저항 조금 이김'],['V','정상']];
+           ['III','중력 이겨 듦'],['IV','저항 조금 이김'],['V','정상'],
+           ['평가불가','의식이 없거나 협조가 안 됨']];
+const PWR_NA='평가불가';
 const PWR_PE='사지 근력 평가함';
-const pwrDone = ()=>!!(S.power&&(S.power.arm||S.power.leg));
+const pwrDone = ()=>!!(S.power&&S.power.arm&&S.power.leg);
+/* 실제로 등급을 매긴 것이 하나라도 있어야 「평가함」이라 적을 수 있다.
+   둘 다 평가불가인데 「사지 근력 평가함」을 적으면 안 한 걸 했다고 적는 것이다 */
+const pwrGraded = ()=>!!(S.power&&((S.power.arm&&S.power.arm!==PWR_NA)||(S.power.leg&&S.power.leg!==PWR_NA)));
 function vPower(){
   const w=S.power||(S.power={arm:null,leg:null});
-  const row=(k,lb)=>`<div class="q ${w[k]?'':'miss'}"><span class="t" style="min-width:56px">${lb}</span>`
-    +`<span class="yn">`+MRC.map(([g,d])=>
+  const row=(k,lb)=>`<div class="q ${w[k]?'':'miss'}"><span class="t" style="min-width:56px;flex:0 0 auto">${lb}</span>`
+    +`<span class="yn" style="flex-wrap:wrap">`+MRC.map(([g,d])=>
       `<button class="${w[k]===g?'y':''}" data-pw="${k}" data-v="${g}" title="${esc(d)}">${g}</button>`).join('')+`</span></div>`;
   return `<p class="lb" style="margin-top:12px">💪 사지 근력 <span style="font-weight:600;letter-spacing:0;color:var(--ink4)">0 못 움직임 · III 중력 이겨 듦 · V 정상</span></p>`
     + row('arm','상지') + row('leg','하지')
@@ -655,9 +660,11 @@ function blocks(){
       ae.push(`${ORINM[k]}에 대한 지남력 ${S.ori[k]===1?'있음':'없음'}`); });
     if(S.guard) ae.push(S.guard);
     const fpe=['낙상방지 교육함','침대 난간을 올려줌','도난방지 교육함'];
-    if(pwrDone()) fpe.unshift(PWR_PE);
+    if(pwrGraded()) fpe.unshift(PWR_PE);
     out.push({t:'의식 · 낙상', ae, dx:'낙상위험', pe:fpe});
   }
+  /* 못 한 평가를 적지 않는다 — 둘 다 평가불가면 경로 진단에 붙은 것도 뺀다 */
+  if(neuroOpen() && !pwrGraded()) out.forEach(b=>{ b.pe=(b.pe||[]).filter(t=>t!==PWR_PE); });
   /* 같은 평가가 두 블록에 겹치면 앞 블록만 남긴다.
      「사지 근력 평가함」이 경로 진단과 의식·낙상에 모두 붙어 두 번 나왔다 */
   { const seenPe=new Set();
