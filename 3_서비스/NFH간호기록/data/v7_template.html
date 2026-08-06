@@ -274,7 +274,7 @@ function fig(kind,w){
 const gcsSum=()=> (S.gcs.E&&S.gcs.V&&S.gcs.M)? S.gcs.E+S.gcs.V+S.gcs.M : null;
 const PAIN0=()=>({parts:[],subs:{},tool:null,toolOpen:false,inten:null,inten2:null,
                   pats:[],freq:null,dur:null,smc:{},aeq:{},open:false});
-let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',
+let S={nm:'',id:'',edu:false,consc:null,guard:null,ori:{},gcs:{E:null,V:null,M:null},pain:PAIN0(),det:{},closing:'',power:{arm:null,leg:null},
        sym:'',s1:'',s2:'',set:'',ans:{},off:[],cath:{},memo:''};
 
 try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(S,JSON.parse(r));}catch(e){}
@@ -465,6 +465,21 @@ function pickQ(canon){
 }
 const baseQs = ()=>BASE_C.map(pickQ);
 const isNeuroPath = ()=>NEU_SET.indexOf(S.set)>=0;
+/* 사지 근력 — 마스터에 등급(0~V) 진술문이 없다. 「사지 근력 평가함」만 원문으로 남기고
+   값은 괄호 비고로 보낸다. 동공 크기·NRS 점수와 같은 방식이다 */
+const MRC=[['0','전혀 못 움직임'],['I','근육만 꿈틀'],['II','바닥에서 밀기만'],
+           ['III','중력 이겨 듦'],['IV','저항 조금 이김'],['V','정상']];
+const PWR_PE='사지 근력 평가함';
+const pwrDone = ()=>!!(S.power&&(S.power.arm||S.power.leg));
+function vPower(){
+  const w=S.power||(S.power={arm:null,leg:null});
+  const row=(k,lb)=>`<div class="q ${w[k]?'':'miss'}"><span class="t" style="min-width:56px">${lb}</span>`
+    +`<span class="yn">`+MRC.map(([g,d])=>
+      `<button class="${w[k]===g?'y':''}" data-pw="${k}" data-v="${g}" title="${esc(d)}">${g}</button>`).join('')+`</span></div>`;
+  return `<p class="lb" style="margin-top:12px">💪 사지 근력 <span style="font-weight:600;letter-spacing:0;color:var(--ink4)">0 못 움직임 · III 중력 이겨 듦 · V 정상</span></p>`
+    + row('arm','상지') + row('leg','하지')
+    + `<p class="hint">등급은 마스터에 없어 괄호 비고로 남습니다</p>`;
+}
 /* 신경학 사정을 띄울 때 — 경로가 신경학이거나, 마무리에서 의식 저하를 눌렀을 때 */
 function neuroOpen(){ return isNeuroPath() || S.consc==='의식수준 저하됨'; }
 const neuroQs = ()=>neuroOpen()? NEU_FULL.map(pickQ) : [];
@@ -630,6 +645,8 @@ function blocks(){
       if(g!==null) ae.push('Glasgow Coma Scale : '+g);
       ae.push(g===15 ? '의식 명료함' : '의식수준 저하됨');
     }
+    /* 근력을 봤으면 「사지 근력 평가함」은 반드시 나간다.
+       진단의 평가 2개 자리를 놓고 다투지 않게 여기서 직접 넣는다 */
     /* 신경학 소견 — 진단 근거인 것은 그 진단 블록에 이미 들어갔다 */
     const dxq2=new Set(st? st.dx.flatMap(d=>d.ae) : []);
     neuroQs().filter(q=>!dxq2.has(q)).forEach(q=>{
@@ -637,10 +654,14 @@ function blocks(){
     ORI.forEach(([k])=>{ if(S.ori[k]!==undefined)
       ae.push(`${ORINM[k]}에 대한 지남력 ${S.ori[k]===1?'있음':'없음'}`); });
     if(S.guard) ae.push(S.guard);
-    out.push({t:'의식 · 낙상', ae,
-      dx:'낙상위험',
-      pe:['낙상방지 교육함','침대 난간을 올려줌','도난방지 교육함']});
+    const fpe=['낙상방지 교육함','침대 난간을 올려줌','도난방지 교육함'];
+    if(pwrDone()) fpe.unshift(PWR_PE);
+    out.push({t:'의식 · 낙상', ae, dx:'낙상위험', pe:fpe});
   }
+  /* 같은 평가가 두 블록에 겹치면 앞 블록만 남긴다.
+     「사지 근력 평가함」이 경로 진단과 의식·낙상에 모두 붙어 두 번 나왔다 */
+  { const seenPe=new Set();
+    out.forEach(b=>{ b.pe=(b.pe||[]).filter(t=>!seenPe.has(t)&&(seenPe.add(t),true)); }); }
   return out;
 }
 function text(){
@@ -654,7 +675,8 @@ function text(){
     if(b.pe.length) L.push('평가) '+b.pe.join(', '));
     L.push('');
   });
-  const nt=painLines().notes.concat(S.memo.trim()?[S.memo.trim()]:[]);
+  const pw=[]; if(S.power){ if(S.power.arm) pw.push('상지 '+S.power.arm); if(S.power.leg) pw.push('하지 '+S.power.leg); }
+  const nt=painLines().notes.concat(pw.length?['근력 — '+pw.join(' / ')]:[], S.memo.trim()?[S.memo.trim()]:[]);
   if(nt.length) L.push('('+nt.join(' / ')+')');
   return L.join('\n').trim();
 }
@@ -718,6 +740,8 @@ function missing(){
       if(!p.freq)         m.push('통증 빈도');
       if(!p.dur)          m.push('통증 기간');
     }
+    if(neuroOpen()){ if(!(S.power&&S.power.arm)) m.push('근력 — 상지');
+                     if(!(S.power&&S.power.leg)) m.push('근력 — 하지'); }
     if((D.closing||[]).length && !S.closing) m.push('더 불편한 곳');
     if(needSmc()) ['s','m','c'].forEach((k,i)=>{ if(!pn().smc[k]) m.push('SMC '+['감각','운동','순환'][i]); });
   }
@@ -743,6 +767,7 @@ function view(){
   if(S.consc==='의식수준 저하됨' && !isNeuroPath() && st){
     h.push(`<p class="lb hot" style="margin-top:14px">🧠 신경학 — 의식이 떨어져 확인합니다</p>`);
     NEU_FULL.map(pickQ).forEach(q=>h.push(qRow(q)));
+    h.push(vPower());
   }
   /* 15점 미만이면 GCS 점수를 매긴다 — 한 줄 목록, 고른 것만 설명이 펼쳐진다 */
   if(S.consc==='의식수준 저하됨'){
@@ -848,6 +873,7 @@ function view(){
     if(isNeuroPath()){
       h.push(`<p class="lb" style="margin-top:14px">🧠 신경학 — 이 경로는 항상 확인합니다</p>`);
       NEU_FULL.map(pickQ).forEach(q=>h.push(qRow(q)));
+      h.push(vPower());
     }
     /* 🤕 부위 · 상황 — 고른 것이 진단·문항을 데려온다 */
     detGroups().forEach(g=>{
@@ -927,10 +953,10 @@ function view(){
 
 /* ── 이벤트 ── */
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
+  const b=e.target.closest('[data-sym],[data-s1],[data-s2],[data-yn],[data-ck],[data-sel],[data-off],[data-edu],[data-cs],[data-gd],[data-or],[data-gc],[data-vb],[data-cmore],[data-ct],[data-cd],[data-reset],[data-cl],[data-pw],[data-site],[data-ppart],[data-psub],[data-ptool],[data-ptoolopen],[data-pint],[data-pint2],[data-ppat],[data-pfreq],[data-pdur],[data-psmc],[data-paeq],[data-popen],[data-pclr]');
   if(!b) return; const d=b.dataset;
   const tog=(arr,v)=>{ const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1); return arr; };
-  if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; }
+  if(d.reset){ S.sym=S.s1=S.s2=S.set=''; S.ans={}; S.off=[]; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; }
   else if(d.cl){ S.closing = S.closing===d.cl?'':d.cl; }
   else if(d.site){ tog(S.det[d.site]||(S.det[d.site]=[]), d.v); }
   else if(d.ppart){ const p=pn(); tog(p.parts,d.v); if(p.parts.indexOf(d.v)<0) delete p.subs[d.v]; }
@@ -946,7 +972,8 @@ document.addEventListener('click',e=>{
   else if(d.paeq){ const p=pn(); p.aeq[d.v] = p.aeq[d.v]===true?undefined:true; }
   else if(d.popen){ pn().open=!pn().open; }
   else if(d.pclr){ pn().parts=[]; pn().subs={}; }
-  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; }
+  else if(d.pw){ const w=S.power||(S.power={arm:null,leg:null}); w[d.pw]= w[d.pw]===d.v?null:d.v; }
+  else if(d.sym){ S.sym=d.sym; S.s1=S.s2=S.set=''; S.ans={}; S.pain=PAIN0(); S.det={}; S.closing=''; S.power={arm:null,leg:null}; }
   else if(d.s1){ S.s1=d.s1; S.s2=''; }
   else if(d.s2){ S.s2=d.s2; }
   else if(d.ck){ S.ans[d.ck] = S.ans[d.ck]===true?undefined:true; }
