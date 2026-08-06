@@ -902,6 +902,36 @@ function vCath(){
     + `</div></div>`);
   return h.join('');
 }
+/* 검색 결과. 글자 하나 칠 때마다 화면 전체를 다시 그리면
+   한글 조합 중에 글자가 겹쳐 보이고 결과를 눌러도 안 먹는다.
+   그래서 이 부분만 따로 만들어 갈아끼운다 */
+function vSearch(){
+  const kw=(S.q||'').trim().toLowerCase();
+  if(!kw) return '';
+  const hit=[], hit2=[];
+  D.branch.forEach(b=>{ if(!b.set) return; const st=D.sets[b.set]; if(!st) return;
+    const path=b.sym+(b.sel1?' › '+b.sel1:'')+(b.sel2?' › '+b.sel2:'');
+    const bag=[path,b.set,st.dx.map(d=>d.name).join(' ')];
+    [...new Set(st.dx.flatMap(d=>d.ae))].forEach(q=>{ const v=D.qbank[q];
+      if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
+    if(bag.join(' ').toLowerCase().indexOf(kw)>=0)
+      hit.push({b,path,dx:st.dx.map(d=>d.name).join(' + ')}); });
+  Object.keys(SITES).forEach(g=>SITES[g].forEach(x=>{
+    const bag=[g,x.v,x.note||'',x.dx||''];
+    (x.ae||[]).forEach(q=>{ const v=D.qbank[q]; if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
+    (x.pe||[]).forEach(t=>bag.push(t));
+    if(bag.join(' ').toLowerCase().indexOf(kw)>=0) hit2.push({g,x}); }));
+  if(!hit.length && !hit2.length)
+    return `<div class="sec"><p class="hint">찾는 것이 없습니다. 아래에서 골라주세요.</p></div>`;
+  return `<div class="sec">`
+    + (hit2.length ? `<p class="lb">🔍 이런 것이 있나요? ${hit2.length}개</p><div class="col">`
+        + hit2.slice(0,12).map(({g,x})=>`<button class="bv ${(S.det[g]||[]).includes(x.v)?'on':''}" data-pick="${esc(g)}" data-v="${esc(x.v)}"><b>${x.ic} ${esc(x.v)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(SITELB[g]||g)}${x.dx?' · '+esc(x.dx):''}</span></button>`).join('')
+        + `</div>` : '')
+    + (hit.length ? `<p class="lb" style="margin-top:14px">🩺 주호소 ${hit.length}개</p><div class="col">`
+        + hit.slice(0,20).map(x=>`<button class="bv" data-go="${esc(x.b.sym)}" data-g1="${esc(x.b.sel1||'')}" data-g2="${esc(x.b.sel2||'')}"><b>${esc(x.path)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.dx)}</span></button>`).join('')
+        + `</div>` : '')
+    + `</div>`;
+}
 function view(){
   _rk=new Set();
   if(!S.cathDone){ $('w').innerHTML=vCath(); save(); return; }
@@ -965,42 +995,8 @@ function view(){
     });
     cats.sort((a,b)=>a.no-b.no);
     /* 아픈 곳으로 찾기 — 주호소·분기·질문·진술문을 다 훑는다 */
-    h.push(`<div class="sec"><input class="sch" id="sch" placeholder="🔍 아픈 곳 찾기 — 배, 숨, 피, 열…" value="${esc(S.q||'')}"></div>`);
-    if((S.q||'').trim()){
-      const kw=S.q.trim().toLowerCase(), hit=[];
-      D.branch.forEach(b=>{ if(!b.set) return; const st=D.sets[b.set]; if(!st) return;
-        const path=b.sym+(b.sel1?' › '+b.sel1:'')+(b.sel2?' › '+b.sel2:'');
-        const bag=[path,b.set,st.dx.map(d=>d.name).join(' ')];
-        [...new Set(st.dx.flatMap(d=>d.ae))].forEach(q=>{ const v=D.qbank[q];
-          if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
-        if(bag.join(' ').toLowerCase().indexOf(kw)>=0)
-          hit.push({b,path,dx:st.dx.map(d=>d.name).join(' + ')}); });
-      /* 부위·상황·추가상태도 찾는다. 「벌에 쏘였다」가 경로에는 없고 여기 있다 */
-      const hit2=[];
-      Object.keys(SITES).forEach(g=>SITES[g].forEach(x=>{
-        const bag=[g,x.v,x.note||'',x.dx||''];
-        (x.ae||[]).forEach(q=>{ const v=D.qbank[q]; if(v) bag.push(String(v.q),(v.stmts||[]).join(' ')); });
-        (x.pe||[]).forEach(t=>bag.push(t));
-        if(bag.join(' ').toLowerCase().indexOf(kw)>=0) hit2.push({g,x});
-      }));
-      h.push(`<div class="sec">`+((hit.length||hit2.length)? '' : `<p class="hint">찾는 것이 없습니다. 아래에서 골라주세요.</p>`)
-        + (hit2.length
-          ? `<p class="lb">🔍 이런 것이 있나요? ${hit2.length}개</p><div class="col">`
-            + hit2.slice(0,12).map(({g,x})=>`<button class="bv ${(S.det[g]||[]).includes(x.v)?'on':''}" data-pick="${esc(g)}" data-v="${esc(x.v)}">
-                 <b>${x.ic} ${esc(x.v)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(SITELB[g]||g)}${x.dx?' · '+esc(x.dx):''}${x.note?' · '+esc(String(x.note).split('(')[0].trim()):''}</span></button>`).join('')
-            + `</div>` : '')
-        + (hit.length
-          ? `<p class="lb" style="margin-top:14px">🩺 주호소 ${hit.length}개</p><div class="col">`
-            + hit.slice(0,20).map(x=>`<button class="bv" data-go="${esc(x.b.sym)}" data-g1="${esc(x.b.sel1||'')}" data-g2="${esc(x.b.sel2||'')}"><b>${esc(x.path)}</b><span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.dx)}</span></button>`).join('')
-            + `</div>` : '')
-        + `</div>`);
-    }
-    /* 지난 환자 — 복사한 기록을 10명까지 남겨 다시 꺼낼 수 있다 */
-    { const hs=hist();
-      if(hs.length) h.push(`<details class="extra" style="margin-bottom:14px"><summary>🗂️ 지난 환자 <b>${hs.length}</b></summary><div class="col" style="padding-top:8px">`
-        + hs.map((x,i)=>`<button class="bv" data-hist="${i}"><b>${esc(x.nm)} ${esc(x.id)}</b>
-             <span style="display:block;font-size:12.5px;color:var(--ink3);margin-top:2px">${esc(x.sym||'')} · ${esc(x.at||'')}</span></button>`).join('')
-        + `</div></details>`); }
+    h.push(`<div class="sec"><input class="sch" id="sch" placeholder="🔍 아픈 곳 찾기 — 배, 숨, 피, 열…" value="${esc(S.q||'')}"></div>
+      <div id="schres"></div>`);
     { const picked=Object.keys(S.det).flatMap(g=>(S.det[g]||[]).map(v=>({g,v})));
       if(picked.length) h.push(`<div class="sec"><p class="hint" style="background:var(--soft);border:1px solid var(--edge);border-radius:10px;padding:10px 12px">
         ✅ ${picked.map(x=>esc(x.v)).join(' · ')} 켜뒀습니다 — 주호소를 고르면 함께 기록됩니다</p></div>`); }
@@ -1137,6 +1133,7 @@ function view(){
     : `<div class="lock ok">✅ 다 채웠습니다 — 위 <b>📤 복사</b>를 누르세요</div>`);
 
   $('w').innerHTML=h.join('');
+  { const r=$('schres'); if(r) r.innerHTML=vSearch(); }
   $('who').innerHTML = S.nm? esc(maskName(S.nm))+'<small>'+esc(S.id)+'</small>' : '';
   const cp=$('cp');
   cp.textContent = m.length? `🔒 ${m.length}` : '📤 복사';
@@ -1202,8 +1199,9 @@ document.addEventListener('input',e=>{
   if(t.id==='nm'){S.nm=t.value;save();return;}
   if(t.id==='id'){S.id=t.value;save();return;}
   if(t.id==='memo'){S.memo=t.value;save();return;}
-  if(t.id==='sch'){ S.q=t.value; save(); const p=t.selectionStart; view();
-                    const n=$('sch'); if(n){ n.focus(); try{n.setSelectionRange(p,p)}catch(e){} } return; }
+  if(t.id==='sch'){ S.q=t.value; save();
+                    const r=$('schres'); if(r) r.innerHTML=vSearch();   /* 입력칸은 건드리지 않는다 */
+                    return; }
   if(t.dataset.in){S.ans[t.dataset.in]=t.value;save();}
 });
 $('cp').onclick=()=>{
