@@ -273,7 +273,11 @@ const S={
 };
 let step=1, cathMore=false;
 const BASEQ=['Q007','Q008','Q001'];
+/* 신경학 경로 — 이 6개는 신경 사정 세트를 무조건 한다 (V7 NEU_SET 계승) */
 const NEURO=['뇌경색 · 뇌출혈','어지럼','의식 · 섬망','중독','Seizure','두통'];
+/* 신경 사정 세트 : 동공크기 · 동공반응 · 감각 · grasp · obey command · 의식수준
+   V7은 경로마다 neuro 필드로 흩어져 있었다. V8은 신경 경로면 전부 붙인다. */
+const NEUROQ=['Q010','Q011','Q012','Q013','Q098','Q172'];
 const MRC=[['0','전혀 못 움직임'],['I','근육만 꿈틀'],['II','바닥에서 밀기만'],
            ['III','중력 이기고 듦'],['IV','약간 저항'],['V','정상']];
 const LIMB=[['좌상지','좌 팔'],['우상지','우 팔'],['좌하지','좌 다리'],['우하지','우 다리']];
@@ -320,6 +324,8 @@ const pathOf=nm=>PATHS.find(p=>p.nm===nm);
 function askQs(){
   const out=[];
   S.picks.forEach(nm=>{ (pathOf(nm)||{q:[]}).q.forEach(q=>{ if(out.indexOf(q)<0) out.push(q); }); });
+  /* 두통·신경학 문제면 동공·감각·grasp를 무조건 사정한다 (칩스 260808) */
+  if(isNeuro()) NEUROQ.forEach(q=>{ if(out.indexOf(q)<0) out.push(q); });
   /* 부위(외상·피부 등)를 고르면 그 부위의 사정이 따라온다 */
   siteSel().forEach(x=>(x.ae||[]).forEach(q=>{ if(out.indexOf(q)<0) out.push(q); }));
   /* 신경학 이상이 보이면 혈당부터 — 저혈당을 뇌졸중으로 오인하지 않게 (V7 follow) */
@@ -534,7 +540,11 @@ function blocks(){
   const pe=['낙상방지 교육함','침대 난간을 올려줌'];
   if(Object.keys(S.power).length) pe.unshift('사지 근력 평가함');
   out.push({t:'의식 · 낙상', ae:fae, dx:'낙상위험', pe:pe.slice(0,2)});
-  return out;
+  /* 같은 진술문이 두 블록에 걸리면 앞 블록에만 남긴다 (V7 규칙).
+     두통을 주호소로 고르면 「두통 있음」이 사정과 통증에 두 번 나오던 문제 */
+  const used={};
+  out.forEach(b=>{ b.ae=b.ae.filter(t=>{ if(used[t]) return false; used[t]=1; return true; }); });
+  return out.filter(b=>b.ae.length||b.dx);
 }
 function text(){
   const L=[], who=[maskName(S.nm),S.pid.trim()].filter(Boolean).join(' ');
