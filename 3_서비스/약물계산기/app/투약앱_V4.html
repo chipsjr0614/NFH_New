@@ -1204,8 +1204,17 @@ function tpaCardHTML(d,w){
     maint  = total-bolus;
   } else { total=ind.fixedMg; maint=total; }
   // 조제 후 농도 1 mg/ml → 뽑는 부피(ml) = 용량(mg)
-  const maintVol = maint + (ind.inhouse ? d.nsMaint : 0);      // 유지용액 총 volume
-  const mlhr = maintVol/(ind.infMin/60);
+  const nsOpt = d.nsOptions.find(o=>o.ml===tpaNS) || d.nsOptions[0];
+  const nsMl  = ind.inhouse ? nsOpt.ml : 0;
+  const maintVol = maint + nsMl;                    // 유지용액 총 volume
+  const mlhr  = maintVol/(ind.infMin/60);           // 1시간 내 주입에 필요한 실제 속도
+  // 문서에 지정값이 있으면 그것이 우선(150ml 기준 200ml/hr), 없으면 계산값
+  const dialShow = (ind.inhouse && nsOpt.docDial) ? nsOpt.docDial : Math.round(mlhr);
+  const deviate  = ind.inhouse && !nsOpt.docDial;
+
+  const nsSeg = ind.inhouse ? d.nsOptions.map(o=>
+    `<button class="mini-btn ${o.ml===tpaNS?'on':''}" onclick="setTpaNS(${o.ml})">${o.label}<br>
+     <span style="font-weight:400;font-size:11px;opacity:.8">${o.note}</span></button>`).join('') : '';
 
   // 체중별 표 — 45~80kg는 원내 문서 값, 그 밖은 계산값
   let rows='';
@@ -1213,12 +1222,15 @@ function tpaCardHTML(d,w){
     const ws=[45,50,55,60,65,70,75,80,85,90,95,100];
     rows=ws.map(kg=>{
       const t=Math.min(kg*ind.perKg, ind.maxMg), b=t*ind.bolusPct/100, m=t-b;
+      const tv=m+nsMl;
       const doc = kg>=45&&kg<=80;
       return `<tr class="${kg===Math.round(w)?'cur':''}" onclick="setIW(${kg})">
         <td>${kg} kg${doc?'':' <span style="color:var(--warn)">*</span>'}</td>
         <td style="text-align:right">${fmtNum(t,1)} mg</td>
         <td style="text-align:right">${fmtNum(b,2)} mg</td>
-        <td style="text-align:right">${fmtNum(m,2)} mg</td></tr>`;
+        <td style="text-align:right">${fmtNum(m,2)} mg</td>
+        <td style="text-align:right">${Math.round(tv)} ml</td>
+        <td style="text-align:right;font-weight:700">${nsOpt.docDial?nsOpt.docDial:Math.round(tv)}</td></tr>`;
     }).join('');
   }
 
@@ -1275,24 +1287,41 @@ function tpaCardHTML(d,w){
         <div class="ts-n">② 유지</div>
         <div class="ts-v">${fmtNum(maint,2)} <span>mg</span></div>
         <div class="ts-d">50ml 주사기로 <b>${fmtNum(maint,2)} ml</b> 뽑기<br>
-          → <b>N/S ${d.nsMaint}ml</b>에 희석 = 총 <b>약 ${Math.round(maintVol)} ml</b><br>
+          → <b>N/S ${nsMl}ml</b>에 희석 = 총 <b>약 ${Math.round(maintVol)} ml</b><br>
           → Regulator로 <b>1시간</b>에 주입</div>
       </div>
       <div class="tpa-step hl">
         <div class="ts-n">③ Regulator dial</div>
-        <div class="ts-v">${d.dial} <span>ml/hr</span></div>
-        <div class="ts-d">원내 문서 지정값<br>
-          <span style="opacity:.8">(실제 총량 ${Math.round(maintVol)}ml ÷ 1h = ${fmtRate(mlhr)})</span><br>
+        <div class="ts-v">${dialShow} <span>ml/hr</span></div>
+        <div class="ts-d">${nsOpt.docDial
+          ? `원내 문서 지정값 (N/S 150ml 기준)<br><span style="opacity:.8">실제 총량 ${Math.round(maintVol)}ml ÷ 1h = ${fmtRate(mlhr)}</span>`
+          : `<b>계산값</b> — 총 ${Math.round(maintVol)}ml ÷ 1시간<br><span style="opacity:.8">문서의 200ml/hr는 150ml 기준입니다</span>`}<br>
           <b>시간 내 주입 여부를 계속 확인</b></div>
       </div>
     </div>
+
+    ${ind.inhouse?`
+    <div style="padding:0 20px 4px">
+      <div class="sec-head">희석용 N/S — 원내 재고는 250ml만 있습니다</div>
+      <div class="seg">${nsSeg}</div>
+    </div>`:''}
+
+    ${deviate?`<div class="alert alert-warn">⚠️ <b>원내 문서와 달라지는 지점</b><br>
+      문서는 N/S <b>150ml</b> 기준(총 약 200ml → dial <b>200 ml/hr</b>)입니다.
+      <b>250ml</b>을 쓰면 총량이 <b>약 ${Math.round(maintVol)}ml</b>가 되어,
+      같은 1시간에 넣으려면 dial을 <b>약 ${dialShow} ml/hr</b>로 올려야 합니다.<br>
+      · 투여되는 <b>약물의 양은 동일</b>합니다 (${fmtNum(maint,2)}mg) — 바뀌는 건 수액량과 속도입니다.<br>
+      · <b>★ 의국·약제부 승인 필요</b> · Regulator dial이 ${dialShow}ml/hr까지 조절되는지 확인<br>
+      · 250ml 백에서 100ml를 빼내 150ml로 맞추면 문서 그대로 운영할 수 있습니다.</div>`:''}
 
     ${rows?`<details class="rate-fold" open>
       <summary>체중별 투여 용량 · 행을 누르면 체중 적용 &nbsp;<span style="color:var(--warn);font-weight:400">* = 원내 문서 범위(45~80kg) 밖, 계산값</span></summary>
       <table class="rate-table">
         <tr><th>체중</th><th style="text-align:right">총 투여량<br><span style="font-weight:400">×0.9mg</span></th>
         <th style="text-align:right">Bolus<br><span style="font-weight:400">10%</span></th>
-        <th style="text-align:right">유지용량<br><span style="font-weight:400">90%</span></th></tr>
+        <th style="text-align:right">유지용량<br><span style="font-weight:400">90%</span></th>
+        <th style="text-align:right">유지용액<br><span style="font-weight:400">+N/S ${nsMl}</span></th>
+        <th style="text-align:right">dial<br><span style="font-weight:400">ml/hr</span></th></tr>
         ${rows}
       </table>
     </details>`:''}
