@@ -149,14 +149,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .tag{background:#1a2e0e;border:1px solid var(--k4bd);color:#86efac;padding:5px 11px;border-radius:20px;font-size:13px;cursor:pointer;}
 .tag.surg{background:#1c1805;border-color:var(--k3bd);color:#fde047;}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-/* abuse */
-.abuse-card{border-color:var(--k1bd);}
-.agrp{font-size:12px;color:var(--mute);font-weight:700;margin:10px 0 6px;}
-.aitem{display:flex;gap:9px;align-items:flex-start;padding:9px;border:1px solid var(--brd);border-radius:var(--rs);margin-bottom:6px;cursor:pointer;background:var(--surf2);}
-.aitem.on{border-color:var(--k1bd);background:var(--k1bg);}
-.aitem .abx{width:20px;height:20px;border-radius:5px;border:1px solid var(--dim);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;}
-.aitem.on .abx{background:var(--k1);border-color:var(--k1);}
-.aitem b{font-size:14px;display:block;color:var(--txt);} .aitem small{display:block;font-size:12px;color:var(--mute);margin-top:2px;}
+/* 학대 선별 (★V7: FIND 하나로 통합 — 기존 체크리스트형 '학대 의심 사정' 카드는 삭제) */
 .anotice{font-size:12px;color:#fdba74;background:var(--k2bg);border:1px solid var(--k2bd);border-radius:var(--rs);padding:9px 11px;margin-top:8px;}
 /* output */
 .outta{width:100%;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--r);padding:13px;font-family:inherit;font-size:14px;color:var(--txt);line-height:1.8;resize:vertical;min-height:170px;outline:none;}
@@ -347,7 +340,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <button class="allnorm" onclick="abcdAllNormal()">✓ ABCD 모두 정상</button>
       </div>
 
-      <div id="abuseBadge1" style="display:none;background:var(--k2bg);border:1px solid var(--k2bd);color:#fdba74;border-radius:var(--rs);padding:10px 13px;font-size:13px;margin-bottom:11px">⚠️ <b id="abuseBadgeTxt">학대 선별 권고</b> · 기록 단계에서 사정합니다</div>
+      <div id="findBadge" style="display:none;background:var(--k2bg);border:1px solid var(--k2bd);color:#fdba74;border-radius:var(--rs);padding:10px 13px;font-size:13px;margin-bottom:11px">⚠️ <b id="findBadgeTxt">학대 선별 대상</b> · 기록 단계에서 사정합니다</div>
 
       <div class="banner ok" id="riskBanner">
         <div class="bt" id="riskTt">🟢 안정</div>
@@ -441,23 +434,18 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         </div>
       </div>
 
-      <!-- ★V7 FIND 학대 선별 (관찰 7 + 확인질문 3) — 12세 이하·70세 이상 자동 표시·필수 -->
-      <button class="allnorm" id="findBtn" style="border-style:solid;border-width:2px;border-color:var(--k2bd);background:var(--k2bg);color:#fdba74;margin-bottom:11px;font-size:17px;font-weight:800;padding:14px" onclick="toggleFindOpen()">🔍 FIND 학대 선별 열기 +</button>
+      <!-- ★V7 학대 선별 (FIND 관찰 7 + 확인질문 3) — 나이를 입력하면 자동 표시.
+           12세 이하 = 아동학대 선별(필수) / 13세 이상 = 학대 의심 선별(70세 이상 필수)
+           V6까지 있던 체크리스트형 '학대 의심 사정' 카드는 삭제 — 도구가 둘이면 헷갈린다(칩스 260808) -->
+      <button class="allnorm" id="findBtn" style="border-style:solid;border-width:2px;border-color:var(--k2bd);background:var(--k2bg);color:#fdba74;margin-bottom:11px;font-size:17px;font-weight:800;padding:14px" onclick="toggleFindOpen()">🔍 학대 선별 열기 +</button>
       <div class="card" id="findCard" style="display:none;border-color:var(--k2bd);border-width:2px">
-        <div class="lbl" style="color:#fdba74;font-size:17px">🔍 FIND 학대 선별 <span id="findWhy" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+        <div class="lbl" style="color:#fdba74;font-size:17px"><span id="findTitle">🔍 학대 선별</span> <span id="findWhy" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
         <div id="findStat" style="font-size:13px;margin-bottom:11px;padding:9px 11px;background:var(--surf2);border-radius:var(--rs)"></div>
         <div class="miniq">👀 ① 관찰 7가지 <span style="font-weight:400;color:var(--mute)">— 묻지 말고 환자·보호자를 보면서 확인</span></div>
         <div id="findObs"></div>
         <div class="miniq" style="margin-top:13px">🗣️ ② 보호자·환자에게 확인 3가지</div>
         <div id="findAsk"></div>
-        <div class="anotice">⚠️ 의료인은 아동·노인 학대 <b>신고 의무자</b>입니다. 해당 항목이 있으면 아래 학대 의심 사정을 함께 시행하고 기관 절차에 따라 신고를 검토하세요.</div>
-      </div>
-
-      <button class="allnorm" id="abuseBtn" style="border-style:solid;border-width:2px;border-color:var(--k1bd);background:var(--k1bg);color:#fca5a5;margin-bottom:11px;font-size:18px;font-weight:800;padding:15px" onclick="toggleAbuseOpen()">🚨 학대 의심 사정 열기 +</button>
-      <div class="card abuse-card" id="abuseCard" style="display:none">
-        <div class="lbl" style="color:#fca5a5;font-size:17px">⚠️ 학대 의심 스크리닝 <span id="abuseWhy" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
-        <div id="abuseList"></div>
-        <div class="anotice">⚠️ 의료인은 아동·노인 학대 <b>신고 의무자</b>입니다. 의심되면 기관 절차에 따라 신고를 검토하세요.</div>
+        <div class="anotice">⚠️ 의료인은 아동·노인 학대 <b>신고 의무자</b>입니다. 해당 항목이 있으면 기관 절차에 따라 신고를 검토하세요.</div>
       </div>
 
       <div class="card">
@@ -543,7 +531,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         <div><div class="fl">환자 이름</div><input class="fi" id="fName" oninput="S.pname=this.value;var n=document.getElementById('nameInp');if(n)n.value=this.value;maskHint();fmValidate()"></div>
         <div><div class="fl">등록번호 (8자리)</div><input class="fi" id="fPid" inputmode="numeric" maxlength="8" placeholder="12345678" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,8);S.pid=this.value;var p=document.getElementById('pidInp');if(p)p.value=this.value;fmValidate()"></div>
       </div>
-      <div style="margin-top:9px"><div class="fl">나이</div><input class="fi" id="fmAgeInp" placeholder="예) 45 / 7세 / 72" oninput="S.age=this.value;var a=document.getElementById('ageInp');if(a)a.value=this.value;var s=document.getElementById('fmAge');if(s)s.textContent=this.value||'__';renderPeds();renderAbuse()"></div>
+      <div style="margin-top:9px"><div class="fl">나이</div><input class="fi" id="fmAgeInp" placeholder="예) 45 / 7세 / 72" oninput="S.age=this.value;var a=document.getElementById('ageInp');if(a)a.value=this.value;var s=document.getElementById('fmAge');if(s)s.textContent=this.value||'__';renderPeds();renderFind()"></div>
       <div style="margin-top:9px"><div class="fl">내원시간</div><div class="orow"><input class="oinp" id="fmArr" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="timeInput(this,'arr')"><button class="onow" onclick="setTime('arr')">🕐 지금</button></div></div>
       <div style="margin-top:8px"><div class="fl">접수시간</div><div class="orow"><input class="oinp" id="fmReg" placeholder="--:--" maxlength="5" inputmode="numeric" oninput="timeInput(this,'reg')"><button class="onow" onclick="setTime('reg')">🕐 지금</button></div></div>
       <div style="margin-top:9px"><div class="fl">담당교수</div><input class="fi" id="fDoc" oninput="S.doctor=this.value"></div>
@@ -565,9 +553,9 @@ const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contra
   pedW:'',pedT:'',pedH:'',patApp:'',patWob:'',patCir:'',pedRisk:new Set(),
   gi:{},abcd:{A:'',B:'',C:'',D:''}, ccs:[], ccOther:'', forceSevere:false, ans:{},
   onsetBy:{}, painBy:{}, openCC:{},        // ★V6: 발생시점·통증(NRS)을 주호소별로 분리
-  redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
-  find:{}, findOpen:false,                 // ★V7: FIND 학대 선별(관찰 7 + 확인질문 3). o1~o7='있음'/'없음', q1~q3=서술
-  ktas:'', ktasChg:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false, abuseOpen:false, abuseAuto:false, noteEdited:false, o2mode:'RA', o2:'', o2L:'', note:'', present:'', presentEdited:false};
+  redFlags:[], pmhx:[], surg:[], lmp:'',
+  find:{}, findOpen:false,                 // ★V7: 학대 선별(FIND 관찰 7 + 확인질문 3). obs1~7='있음'/'없음', q1~q3=서술
+  ktas:'', ktasChg:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false, noteEdited:false, o2mode:'RA', o2:'', o2L:'', note:'', present:'', presentEdited:false};
 let cur=1;
 const KN={1:'즉시소생',2:'응급',3:'긴급',4:'준응급',5:'비응급'};
 function resetAll(){if(confirm('처음으로 돌아갑니다. 입력 내용이 사라집니다.')){clearSaved();location.reload();}}
@@ -952,7 +940,7 @@ function ageFromYMD(s){
   return (age>=0&&age<=120)?age:null;
 }
 // 나이 직접 입력
-function setAgeDirect(el){S.age=el.value;const f=document.getElementById('fmAgeInp');if(f)f.value=el.value;const s=document.getElementById('fmAge');if(s)s.textContent=el.value||'__';renderTrack();renderPeds();renderAbuse();renderFind();}
+function setAgeDirect(el){S.age=el.value;const f=document.getElementById('fmAgeInp');if(f)f.value=el.value;const s=document.getElementById('fmAge');if(s)s.textContent=el.value||'__';renderTrack();renderPeds();renderFind();}
 // 생일 6자리 → 아래에 "만 N세" 표시 + 나이 자동 채움
 function dobInput(el){
   const t=el.value.replace(/[^0-9]/g,'').slice(0,6);el.value=t;
@@ -964,7 +952,7 @@ function dobInput(el){
     const ai=document.getElementById('ageInp');if(ai)ai.value=S.age;
     const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age;
     const s=document.getElementById('fmAge');if(s)s.textContent=S.age||'__';
-    renderTrack();renderPeds();renderAbuse();renderFind();
+    renderTrack();renderPeds();renderFind();
   }else if(disp){disp.textContent=(t.length===6)?'날짜 확인 필요':'';disp.style.display=t?'':'none';}
 }
 // 소아 평가
@@ -1468,7 +1456,11 @@ const FIND_ASK=[
 ];
 function findChild(){const a=ageNum();return a!==null&&a<=12;}      // 개월·주·일 표기는 ageNum()에서 0세
 function findElder(){const a=ageNum();return a!==null&&a>=70;}
-function findTarget(){return findChild()||findElder();}             // 자동 표시 + 필수
+function findTarget(){return findChild()||findElder();}             // 필수(미응답 시 최종확인 차단)
+// ★V7(칩스 260808): 12세 이하는 '아동학대 선별', 13세 이상 성인은 '학대 의심 선별'로 뜬다.
+//   나이를 넣으면 전 연령에서 카드가 자동으로 열린다. 다만 진행 차단(필수)은 12세 이하·70세 이상만.
+function findShow(){return ageNum()!==null;}
+function findTitle(){return findChild()?'🔍 아동학대 선별 (FIND)':'🔍 학대 의심 선별 (FIND)';}
 function findObsLabel(k,nm){return (k==='obs6'&&!findChild())?'환자의 행동':nm;}   // 성인 대상이면 '아동' → '환자'
 function findYes(){return FIND_OBS.filter(([k])=>S.find[k]==='있음');}
 function findAnswered(){return FIND_OBS.some(([k])=>S.find[k])||FIND_ASK.some(([k])=>String(S.find[k]||'').trim());}
@@ -1484,17 +1476,19 @@ function pickFind(k,v){S.find[k]=(S.find[k]===v?'':v);renderFind();render();}
 function setFindAsk(k,v,re){S.find[k]=v;if(re)renderFind();else renderFindStat();render();}
 function renderFindStat(){
   const st=document.getElementById('findStat');if(!st)return;
-  const miss=findTarget()?findMissing().length:0,yes=findYes().length;
-  st.innerHTML=miss?`<b style="color:#fca5a5">미응답 ${miss}개</b> · 10문항을 모두 응답해야 기록을 완료할 수 있습니다`
-    :(yes?`<b style="color:#fca5a5">해당 ${yes}개</b> · 아래 학대 의심 사정을 함께 시행하세요`:'✅ 10문항 시행 완료 · 해당 없음');
+  const miss=findMissing().length,yes=findYes().length,must=findTarget();
+  st.innerHTML=miss?`<b style="color:#fca5a5">미응답 ${miss}개</b> · `+(must?'10문항을 모두 응답해야 기록을 완료할 수 있습니다':'권고 항목입니다(응답하면 기록에 남습니다)')
+    :(yes?`<b style="color:#fca5a5">해당 ${yes}개</b> · 기관 절차에 따라 신고를 검토하세요`:'✅ 10문항 시행 완료 · 해당 없음');
 }
 function renderFind(){
+  renderFindBadge();
   const card=document.getElementById('findCard');if(!card)return;
-  const tgt=findTarget(),btn=document.getElementById('findBtn');
-  if(btn){btn.style.display=tgt?'none':'';btn.textContent=S.findOpen?'🔍 FIND 학대 선별 닫기 −':'🔍 FIND 학대 선별 열기 +';}
-  if(!(tgt||S.findOpen)){card.style.display='none';return;}
+  const show=findShow(),btn=document.getElementById('findBtn');
+  if(btn){btn.style.display=show?'none':'';btn.textContent=S.findOpen?'🔍 학대 선별 닫기 −':'🔍 학대 선별 열기 +';}
+  if(!(show||S.findOpen)){card.style.display='none';return;}
   card.style.display='';
-  document.getElementById('findWhy').textContent='('+(findChild()?'만 12세 이하 — 필수':findElder()?'만 70세 이상 — 필수':'수동 시행')+')';
+  const ti=document.getElementById('findTitle');if(ti)ti.textContent=findTitle();
+  document.getElementById('findWhy').textContent='('+(findChild()?'만 12세 이하 — 필수':findElder()?'만 70세 이상 — 필수':findShow()?'권고':'수동 시행')+')';
   renderFindStat();
   document.getElementById('findObs').innerHTML=FIND_OBS.map(([k,nm,help],i)=>{
     const v=S.find[k];
@@ -1508,8 +1502,8 @@ function renderFind(){
 }
 // 기록 한 줄. 양성이면 '$'(문제사항) 접두 → 출력에서 🔴가 붙는다.
 function findSummary(){
-  if(!findTarget()&&!findAnswered())return '';
-  const head='FIND 학대 선별('+(findChild()?'12세 이하':findElder()?'70세 이상':'수동 시행')+')';
+  if(!findShow()&&!findAnswered())return '';
+  const head=(findChild()?'아동학대 선별(FIND · 12세 이하)':'학대 의심 선별(FIND'+(findElder()?' · 70세 이상':'')+')');
   const miss=findMissing();
   // 대상 환자만 "미완료"를 남긴다(진행이 차단되므로 최종 기록엔 안 나옴). 비대상이 수동으로 하다 만 것은 기록하지 않음.
   if(miss.length)return findTarget()?('$ '+head+' : 미완료 — 미응답 '+miss.length+'개'):'';
@@ -1519,34 +1513,18 @@ function findSummary(){
   return (yes.length?'$ ':'')+head+' : '+body+(asked.length?' · '+asked.join(' · '):'');
 }
 
-// ══════════ 학대 스크리닝 ══════════
-const A_COMMON=[['손상-기전 불일치','다친 경위와 실제 부상이 안 맞음'],['지연 내원','다친 뒤 한참 지나 데려옴'],['진술 번복·불일치','말이 바뀌거나 보호자·환자 진술이 다름'],['반복 내원','같은/유사 손상 반복 내원 이력'],['보호자 통제적','환자와 단둘이 못 있게 하거나 통제적']];
-const A_CHILD=[['발달단계 불일치','발달상 불가능한 손상(못 걷는 영아 골절 등)'],['의심 부위 멍','몸통·귀·목 멍, 4개월 미만 영아 멍(TEN-4)'],['얼굴 손상','볼·눈꺼풀·결막·귓바퀴·설소대(FACES)'],['양상 있는 손상','담배·담금·물림·도구 자국'],['시기 다른 손상','회복단계가 서로 다른 손상 혼재']];
-const A_ELDER=[['양상 손상','설명 안 되는 손상, 결박·담금 자국'],['방임 단서','탈수·영양불량·욕창·심한 위생불량'],['약 관리 안 됨','처방약 미사용 누적 등'],['보호자 두려움','보호자에 위축·두려운 태도'],['경제적 착취','보호자가 비용 거부 등']];
 // ★V6: '18개월'이 parseInt로 18(세)이 되어 소아 정렬·학대 선별이 틀리던 문제 → 개월·주·일 표기는 0세로
 function ageNum(){const a=(S.age||'').trim();if(!a)return null;if(/개월|주|일/.test(a))return 0;const n=parseInt(a,10);return isNaN(n)?null:n;}
-function renderAbuse(){
-  const a=ageNum();const ped=(a!==null&&a<15)||isPed()||S.ccs.some(c=>CC[c]&&CC[c].ped);const elder=a!==null&&a>=65;const trauma=ccHas('외상')||ccHas('소아 외상');
-  // 첫 페이지: 소아·노인이면 선별 권고 배지만
-  const badge=document.getElementById('abuseBadge1');
-  // ★V7: FIND 대상이면 배지에 "지금부터 관찰" 안내 — 관찰 7항목은 말 걸기 전부터 봐야 하므로
-  if(badge){const ft=findTarget(),rec=ft||ped||elder;badge.style.display=rec?'':'none';
-    if(rec){const t=document.getElementById('abuseBadgeTxt');
-      if(t)t.textContent=ft?((findChild()?'만 12세 이하':'만 70세 이상')+' — FIND 학대 선별 대상 · 지금부터 관찰 7항목을 보세요')
-                          :((ped?'소아':'노인')+' — 학대 선별 권고');}}
-  // 마지막 기록 페이지: 실제 체크리스트 (소아·노인·외상 자동 / 수동 토글)
-  const show=S.abuseOpen;
-  const btn=document.getElementById('abuseBtn');if(btn)btn.textContent=show?'🚨 학대 의심 사정 닫기 −':'🚨 학대 의심 사정 열기 +';
-  const card=document.getElementById('abuseCard');if(!card)return;
-  if(!show){card.style.display='none';return;}   // ★V6: 닫아도 체크 유지(실수로 닫으면 사정 내용이 날아가던 문제)
-  card.style.display='';
-  let why=[];if(ped)why.push('소아');if(elder)why.push('노인');if(trauma)why.push('외상');if(S.abuseOpen&&!why.length)why.push('수동');
-  document.getElementById('abuseWhy').textContent='('+why.join('·')+' 노출)';
-  let groups=[['공통',A_COMMON]];if(ped)groups.push(['아동',A_CHILD]);if(elder)groups.push(['노인',A_ELDER]);
-  document.getElementById('abuseList').innerHTML=groups.map(([title,items])=>`<div class="agrp">${title}</div>`+items.map(([nm,help])=>`<div class="aitem ${S.abuse.has(nm)?'on':''}" onclick="toggleAbuse('${nm}')"><span class="abx">${S.abuse.has(nm)?'✓':''}</span><div><b>${nm}</b><small>${help}</small></div></div>`).join('')).join('');
+// ★V7: 첫 화면 배지 — 학대 선별 대상임을 미리 알린다(관찰 7항목은 말 걸기 전부터 봐야 하므로)
+function renderFindBadge(){
+  const badge=document.getElementById('findBadge');if(!badge)return;
+  // 배지는 필수 대상(12세 이하·70세 이상)만 — 모든 환자에게 띄우면 경고 효과가 사라진다.
+  // 13~69세는 배지 없이 S5 카드만 자동으로 열린다.
+  const show=findTarget();badge.style.display=show?'':'none';if(!show)return;
+  const t=document.getElementById('findBadgeTxt');if(!t)return;
+  t.textContent=(findChild()?'만 12세 이하 — 아동학대 선별(필수)':'만 70세 이상 — 학대 의심 선별(필수)')
+                +' · 지금부터 관찰 7항목을 보세요';
 }
-function toggleAbuse(nm){S.abuse.has(nm)?S.abuse.delete(nm):S.abuse.add(nm);renderAbuse();render();}
-function toggleAbuseOpen(){S.abuseOpen=!S.abuseOpen;renderAbuse();render();}
 
 // ══════════ 과거력 ══════════
 function addPmhx(){const i=document.getElementById('pmhxInp');const dt=document.getElementById('pmhxDate');const v=i.value.trim();if(!v)return;const d=(dt&&dt.value.trim())?'('+dt.value.trim()+')':'';S.pmhx.push('#'+v.replace(/^#/,'')+d);i.value='';if(dt)dt.value='';i.focus();renderPmhx();render();}
@@ -1667,7 +1645,6 @@ function fullNote(){
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))spec.push('$ '+(b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   isoMessages().forEach(m=>spec.push(m));
   {const fs=findSummary();if(fs)spec.push(fs);}                       // ★V7 FIND — 음성(해당 없음)도 시행 증거로 남긴다
-  if(S.abuse.size)spec.push('$ 학대 의심: '+[...S.abuse].join(', '));
   if((S.note||'').trim())spec.push(S.note.trim());
   if(spec.length)t+=`\n[특이사항] ${spec.join(' / ')}`;
   if(S.ktas)t+=`\n[KTAS] 내원시 ${S.ktas} (${KN[S.ktas]})`+(S.ktasChg?` → 변경 ${S.ktasChg} (${KN[S.ktasChg]})`:'');
@@ -1700,9 +1677,9 @@ function isoMessages(){
   return m;
 }
 function openFinal(){
-  // ★V7: FIND 대상(12세 이하·70세 이상)은 10문항 전부 응답해야 기록 완료 가능
+  // ★V7: 필수 대상(12세 이하·70세 이상)은 10문항 전부 응답해야 기록 완료 가능
   if(findTarget()){const m=findMissing();
-    if(m.length){alert('FIND 학대 선별을 모두 응답해야 합니다.\n\n미응답 '+m.length+'개\n· '+m.join('\n· '));
+    if(m.length){alert((findChild()?'아동학대 선별':'학대 의심 선별')+' 10문항을 모두 응답해야 합니다.\n\n미응답 '+m.length+'개\n· '+m.join('\n· '));
       const c=document.getElementById('findCard');if(c)c.scrollIntoView({behavior:'smooth',block:'center'});return;}}
   if(!S.ktas){alert('내원시 KTAS를 입력하세요.');const r=document.getElementById('ktasRow');if(r)r.scrollIntoView({behavior:'smooth',block:'center'});return;}
   document.getElementById('fName').value=S.pname;document.getElementById('fPid').value=S.pid;document.getElementById('fDoc').value=S.doctor;
@@ -1741,7 +1718,6 @@ function recordParts(){
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))specLines.push('🔴 $ '+(b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   isoMessages().forEach(m=>specLines.push('🔴 '+m));
   {const fs=findSummary();if(fs)specLines.push((fs.startsWith('$')?'🔴 ':'')+fs);}   // ★V7 FIND
-  if(S.abuse.size)specLines.push('🔴 학대 의심: '+[...S.abuse].join(', '));
   if((S.note||'').trim()){const nt=S.note.trim().replace(/[\r\n\t]+/g,' ');specLines.push((nt.startsWith('$')?'🔴 ':'')+nt);}
   const spec=specLines.length?specLines.map(l=>'• '+l).join('\n'):'없음';
   const sexAge=(S.sex||'-')+' / '+(S.age||'-');
@@ -1855,7 +1831,6 @@ function warnItems(){
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))w.push((b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   isoMessages().forEach(m=>w.push(m));
   {const fs=findSummary();if(fs&&fs.startsWith('$'))w.push(fs.replace(/^\$ /,''));}   // ★V7: FIND 양성·미완료만 경고
-  if(S.abuse.size)w.push('학대 의심: '+[...S.abuse].join(', '));
   if(S.contrast==='있음')w.push(contrastText()+' — 조영검사 시 주의(전처치/대체검사 확인)');
   if(S.preg==='가능성'||S.preg==='임신중')w.push('임신 '+S.preg+(S.lmp?' (LMP '+S.lmp+')':''));
   if(S.travel==='있음')w.push('여행력 있음');
@@ -1873,8 +1848,8 @@ function render(){
   if(cur===5){
     // ★V7: 상세 학대 체크리스트는 FIND에서 '있음'이 나왔을 때 자동으로 연다.
     //      (V6는 소아·노인·외상이면 무조건 열려 화면이 길었다 — 1차 선별은 이제 FIND가 맡는다)
-    if(findYes().length&&!S.abuseAuto){S.abuseOpen=true;S.abuseAuto=true;}
-    if(!S.noteEdited)document.getElementById('outNote').value=fullNote();renderAbuse();renderWarnBox();
+    renderFind();
+    if(!S.noteEdited)document.getElementById('outNote').value=fullNote();renderWarnBox();
   }
   if(cur===4){renderKTAS();renderCcHint();refreshPresent();}
   saveSoon();                       // ★V6 자동 저장
@@ -2019,7 +1994,7 @@ function applyStateToDom(){
   const dd=document.getElementById('dateDisp');if(dd)dd.textContent=S.date;
   const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age||'';
   renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();
-  renderPeds();renderPmhx();renderSurg();renderAbuse();renderFind();maskHint();   // ★V7 FIND 복원
+  renderPeds();renderPmhx();renderSurg();renderFind();maskHint();   // ★V7 학대 선별 복원
   // 주호소별 발생시점·NRS는 renderDetail()이 S에서 직접 그리므로 별도 복원 불필요
 }
 function restoreSaved(){
@@ -2040,7 +2015,7 @@ function discardSaved(){clearSaved();restorePending=false;const bar=document.get
 
 // init
 S.date=today();document.getElementById('dateDisp').textContent=S.date;
-renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();renderPeds();renderAbuse();go(1);
+renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();renderPeds();renderFind();go(1);
 showRestoreBar();
 window.addEventListener('beforeunload',saveNow);
 </script>
