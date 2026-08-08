@@ -283,6 +283,12 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
 .ref-missing{font-size:var(--fs-body);color:var(--warn);background:var(--warn-bg);border-left:4px solid var(--warn);padding:12px 16px;border-radius:10px;font-weight:600;line-height:1.6}
 @media(max-width:700px){ .adult-layout{grid-template-columns:1fr} }
 
+/* ══ 캐릭터: 빈 화면에만 조용히 (소방 헬멧 · 원본 도안) ══ */
+.mascot{display:flex;flex-direction:column;align-items:center;gap:12px;padding:44px 20px;text-align:center;color:var(--text-dim)}
+.mascot svg{opacity:.5}
+.m-msg{font-size:var(--fs-body-l);font-weight:650;color:var(--text-dim)}
+.m-sub{font-size:var(--fs-body);color:var(--text-dim);opacity:.7}
+
 /* ══ 🧮 직접계산 탭 ══ */
 .calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
 .field{display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -786,9 +792,57 @@ const HELPER_DRUGS = [
     ref:{ dose:'phosphate >2mg/dL 또는 무증상까지 교정 · MIVs 1@ + N/S 250cc(말초) over 1시간', mix:'—', caution:'IV bolus 금지 · 1@에 K 20mEq 함유(투여속도 <20mmol/hr)' } },
   { id:'nacl3', name:'3% NaCl', vol:'(고장성 식염수)', badge:'저Na·뇌부종', color:'red', cat:'🧪 전해질',
     ref:{ dose:'증상성 저나트륨혈증: 100~150ml IV over 10~20분, 증상 지속 시 반복 (목표 24h Na 상승 <8~10mEq/L) · 뇌부종/ICP↑: 2~5ml/kg over 10~20분', mix:'원액(3% ≈ 513mEq/L Na) · 고장성 → 가급적 중심정맥', caution:'⚠️ 과교정 시 삼투성 탈수초증(ODS/CPM) — Na 상승속도 엄격 제한 · 혈청 Na 자주 f/u · 용량과부하 · ★원내 프로토콜·약제부 확인' } },
+
+  // ══════════════════════════════════════════════════════════════
+  // 🩸 혈전용해·항응고 (V4 추가 · 260808)
+  // ⚠️ Actilyse는 DRUG_DB/ENRICH 어디에도 없던 신규 데이터 — 전량 표준 레퍼런스 기반 초안.
+  //    약제부·의국 검증 전 사용 금지. 적응증마다 용량 체계가 완전히 다르므로 선택을 강제한다.
+  // ══════════════════════════════════════════════════════════════
+  { id:'tpa', name:'Actilyse (alteplase)', vol:'(50mg vial × 2)', badge:'혈전용해 tPA', color:'red',
+    cat:'🩸 혈전용해·항응고', special:'tpa',
+    verify:'★ 약제부·의국 검증 필요',
+    recon:'1 vial(50mg) + 동봉 주사용수(SWFI) 50ml → <b>1 mg/ml</b>',
+    conc:1,
+    indications:[
+      { key:'stroke', label:'급성 뇌경색', perKg:0.9, maxMg:90, bolusPct:10, infMin:60,
+        how:'총량의 <b>10%를 1분간 IV bolus</b> → 나머지 <b>90%를 60분간</b> 주입',
+        window:'증상 발생 4.5시간 이내 (원내 기준 확인)' },
+      { key:'pe', label:'폐색전증 (PE)', fixedMg:100, infMin:120,
+        how:'<b>100mg을 2시간에 걸쳐</b> 주입 (체중 무관)',
+        window:'bolus 유무는 ★원내 프로토콜 확인' }
+    ],
+    prep:[
+      '흔들지 말 것 — 부드럽게 굴려 용해 (심하게 흔들면 거품·역가 손실)',
+      '<b>D5W 금기</b> — 희석·플러싱 전부 NS',
+      '방부제 없음 → 남은 약 폐기, 재사용 금지',
+      '전용 라인 권장 · 다른 약과 같은 라인 혼합 금지',
+      '<b>주입 종료 후 라인을 NS로 플러싱</b> — 튜빙에 약물이 상당량 남음'
+    ],
+    monitor:[
+      '투여 전 <b>BP &lt; 185/110</b> · 투여 중~24h <b>BP &lt; 180/105</b> 유지',
+      '신경학적 사정 q15분×2h → q30분×6h → q1h×16h',
+      '출혈 징후(의식저하·두통·구토·혈뇨·잇몸출혈) 관찰',
+      '혈관부종(angioedema) — 혀·입술 부종 시 즉시 중단'
+    ],
+    absolute:'⛔ 투여 후 <b>24시간 내 항응고제(Heparin)·항혈소판제 금기</b> — 이 앱의 Heparin 카드와 함께 확인할 것',
+    avoid:'24h 내 침습적 처치·동맥천자·NG tube·Foley 삽입 지양' },
+
+  { id:'hep', name:'Heparin', vol:'(25,000u/5ml)', badge:'항응고', color:'orange',
+    cat:'🩸 혈전용해·항응고', special:'heparin',
+    verify:'★ 원내 프로토콜 확인 필요',
+    mixTxt:'Heparin 25,000u/5ml <b>1@ + NS 495ml = 총 500ml</b>',
+    conc:50, unit:'u/ml',
+    formula:'ml/hr = (units/hr) ÷ 50',
+    regimens:[
+      { key:'vte', label:'VTE (정맥혈전)', bolus:80, rate:18 },
+      { key:'acs', label:'ACS (관상동맥)', bolus:60, bolusMax:4000, rate:12, rateMax:1000 }
+    ],
+    rates:[500,750,1000,1250,1500,1750,2000],
+    absolute:'⛔ <b>tPA(Actilyse) 투여 후 24시간 이내 금기</b> — 뇌경색 프로토콜 확인 필수',
+    caution:'aPTT 조절표(nomogram)는 <b>병원마다 다르다</b> — 원내 지침을 따를 것. 이 앱은 농도 환산만 제공한다.\nHIT(헤파린 유발 혈소판감소증) 의심 시 즉시 중단 · 혈소판 수치 f/u\n역전제: Protamine sulfate' },
 ];
 // 지속주입 약물 한글명 (검색용)
-const HELPER_KR = { nicar:'니카르디핀', ntg:'니트로글리세린', labe:'라베탈롤', dilt:'딜티아젬', esmo:'에스몰롤', isup:'이소프로테레놀', lido:'리도카인', nipr:'니트로프루시드', isok:'이소켓 이소소르비드', amio:'아미오다론', adeno:'아데노신', vera:'베라파밀', vaso2:'바소프레신', mida:'미다졸람', etom:'에토미데이트', rocu:'로쿠로니움', nalo:'날록손', flum:'플루마제닐', cagl:'칼슘 글루코네이트', kcl:'염화칼륨 포타슘', mag:'마그네슘', phos:'포스텐 인산염', nacl3:'고장성 식염수 생리식염수 저나트륨' };
+const HELPER_KR = { nicar:'니카르디핀', ntg:'니트로글리세린', labe:'라베탈롤', dilt:'딜티아젬', esmo:'에스몰롤', isup:'이소프로테레놀', lido:'리도카인', nipr:'니트로프루시드', isok:'이소켓 이소소르비드', amio:'아미오다론', adeno:'아데노신', vera:'베라파밀', vaso2:'바소프레신', mida:'미다졸람', etom:'에토미데이트', rocu:'로쿠로니움', nalo:'날록손', flum:'플루마제닐', cagl:'칼슘 글루코네이트', kcl:'염화칼륨 포타슘', mag:'마그네슘', phos:'포스텐 인산염', nacl3:'고장성 식염수 생리식염수 저나트륨', tpa:'액티라제 알테플라제 티피에이 혈전용해 뇌경색 폐색전', hep:'헤파린 항응고 혈전' };
 
 // ── PALS 기도 장비 ──
 const AIRWAY_TABLE = [
@@ -924,7 +978,7 @@ function searchExtraHTML(){
 function renderDrugList(list){
   const el=document.getElementById('drugList');
   const extra=searchExtraHTML();
-  if(!list.length && !extra){ el.innerHTML='<div style="color:#8b949e;padding:18px">검색 결과 없음</div>'; return; }
+  if(!list.length && !extra){ el.innerHTML=mascot('그런 약은 못 찾았어요','다른 이름이나 한글로 찾아보세요'); return; }
   el.innerHTML=list.map(d=>{
     const open=selDrug===d.name;
     return `<div class="drug-item">
@@ -1093,6 +1147,196 @@ function refBlockHTML(d){
   }).join('')+'</div>';
 }
 
+// ══════════════════════════════════════════════════════════════
+// V4 ── 🩸 혈전용해·항응고 전용 카드 (표준 rate card로 표현할 수 없는 프로토콜)
+// ══════════════════════════════════════════════════════════════
+let tpaInd='stroke', hepReg='vte';
+function setTpaInd(k){ tpaInd=k; updateInfuse(); }
+function setHepReg(k){ hepReg=k; updateInfuse(); }
+
+function tpaCardHTML(d,w){
+  const ind=d.indications.find(x=>x.key===tpaInd)||d.indications[0];
+  const segs=d.indications.map(x=>
+    `<button class="mini-btn ${x.key===tpaInd?'on':''}" onclick="setTpaInd('${x.key}')">${x.label}</button>`).join('');
+
+  let rows='', total, bolus=0, inf, capped=false;
+  if(ind.perKg){
+    const raw=w*ind.perKg;
+    capped = raw>ind.maxMg;
+    total = Math.min(raw, ind.maxMg);
+    bolus = total*ind.bolusPct/100;
+    inf   = total-bolus;
+  } else {
+    total = ind.fixedMg; inf = total;
+  }
+  const mlhr = inf/(ind.infMin/60);          // 농도 1mg/ml → ml = mg
+  const vials = Math.ceil(total/50);
+
+  // 체중별 표 (뇌경색만 — PE는 체중 무관)
+  if(ind.perKg){
+    const ws=[50,55,60,65,70,75,80,85,90,95,100];
+    rows=ws.map(kg=>{
+      const t=Math.min(kg*ind.perKg, ind.maxMg), b=t*ind.bolusPct/100, i=t-b;
+      return `<tr class="${kg===Math.round(w)?'cur':''}" onclick="setIW(${kg})">
+        <td>${kg} kg</td><td style="text-align:right">${fmtNum(t,1)} mg</td>
+        <td style="text-align:right">${fmtNum(b,2)} ml</td>
+        <td style="text-align:right">${fmtRate(i/(ind.infMin/60))} ml/hr</td></tr>`;
+    }).join('');
+  }
+
+  return `
+  <div class="calc-hero">
+    <div class="hero-head">
+      <div style="min-width:0;flex:1">
+        <div class="hero-name" style="color:var(--danger)">${d.name}
+          <span style="font-size:13px;color:var(--text-dim);font-weight:400">${d.vol}</span></div>
+        <div class="hero-mix">${d.recon}</div>
+      </div>
+      <div class="hero-chips">
+        <span class="badge" style="background:var(--surface-2);color:var(--danger)">${d.badge}</span>
+        <span class="conc-chip">1 mg/ml</span>
+        <span class="verify-chip">${d.verify}</span>
+      </div>
+    </div>
+
+    <div class="alert alert-danger">${d.absolute}</div>
+
+    <div style="padding:16px 20px 4px">
+      <div class="sec-head">적응증 — 먼저 고르세요 (용량 체계가 완전히 다릅니다)</div>
+      <div class="seg">${segs}</div>
+      <div class="calc-note" style="margin-top:10px">${ind.how}<br>⏱ ${ind.window}</div>
+    </div>
+
+    <div class="stepper">
+      <button class="step-btn" onclick="setIW(Math.max(1,${Math.round(w)}-5))" ${w<=1?'disabled':''} title="체중 −5">−</button>
+      <div class="step-val">
+        <input type="number" step="any" min="1" max="250" inputmode="decimal" value="${w}"
+               onchange="setIW(this.value)" aria-label="체중" ${ind.perKg?'':'disabled'}>
+        <div class="step-unit">kg ${ind.perKg?'· 5kg 단위':'· PE는 체중 무관'}</div>
+      </div>
+      <button class="step-btn" onclick="setIW(${Math.round(w)}+5)" title="체중 +5" ${ind.perKg?'':'disabled'}>＋</button>
+    </div>
+
+    <div class="big-result">
+      <div class="big-num">${fmtNum(total,1)}</div>
+      <div class="big-unit">mg 총량 · ${vials} vial</div>
+      <div class="big-sub">
+        ${bolus>0?`<b>Bolus</b> ${fmtNum(bolus,2)} mg = <b>${fmtNum(bolus,2)} ml</b> (1분간 IV push)<br>`:''}
+        <b>주입</b> ${fmtNum(inf,2)} mg = ${fmtNum(inf,2)} ml / ${ind.infMin}분 → <b>${fmtRate(mlhr)} ml/hr</b>
+      </div>
+    </div>
+
+    ${capped?`<div class="alert alert-warn">⚠️ 체중 ${w}kg × ${ind.perKg} = ${fmtNum(w*ind.perKg,1)}mg 이지만 <b>최대 ${ind.maxMg}mg 상한</b>이 적용되었습니다.</div>`:''}
+
+    ${rows?`<details class="rate-fold" open>
+      <summary>체중별 표 (${ind.perKg} mg/kg · 최대 ${ind.maxMg}mg) · 행을 누르면 체중 적용</summary>
+      <table class="rate-table">
+        <tr><th>체중</th><th style="text-align:right">총량</th><th style="text-align:right">Bolus</th><th style="text-align:right">주입</th></tr>
+        ${rows}
+      </table>
+    </details>`:''}
+
+    <div class="ref-block">
+      <div class="info-row"><span class="info-label">조제</span><span class="info-val">${d.prep.map(x=>'· '+x).join('\n')}</span></div>
+      <div class="info-row"><span class="info-label">⚠️ 감시</span><span class="info-val warn">${d.monitor.map(x=>'· '+x).join('\n')}</span></div>
+      <div class="info-row"><span class="info-label">금지</span><span class="info-val warn">· ${d.avoid}</span></div>
+    </div>
+  </div>`;
+}
+
+function heparinCardHTML(d,w){
+  const rg=d.regimens.find(x=>x.key===hepReg)||d.regimens[0];
+  const segs=d.regimens.map(x=>
+    `<button class="mini-btn ${x.key===hepReg?'on':''}" onclick="setHepReg('${x.key}')">${x.label}</button>`).join('');
+  let bolus=w*rg.bolus, bCap=false, uhr=w*rg.rate, rCap=false;
+  if(rg.bolusMax&&bolus>rg.bolusMax){ bolus=rg.bolusMax; bCap=true; }
+  if(rg.rateMax&&uhr>rg.rateMax){ uhr=rg.rateMax; rCap=true; }
+  const mlhr=uhr/d.conc, bolusMl=bolus/5000;   // bolus는 원액 5,000u/ml 기준
+
+  const rows=d.rates.map(u=>`
+    <tr class="${Math.abs(u-uhr)<1?'cur':''}"><td>${u.toLocaleString()} u/hr</td>
+    <td style="text-align:right">${fmtRate(u/d.conc)} ml/hr</td></tr>`).join('');
+
+  return `
+  <div class="calc-hero">
+    <div class="hero-head">
+      <div style="min-width:0;flex:1">
+        <div class="hero-name" style="color:var(--warn)">${d.name}
+          <span style="font-size:13px;color:var(--text-dim);font-weight:400">${d.vol}</span></div>
+        <div class="hero-mix">${d.mixTxt}</div>
+      </div>
+      <div class="hero-chips">
+        <span class="badge" style="background:var(--surface-2);color:var(--warn)">${d.badge}</span>
+        <span class="vol-chip">총 500 ml</span>
+        <span class="conc-chip">50 u/ml</span>
+        <span class="verify-chip">${d.verify}</span>
+      </div>
+    </div>
+
+    <div class="alert alert-danger">${d.absolute}</div>
+    <div class="alert alert-info"><b>${d.formula}</b> — 25,000u ÷ 500ml = 50 u/ml</div>
+
+    <div style="padding:16px 20px 4px">
+      <div class="sec-head">체중기반 시작용량 (★표준 레퍼런스 — 원내 지침 우선)</div>
+      <div class="seg">${segs}</div>
+    </div>
+
+    <div class="stepper">
+      <button class="step-btn" onclick="setIW(Math.max(1,${Math.round(w)}-5))" ${w<=1?'disabled':''} title="체중 −5">−</button>
+      <div class="step-val">
+        <input type="number" step="any" min="1" max="250" inputmode="decimal" value="${w}"
+               onchange="setIW(this.value)" aria-label="체중">
+        <div class="step-unit">kg · 5kg 단위</div>
+      </div>
+      <button class="step-btn" onclick="setIW(${Math.round(w)}+5)" title="체중 +5">＋</button>
+    </div>
+
+    <div class="big-result">
+      <div class="big-num">${fmtRate(mlhr)}</div>
+      <div class="big-unit">ml/hr</div>
+      <div class="big-sub">
+        <b>Bolus</b> ${rg.bolus} u/kg × ${w}kg = <b>${Math.round(bolus).toLocaleString()} units</b>
+        (원액 5,000u/ml 기준 ${fmtNum(bolusMl,2)} ml)${bCap?' <span style="color:var(--warn)">— 상한 적용</span>':''}<br>
+        <b>유지</b> ${rg.rate} u/kg/hr × ${w}kg = <b>${Math.round(uhr).toLocaleString()} u/hr</b>${rCap?' <span style="color:var(--warn)">— 상한 적용</span>':''}
+        → ${fmtRate(mlhr)} ml/hr<br>
+        총 500ml 소진 ≈ ${fmtNum(500/mlhr,1)}시간
+      </div>
+    </div>
+
+    ${(bCap||rCap)?`<div class="alert alert-warn">⚠️ ${rg.label} 상한이 적용되었습니다${rg.bolusMax?` (bolus 최대 ${rg.bolusMax.toLocaleString()}u`:''}${rg.rateMax?`, 유지 최대 ${rg.rateMax.toLocaleString()}u/hr)`:')'}.</div>`:''}
+
+    <details class="rate-fold" open>
+      <summary>units/hr → ml/hr 환산표 (50 u/ml)</summary>
+      <table class="rate-table">
+        <tr><th>주입량</th><th style="text-align:right">주입 속도</th></tr>${rows}
+      </table>
+    </details>
+
+    <div class="ref-block">
+      <div class="info-row"><span class="info-label">⚠️ 주의</span><span class="info-val warn">${d.caution}</span></div>
+    </div>
+    ${refBlockHTML(d)}
+  </div>`;
+}
+
+// ── 캐릭터: 빈 화면에만 조용히 등장 (소방 헬멧 모티프 · 원본 도안) ──
+function mascot(msg,sub){
+  return `<div class="mascot">
+    <svg viewBox="0 0 100 76" width="88" height="67" aria-hidden="true" fill="none"
+         stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 40c0-19 15-31 34-31s34 12 34 31"/>
+      <path d="M8 40h84c0 5-4 8-10 8H18c-6 0-10-3-10-8z"/>
+      <path d="M42 14h16l3 14H39z"/>
+      <circle cx="50" cy="21" r="2.6" fill="currentColor" stroke="none"/>
+      <circle cx="38" cy="61" r="2.4" fill="currentColor" stroke="none"/>
+      <circle cx="62" cy="61" r="2.4" fill="currentColor" stroke="none"/>
+      <path d="M45 68q5 4 10 0"/>
+    </svg>
+    <div class="m-msg">${msg}</div>
+    ${sub?`<div class="m-sub">${sub}</div>`:''}
+  </div>`;
+}
+
 // 펌프에 그대로 입력하는 값이므로 ml/hr은 항상 소수 1자리 고정 (12 → 12.0)
 function fmtRate(n){ return (n==null||!isFinite(n))?'—':n.toFixed(1); }
 function defStep(drug){
@@ -1209,7 +1453,7 @@ function updateAdult(){
       <span class="${d.color}">${d.name}</span><br>
       <span style="font-size:10px;color:#8b949e">${d.badge}</span>
     </button>`
-  ).join('')||'<div style="color:#8b949e;font-size:12px;padding:8px">검색 결과 없음</div>';
+  ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">🔍 검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
   // 컨텐츠
   const content=document.getElementById('drugContent');
   const drug=ADULT_DRUGS.find(d=>d.id===activeAdultDrug);
@@ -1271,7 +1515,7 @@ function updateAdult(){
 // ════════════════════════════════════════════════
 let activeInfuseDrug = 'nicar';
 let infuseCat = '전체';
-const INFUSE_CATS = ['전체','💧 지속주입(계산)','⚡ 응급·삽관','🧪 전해질'];
+const INFUSE_CATS = ['전체','💧 지속주입(계산)','🩸 혈전용해·항응고','⚡ 응급·삽관','🧪 전해질'];
 function setIW(w){ document.getElementById('infuseWeight').value=w; updateInfuse(); }
 function selectInfuse(id){ activeInfuseDrug=id; updateInfuse(); }
 function setInfuseCat(c){ infuseCat=c; const first=HELPER_DRUGS.find(d=>c==='전체'||(d.cat||'💧 지속주입(계산)')===c); if(first)activeInfuseDrug=first.id; updateInfuse(); }
@@ -1297,12 +1541,14 @@ function updateInfuse(){
   };
   document.getElementById('infuseSidebar').innerHTML=cats.map(ct=>
     `<div style="width:100%;font-size:10px;color:#8b949e;font-weight:700;margin:10px 2px 2px">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
-  ).join('')||'<div style="color:#8b949e;font-size:12px;padding:8px">검색 결과 없음</div>';
+  ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">🔍 검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
   const content=document.getElementById('infuseContent');
   const drug=HELPER_DRUGS.find(d=>d.id===activeInfuseDrug);
   if(!drug){content.innerHTML='';return;}
   const colors={blue:'#58a6ff',purple:'#bc8cff',red:'#f85149',orange:'#ffa726'};
   const c=colors[drug.color]||'#58a6ff';
+  if(drug.special==='tpa'){     content.innerHTML=tpaCardHTML(drug,w);     return; }
+  if(drug.special==='heparin'){ content.innerHTML=heparinCardHTML(drug,w); return; }
   if(drug.protocol){   // Amiodarone 24시간 유지주입 등 고정 프로토콜
     const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:#58a6ff">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
     content.innerHTML=`
