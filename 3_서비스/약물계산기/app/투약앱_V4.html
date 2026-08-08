@@ -1076,7 +1076,7 @@ function rateCardHTML(drug,w,cb){
     </div>
 
     <div class="big-result">
-      <div class="big-num${bad?' bad':''}">${bad?'입력 확인 필요':fmtNum(mlhr,1)}</div>
+      <div class="big-num${bad?' bad':''}">${bad?'입력 확인 필요':fmtRate(mlhr)}</div>
       <div class="big-unit">ml/hr</div>
       ${sub.length?`<div class="big-sub">${sub.join('<br>')}</div>`:''}
       <div class="big-sub" style="margin-top:8px">체중 ${w}kg 기준</div>
@@ -1602,7 +1602,7 @@ function updateCalc(){
   lastCalcText =
     (calcPickNote?calcPickNote.replace(/<[^>]*>/g,'')+'\n':'')+
     '농도 '+fmtNum(st.conc,2)+' '+bl+'/ml ('+basis+')\n'+
-    '용량 '+fmtNum(dose,4)+' '+unitKey+'  →  '+fmtNum(mlhr,1)+' ml/hr\n'+
+    '용량 '+fmtNum(dose,4)+' '+unitKey+'  →  '+fmtRate(mlhr)+' ml/hr\n'+
     extra.join(' · ');
 
   res.innerHTML=
@@ -1618,7 +1618,7 @@ function updateCalc(){
       '</div>'+
     '</div>'+
     '<div class="big-result">'+
-      '<div class="big-num">'+fmtNum(mlhr,1)+'</div>'+
+      '<div class="big-num">'+fmtRate(mlhr)+'</div>'+
       '<div class="big-unit">ml/hr</div>'+
       '<div class="big-sub">'+fmtNum(dose,4)+' '+unitKey+'<br>'+extra.join(' · ')+'</div>'+
     '</div>'+
@@ -1640,8 +1640,8 @@ function updateCalc(){
   for(let i=0;i<n;i++){
     const d=parseFloat((from+i*step).toFixed(6));
     const r=calcInfusion(d,unitKey,st.conc,st.W);
-    rows+='<tr class="'+(Math.abs(d-dose)<1e-9?'cur':'')+'" onclick="pickTblDose('+d+')"><td>'+fmtNum(d,3)+' '+unitKey+'</td><td>'+fmtNum(r,1)+' ml/hr</td></tr>';
-    txt+=fmtNum(d,3)+'\t'+fmtNum(r,1)+'\n';
+    rows+='<tr class="'+(Math.abs(d-dose)<1e-9?'cur':'')+'" onclick="pickTblDose('+d+')"><td>'+fmtNum(d,3)+' '+unitKey+'</td><td>'+fmtRate(r)+' ml/hr</td></tr>';
+    txt+=fmtNum(d,3)+'\t'+fmtRate(r)+'\n';
   }
   lastTableText='농도 '+fmtNum(st.conc,2)+' '+bl+'/ml · 체중 '+fmtNum(st.W,1)+'kg\n'+txt;
   tbl.innerHTML='<table class="rate-table"><tr><th>용량</th><th style="text-align:right">주입 속도</th></tr>'+rows+'</table>';
