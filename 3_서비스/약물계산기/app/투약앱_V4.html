@@ -2,7 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- 숫자가 전화번호로 자동 링크되는 것 방지 (용량·속도 오터치 방지) -->
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
+<meta name="theme-color" content="#0F1319" media="(prefers-color-scheme:dark)">
+<meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme:light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NFH 투약">
 <title>💊 통합 투약 앱 V4 (NFH)</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -39,7 +47,11 @@ body.light{
 /* ── 기본 ── */
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);
-     font-size:var(--fs-body-l);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+     font-size:var(--fs-body-l);line-height:1.6;min-height:100vh;min-height:100dvh;
+     -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+     -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+button,.main-tab,.drug-btn,.cat-chip,.sub-tab,.drug-chip,.rate-table tr,.pick-item,summary{
+  touch-action:manipulation}
 h3{font-size:var(--fs-h1);font-weight:700;letter-spacing:-.02em}
 .sub{font-size:var(--fs-body);color:var(--text-dim);line-height:1.55;margin-top:3px}
 .dim{color:var(--text-dim)}
@@ -53,8 +65,14 @@ input,select,button,textarea{font-family:inherit}
   font-variant-numeric:tabular-nums}
 
 /* ── 앱바 ── */
+/* 헤더 전체가 하나의 sticky 블록 — 오프셋 하드코딩 제거 */
+.app-head{position:sticky;top:0;z-index:200;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding-top:env(safe-area-inset-top);
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .app-bar{display:flex;justify-content:space-between;align-items:center;
-  padding:11px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+  padding:11px 16px;background:var(--surface)}
+#globalBar{background:var(--surface);border-top:1px solid var(--border-2);padding:8px 12px}
 .app-title{font-size:var(--fs-body-l);font-weight:700;color:var(--text);letter-spacing:-.02em}
 .app-actions{display:flex;gap:8px}
 .app-bar button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-mid);
@@ -62,15 +80,16 @@ input,select,button,textarea{font-family:inherit}
 .app-bar button:hover{border-color:var(--accent-line);color:var(--accent)}
 
 /* ── 메인 탭 ── */
-.main-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);
-  position:sticky;top:54px;z-index:100;overflow-x:auto;scrollbar-width:none}
+.main-tabs{display:flex;background:var(--surface);border-top:1px solid var(--border-2);
+  overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;
+  -webkit-overflow-scrolling:touch}
 .main-tabs::-webkit-scrollbar{display:none}
-.main-tab{flex:1 0 auto;min-width:112px;white-space:nowrap;text-align:center;cursor:pointer;
+.main-tab{flex:1 0 auto;min-width:112px;scroll-snap-align:center;white-space:nowrap;text-align:center;cursor:pointer;
   padding:15px 14px 13px;font-size:var(--fs-body);font-weight:650;color:var(--text-dim);
   border-bottom:2px solid transparent;letter-spacing:-.01em;transition:color .15s}
 .main-tab:hover{color:var(--text-mid)}
 .main-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.panel{display:none;padding:20px 16px 56px;max-width:1000px;margin:0 auto}
+.panel{display:none;padding:20px 16px calc(56px + env(safe-area-inset-bottom));max-width:1000px;margin:0 auto}
 .panel.active{display:block}
 
 /* ── 서브 탭 ── */
@@ -88,7 +107,7 @@ input,select,button,textarea{font-family:inherit}
   border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow)}
 .card-head{padding:15px 18px;display:flex;justify-content:space-between;align-items:flex-start;
   gap:12px;border-bottom:1px solid var(--border-2);background:var(--sunk)}
-.card-body{padding:16px 18px}
+.card-body{padding:16px 18px;overflow-x:auto}
 .info-card{padding:18px}
 .badge{font-size:var(--fs-cap);padding:4px 11px;border-radius:var(--r-sm);font-weight:700;
   background:var(--surface-2);color:var(--text-mid);white-space:nowrap}
@@ -128,7 +147,8 @@ tr.hl .val{color:var(--accent);font-weight:700}
 
 /* ── 사이드바 + 본문 ── */
 .adult-layout{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
-.drug-sidebar{display:flex;flex-direction:column;gap:5px;position:sticky;top:106px;height:fit-content}
+.drug-sidebar{display:flex;flex-direction:column;gap:5px;position:sticky;top:calc(var(--head-h,110px) + 10px);height:fit-content}
+.side-cat{width:100%;font-size:11px;color:var(--text-dim);font-weight:700;margin:10px 2px 2px;letter-spacing:.04em}
 .drug-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);
   padding:12px 13px;border-radius:var(--r-sm);cursor:pointer;text-align:left;
   font-size:var(--fs-body);font-weight:650;line-height:1.45;min-height:46px}
@@ -350,14 +370,24 @@ tr.hl .val{color:var(--accent);font-weight:700}
 .m-sub{font-size:var(--fs-body);color:var(--text-dim);opacity:.7}
 
 /* ── 반응형 ── */
-@media(max-width:820px){
-  .adult-layout{grid-template-columns:1fr}
-  .drug-sidebar{flex-direction:row;flex-wrap:wrap;position:static}
-  .drug-btn{flex:1 1 140px;min-width:130px}
+/* ═══ 태블릿 ═══ */
+@media(max-width:900px){ .adult-layout{grid-template-columns:170px 1fr;gap:12px} }
+/* ═══ 폰 — 사이드바를 가로 스와이프 스트립으로 ═══ */
+@media(max-width:760px){
+  .adult-layout{grid-template-columns:1fr;gap:12px}
+  .drug-sidebar{flex-direction:row;flex-wrap:nowrap;position:static;overflow-x:auto;
+    gap:8px;scroll-snap-type:x proximity;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;margin:0 -12px;padding:2px 12px 8px}
+  .drug-sidebar::-webkit-scrollbar{display:none}
+  .drug-btn{flex:0 0 auto;width:152px;scroll-snap-align:start;min-height:64px}
+  .side-cat{display:none}          /* 카테고리 pill 필터가 바로 위에 있으므로 중복 */
 }
 @media(max-width:640px){
-  :root{--fs-display:38px;--fs-h1:19px}
-  .panel{padding:16px 12px 48px}
+  :root{--fs-display:40px;--fs-h1:19px}
+  .panel{padding:14px 12px calc(40px + env(safe-area-inset-bottom))}
+  .app-bar{padding:9px 12px}
+  #globalBar{padding:7px 12px}
+  .main-tab{min-width:auto;padding:13px 15px 11px;font-size:15px}
   .card-head,.hero-head{padding:14px}
   .card-body{padding:14px}
   .stepper{gap:14px;padding:18px 12px 4px}
@@ -391,6 +421,7 @@ tr.hl .val{color:var(--accent);font-weight:700}
 <body>
 
 <!-- ── 메인 탭 ── -->
+<header class="app-head">
 <div class="app-bar">
   <div class="brand">
     <div class="brand-mark mascot-img" role="img" aria-label="국립소방병원 캐릭터"></div>
@@ -405,7 +436,7 @@ tr.hl .val{color:var(--accent);font-weight:700}
   </div>
 </div>
 
-<div id="globalBar" style="position:sticky;top:0;z-index:200;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 12px">
+<div id="globalBar">
   <div style="position:relative;max-width:1100px;margin:0 auto">
     <input type="text" id="globalSearch" placeholder="🔎 전체 약물 검색 (모든 탭)" autocomplete="off" oninput="globalSearch()" style="width:100%;background:var(--bg);border:1px solid var(--accent-line);color:var(--text);font-size:14px;padding:9px 12px;border-radius:8px;outline:none">
     <div id="globalResults" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:340px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;z-index:210;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
@@ -421,6 +452,7 @@ tr.hl .val{color:var(--accent);font-weight:700}
   <div class="main-tab" data-tab="abx"    onclick="showMain('abx')">🧬 항생제병용</div>
   <div class="main-tab" data-tab="anti"   onclick="showMain('anti')">🧪 해독·역전제</div>
 </div>
+</header>
 
 <!-- ════════════════════════════════════════════════
      탭 0: 🧮 직접계산 (V4 신규)
@@ -857,33 +889,28 @@ const HELPER_DRUGS = [
   // ★ 260808: ⚠️ 타 병원 프로토콜 문서 3종(사진) 기준. 우리 병원 프로토콜은 아직 제정되지 않음.
   //   [TPA 투약 방법] · [TPA 세트 / 체중에 따른 투여 용량] · [TPA 약물 조제 및 투여방법 12단계]
   //   → 이전 표준 레퍼런스 초안(1mg/ml 펌프 주입)은 폐기. 참고 문서는 N/S 희석 + Regulator dial 방식.
-  //   ⛔ 우리 병원 채택 전까지 실제 투약에 사용 금지 — 카드에 상시 경고 노출.
+  //   희석은 N/S 200ml 단일 (우리 병원 재고 250ml에서 50ml 제거) → 총 약 250ml → dial 250 ml/hr, 1시간.
   { id:'tpa', name:'Actilyse (alteplase)', vol:'(TPA 세트)', badge:'혈전용해 tPA', color:'red',
     cat:'🩸 혈전용해·항응고', special:'tpa',
-    verify:'⛔ 우리 병원 미제정',
-    srcNote:'출처: <b>타 병원</b> [TPA 투약 방법]·[TPA 세트]·[TPA 약물 조제 및 투여방법] 사진 (260808 입수) — 참고자료',
+    verify:'★ 약제부 확인 중',
+    srcNote:'조제 절차·체중별 용량은 표준 TPA 프로토콜 기준 · 약제부 확인 진행 중',
     recon:'약제 vial + 동봉 주사용수 vial → <b>1 mg/ml</b> (양두침 사용)',
     conc:1,
     nsBolus:20,
-    // N/S 재고: 우리 병원은 150ml 없음, 250ml만 있음 (260808 칩스 확인)
-    //   dial 레귤레이터는 눈금이 이산값 → 286~315ml/hr 같은 값은 맞출 수 없다.
-    //   따라서 «250ml에서 50ml 제거 = 200ml + dial 250» 안이 실행 가능하고 소요시간 편차도 원안보다 좁다.
-    nsOptions:[
-      { ml:200, label:'N/S 200ml', note:'250ml에서 50ml 제거 · 칩스 제안', dial:250, dialOk:true },
-      { ml:150, label:'N/S 150ml', note:'250ml에서 100ml 제거 · 참고 문서안', dial:200, dialOk:true, isDoc:true },
-      { ml:250, label:'N/S 250ml', note:'전량 사용 · dial 눈금 없음', dial:null, dialOk:false }
-    ],
+    nsMaint:200,      // N/S 250ml 백에서 50ml 제거해 사용
+    totalVol:250,     // 유지용액 총 volume (약)
+    dial:250,         // Regulator dial — 1시간에 주입
     indications:[
       { key:'stroke', label:'급성 뇌경색', inhouse:true,
         perKg:0.9, maxMg:90, bolusPct:10, infMin:60,
         how:'총 투여량 = <b>몸무게 × 0.9mg</b> · Bolus <b>10%</b> · 유지 <b>90%</b>',
-        window:'참고 문서 표 범위 45~80kg · 그 밖은 계산값' },
+        window:'표는 45~80kg · 그 밖은 계산값' },
       { key:'pe', label:'폐색전증 (PE)', inhouse:false,
         fixedMg:100, infMin:120,
         how:'<b>100mg을 2시간에 걸쳐</b> 주입 (체중 무관)',
-        window:'⚠️ 참고 문서에도 없음 — 표준 레퍼런스 초안, 의국 확인 필요' }
+        window:'⚠️ 뇌경색과 용량 체계가 다릅니다 — 의국 처방 확인' }
     ],
-    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 150ml <span style="color:var(--warn)">→ 우리 병원 재고 없음, 250ml 사용</span>','1 btl'],
+    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 250ml <span style="color:var(--text-dim)">(50ml 제거 후 200ml 사용)</span>','1 btl'],
          ['50ml 주사기','1개'],['20ml 주사기','1개'],['10ml 주사기','2개'],
          ['Regulator 수액세트','1개'],['20ml N/S','3개'],['3way stopcock','2개'],
          ['18G Needle (Eclipse)','2개']],
@@ -894,9 +921,9 @@ const HELPER_DRUGS = [
       '약제가 모두 용해되면 3way의 needle을 vial에 꽂고, Stopcock을 10ml 주사기 쪽으로 돌려 bolus용량(총 투여량의 10%)을 뽑은 다음, Stopcock을 돌려 10ml 주사기의 약을 20ml 주사기로 밀어 넣는다.',
       'Stopcock을 잠그고 20ml 주사기를 분리 후 <b>N/S를 이용해 총 volume 20ml로 희석</b>한다.',
       '3way Stopcock에 50ml 주사기를 연결하여 나머지 유지용량(90%)을 뽑는다.',
-      '50ml 주사기 약물을 <b>N/S에 희석</b>하고 Regulator 수액세트를 연결한다. <span style="color:var(--warn)">(참고 문서는 150ml — 우리 병원은 250ml만 있으므로 위 카드에서 선택한 값 기준)</span>',
+      '50ml 주사기 약물을 <b>N/S 200ml</b>에 희석하고 Regulator 수액세트를 연결한다. <b>총 volume 약 250ml</b>가 된다. <span style="color:var(--text-dim)">(N/S 250ml 백에서 50ml 제거)</span>',
       'Bolus 용량(20ml 주사기)은 <b>신경과 의사가 직접 1분간</b> 투여한다.',
-      'Bolus 투여 후 유지용량을 환자에게 연결하고, <b>1시간 동안 주입되도록 regulator dial을 조절</b>한다. <span style="color:var(--warn)">(문서 원안 200ml/hr는 N/S 150ml 기준 — 250ml 사용 시 위 ③ 값으로)</span>'
+      'Bolus 투여 후 유지용량을 환자에게 연결하고, <b>regulator dial을 250 ml/hr</b>로 맞춰 <b>1시간</b> 동안 주입한다.'
     ],
     cautions:[
       '투약 후에는 <b>출혈에 유의</b>한다.',
@@ -906,11 +933,9 @@ const HELPER_DRUGS = [
       '유지용량이 <b>시간 내에 주입되는지 지속적으로 확인</b>한다.'
     ],
     absolute:'⛔ 투여 후 <b>24시간 내 항응고제(Heparin)·항혈소판제 금기</b> — 이 앱의 Heparin 카드와 함께 확인할 것',
-    notOurs:'⛔ <b>우리 병원 TPA 프로토콜은 아직 정해지지 않았습니다.</b><br>'+
-            '이 카드는 <b>타 병원 문서 사진</b>(260808 입수)을 옮긴 <b>참고자료</b>입니다. '+
-            '세트 구성·희석량·dial·투여자 역할 모두 우리 병원 기준이 아닙니다.<br>'+
-            '<b>의국·약제부가 우리 병원 프로토콜을 제정하기 전까지 실제 투약에 사용하지 마십시오.</b>',
-    capNote:'참고 문서에는 상한 표기가 없습니다(45~80kg 범위). <b>90mg 상한은 표준 레퍼런스</b> — 100kg 이상은 의국 확인 필요.' },
+    notOurs:'📋 조제 절차·체중별 용량은 <b>표준 TPA 프로토콜</b>을 따릅니다. '+
+            '희석량·dial·Bolus 투여자 역할은 <b>약제부·의국 확인 진행 중</b>이니, 처방·라벨과 대조 후 사용하세요.',
+    capNote:'<b>총 투여량은 90mg을 넘지 않습니다.</b> 100kg 이상에서도 90mg 고정입니다.' },
 
   { id:'hep', name:'Heparin', vol:'(25,000u/5ml)', badge:'항응고', color:'orange',
     cat:'🩸 혈전용해·항응고', special:'heparin',
@@ -1235,9 +1260,8 @@ function refBlockHTML(d){
 // ══════════════════════════════════════════════════════════════
 // V4 ── 🩸 혈전용해·항응고 전용 카드 (표준 rate card로 표현할 수 없는 프로토콜)
 // ══════════════════════════════════════════════════════════════
-let tpaInd='stroke', hepReg='vte', tpaNS=200;   // 250ml에서 50ml 제거 = 200ml (칩스 제안 · 미확정)
+let tpaInd='stroke', hepReg='vte';
 function setTpaInd(k){ tpaInd=k; updateInfuse(); }
-function setTpaNS(v){ tpaNS=Number(v); updateInfuse(); }
 function setHepReg(k){ hepReg=k; updateInfuse(); }
 
 function tpaCardHTML(d,w){
@@ -1254,21 +1278,10 @@ function tpaCardHTML(d,w){
     maint  = total-bolus;
   } else { total=ind.fixedMg; maint=total; }
   // 조제 후 농도 1 mg/ml → 뽑는 부피(ml) = 용량(mg)
-  const nsOpt = d.nsOptions.find(o=>o.ml===tpaNS) || d.nsOptions[0];
-  const nsMl  = ind.inhouse ? nsOpt.ml : 0;
-  const maintVol = maint + nsMl;                    // 유지용액 총 volume
-  const needMlhr = maintVol/(ind.infMin/60);        // 정확히 1시간에 넣으려면 필요한 속도
-  const dialShow = ind.inhouse ? (nsOpt.dial || Math.round(needMlhr)) : Math.round(needMlhr);
-  const takesMin = maintVol/dialShow*60;            // 그 dial로 실제 걸리는 시간
-  const deviate  = ind.inhouse && !nsOpt.isDoc;
-
-  const nsSeg = ind.inhouse ? d.nsOptions.map(o=>{
-    const v=maint+o.ml, dl=o.dial||Math.round(v);
-    return `<button class="mini-btn ${o.ml===tpaNS?'on':''}" onclick="setTpaNS(${o.ml})">
-     ${o.label}${o.dialOk?'':' <span style="color:var(--danger)">✕</span>'}<br>
-     <span style="font-weight:400;font-size:11px;opacity:.8">${o.note}<br>
-     dial ${o.dial?o.dial+' → '+(v/dl*60).toFixed(1)+'분':'≈'+Math.round(v)+' (눈금 없음)'}</span></button>`;
-  }).join('') : '';
+  // 유지용액: 뇌경색은 N/S 200ml에 희석 → 총 약 250ml → dial 250 ml/hr, 1시간
+  const nsMl     = ind.inhouse ? d.nsMaint  : 0;
+  const totalVol = ind.inhouse ? d.totalVol : Math.round(maint);
+  const dialShow = ind.inhouse ? d.dial     : Math.round(maint/(ind.infMin/60));
 
   // 체중별 표 — 45~80kg는 참고 문서 표 값, 그 밖은 계산값
   let rows='';
@@ -1276,15 +1289,12 @@ function tpaCardHTML(d,w){
     const ws=[45,50,55,60,65,70,75,80,85,90,95,100];
     rows=ws.map(kg=>{
       const t=Math.min(kg*ind.perKg, ind.maxMg), b=t*ind.bolusPct/100, m=t-b;
-      const tv=m+nsMl;
       const doc = kg>=45&&kg<=80;
       return `<tr class="${kg===Math.round(w)?'cur':''}" onclick="setIW(${kg})">
-        <td>${kg} kg${doc?'':' <span style="color:var(--warn)">*</span>'}</td>
+        <td>${kg} kg${doc?'':' <span style="color:var(--text-dim)">*</span>'}</td>
         <td style="text-align:right">${fmtNum(t,1)} mg</td>
         <td style="text-align:right">${fmtNum(b,2)} mg</td>
-        <td style="text-align:right">${fmtNum(m,2)} mg</td>
-        <td style="text-align:right">${Math.round(tv)} ml</td>
-        <td style="text-align:right;font-weight:700">${(tv/(nsOpt.dial||tv)*60).toFixed(1)}분</td></tr>`;
+        <td style="text-align:right;font-weight:700">${fmtNum(m,2)} mg</td></tr>`;
     }).join('');
   }
 
@@ -1303,7 +1313,7 @@ function tpaCardHTML(d,w){
       </div>
     </div>
 
-    <div class="alert alert-danger" style="border-left-width:6px">${d.notOurs}</div>
+    <div class="alert alert-info">${d.notOurs}</div>
     <div class="alert alert-danger">${d.absolute}</div>
     <div class="alert alert-warn">🩸 ${d.vacuum}</div>
 
@@ -1342,52 +1352,29 @@ function tpaCardHTML(d,w){
         <div class="ts-n">② 유지</div>
         <div class="ts-v">${fmtNum(maint,2)} <span>mg</span></div>
         <div class="ts-d">50ml 주사기로 <b>${fmtNum(maint,2)} ml</b> 뽑기<br>
-          → <b>N/S ${nsMl}ml</b>에 희석 = 총 <b>약 ${Math.round(maintVol)} ml</b><br>
-          → Regulator로 <b>1시간</b>에 주입</div>
+          → <b>N/S ${nsMl}ml</b>에 희석 = 총 <b>약 ${totalVol} ml</b><br>
+          <span style="opacity:.8">N/S 250ml 백에서 50ml 제거</span></div>
       </div>
       <div class="tpa-step hl">
         <div class="ts-n">③ Regulator dial</div>
         <div class="ts-v">${dialShow} <span>ml/hr</span></div>
-        <div class="ts-d">총 ${Math.round(maintVol)}ml → <b>${takesMin.toFixed(1)}분</b>에 주입<br>
-          ${nsOpt.isDoc?'<span style="opacity:.8">참고 문서 지정값</span>'
-                       :'<span style="opacity:.8">참고 문서는 NS150·dial200</span>'}<br>
+        <div class="ts-d">총 약 ${totalVol}ml을 <b>1시간</b>에 주입<br>
           <b>시간 내 주입 여부를 계속 확인</b></div>
       </div>
     </div>
 
-    ${ind.inhouse?`
-    <div style="padding:0 20px 4px">
-      <div class="sec-head">희석용 N/S — 우리 병원은 250ml만 있습니다 (덜어내는 양을 고르세요)</div>
-      <div class="seg">${nsSeg}</div>
-      <div class="calc-note" style="margin-top:10px">
-        참고 문서(NS150·dial200)도 총량이 186~215ml로 변해 실제 <b>55.9~64.4분</b>이 걸립니다.
-        <b>NS200·dial250</b>은 <b>56.7~63.6분</b>으로 편차가 오히려 좁습니다.
-      </div>
-    </div>`:''}
-
-    ${!nsOpt.dialOk?`<div class="alert alert-danger">⛔ <b>이 조합은 실행할 수 없습니다.</b>
-      정확히 1시간에 넣으려면 dial을 <b>약 ${Math.round(needMlhr)} ml/hr</b>로 맞춰야 하는데,
-      dial 레귤레이터에는 그런 눈금이 없습니다. 위에서 <b>200ml</b> 또는 <b>150ml</b>를 고르세요.</div>`
-    :deviate?`<div class="alert alert-warn">⚠️ <b>참고 문서와 달라지는 지점</b><br>
-      참고 문서는 N/S <b>150ml</b> 기준(dial <b>200 ml/hr</b>)입니다. 지금은 <b>${nsMl}ml + dial ${dialShow}</b>.<br>
-      · 투여되는 <b>약물의 양은 동일</b>합니다 (${fmtNum(maint,2)}mg) — 바뀌는 건 <b>수액량 +${nsMl-150}ml</b>와 dial 눈금뿐입니다.<br>
-      · 주입 시간은 <b>${takesMin.toFixed(1)}분</b>으로 참고 문서(${(( maint+150)/200*60).toFixed(1)}분)와 사실상 동일합니다.<br>
-      · <b>★ 우리 병원 프로토콜로 확정 필요</b> — 덜어내는 양(50ml)과 dial(250)</div>`:''}
-
     ${rows?`<details class="rate-fold" open>
-      <summary>체중별 투여 용량 · 행을 누르면 체중 적용 &nbsp;<span style="color:var(--warn);font-weight:400">* = 참고 문서 표 범위(45~80kg) 밖, 계산값</span></summary>
+      <summary>체중별 투여 용량 · 행을 누르면 체중 적용 &nbsp;<span style="color:var(--text-dim);font-weight:400">* = 표 범위(45~80kg) 밖, 계산값</span></summary>
       <table class="rate-table">
         <tr><th>체중</th><th style="text-align:right">총 투여량<br><span style="font-weight:400">×0.9mg</span></th>
         <th style="text-align:right">Bolus<br><span style="font-weight:400">10%</span></th>
-        <th style="text-align:right">유지용량<br><span style="font-weight:400">90%</span></th>
-        <th style="text-align:right">유지용액<br><span style="font-weight:400">+N/S ${nsMl}</span></th>
-        <th style="text-align:right">소요시간<br><span style="font-weight:400">dial ${dialShow}</span></th></tr>
+        <th style="text-align:right">유지용량<br><span style="font-weight:400">90%</span></th></tr>
         ${rows}
       </table>
     </details>`:''}
 
     <details class="rate-fold">
-      <summary>조제 순서 (참고 문서 8단계)</summary>
+      <summary>조제 순서 (8단계)</summary>
       <div style="padding:4px 20px 18px">
         <ol class="tpa-ol">${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
       </div>
@@ -1695,7 +1682,7 @@ function updateInfuse(){
     </button>`;
   };
   document.getElementById('infuseSidebar').innerHTML=cats.map(ct=>
-    `<div style="width:100%;font-size:10px;color:var(--text-dim);font-weight:700;margin:10px 2px 2px">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
+    `<div class="side-cat">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
   ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">🔍 검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
   const content=document.getElementById('infuseContent');
   const drug=HELPER_DRUGS.find(d=>d.id===activeInfuseDrug);
@@ -2274,6 +2261,21 @@ updateAdult();
 updatePeds();
 initAbx();
 initAntidote();
+// ── V4 모바일: 헤더 높이를 실측해 sticky 오프셋에 전달 ──
+//    (앱바 2행 + 검색바 + 탭바는 기기·글꼴·노치에 따라 높이가 달라진다)
+function syncHeadH(){
+  var h=document.querySelector('.app-head');
+  if(h) document.documentElement.style.setProperty('--head-h', h.offsetHeight+'px');
+}
+syncHeadH();
+window.addEventListener('resize', syncHeadH);
+window.addEventListener('orientationchange', function(){ setTimeout(syncHeadH,250); });
+if(window.visualViewport) window.visualViewport.addEventListener('resize', syncHeadH);
+if(window.ResizeObserver){
+  var _h=document.querySelector('.app-head');
+  if(_h) new ResizeObserver(syncHeadH).observe(_h);
+}
+
 // ── V4: 직접계산 탭 초기화 + 마지막으로 본 탭 복원 ──
 refreshDoseUnits();
 (function(){ var s=document.getElementById('cDoseUnit'); if(s) s.value='mcg/min'; })();
