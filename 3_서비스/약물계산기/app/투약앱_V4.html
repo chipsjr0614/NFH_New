@@ -283,6 +283,19 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
 .ref-missing{font-size:var(--fs-body);color:var(--warn);background:var(--warn-bg);border-left:4px solid var(--warn);padding:12px 16px;border-radius:10px;font-weight:600;line-height:1.6}
 @media(max-width:700px){ .adult-layout{grid-template-columns:1fr} }
 
+/* ══ TPA 3단계 패널 ══ */
+.tpa-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;padding:4px 20px 18px}
+.tpa-step{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tpa-step.hl{border-color:var(--accent-line);background:var(--accent-bg)}
+.ts-n{font-size:var(--fs-cap);font-weight:750;color:var(--text-dim);letter-spacing:.06em}
+.tpa-step.hl .ts-n{color:var(--accent)}
+.ts-v{font-size:30px;font-weight:700;color:var(--text);margin:6px 0 8px;line-height:1.1;letter-spacing:-.02em}
+.ts-v span{font-size:14px;font-weight:600;color:var(--text-dim);letter-spacing:0}
+.tpa-step.hl .ts-v{color:var(--accent)}
+.ts-d{font-size:var(--fs-body);color:var(--text-dim);line-height:1.65}
+.tpa-ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:11px}
+.tpa-ol li{font-size:var(--fs-body-l);line-height:1.65;color:var(--text);padding-left:4px}
+
 /* ══ 캐릭터: 빈 화면에만 조용히 (소방 헬멧 · 원본 도안) ══ */
 .mascot{display:flex;flex-direction:column;align-items:center;gap:12px;padding:44px 20px;text-align:center;color:var(--text-dim)}
 .mascot svg{opacity:.5}
@@ -798,34 +811,51 @@ const HELPER_DRUGS = [
   // ⚠️ Actilyse는 DRUG_DB/ENRICH 어디에도 없던 신규 데이터 — 전량 표준 레퍼런스 기반 초안.
   //    약제부·의국 검증 전 사용 금지. 적응증마다 용량 체계가 완전히 다르므로 선택을 강제한다.
   // ══════════════════════════════════════════════════════════════
-  { id:'tpa', name:'Actilyse (alteplase)', vol:'(50mg vial × 2)', badge:'혈전용해 tPA', color:'red',
+  // ★ 260808: 원내 실물 문서 3종(사진) 기준으로 전면 교체.
+  //   [TPA 투약 방법] · [TPA 세트 / 체중에 따른 투여 용량] · [TPA 약물 조제 및 투여방법 12단계]
+  //   → 이전 표준 레퍼런스 초안(1mg/ml 펌프 주입)은 폐기. 원내는 N/S 희석 + Regulator dial 방식.
+  { id:'tpa', name:'Actilyse (alteplase)', vol:'(TPA 세트)', badge:'혈전용해 tPA', color:'red',
     cat:'🩸 혈전용해·항응고', special:'tpa',
-    verify:'★ 약제부·의국 검증 필요',
-    recon:'1 vial(50mg) + 동봉 주사용수(SWFI) 50ml → <b>1 mg/ml</b>',
+    verify:'★ 원내 문서 기준',
+    srcNote:'출처: 원내 [TPA 투약 방법] · [TPA 세트] · [TPA 약물 조제 및 투여방법] (사진 260808)',
+    recon:'약제 vial + 동봉 주사용수 vial → <b>1 mg/ml</b> (양두침 사용)',
     conc:1,
+    nsBolus:20, nsMaint:150,
+    dial:200,
     indications:[
-      { key:'stroke', label:'급성 뇌경색', perKg:0.9, maxMg:90, bolusPct:10, infMin:60,
-        how:'총량의 <b>10%를 1분간 IV bolus</b> → 나머지 <b>90%를 60분간</b> 주입',
-        window:'증상 발생 4.5시간 이내 (원내 기준 확인)' },
-      { key:'pe', label:'폐색전증 (PE)', fixedMg:100, infMin:120,
+      { key:'stroke', label:'급성 뇌경색', inhouse:true,
+        perKg:0.9, maxMg:90, bolusPct:10, infMin:60,
+        how:'총 투여량 = <b>몸무게 × 0.9mg</b> · Bolus <b>10%</b> · 유지 <b>90%</b>',
+        window:'원내 문서 범위 45~80kg · 그 밖은 계산값' },
+      { key:'pe', label:'폐색전증 (PE)', inhouse:false,
+        fixedMg:100, infMin:120,
         how:'<b>100mg을 2시간에 걸쳐</b> 주입 (체중 무관)',
-        window:'bolus 유무는 ★원내 프로토콜 확인' }
+        window:'⚠️ 원내 문서 없음 — 표준 레퍼런스 초안, 의국 확인 필요' }
     ],
-    prep:[
-      '흔들지 말 것 — 부드럽게 굴려 용해 (심하게 흔들면 거품·역가 손실)',
-      '<b>D5W 금기</b> — 희석·플러싱 전부 NS',
-      '방부제 없음 → 남은 약 폐기, 재사용 금지',
-      '전용 라인 권장 · 다른 약과 같은 라인 혼합 금지',
-      '<b>주입 종료 후 라인을 NS로 플러싱</b> — 튜빙에 약물이 상당량 남음'
+    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 150ml','1 btl'],
+         ['50ml 주사기','1개'],['20ml 주사기','1개'],['10ml 주사기','2개'],
+         ['Regulator 수액세트','1개'],['20ml N/S','3개'],['3way stopcock','2개'],
+         ['18G Needle (Eclipse)','2개']],
+    vacuum:'양두침을 <b>주사용수 vial에 먼저</b> 꽂고, 주사용수 vial이 위로 가도록 약제 vial에 반대쪽을 꽂는다.<br>약제 vial에 먼저 꽂으면 <b>vial 내 진공이 사라져 주사용수가 넘어가지 않는다.</b>',
+    steps:[
+      '양두침을 주사용수 vial에 먼저 꽂은 후 반대편에 약제 vial을 꽂는다.',
+      '3way Stopcock에 10ml 주사기, 20ml 주사기, needle을 연결한다.',
+      '약제가 모두 용해되면 3way의 needle을 vial에 꽂고, Stopcock을 10ml 주사기 쪽으로 돌려 bolus용량(총 투여량의 10%)을 뽑은 다음, Stopcock을 돌려 10ml 주사기의 약을 20ml 주사기로 밀어 넣는다.',
+      'Stopcock을 잠그고 20ml 주사기를 분리 후 <b>N/S를 이용해 총 volume 20ml로 희석</b>한다.',
+      '3way Stopcock에 50ml 주사기를 연결하여 나머지 유지용량(90%)을 뽑는다.',
+      '50ml 주사기 약물을 <b>N/S 150ml에 희석</b>하고 Regulator 수액세트를 연결한다. (총 volume 약 200ml)',
+      'Bolus 용량(20ml 주사기)은 <b>신경과 의사가 직접 1분간</b> 투여한다.',
+      'Bolus 투여 후 유지용량을 환자에게 연결하고, <b>1시간 동안 주입되도록 regulator dial을 조절</b>한다 (200ml/hr).'
     ],
-    monitor:[
-      '투여 전 <b>BP &lt; 185/110</b> · 투여 중~24h <b>BP &lt; 180/105</b> 유지',
-      '신경학적 사정 q15분×2h → q30분×6h → q1h×16h',
-      '출혈 징후(의식저하·두통·구토·혈뇨·잇몸출혈) 관찰',
-      '혈관부종(angioedema) — 혀·입술 부종 시 즉시 중단'
+    cautions:[
+      '투약 후에는 <b>출혈에 유의</b>한다.',
+      'IV route는 되도록 <b>관절부위는 피한다.</b>',
+      '<b>TPA 투여는 단독 IV route를 사용한다.</b>',
+      '유치도뇨 필요시 되도록 <b>투약 전에</b> 삽입한다.',
+      '유지용량이 <b>시간 내에 주입되는지 지속적으로 확인</b>한다.'
     ],
     absolute:'⛔ 투여 후 <b>24시간 내 항응고제(Heparin)·항혈소판제 금기</b> — 이 앱의 Heparin 카드와 함께 확인할 것',
-    avoid:'24h 내 침습적 처치·동맥천자·NG tube·Foley 삽입 지양' },
+    capNote:'원내 문서에는 상한 표기가 없습니다(45~80kg 범위). <b>90mg 상한은 표준 레퍼런스</b> — 100kg 이상은 의국 확인 필요.' },
 
   { id:'hep', name:'Heparin', vol:'(25,000u/5ml)', badge:'항응고', color:'orange',
     cat:'🩸 혈전용해·항응고', special:'heparin',
@@ -1157,30 +1187,32 @@ function setHepReg(k){ hepReg=k; updateInfuse(); }
 function tpaCardHTML(d,w){
   const ind=d.indications.find(x=>x.key===tpaInd)||d.indications[0];
   const segs=d.indications.map(x=>
-    `<button class="mini-btn ${x.key===tpaInd?'on':''}" onclick="setTpaInd('${x.key}')">${x.label}</button>`).join('');
+    `<button class="mini-btn ${x.key===tpaInd?'on':''}" onclick="setTpaInd('${x.key}')">${x.label}${x.inhouse?'':' ⚠️'}</button>`).join('');
 
-  let rows='', total, bolus=0, inf, capped=false;
+  let total, bolus=0, maint, capped=false;
   if(ind.perKg){
     const raw=w*ind.perKg;
     capped = raw>ind.maxMg;
-    total = Math.min(raw, ind.maxMg);
-    bolus = total*ind.bolusPct/100;
-    inf   = total-bolus;
-  } else {
-    total = ind.fixedMg; inf = total;
-  }
-  const mlhr = inf/(ind.infMin/60);          // 농도 1mg/ml → ml = mg
-  const vials = Math.ceil(total/50);
+    total  = Math.min(raw, ind.maxMg);
+    bolus  = total*ind.bolusPct/100;
+    maint  = total-bolus;
+  } else { total=ind.fixedMg; maint=total; }
+  // 조제 후 농도 1 mg/ml → 뽑는 부피(ml) = 용량(mg)
+  const maintVol = maint + (ind.inhouse ? d.nsMaint : 0);      // 유지용액 총 volume
+  const mlhr = maintVol/(ind.infMin/60);
 
-  // 체중별 표 (뇌경색만 — PE는 체중 무관)
+  // 체중별 표 — 45~80kg는 원내 문서 값, 그 밖은 계산값
+  let rows='';
   if(ind.perKg){
-    const ws=[50,55,60,65,70,75,80,85,90,95,100];
+    const ws=[45,50,55,60,65,70,75,80,85,90,95,100];
     rows=ws.map(kg=>{
-      const t=Math.min(kg*ind.perKg, ind.maxMg), b=t*ind.bolusPct/100, i=t-b;
+      const t=Math.min(kg*ind.perKg, ind.maxMg), b=t*ind.bolusPct/100, m=t-b;
+      const doc = kg>=45&&kg<=80;
       return `<tr class="${kg===Math.round(w)?'cur':''}" onclick="setIW(${kg})">
-        <td>${kg} kg</td><td style="text-align:right">${fmtNum(t,1)} mg</td>
-        <td style="text-align:right">${fmtNum(b,2)} ml</td>
-        <td style="text-align:right">${fmtRate(i/(ind.infMin/60))} ml/hr</td></tr>`;
+        <td>${kg} kg${doc?'':' <span style="color:var(--warn)">*</span>'}</td>
+        <td style="text-align:right">${fmtNum(t,1)} mg</td>
+        <td style="text-align:right">${fmtNum(b,2)} mg</td>
+        <td style="text-align:right">${fmtNum(m,2)} mg</td></tr>`;
     }).join('');
   }
 
@@ -1190,7 +1222,7 @@ function tpaCardHTML(d,w){
       <div style="min-width:0;flex:1">
         <div class="hero-name" style="color:var(--danger)">${d.name}
           <span style="font-size:13px;color:var(--text-dim);font-weight:400">${d.vol}</span></div>
-        <div class="hero-mix">${d.recon}</div>
+        <div class="hero-mix">${d.recon}<br><span style="font-size:12px">${d.srcNote}</span></div>
       </div>
       <div class="hero-chips">
         <span class="badge" style="background:var(--surface-2);color:var(--danger)">${d.badge}</span>
@@ -1200,6 +1232,7 @@ function tpaCardHTML(d,w){
     </div>
 
     <div class="alert alert-danger">${d.absolute}</div>
+    <div class="alert alert-warn">🩸 ${d.vacuum}</div>
 
     <div style="padding:16px 20px 4px">
       <div class="sec-head">적응증 — 먼저 고르세요 (용량 체계가 완전히 다릅니다)</div>
@@ -1208,7 +1241,7 @@ function tpaCardHTML(d,w){
     </div>
 
     <div class="stepper">
-      <button class="step-btn" onclick="setIW(Math.max(1,${Math.round(w)}-5))" ${w<=1?'disabled':''} title="체중 −5">−</button>
+      <button class="step-btn" onclick="setIW(Math.max(1,${Math.round(w)}-5))" ${(w<=1||!ind.perKg)?'disabled':''} title="체중 −5">−</button>
       <div class="step-val">
         <input type="number" step="any" min="1" max="250" inputmode="decimal" value="${w}"
                onchange="setIW(this.value)" aria-label="체중" ${ind.perKg?'':'disabled'}>
@@ -1219,27 +1252,63 @@ function tpaCardHTML(d,w){
 
     <div class="big-result">
       <div class="big-num">${fmtNum(total,1)}</div>
-      <div class="big-unit">mg 총량 · ${vials} vial</div>
-      <div class="big-sub">
-        ${bolus>0?`<b>Bolus</b> ${fmtNum(bolus,2)} mg = <b>${fmtNum(bolus,2)} ml</b> (1분간 IV push)<br>`:''}
-        <b>주입</b> ${fmtNum(inf,2)} mg = ${fmtNum(inf,2)} ml / ${ind.infMin}분 → <b>${fmtRate(mlhr)} ml/hr</b>
+      <div class="big-unit">mg · 총 투여량</div>
+    </div>
+
+    ${capped?`<div class="alert alert-warn">⚠️ ${w}kg × ${ind.perKg} = ${fmtNum(w*ind.perKg,1)}mg → <b>${ind.maxMg}mg 상한 적용</b>.<br>${d.capNote}</div>`:''}
+
+    <div class="tpa-steps">
+      <div class="tpa-step">
+        <div class="ts-n">① Bolus</div>
+        <div class="ts-v">${fmtNum(bolus,2)} <span>mg</span></div>
+        <div class="ts-d">10ml 주사기로 <b>${fmtNum(bolus,2)} ml</b> 뽑기<br>
+          → 20ml 주사기로 밀어넣고 <b>N/S로 총 ${d.nsBolus}ml</b> 희석<br>
+          → <b>신경과 의사가 직접 1분간</b> 투여</div>
+      </div>
+      <div class="tpa-step">
+        <div class="ts-n">② 유지</div>
+        <div class="ts-v">${fmtNum(maint,2)} <span>mg</span></div>
+        <div class="ts-d">50ml 주사기로 <b>${fmtNum(maint,2)} ml</b> 뽑기<br>
+          → <b>N/S ${d.nsMaint}ml</b>에 희석 = 총 <b>약 ${Math.round(maintVol)} ml</b><br>
+          → Regulator로 <b>1시간</b>에 주입</div>
+      </div>
+      <div class="tpa-step hl">
+        <div class="ts-n">③ Regulator dial</div>
+        <div class="ts-v">${d.dial} <span>ml/hr</span></div>
+        <div class="ts-d">원내 문서 지정값<br>
+          <span style="opacity:.8">(실제 총량 ${Math.round(maintVol)}ml ÷ 1h = ${fmtRate(mlhr)})</span><br>
+          <b>시간 내 주입 여부를 계속 확인</b></div>
       </div>
     </div>
 
-    ${capped?`<div class="alert alert-warn">⚠️ 체중 ${w}kg × ${ind.perKg} = ${fmtNum(w*ind.perKg,1)}mg 이지만 <b>최대 ${ind.maxMg}mg 상한</b>이 적용되었습니다.</div>`:''}
-
     ${rows?`<details class="rate-fold" open>
-      <summary>체중별 표 (${ind.perKg} mg/kg · 최대 ${ind.maxMg}mg) · 행을 누르면 체중 적용</summary>
+      <summary>체중별 투여 용량 · 행을 누르면 체중 적용 &nbsp;<span style="color:var(--warn);font-weight:400">* = 원내 문서 범위(45~80kg) 밖, 계산값</span></summary>
       <table class="rate-table">
-        <tr><th>체중</th><th style="text-align:right">총량</th><th style="text-align:right">Bolus</th><th style="text-align:right">주입</th></tr>
+        <tr><th>체중</th><th style="text-align:right">총 투여량<br><span style="font-weight:400">×0.9mg</span></th>
+        <th style="text-align:right">Bolus<br><span style="font-weight:400">10%</span></th>
+        <th style="text-align:right">유지용량<br><span style="font-weight:400">90%</span></th></tr>
         ${rows}
       </table>
     </details>`:''}
 
+    <details class="rate-fold">
+      <summary>조제 순서 (원내 문서 8단계)</summary>
+      <div style="padding:4px 20px 18px">
+        <ol class="tpa-ol">${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+      </div>
+    </details>
+
+    <details class="rate-fold">
+      <summary>TPA 세트 구성</summary>
+      <table class="rate-table">
+        <tr><th>품목</th><th style="text-align:right">수량</th></tr>
+        ${d.set.map(x=>`<tr><td>${x[0]}</td><td style="text-align:right">${x[1]}</td></tr>`).join('')}
+      </table>
+    </details>
+
     <div class="ref-block">
-      <div class="info-row"><span class="info-label">조제</span><span class="info-val">${d.prep.map(x=>'· '+x).join('\n')}</span></div>
-      <div class="info-row"><span class="info-label">⚠️ 감시</span><span class="info-val warn">${d.monitor.map(x=>'· '+x).join('\n')}</span></div>
-      <div class="info-row"><span class="info-label">금지</span><span class="info-val warn">· ${d.avoid}</span></div>
+      <div class="info-row"><span class="info-label">⚠️ 주의</span>
+        <span class="info-val warn">${d.cautions.map(x=>'· '+x).join('\n')}</span></div>
     </div>
   </div>`;
 }
