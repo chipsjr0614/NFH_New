@@ -811,33 +811,36 @@ const HELPER_DRUGS = [
   // ⚠️ Actilyse는 DRUG_DB/ENRICH 어디에도 없던 신규 데이터 — 전량 표준 레퍼런스 기반 초안.
   //    약제부·의국 검증 전 사용 금지. 적응증마다 용량 체계가 완전히 다르므로 선택을 강제한다.
   // ══════════════════════════════════════════════════════════════
-  // ★ 260808: 원내 실물 문서 3종(사진) 기준으로 전면 교체.
+  // ★ 260808: ⚠️ 타 병원 프로토콜 문서 3종(사진) 기준. 우리 병원 프로토콜은 아직 제정되지 않음.
   //   [TPA 투약 방법] · [TPA 세트 / 체중에 따른 투여 용량] · [TPA 약물 조제 및 투여방법 12단계]
-  //   → 이전 표준 레퍼런스 초안(1mg/ml 펌프 주입)은 폐기. 원내는 N/S 희석 + Regulator dial 방식.
+  //   → 이전 표준 레퍼런스 초안(1mg/ml 펌프 주입)은 폐기. 참고 문서는 N/S 희석 + Regulator dial 방식.
+  //   ⛔ 우리 병원 채택 전까지 실제 투약에 사용 금지 — 카드에 상시 경고 노출.
   { id:'tpa', name:'Actilyse (alteplase)', vol:'(TPA 세트)', badge:'혈전용해 tPA', color:'red',
     cat:'🩸 혈전용해·항응고', special:'tpa',
-    verify:'★ 원내 문서 기준',
-    srcNote:'출처: 원내 [TPA 투약 방법] · [TPA 세트] · [TPA 약물 조제 및 투여방법] (사진 260808)',
+    verify:'⛔ 우리 병원 미제정',
+    srcNote:'출처: <b>타 병원</b> [TPA 투약 방법]·[TPA 세트]·[TPA 약물 조제 및 투여방법] 사진 (260808 입수) — 참고자료',
     recon:'약제 vial + 동봉 주사용수 vial → <b>1 mg/ml</b> (양두침 사용)',
     conc:1,
     nsBolus:20,
-    // ★ 원내 재고: N/S 150ml 없음, 250ml만 있음 (260808 칩스 확인)
-    //   문서 원안은 150ml(총 약 200ml → dial 200ml/hr). 250ml 사용 시 총량이 늘어 dial을 올려야 함.
+    // N/S 재고: 우리 병원은 150ml 없음, 250ml만 있음 (260808 칩스 확인)
+    //   dial 레귤레이터는 눈금이 이산값 → 286~315ml/hr 같은 값은 맞출 수 없다.
+    //   따라서 «250ml에서 50ml 제거 = 200ml + dial 250» 안이 실행 가능하고 소요시간 편차도 원안보다 좁다.
     nsOptions:[
-      { ml:250, label:'N/S 250ml', note:'원내 재고', stock:true,  docDial:null },
-      { ml:150, label:'N/S 150ml', note:'문서 원안 · 재고 없음', stock:false, docDial:200 }
+      { ml:200, label:'N/S 200ml', note:'250ml에서 50ml 제거 · 칩스 제안', dial:250, dialOk:true },
+      { ml:150, label:'N/S 150ml', note:'250ml에서 100ml 제거 · 참고 문서안', dial:200, dialOk:true, isDoc:true },
+      { ml:250, label:'N/S 250ml', note:'전량 사용 · dial 눈금 없음', dial:null, dialOk:false }
     ],
     indications:[
       { key:'stroke', label:'급성 뇌경색', inhouse:true,
         perKg:0.9, maxMg:90, bolusPct:10, infMin:60,
         how:'총 투여량 = <b>몸무게 × 0.9mg</b> · Bolus <b>10%</b> · 유지 <b>90%</b>',
-        window:'원내 문서 범위 45~80kg · 그 밖은 계산값' },
+        window:'참고 문서 표 범위 45~80kg · 그 밖은 계산값' },
       { key:'pe', label:'폐색전증 (PE)', inhouse:false,
         fixedMg:100, infMin:120,
         how:'<b>100mg을 2시간에 걸쳐</b> 주입 (체중 무관)',
-        window:'⚠️ 원내 문서 없음 — 표준 레퍼런스 초안, 의국 확인 필요' }
+        window:'⚠️ 참고 문서에도 없음 — 표준 레퍼런스 초안, 의국 확인 필요' }
     ],
-    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 150ml <span style="color:var(--warn)">→ 원내 재고 없음, 250ml 사용</span>','1 btl'],
+    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 150ml <span style="color:var(--warn)">→ 우리 병원 재고 없음, 250ml 사용</span>','1 btl'],
          ['50ml 주사기','1개'],['20ml 주사기','1개'],['10ml 주사기','2개'],
          ['Regulator 수액세트','1개'],['20ml N/S','3개'],['3way stopcock','2개'],
          ['18G Needle (Eclipse)','2개']],
@@ -848,7 +851,7 @@ const HELPER_DRUGS = [
       '약제가 모두 용해되면 3way의 needle을 vial에 꽂고, Stopcock을 10ml 주사기 쪽으로 돌려 bolus용량(총 투여량의 10%)을 뽑은 다음, Stopcock을 돌려 10ml 주사기의 약을 20ml 주사기로 밀어 넣는다.',
       'Stopcock을 잠그고 20ml 주사기를 분리 후 <b>N/S를 이용해 총 volume 20ml로 희석</b>한다.',
       '3way Stopcock에 50ml 주사기를 연결하여 나머지 유지용량(90%)을 뽑는다.',
-      '50ml 주사기 약물을 <b>N/S에 희석</b>하고 Regulator 수액세트를 연결한다. <span style="color:var(--warn)">(문서 원안은 150ml — 원내는 250ml만 있으므로 위 카드에서 선택한 값 기준)</span>',
+      '50ml 주사기 약물을 <b>N/S에 희석</b>하고 Regulator 수액세트를 연결한다. <span style="color:var(--warn)">(참고 문서는 150ml — 우리 병원은 250ml만 있으므로 위 카드에서 선택한 값 기준)</span>',
       'Bolus 용량(20ml 주사기)은 <b>신경과 의사가 직접 1분간</b> 투여한다.',
       'Bolus 투여 후 유지용량을 환자에게 연결하고, <b>1시간 동안 주입되도록 regulator dial을 조절</b>한다. <span style="color:var(--warn)">(문서 원안 200ml/hr는 N/S 150ml 기준 — 250ml 사용 시 위 ③ 값으로)</span>'
     ],
@@ -860,11 +863,15 @@ const HELPER_DRUGS = [
       '유지용량이 <b>시간 내에 주입되는지 지속적으로 확인</b>한다.'
     ],
     absolute:'⛔ 투여 후 <b>24시간 내 항응고제(Heparin)·항혈소판제 금기</b> — 이 앱의 Heparin 카드와 함께 확인할 것',
-    capNote:'원내 문서에는 상한 표기가 없습니다(45~80kg 범위). <b>90mg 상한은 표준 레퍼런스</b> — 100kg 이상은 의국 확인 필요.' },
+    notOurs:'⛔ <b>우리 병원 TPA 프로토콜은 아직 정해지지 않았습니다.</b><br>'+
+            '이 카드는 <b>타 병원 문서 사진</b>(260808 입수)을 옮긴 <b>참고자료</b>입니다. '+
+            '세트 구성·희석량·dial·투여자 역할 모두 우리 병원 기준이 아닙니다.<br>'+
+            '<b>의국·약제부가 우리 병원 프로토콜을 제정하기 전까지 실제 투약에 사용하지 마십시오.</b>',
+    capNote:'참고 문서에는 상한 표기가 없습니다(45~80kg 범위). <b>90mg 상한은 표준 레퍼런스</b> — 100kg 이상은 의국 확인 필요.' },
 
   { id:'hep', name:'Heparin', vol:'(25,000u/5ml)', badge:'항응고', color:'orange',
     cat:'🩸 혈전용해·항응고', special:'heparin',
-    verify:'★ 원내 프로토콜 확인 필요',
+    verify:'★ 우리 병원 지침 확인 필요',
     mixTxt:'Heparin 25,000u/5ml <b>1@ + NS 495ml = 총 500ml</b>',
     conc:50, unit:'u/ml',
     formula:'ml/hr = (units/hr) ÷ 50',
@@ -1185,7 +1192,7 @@ function refBlockHTML(d){
 // ══════════════════════════════════════════════════════════════
 // V4 ── 🩸 혈전용해·항응고 전용 카드 (표준 rate card로 표현할 수 없는 프로토콜)
 // ══════════════════════════════════════════════════════════════
-let tpaInd='stroke', hepReg='vte', tpaNS=250;   // 원내 재고가 250ml이므로 기본값 250
+let tpaInd='stroke', hepReg='vte', tpaNS=200;   // 250ml에서 50ml 제거 = 200ml (칩스 제안 · 미확정)
 function setTpaInd(k){ tpaInd=k; updateInfuse(); }
 function setTpaNS(v){ tpaNS=Number(v); updateInfuse(); }
 function setHepReg(k){ hepReg=k; updateInfuse(); }
@@ -1207,16 +1214,20 @@ function tpaCardHTML(d,w){
   const nsOpt = d.nsOptions.find(o=>o.ml===tpaNS) || d.nsOptions[0];
   const nsMl  = ind.inhouse ? nsOpt.ml : 0;
   const maintVol = maint + nsMl;                    // 유지용액 총 volume
-  const mlhr  = maintVol/(ind.infMin/60);           // 1시간 내 주입에 필요한 실제 속도
-  // 문서에 지정값이 있으면 그것이 우선(150ml 기준 200ml/hr), 없으면 계산값
-  const dialShow = (ind.inhouse && nsOpt.docDial) ? nsOpt.docDial : Math.round(mlhr);
-  const deviate  = ind.inhouse && !nsOpt.docDial;
+  const needMlhr = maintVol/(ind.infMin/60);        // 정확히 1시간에 넣으려면 필요한 속도
+  const dialShow = ind.inhouse ? (nsOpt.dial || Math.round(needMlhr)) : Math.round(needMlhr);
+  const takesMin = maintVol/dialShow*60;            // 그 dial로 실제 걸리는 시간
+  const deviate  = ind.inhouse && !nsOpt.isDoc;
 
-  const nsSeg = ind.inhouse ? d.nsOptions.map(o=>
-    `<button class="mini-btn ${o.ml===tpaNS?'on':''}" onclick="setTpaNS(${o.ml})">${o.label}<br>
-     <span style="font-weight:400;font-size:11px;opacity:.8">${o.note}</span></button>`).join('') : '';
+  const nsSeg = ind.inhouse ? d.nsOptions.map(o=>{
+    const v=maint+o.ml, dl=o.dial||Math.round(v);
+    return `<button class="mini-btn ${o.ml===tpaNS?'on':''}" onclick="setTpaNS(${o.ml})">
+     ${o.label}${o.dialOk?'':' <span style="color:var(--danger)">✕</span>'}<br>
+     <span style="font-weight:400;font-size:11px;opacity:.8">${o.note}<br>
+     dial ${o.dial?o.dial+' → '+(v/dl*60).toFixed(1)+'분':'≈'+Math.round(v)+' (눈금 없음)'}</span></button>`;
+  }).join('') : '';
 
-  // 체중별 표 — 45~80kg는 원내 문서 값, 그 밖은 계산값
+  // 체중별 표 — 45~80kg는 참고 문서 표 값, 그 밖은 계산값
   let rows='';
   if(ind.perKg){
     const ws=[45,50,55,60,65,70,75,80,85,90,95,100];
@@ -1230,7 +1241,7 @@ function tpaCardHTML(d,w){
         <td style="text-align:right">${fmtNum(b,2)} mg</td>
         <td style="text-align:right">${fmtNum(m,2)} mg</td>
         <td style="text-align:right">${Math.round(tv)} ml</td>
-        <td style="text-align:right;font-weight:700">${nsOpt.docDial?nsOpt.docDial:Math.round(tv)}</td></tr>`;
+        <td style="text-align:right;font-weight:700">${(tv/(nsOpt.dial||tv)*60).toFixed(1)}분</td></tr>`;
     }).join('');
   }
 
@@ -1249,6 +1260,7 @@ function tpaCardHTML(d,w){
       </div>
     </div>
 
+    <div class="alert alert-danger" style="border-left-width:6px">${d.notOurs}</div>
     <div class="alert alert-danger">${d.absolute}</div>
     <div class="alert alert-warn">🩸 ${d.vacuum}</div>
 
@@ -1293,41 +1305,46 @@ function tpaCardHTML(d,w){
       <div class="tpa-step hl">
         <div class="ts-n">③ Regulator dial</div>
         <div class="ts-v">${dialShow} <span>ml/hr</span></div>
-        <div class="ts-d">${nsOpt.docDial
-          ? `원내 문서 지정값 (N/S 150ml 기준)<br><span style="opacity:.8">실제 총량 ${Math.round(maintVol)}ml ÷ 1h = ${fmtRate(mlhr)}</span>`
-          : `<b>계산값</b> — 총 ${Math.round(maintVol)}ml ÷ 1시간<br><span style="opacity:.8">문서의 200ml/hr는 150ml 기준입니다</span>`}<br>
+        <div class="ts-d">총 ${Math.round(maintVol)}ml → <b>${takesMin.toFixed(1)}분</b>에 주입<br>
+          ${nsOpt.isDoc?'<span style="opacity:.8">참고 문서 지정값</span>'
+                       :'<span style="opacity:.8">참고 문서는 NS150·dial200</span>'}<br>
           <b>시간 내 주입 여부를 계속 확인</b></div>
       </div>
     </div>
 
     ${ind.inhouse?`
     <div style="padding:0 20px 4px">
-      <div class="sec-head">희석용 N/S — 원내 재고는 250ml만 있습니다</div>
+      <div class="sec-head">희석용 N/S — 우리 병원은 250ml만 있습니다 (덜어내는 양을 고르세요)</div>
       <div class="seg">${nsSeg}</div>
+      <div class="calc-note" style="margin-top:10px">
+        참고 문서(NS150·dial200)도 총량이 186~215ml로 변해 실제 <b>55.9~64.4분</b>이 걸립니다.
+        <b>NS200·dial250</b>은 <b>56.7~63.6분</b>으로 편차가 오히려 좁습니다.
+      </div>
     </div>`:''}
 
-    ${deviate?`<div class="alert alert-warn">⚠️ <b>원내 문서와 달라지는 지점</b><br>
-      문서는 N/S <b>150ml</b> 기준(총 약 200ml → dial <b>200 ml/hr</b>)입니다.
-      <b>250ml</b>을 쓰면 총량이 <b>약 ${Math.round(maintVol)}ml</b>가 되어,
-      같은 1시간에 넣으려면 dial을 <b>약 ${dialShow} ml/hr</b>로 올려야 합니다.<br>
-      · 투여되는 <b>약물의 양은 동일</b>합니다 (${fmtNum(maint,2)}mg) — 바뀌는 건 수액량과 속도입니다.<br>
-      · <b>★ 의국·약제부 승인 필요</b> · Regulator dial이 ${dialShow}ml/hr까지 조절되는지 확인<br>
-      · 250ml 백에서 100ml를 빼내 150ml로 맞추면 문서 그대로 운영할 수 있습니다.</div>`:''}
+    ${!nsOpt.dialOk?`<div class="alert alert-danger">⛔ <b>이 조합은 실행할 수 없습니다.</b>
+      정확히 1시간에 넣으려면 dial을 <b>약 ${Math.round(needMlhr)} ml/hr</b>로 맞춰야 하는데,
+      dial 레귤레이터에는 그런 눈금이 없습니다. 위에서 <b>200ml</b> 또는 <b>150ml</b>를 고르세요.</div>`
+    :deviate?`<div class="alert alert-warn">⚠️ <b>참고 문서와 달라지는 지점</b><br>
+      참고 문서는 N/S <b>150ml</b> 기준(dial <b>200 ml/hr</b>)입니다. 지금은 <b>${nsMl}ml + dial ${dialShow}</b>.<br>
+      · 투여되는 <b>약물의 양은 동일</b>합니다 (${fmtNum(maint,2)}mg) — 바뀌는 건 <b>수액량 +${nsMl-150}ml</b>와 dial 눈금뿐입니다.<br>
+      · 주입 시간은 <b>${takesMin.toFixed(1)}분</b>으로 참고 문서(${(( maint+150)/200*60).toFixed(1)}분)와 사실상 동일합니다.<br>
+      · <b>★ 우리 병원 프로토콜로 확정 필요</b> — 덜어내는 양(50ml)과 dial(250)</div>`:''}
 
     ${rows?`<details class="rate-fold" open>
-      <summary>체중별 투여 용량 · 행을 누르면 체중 적용 &nbsp;<span style="color:var(--warn);font-weight:400">* = 원내 문서 범위(45~80kg) 밖, 계산값</span></summary>
+      <summary>체중별 투여 용량 · 행을 누르면 체중 적용 &nbsp;<span style="color:var(--warn);font-weight:400">* = 참고 문서 표 범위(45~80kg) 밖, 계산값</span></summary>
       <table class="rate-table">
         <tr><th>체중</th><th style="text-align:right">총 투여량<br><span style="font-weight:400">×0.9mg</span></th>
         <th style="text-align:right">Bolus<br><span style="font-weight:400">10%</span></th>
         <th style="text-align:right">유지용량<br><span style="font-weight:400">90%</span></th>
         <th style="text-align:right">유지용액<br><span style="font-weight:400">+N/S ${nsMl}</span></th>
-        <th style="text-align:right">dial<br><span style="font-weight:400">ml/hr</span></th></tr>
+        <th style="text-align:right">소요시간<br><span style="font-weight:400">dial ${dialShow}</span></th></tr>
         ${rows}
       </table>
     </details>`:''}
 
     <details class="rate-fold">
-      <summary>조제 순서 (원내 문서 8단계)</summary>
+      <summary>조제 순서 (참고 문서 8단계)</summary>
       <div style="padding:4px 20px 18px">
         <ol class="tpa-ol">${d.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
       </div>
