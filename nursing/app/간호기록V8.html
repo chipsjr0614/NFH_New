@@ -214,6 +214,58 @@ details summary{list-style:none;cursor:pointer;font-size:13.5px;font-weight:700;
 .lock.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:transparent;font-weight:700}
 .lock .ls{margin-top:8px;font-size:13px;color:var(--ink3);line-height:1.7}
 details summary::-webkit-details-marker{display:none}
+/* ══ V8 추가 ══ */
+.prog{flex:none;height:3px;background:var(--line2);position:relative}
+.prog i{position:absolute;left:0;top:0;bottom:0;background:var(--ac);border-radius:0 3px 3px 0;
+  transition:width .28s cubic-bezier(.4,0,.2,1)}
+.hd{margin:2px 0 16px}
+.hd h1{font-size:23px;font-weight:850;letter-spacing:-.02em;margin:0 0 4px;line-height:1.25}
+.hd p{margin:0;font-size:14px;color:var(--ink3);line-height:1.45}
+.hd .stp{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ac);
+  background:var(--acs);border-radius:20px;padding:3px 10px;margin-bottom:9px}
+/* 하단 고정 네비 */
+.nav{flex:none;display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:var(--card);border-top:1px solid var(--line)}
+.nav .b{min-height:52px;font-size:16px}
+.nav .b.go{flex:1;justify-content:center;background:var(--ac);border-color:var(--ac);color:var(--on)}
+.nav .b.go:active{opacity:.82}
+.nav .b.bk{flex:none;min-width:64px;justify-content:center}
+/* 선택 피드백 */
+.b{transition:transform .09s,background .12s,border-color .12s}
+.b:active{transform:scale(.97)}
+.b.on{box-shadow:0 2px 10px -4px var(--ac)}
+/* 진단 카드 */
+.dxr{display:flex;flex-direction:column;gap:7px}
+.dxb2{width:100%;text-align:left;border:1.5px solid var(--line);background:var(--card);
+  border-radius:12px;padding:13px 14px;font-size:15.5px;font-weight:800;color:var(--ink2);
+  display:flex;align-items:center;gap:9px;min-height:54px}
+.dxb2.on{border-color:var(--dx);background:var(--dxb);color:var(--dx)}
+.dxb2 .tag{font-size:11px;font-weight:800;border-radius:20px;padding:2px 8px;
+  background:var(--sunk);color:var(--ink3);flex:none;margin-left:auto}
+.dxb2.on .tag{background:var(--dx);color:#fff}
+/* 결과 */
+.res{background:var(--card);border:1.5px solid var(--line2);border-radius:14px;padding:15px 15px;
+  font-size:14.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word;
+  font-family:ui-monospace,Menlo,"SF Mono",monospace}
+.res b{color:var(--ac)}
+.cpbig{width:100%;justify-content:center;background:var(--ac);border-color:var(--ac);color:var(--on);
+  min-height:56px;font-size:17px;font-weight:850;border-radius:13px}
+.cpbig.done{background:var(--ok);border-color:var(--ok)}
+/* 보관함 */
+.sheet{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.42);display:flex;align-items:flex-end}
+.sheet.hide{display:none}
+.sbox{background:var(--bg);width:100%;max-height:82vh;border-radius:18px 18px 0 0;
+  display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.shd{flex:none;display:flex;align-items:center;gap:9px;padding:15px 15px 11px;border-bottom:1px solid var(--line)}
+.shd b{flex:1;font-size:17px;font-weight:850}
+.sbody{flex:1;overflow-y:auto;padding:12px 15px 18px;-webkit-overflow-scrolling:touch}
+.hc{background:var(--card);border:1.5px solid var(--line2);border-radius:12px;padding:12px 13px;margin-bottom:9px}
+.hc .hn{font-size:15px;font-weight:800;display:flex;align-items:center;gap:7px}
+.hc .hn small{font-weight:600;color:var(--ink3);font-family:ui-monospace,Menlo,monospace}
+.hc .hm2{font-size:12.5px;color:var(--ink3);margin:5px 0 9px;line-height:1.5}
+.hc .hb{display:flex;gap:6px}
+.hc .hb .b{flex:1;justify-content:center;min-height:42px;font-size:13.5px;padding:8px}
+
 </style></head>
 <body>
 <script>
@@ -228,29 +280,40 @@ window.NFH_V8={"paths": [{"nm": "호흡곤란", "ic": "🫁", "cat": "숨·가�
 </script>
 
 
-<div id="scroll">
- <div class="top">
-   <div class="who"><b id="whoNm">환자</b><span id="whoStep">1 / 6</span></div>
- </div>
-
- <div class="gate" id="gate">
-   <div class="gbox">
-     <p class="lb">🏥 통합 간호기록 V8</p>
-     <div class="gin"><input id="nm" placeholder="환자 이름" autocomplete="off"></div>
-     <div class="gin"><input id="pid" placeholder="등록번호" inputmode="numeric" autocomplete="off"></div>
-     <button class="b wide ggo" id="ggo" data-go="1">시작하기 →</button>
-     <p class="hint">이름은 기록에 <b>김O수</b>로 가려져 나갑니다</p>
-   </div>
- </div>
-
- <div id="main" style="display:none">
-   <div id="body"></div>
-   <div class="row" style="margin:18px 0 40px">
-     <button class="b" data-prev="1" style="flex:none">← 이전</button>
-     <button class="b wide on" data-next="1" style="flex:1">다음 →</button>
-   </div>
- </div>
+<div class="top">
+  <button class="hm" data-home="1" title="처음으로">🏠</button>
+  <div class="who"><span id="whoNm">간호기록</span><small id="whoPid"></small></div>
+  <button class="hm" data-hist="1" title="보관함">📁</button>
 </div>
+<div class="prog"><i id="prog" style="width:14%"></i></div>
+
+<div id="scroll"><div class="w"><div id="body"></div></div></div>
+
+<div class="nav" id="nav" style="display:none">
+  <button class="b bk" data-prev="1">←</button>
+  <button class="b go" data-next="1">다음</button>
+</div>
+
+<!-- 시작 -->
+<div class="gate" id="gate">
+  <div class="gbox">
+    <p class="lb">🏥 통합 간호기록 V8</p>
+    <div class="gin"><input id="nm" placeholder="환자 이름" autocomplete="off"></div>
+    <div class="gin"><input id="pid" placeholder="등록번호" inputmode="numeric" autocomplete="off"></div>
+    <button class="b wide ggo on" data-go="1">시작하기</button>
+    <p class="hint">이름은 기록에 <b>김O수</b>로 가려져 나갑니다</p>
+  </div>
+</div>
+
+<!-- 보관함 -->
+<div class="sheet hide" id="sheet">
+  <div class="sbox">
+    <div class="shd"><b>📁 보관함</b><span class="hint" style="margin:0" id="hcnt"></span>
+      <button class="hm" data-sclose="1">✕</button></div>
+    <div class="sbody" id="sbody"></div>
+  </div>
+</div>
+<div class="toast hide" id="toast"></div>
 
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -260,10 +323,11 @@ window.NFH_V8={"paths": [{"nm": "호흡곤란", "ic": "🫁", "cat": "숨·가�
 
    ★ 진술문은 하나도 새로 만들지 않았다. V7 qbank(마스터 대조본)를 재배치만 했다.
    ★ 간호진단은 「사정에서 양성이 나온 것」 중 우선순위 1개가 자동으로 정해진다.
-     예) 외상에서 "피가 나나요?" 있음 → 출혈 / 없음 → 신체손상위험
+   ★ 신경 경로(두통·뇌경색·Seizure·어지럼·의식섬망·중독)는 동공·감각·grasp를 무조건 사정한다.
    ══════════════════════════════════════════════════════════════ */
 const D=window.NFH_V6, V8=window.NFH_V8, $=i=>document.getElementById(i);
 const QB=D.qbank, P=D.pain||{}, PATHS=V8.paths, PRI=V8.pri, SITES=V8.sites;
+const HKEY='nfh_v8_hist', HMAX=10;
 
 const S={
   nm:'', pid:'',
@@ -271,12 +335,11 @@ const S={
   pain:{on:null,part:'',sub:'',site:'',tool:'NRS',inten:null,pattern:'',freq:'',dur:''},
   consc:'', guard:'', ori:{}, gcs:{E:null,V:null,M:null}, power:{}, memo:''
 };
-let step=1, cathMore=false;
+let step=1, cathMore=false, copied=false;
 const BASEQ=['Q007','Q008','Q001'];
 /* 신경학 경로 — 이 6개는 신경 사정 세트를 무조건 한다 (V7 NEU_SET 계승) */
 const NEURO=['뇌경색 · 뇌출혈','어지럼','의식 · 섬망','중독','Seizure','두통'];
-/* 신경 사정 세트 : 동공크기 · 동공반응 · 감각 · grasp · obey command · 의식수준
-   V7은 경로마다 neuro 필드로 흩어져 있었다. V8은 신경 경로면 전부 붙인다. */
+/* 동공크기 · 동공반응 · 감각이상 · grasp · obey command · 의식수준 */
 const NEUROQ=['Q010','Q011','Q012','Q013','Q098','Q172'];
 const MRC=[['0','전혀 못 움직임'],['I','근육만 꿈틀'],['II','바닥에서 밀기만'],
            ['III','중력 이기고 듦'],['IV','약간 저항'],['V','정상']];
@@ -285,6 +348,14 @@ const GCSD={E:[['4','자발적'],['3','부르면'],['2','통증에'],['1','안 �
             V:[['5','지남력 있음'],['4','혼돈'],['3','부적절'],['2','이해불가'],['1','없음']],
             M:[['6','명령 따름'],['5','통증 국소화'],['4','회피'],['3','굴곡'],['2','신전'],['1','없음']]};
 const ORI=[['person','사람'],['time','시간'],['place','장소']];
+const STEPS=[null,
+  ['도관 · 튜브','가지고 있는 관을 모두 눌러주세요'],
+  ['기본 사정','모든 환자에게 묻는 3가지'],
+  ['주호소','오늘 왜 오셨나요 · 최대 2개'],
+  ['사정','물어보고 눌러주세요'],
+  ['통증','아픈 곳이 있나요'],
+  ['의식 · 낙상','마지막 확인'],
+  ['기록 완성','복사해서 붙여넣으세요']];
 
 /* ── 진술문 헬퍼 (V7 원본) ── */
 const NEGP=/(없음|안됨|않음|못함|못 봄|아님)$/;
@@ -304,7 +375,6 @@ function stmt(qid,v){
   if(typeof v==='number') return q.stmts[v]||null;
   return v===true?(q.stmts[0]||null):null;
 }
-/* 고른 진술문 자체를 보고 양성인지 판단한다 (V7 원본) */
 function pos(qid){
   const v=S.ans[qid], b=QB[qid]; if(!b||v===undefined) return false;
   if(v===true) return true;
@@ -320,15 +390,19 @@ function maskName(n){
   if(n.length===4) return n.slice(0,2)+'OO';
   return n.slice(0,2)+'OOO';
 }
+function toast(msg,warn){
+  const t=$('toast'); t.textContent=msg; t.className='toast'+(warn?' warn':'');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.add('hide'),1900);
+}
 const pathOf=nm=>PATHS.find(p=>p.nm===nm);
+function isNeuro(){ return S.picks.some(nm=>NEURO.indexOf(nm)>=0); }
 function askQs(){
   const out=[];
   S.picks.forEach(nm=>{ (pathOf(nm)||{q:[]}).q.forEach(q=>{ if(out.indexOf(q)<0) out.push(q); }); });
   /* 두통·신경학 문제면 동공·감각·grasp를 무조건 사정한다 (칩스 260808) */
   if(isNeuro()) NEUROQ.forEach(q=>{ if(out.indexOf(q)<0) out.push(q); });
-  /* 부위(외상·피부 등)를 고르면 그 부위의 사정이 따라온다 */
   siteSel().forEach(x=>(x.ae||[]).forEach(q=>{ if(out.indexOf(q)<0) out.push(q); }));
-  /* 신경학 이상이 보이면 혈당부터 — 저혈당을 뇌졸중으로 오인하지 않게 (V7 follow) */
+  /* 신경학 이상이면 혈당부터 — 저혈당을 뇌졸중으로 오인하지 않게 (V7 follow) */
   if(needGlu()) (V8.follow[0].ae||[]).forEach(q=>{ if(out.indexOf(q)<0) out.push(q); });
   return out;
 }
@@ -339,11 +413,9 @@ function siteSel(){
   return out;
 }
 function needGlu(){
-  if(S.picks.some(nm=>nm==='고혈당'||nm==='저혈당')) return false;   /* skipPaths */
-  return S.picks.some(nm=>NEURO.indexOf(nm)>=0)||S.consc==='의식수준 저하됨';
+  if(S.picks.some(nm=>nm==='고혈당'||nm==='저혈당')) return false;
+  return isNeuro()||S.consc==='의식수준 저하됨';
 }
-function isNeuro(){ return S.picks.some(nm=>NEURO.indexOf(nm)>=0); }
-
 /* ── 간호진단 : 양성 사정 → 우선순위 1개 자동 ── */
 function dxAll(){
   const out=[];
@@ -354,9 +426,8 @@ function dxAll(){
 function dxAuto(){
   const all=dxAll(); if(!all.length) return null;
   const hit=all.filter(x=>(x.ae||[]).some(pos));
-  const pool=hit.length?hit:all;
-  pool.sort((a,b)=>{ const i=PRI.indexOf(a.name), j=PRI.indexOf(b.name);
-    return (i<0?99:i)-(j<0?99:j); });
+  const pool=(hit.length?hit:all).slice();
+  pool.sort((a,b)=>{ const i=PRI.indexOf(a.name), j=PRI.indexOf(b.name); return (i<0?99:i)-(j<0?99:j); });
   return pool[0];
 }
 function dxNow(){
@@ -368,70 +439,69 @@ function painAuto(){ return S.picks.some(nm=>(pathOf(nm)||{}).pain); }
 
 /* ══════ 화면 ══════ */
 function view(){
-  $('whoNm').textContent=(maskName(S.nm)||'환자')+(S.pid?' · '+S.pid:'');
-  $('whoStep').textContent=step+' / 6';
+  const t=STEPS[step]||['',''];
+  $('whoNm').textContent=maskName(S.nm)||'간호기록';
+  $('whoPid').textContent=S.pid||'';
+  $('prog').style.width=Math.round(step/7*100)+'%';
   const fn=[null,vCath,vBase,vPick,vAsk,vPain,vEnd,vText][step];
-  $('body').innerHTML=fn?fn():'';
-  document.querySelector('[data-prev]').style.visibility=step>1?'':'hidden';
-  document.querySelector('[data-next]').textContent=step>=7?'처음으로':(step===6?'기록 만들기 →':'다음 →');
-  window.scrollTo(0,0);
+  $('body').innerHTML=`<div class="hd"><span class="stp">STEP ${step} / 7</span>
+      <h1>${esc(t[0])}</h1><p>${esc(t[1])}</p></div>`+(fn?fn():'');
+  $('nav').style.display=step>=7?'none':'flex';
+  document.querySelector('.nav .bk').style.visibility=step>1?'':'hidden';
+  document.querySelector('.nav .go').textContent=step===6?'기록 만들기':'다음';
+  $('scroll').scrollTop=0;
 }
-/* 0층 도관 */
 function vCath(){
   const list=D.cath.filter(c=>cathMore||c.top);
-  let h=`<p class="lb">🔌 도관 · 튜브 <span style="font-weight:400">— 가지고 있는 것을 모두</span></p><div class="row">`;
-  h+=list.map(c=>`<button class="b ${S.cath[c.s]?'on':''}" data-cath="${esc(c.s)}">${esc(c.s)}</button>`).join('');
-  if(!cathMore) h+=`<button class="b gh" data-cmore="1">＋ 더보기 ${D.cath.length-D.cath.filter(c=>c.top).length}종</button>`;
+  let h=`<div class="row">`
+    +list.map(c=>`<button class="b ${S.cath[c.s]?'on':''}" data-cath="${esc(c.s)}">${esc(c.s)}</button>`).join('');
+  if(!cathMore) h+=`<button class="b gh" data-cmore="1">＋ ${D.cath.length-D.cath.filter(c=>c.top).length}종 더</button>`;
   h+=`</div>`;
   D.cath.filter(c=>S.cath[c.s]).forEach(c=>{
-    h+=`<div class="gh"><span class="gk">${esc(c.s)}</span></div><div class="row">`
-      +c.d.map(t=>`<button class="b ${(S.cath[c.s]||[]).indexOf(t)>=0?'on':''}" data-cd="${esc(c.s)}" data-t="${esc(t)}">${esc(t)}</button>`).join('')+`</div>`;
+    h+=`<div class="gh"><span class="gk">${esc(c.s)}</span></div><div class="col">`
+      +c.d.map(t=>`<button class="bv ${(S.cath[c.s]||[]).indexOf(t)>=0?'on':''}" data-cd="${esc(c.s)}" data-t="${esc(t)}">${esc(t)}</button>`).join('')+`</div>`;
   });
   return h+`<p class="hint">없으면 그냥 다음으로</p>`;
 }
-/* 1층 기본 3질문 */
 function vBase(){
-  return `<p class="lb">🩺 기본 사정 <span style="font-weight:400">— 모든 환자에게 묻습니다</span></p>`
-    +BASEQ.map(q=>qRow(q,S.base[q],'base')).join('')
+  return BASEQ.map(q=>qRow(q,S.base[q],'base')).join('')
     +`<p class="hint">안 누르면 기록에 남지 않습니다</p>`;
 }
-/* 2층 주호소 */
 function vPick(){
   const cats=[]; PATHS.forEach(p=>{ if(cats.indexOf(p.cat)<0) cats.push(p.cat); });
-  let h=`<p class="lb">🎯 주호소 <span style="font-weight:400">— 최대 2개</span></p>`;
-  if(S.picks.length) h+=`<p class="hint" style="margin:0 0 10px">선택: <b>${S.picks.map(esc).join(' · ')}</b></p>`;
+  let h='';
+  if(S.picks.length) h+=`<p class="hint" style="margin:0 0 12px">선택 <b>${S.picks.map(esc).join(' · ')}</b></p>`;
   cats.forEach(c=>{
-    h+=`<div class="gh"><span class="gk">${esc(c)}</span></div><div class="row">`
+    h+=`<div class="cat">${esc(c)}</div><div class="row">`
       +PATHS.filter(p=>p.cat===c).map(p=>{
         const on=S.picks.indexOf(p.nm)>=0, full=S.picks.length>=2&&!on;
-        return `<button class="b ${on?'on':''}" ${full?'style="opacity:.35"':''} data-pick="${esc(p.nm)}">${p.ic} ${esc(p.nm)}</button>`;
+        return `<button class="b ${on?'on':''}" ${full?'style="opacity:.32"':''} data-pick="${esc(p.nm)}">${p.ic} ${esc(p.nm)}</button>`;
       }).join('')+`</div>`;
   });
   return h;
 }
-/* 3층 사정 + 부위 + 진단 */
 function vAsk(){
   if(!S.picks.length) return `<p class="hint">주호소를 먼저 고르세요.</p>`;
-  let h=`<p class="lb">📝 ${S.picks.map(esc).join(' · ')}</p>`;
-  /* 부위·상황 — 외상/피부/중독/체온에서만 */
+  let h='';
   siteGroups().forEach(g=>{
     const lab={'외상부위':'🤕 어디를 다치셨어요?','피부상황':'🧴 피부에 뭐가 있나요?',
-               '온열노출':'🥵 더위에 노출됐나요?','한랭노출':'🧊 추위에 노출됐나요?','노출경로':'💊 어떻게 노출됐나요?'}[g]||g;
-    h+=`<div class="gh"><span class="gk">${esc(lab)}</span>복수 선택</div><div class="row">`
-      +(SITES[g]||[]).map(x=>`<button class="b ${(S.site[g]||[]).indexOf(x.v)>=0?'on':''}" data-site="${esc(g)}" data-v="${esc(x.v)}">${x.ic} ${esc(x.v)}</button>`).join('')
-      +`</div>`;
+      '온열노출':'🥵 더위에 노출됐나요?','한랭노출':'🧊 추위에 노출됐나요?','노출경로':'💊 어떻게 노출됐나요?'}[g]||g;
+    h+=`<div class="cat">${esc(lab)}</div><div class="row">`
+      +(SITES[g]||[]).map(x=>`<button class="b ${(S.site[g]||[]).indexOf(x.v)>=0?'on':''}" data-site="${esc(g)}" data-v="${esc(x.v)}">${x.ic} ${esc(x.v)}</button>`).join('')+`</div>`;
   });
-  if(needGlu()) h+=`<p class="hint" style="color:var(--ac);font-weight:700">⚡ 신경 증상 — 혈당부터 확인하세요 (저혈당 감별)</p>`;
-  const qs=askQs();
-  h+=qs.map(q=>qRow(q,S.ans[q],'ans')).join('')||`<p class="hint">사정 문항이 없습니다.</p>`;
+  if(needGlu()) h+=`<div class="warn3">⚡ 신경 증상 — <b>혈당부터 확인하세요</b> (저혈당 감별)</div>`;
+  h+=askQs().map(q=>qRow(q,S.ans[q],'ans')).join('')||`<p class="hint">사정 문항이 없습니다.</p>`;
   const all=dxAll(), now=dxNow();
   if(all.length){
-    h+=`<div class="gh"><span class="gk">간호진단</span>사정에 따라 자동 · 눌러서 바꿀 수 있음</div><div class="row">`
-      +all.map(x=>`<button class="b ${now&&now.name===x.name?'on':''}" data-dx="${esc(x.name)}">${esc(x.name)}</button>`).join('')+`</div>`;
+    h+=`<div class="cat">간호진단 — 사정에 따라 자동 · 눌러서 바꿈</div><div class="dxr">`
+      +all.map(x=>{
+        const sel=now&&now.name===x.name, hit=(x.ae||[]).some(pos);
+        return `<button class="dxb2 ${sel?'on':''}" data-dx="${esc(x.name)}">${esc(x.name)}
+          <span class="tag">${hit?'사정 근거 있음':'근거 없음'}</span></button>`;
+      }).join('')+`</div>`;
   }else h+=`<p class="hint">이 주호소는 통증에서 진단이 붙습니다.</p>`;
   return h;
 }
-/* 4층 통증 */
 function vPain(){
   const p=S.pain;
   if(painAuto()&&p.on===null){
@@ -439,68 +509,64 @@ function vPain(){
     S.picks.forEach(nm=>{ if(nm==='두통') p.part='머리';
       else if(nm==='복통') p.part='배'; else if(nm==='심근경색 의심') p.part='가슴'; });
   }
-  let h=`<p class="lb">😣 통증</p>
-    <div class="q"><span class="t">통증이 있으세요?</span><span class="yn">
+  let h=`<div class="q"><span class="t">통증이 있으세요?</span><span class="yn">
       <button class="${p.on===1?'y':''}" data-pon="1">있음</button>
       <button class="${p.on===0?'n':''}" data-pon="0">없음</button></span></div>`;
   if(p.on!==1) return h+`<p class="hint">없으면 통증 사정과 급성통증 진단이 빠집니다</p>`;
-  h+=`<div class="gh"><span class="gk">부위</span></div><div class="row">`
+  h+=`<div class="cat">부위</div><div class="row">`
     +(P.parts||[]).map(x=>`<button class="b ${p.part===x.v?'on':''}" data-ppart="${esc(x.v)}">${x.ic} ${esc(x.v)}</button>`).join('')+`</div>`;
   const subs=(P.subs||{})[p.part];
-  if(subs) h+=`<div class="gh"><span class="gk">세부 부위</span></div><div class="row">`
+  if(subs) h+=`<div class="cat">세부 부위</div><div class="row">`
     +subs.map(v=>`<button class="b ${p.sub===v?'on':''}" data-psub="${esc(v)}">${esc(v)}</button>`).join('')+`</div>`;
-  else if(p.part) h+=`<div class="gh"><span class="gk">부위 직접 기재</span></div>
-    <div class="gin"><input id="psite" value="${esc(p.site)}" placeholder="예) 좌측 발목"></div>`;
-  h+=`<div class="gh"><span class="gk">강도</span></div><div class="row">`
+  else if(p.part) h+=`<div class="cat">부위 직접 기재</div>
+    <input class="sch" id="psite" value="${esc(p.site)}" placeholder="예) 좌측 발목">`;
+  h+=`<div class="cat">강도</div><div class="row">`
     +(P.tools||[]).map(t=>`<button class="b ${p.tool===t.v?'on':''}" data-ptool="${esc(t.v)}">${esc(t.v)}</button>`).join('')+`</div>`
-    +`<div class="row" style="margin-top:7px">`
-    +[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="b ${p.inten===n?'on':''}" data-pint="${n}" style="min-width:40px">${n}</button>`).join('')+`</div>`;
+    +`<div class="row nrs" style="margin-top:7px">`
+    +[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="b ${p.inten===n?'on':''}" data-pint="${n}">${n}</button>`).join('')+`</div>`;
   [['양상','patterns','ppat','pattern'],['빈도','freqs','pfreq','freq'],['기간','durs','pdur','dur']].forEach(([lb,key,act,fld])=>{
-    h+=`<div class="gh"><span class="gk">${lb}</span></div><div class="row">`
+    h+=`<div class="cat">${lb}</div><div class="row">`
       +(P[key]||[]).map(v=>`<button class="b ${p[fld]===v?'on':''}" data-${act}="${esc(v)}">${esc(v)}</button>`).join('')+`</div>`;
   });
-  return h+`<p class="hint">진단: <b>${p.dur===P.chronic?'만성통증':'급성통증'}</b></p>`;
+  return h+`<p class="hint">진단 <b>${p.dur===P.chronic?'만성통증':'급성통증'}</b></p>`;
 }
-/* 5층 의식 · 낙상 (+ 의식 저하면 지남력·GCS, 신경 경로면 근력) */
 function vEnd(){
-  let h=`<p class="lb">🧠 의식 · 낙상 <span style="font-weight:400">— 낙상위험은 모든 환자에게</span></p>
-    <div class="q"><span class="t">의식</span><span class="yn">
+  let h=`<div class="q"><span class="t">의식</span><span class="yn">
       <button class="${S.consc==='의식 명료함'?'y':''}" data-consc="의식 명료함">명료함</button>
       <button class="${S.consc==='의식수준 저하됨'?'n':''}" data-consc="의식수준 저하됨">저하됨</button></span></div>`;
   if(S.consc==='의식수준 저하됨'){
-    h+=`<div class="gh"><span class="gk">지남력</span>맞으면 누르세요</div><div class="row">`
+    h+=`<div class="cat">지남력 — 맞으면 누르세요</div><div class="row">`
       +ORI.map(([k,lb])=>`<button class="b ${S.ori[k]===1?'on':''}" data-ori="${k}">${lb}</button>`).join('')+`</div>`;
-    h+=`<div class="gh"><span class="gk">GCS</span>${gcsSum()!==null?'합계 '+gcsSum()+'점':'눈뜸 · 언어 · 운동'}</div>`;
+    h+=`<div class="cat">GCS ${gcsSum()!==null?'— 합계 '+gcsSum()+'점':''}</div>`;
     ['E','V','M'].forEach(k=>{
-      h+=`<div class="row" style="margin-bottom:5px"><span class="t" style="min-width:52px;align-self:center">${({E:'눈뜸',V:'언어',M:'운동'})[k]}</span>`
-        +GCSD[k].map(([n,lb])=>`<button class="b ${S.gcs[k]===+n?'on':''}" data-gcs="${k}" data-n="${n}" title="${esc(lb)}">${n}</button>`).join('')+`</div>`;
+      h+=`<div class="row" style="margin-bottom:6px"><span class="t" style="min-width:50px;align-self:center;font-size:13px">${({E:'눈뜸',V:'언어',M:'운동'})[k]}</span>`
+        +GCSD[k].map(([n,lb])=>`<button class="b ${S.gcs[k]===+n?'on':''}" data-gcs="${k}" data-n="${n}" title="${esc(lb)}" style="min-width:44px;justify-content:center">${n}</button>`).join('')+`</div>`;
     });
   }
   if(isNeuro()||S.consc==='의식수준 저하됨'){
-    h+=`<div class="gh"><span class="gk">근력</span>상·하지 좌우 (MRC)</div>`;
+    h+=`<div class="cat">근력 — 상·하지 좌우 (MRC)</div>`;
     LIMB.forEach(([k,lb])=>{
-      h+=`<div class="row" style="margin-bottom:5px"><span class="t" style="min-width:52px;align-self:center">${lb}</span>`
-        +MRC.map(([g,d])=>`<button class="b ${S.power[k]===g?'on':''}" data-pw="${k}" data-g="${g}" title="${esc(d)}" style="min-width:38px">${g}</button>`).join('')+`</div>`;
+      h+=`<div class="row" style="margin-bottom:6px"><span class="t" style="min-width:50px;align-self:center;font-size:13px">${lb}</span>`
+        +MRC.map(([g,d])=>`<button class="b ${S.power[k]===g?'on':''}" data-pw="${k}" data-g="${g}" title="${esc(d)}" style="min-width:42px;justify-content:center">${g}</button>`).join('')+`</div>`;
     });
     h+=`<p class="hint">등급은 마스터에 없어 괄호 비고로 남습니다</p>`;
   }
   h+=`<div class="q"><span class="t">보호자</span><span class="yn">
       <button class="${S.guard==='보호자 동행함'?'y':''}" data-guard="보호자 동행함">동행</button>
       <button class="${S.guard==='보호자 동행하지 않음'?'n':''}" data-guard="보호자 동행하지 않음">없음</button></span></div>`;
-  h+=`<div class="gh"><span class="gk">비고</span>마스터에 없는 값(수치 등)</div>
-      <div class="gin"><input id="memo" value="${esc(S.memo)}" placeholder="예) 체온 38.9 / 산소 3L nasal prong"></div>`;
+  h+=`<div class="cat">비고 — 마스터에 없는 값(수치 등)</div>
+      <input class="sch" id="memo" value="${esc(S.memo)}" placeholder="예) 체온 38.9 / 산소 3L nasal prong">`;
   return h;
 }
 function gcsSum(){ const g=S.gcs; return (g.E&&g.V&&g.M)?(g.E+g.V+g.M):null; }
 
-/* 문항 한 줄 */
 function qRow(qid,val,bag){
   const q=QB[qid]; if(!q) return '';
   const t=esc(q.q.replace(/^"|"$/g,''));
   if(q.fmt==='값입력') return `<div class="q" style="display:block"><span class="t">${t}</span>
-    <div class="gin" style="margin-top:8px"><input data-val="${qid}" data-bag="${bag}" value="${esc(val||'')}" placeholder="${esc(q.stmts[0])}"></div></div>`;
-  if(q.fmt==='선택') return `<div class="q" style="display:block"><span class="t">${t}</span><div class="row" style="margin-top:8px">`
-    +q.stmts.map((s,i)=>`<button class="b ${val===i?'on':''}" data-sel="${qid}" data-i="${i}" data-bag="${bag}">${esc(s)}</button>`).join('')+`</div></div>`;
+    <input class="sch" style="margin-top:9px" data-val="${qid}" data-bag="${bag}" value="${esc(val||'')}" placeholder="${esc(q.stmts[0])}"></div>`;
+  if(q.fmt==='선택') return `<div class="q" style="display:block"><span class="t">${t}</span><div class="col" style="margin-top:9px">`
+    +q.stmts.map((s,i)=>`<button class="bv ${val===i?'on':''}" data-sel="${qid}" data-i="${i}" data-bag="${bag}">${esc(s)}</button>`).join('')+`</div></div>`;
   if(q.fmt==='체크') return `<div class="q"><span class="t">${t}</span><span class="yn">
     <button class="${val===true?'y':''}" data-chk="${qid}" data-bag="${bag}">${esc(q.stmts[0])}</button></span></div>`;
   const ord=tglOrder(q.stmts), lab=tglLabels(q.stmts);
@@ -533,18 +599,30 @@ function blocks(){
   const fae=[];
   if(S.consc==='의식수준 저하됨'){
     const g=gcsSum(); if(g!==null) fae.push('Glasgow Coma Scale : '+g);
-    fae.push(g===15?'의식 명료함':'의식수준 저하됨');       /* 합계 15면 명료함으로 (V7 원칙) */
+    fae.push(g===15?'의식 명료함':'의식수준 저하됨');
     ORI.forEach(([k,lb])=>{ if(S.ori[k]!==undefined) fae.push(lb+'에 대한 지남력 '+(S.ori[k]===1?'있음':'없음')); });
   }else if(S.consc) fae.push(S.consc);
   if(S.guard) fae.push(S.guard);
   const pe=['낙상방지 교육함','침대 난간을 올려줌'];
   if(Object.keys(S.power).length) pe.unshift('사지 근력 평가함');
   out.push({t:'의식 · 낙상', ae:fae, dx:'낙상위험', pe:pe.slice(0,2)});
-  /* 같은 진술문이 두 블록에 걸리면 앞 블록에만 남긴다 (V7 규칙).
-     두통을 주호소로 고르면 「두통 있음」이 사정과 통증에 두 번 나오던 문제 */
+  /* 같은 진술문이 두 블록에 걸리면 앞 블록에만 남긴다 (V7 규칙) */
   const used={};
   out.forEach(b=>{ b.ae=b.ae.filter(t=>{ if(used[t]) return false; used[t]=1; return true; }); });
   return out.filter(b=>b.ae.length||b.dx);
+}
+function notes(){
+  const p=S.pain, nt=[];
+  if(p.on===1){
+    if(p.inten!==null) nt.push(p.tool+' '+p.inten+'점');
+    if(p.pattern) nt.push(p.pattern);
+    if(p.freq) nt.push(p.freq);
+    if(p.dur) nt.push(p.dur);
+  }
+  const pw=LIMB.filter(([k])=>S.power[k]).map(([k])=>k+' '+S.power[k]);
+  if(pw.length) nt.push('근력 — '+pw.join(' / '));
+  if(S.memo.trim()) nt.push(S.memo.trim());
+  return nt;
 }
 function text(){
   const L=[], who=[maskName(S.nm),S.pid.trim()].filter(Boolean).join(' ');
@@ -556,24 +634,61 @@ function text(){
     if(b.pe.length) L.push('평가) '+b.pe.join(', '));
     L.push('');
   });
-  const p=S.pain, nt=[];
-  if(p.on===1){
-    if(p.inten!==null) nt.push(p.tool+' '+p.inten+'점');
-    if(p.pattern) nt.push(p.pattern);
-    if(p.freq) nt.push(p.freq);
-    if(p.dur) nt.push(p.dur);
-  }
-  const pw=LIMB.filter(([k])=>S.power[k]).map(([k,lb])=>k+' '+S.power[k]);
-  if(pw.length) nt.push('근력 — '+pw.join(' / '));
-  if(S.memo.trim()) nt.push(S.memo.trim());
+  const nt=notes();
   if(nt.length) L.push('('+nt.join(' / ')+')');
   return L.join('\n').trim();
 }
 function vText(){
-  return `<p class="lb">📄 기록 <span style="font-weight:400">— 간호진단 ${blocks().filter(b=>b.dx).length}개</span></p>
-    <textarea id="out" style="width:100%;min-height:340px;font-size:14px;line-height:1.75;border:1.5px solid var(--line2);
-      border-radius:12px;padding:14px;background:var(--card);color:var(--ink);font-family:inherit">${esc(text())}</textarea>
-    <div class="row" style="margin-top:10px"><button class="b wide on" data-copy="1" style="flex:1">📋 복사하기</button></div>`;
+  const bs=blocks(), dxs=bs.filter(b=>b.dx).map(b=>b.dx);
+  let h=`<div class="res">`+bs.map(b=>
+      `<b>■ ${esc(b.t)}</b>\n`
+      +(b.ae.length?'사정) '+esc(b.ae.join(', '))+'\n':'')
+      +(b.dx?'진단) '+esc(b.dx)+'\n':'')
+      +(b.pe.length?'평가) '+esc(b.pe.join(', '))+'\n':'')).join('\n')
+    +(notes().length?'\n('+esc(notes().join(' / '))+')':'')+`</div>`;
+  h+=`<p class="hint">간호진단 ${dxs.length}개 · ${esc(dxs.join(' / '))}</p>`;
+  h+=`<div class="row" style="margin-top:12px">
+      <button class="b cpbig ${copied?'done':''}" data-copy="1">${copied?'✓ 복사됨 · 보관함에 저장':'📋 복사하기'}</button></div>`;
+  h+=`<div class="row" style="margin-top:8px">
+      <button class="b bk" data-prev="1" style="flex:none;min-width:64px;justify-content:center">←</button>
+      <button class="b wide" data-home="1">새 환자</button></div>`;
+  return h;
+}
+
+/* ══════ 보관함 (최근 10건) ══════ */
+function hist(){ try{ return JSON.parse(localStorage.getItem(HKEY)||'[]'); }catch(e){ return []; } }
+function histSave(){
+  const bs=blocks(), h=hist();
+  h.unshift({ ts:Date.now(), nm:maskName(S.nm), pid:S.pid,
+    cc:S.picks.join(' · ')||'-', dx:bs.filter(b=>b.dx).map(b=>b.dx).join(' / '), txt:text() });
+  try{ localStorage.setItem(HKEY, JSON.stringify(h.slice(0,HMAX))); }catch(e){}
+}
+function histDel(i){ const h=hist(); h.splice(i,1); try{ localStorage.setItem(HKEY,JSON.stringify(h)); }catch(e){} openHist(); }
+function openHist(){
+  const h=hist();
+  $('hcnt').textContent=h.length+' / '+HMAX;
+  $('sbody').innerHTML=h.length? h.map((r,i)=>{
+    const d=new Date(r.ts), p=n=>String(n).padStart(2,'0');
+    return `<div class="hc"><div class="hn">${esc(r.nm||'-')}<small>${esc(r.pid||'')}</small>
+      <span class="tag" style="margin-left:auto;font-size:11px;color:var(--ink3)">${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}</span></div>
+      <div class="hm2">${esc(r.cc)}<br>${esc(r.dx||'-')}</div>
+      <div class="hb"><button class="b" data-hcopy="${i}">📋 복사</button>
+        <button class="b" data-hdel="${i}">삭제</button></div></div>`;
+  }).join('') : `<p class="hint">저장된 기록이 없습니다.<br>기록을 복사하면 자동으로 보관됩니다.</p>`;
+  $('sheet').classList.remove('hide');
+}
+function doCopy(t,msg){
+  const done=()=>toast(msg||'복사했습니다');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done,()=>fallback(t,done));
+  }else fallback(t,done);
+}
+function fallback(t,done){
+  const a=document.createElement('textarea');
+  a.value=t; a.style.position='fixed'; a.style.opacity='0';
+  document.body.appendChild(a); a.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ toast('복사 실패 — 길게 눌러 복사하세요',1); }
+  document.body.removeChild(a);
 }
 
 /* ══════ 이벤트 ══════ */
@@ -581,14 +696,20 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   const g=k=>b.getAttribute(k), bag=g('data-bag'), box=()=>bag==='base'?S.base:S.ans;
   if(g('data-go')){ S.nm=$('nm').value.trim(); S.pid=$('pid').value.trim();
-    if(!S.nm){ $('nm').focus(); return; }
-    $('gate').classList.add('hide'); $('main').style.display=''; view(); return; }
+    if(!S.nm){ $('nm').focus(); toast('환자 이름을 입력하세요',1); return; }
+    $('gate').classList.add('hide'); view(); return; }
+  if(g('data-home')){ if(step>1&&!confirm('처음으로 돌아갑니다. 입력한 내용이 사라집니다.')) return; location.reload(); return; }
+  if(g('data-hist')){ openHist(); return; }
+  if(g('data-sclose')){ $('sheet').classList.add('hide'); return; }
+  if(g('data-hcopy')!==null&&g('data-hcopy')!==undefined){ const r=hist()[+g('data-hcopy')]; if(r) doCopy(r.txt); return; }
+  if(g('data-hdel')!==null&&g('data-hdel')!==undefined){ if(confirm('삭제할까요?')) histDel(+g('data-hdel')); return; }
   if(g('data-cmore')){ cathMore=true; view(); return; }
   if(g('data-cath')){ const k=g('data-cath'); if(S.cath[k]) delete S.cath[k]; else S.cath[k]=[]; view(); return; }
   if(g('data-cd')){ const k=g('data-cd'),t=g('data-t'),a=S.cath[k]||[]; const i=a.indexOf(t);
     i<0?a.push(t):a.splice(i,1); S.cath[k]=a; view(); return; }
   if(g('data-pick')){ const nm=g('data-pick'), i=S.picks.indexOf(nm);
-    if(i>=0) S.picks.splice(i,1); else if(S.picks.length<2) S.picks.push(nm);
+    if(i>=0) S.picks.splice(i,1);
+    else if(S.picks.length<2) S.picks.push(nm); else { toast('주호소는 2개까지입니다',1); return; }
     S.dxPick=''; view(); return; }
   if(g('data-site')){ const k=g('data-site'),v=g('data-v'),a=S.site[k]||[]; const i=a.indexOf(v);
     i<0?a.push(v):a.splice(i,1); S.site[k]=a; S.dxPick=''; view(); return; }
@@ -609,14 +730,13 @@ document.addEventListener('click',e=>{
   if(g('data-ori')){ const k=g('data-ori'); S.ori[k]=(S.ori[k]===1?0:1); view(); return; }
   if(g('data-gcs')){ const k=g('data-gcs'),n=+g('data-n'); S.gcs[k]=(S.gcs[k]===n?null:n); view(); return; }
   if(g('data-pw')){ const k=g('data-pw'),v=g('data-g'); if(S.power[k]===v) delete S.power[k]; else S.power[k]=v; view(); return; }
-  if(g('data-copy')){ const t=$('out').value;
-    navigator.clipboard.writeText(t).then(()=>alert('복사했습니다.'),()=>{ $('out').select(); document.execCommand('copy'); alert('복사했습니다.'); }); return; }
-  if(g('data-prev')){ if(step>1){ saveInputs(); step--; view(); } return; }
+  if(g('data-copy')){ doCopy(text(),'복사했습니다 · 보관함에 저장'); if(!copied){ histSave(); copied=true; view(); } return; }
+  if(g('data-prev')){ if(step>1){ saveInputs(); step--; copied=false; view(); } return; }
   if(g('data-next')){
-    if(step>=7){ location.reload(); return; }
     saveInputs();
-    if(step===3&&!S.picks.length){ alert('주호소를 1개 이상 고르세요.'); return; }
-    step++; view(); return; }
+    if(step===3&&!S.picks.length){ toast('주호소를 1개 이상 고르세요',1); return; }
+    if(step<7){ step++; view(); }
+    return; }
 });
 function saveInputs(){
   const ps=$('psite'); if(ps) S.pain.site=ps.value;
@@ -626,6 +746,7 @@ function saveInputs(){
     (bag==='base'?S.base:S.ans)[q]=el.value.trim()||undefined;
   });
 }
+$('sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') $('sheet').classList.add('hide'); });
 $('nm').addEventListener('keydown',e=>{ if(e.key==='Enter') $('pid').focus(); });
 $('pid').addEventListener('keydown',e=>{ if(e.key==='Enter') document.querySelector('[data-go]').click(); });
 </script>
