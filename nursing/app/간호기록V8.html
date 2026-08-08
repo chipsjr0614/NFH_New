@@ -16,11 +16,23 @@
   --ac:#0F5F62;--acs:#DEEDEC;--ace:#9AC3C1;--on:#FFF;
   --ae:#1F6FD6;--dx:#D63A4D;--dxb:#FCEAEC;--pe:#A8730A;--peb:#F9F1DF;--ok:#15803D;
 }
-@media(prefers-color-scheme:dark){:root{
+/* 시스템이 다크면 자동 다크 — 단 사용자가 직접 고른 값(html[data-theme])이 있으면 그게 이긴다 */
+@media(prefers-color-scheme:dark){html:not([data-theme=light]){
   --bg:#0B1011;--card:#151C1D;--sunk:#101718;--line:#2A3637;--line2:#222D2E;
-  --ink:#E6ECEB;--ink2:#A2B0B0;--ink3:#78888;--ink4:#5B6B6B;
+  --ink:#E6ECEB;--ink2:#A2B0B0;--ink3:#788888;--ink4:#5B6B6B;
   --ac:#4FB3AE;--acs:#142D2C;--ace:#2D5553;--on:#07201F;
   --ae:#78ADEA;--dx:#F2808F;--dxb:#2D191D;--pe:#DCA940;--peb:#2A2312;--ok:#5EBE7F;}}
+/* ★V8 수동 전환 — ☀️/🌙 버튼 */
+html[data-theme=dark]{
+  --bg:#0B1011;--card:#151C1D;--sunk:#101718;--line:#2A3637;--line2:#222D2E;
+  --ink:#E6ECEB;--ink2:#A2B0B0;--ink3:#788888;--ink4:#5B6B6B;
+  --ac:#4FB3AE;--acs:#142D2C;--ace:#2D5553;--on:#07201F;
+  --ae:#78ADEA;--dx:#F2808F;--dxb:#2D191D;--pe:#DCA940;--peb:#2A2312;--ok:#5EBE7F;}
+html[data-theme=light]{
+  --bg:#F2F5F5;--card:#FFF;--sunk:#EAEFEE;--line:#D3DCDB;--line2:#E4EAE9;
+  --ink:#0E1516;--ink2:#4A5959;--ink3:#7C8C8C;--ink4:#A8B5B5;
+  --ac:#0F5F62;--acs:#DEEDEC;--ace:#9AC3C1;--on:#FFF;
+  --ae:#1F6FD6;--dx:#D63A4D;--dxb:#FCEAEC;--pe:#A8730A;--peb:#F9F1DF;--ok:#15803D;}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;word-break:keep-all}
 /* ── 아이폰 고무줄(바운스) 스크롤 막기 (260805) ──
    빈 공간을 치거나 끝까지 넘기면 화면이 통째로 흔들리는 걸 막는다.
@@ -300,6 +312,7 @@ window.NFH_V8={"paths": [{"nm": "심근경색 의심", "ic": "❤️", "cat": "�
 <div class="top">
   <button class="hm" data-home="1" title="새 환자">🏠</button>
   <div class="who"><span id="whoNm">간호기록</span><small id="whoPid"></small></div>
+  <button class="hm" data-theme="1" id="thBtn" title="화면 밝기">🌙</button>
   <button class="hm" data-hist="1" title="보관함">📁</button>
 </div>
 <div class="prog"><i id="prog" style="width:0%"></i></div>
@@ -591,6 +604,22 @@ function vEnd(){
   return h;
 }
 function gcsSum(){ const g=S.gcs; return (g.E&&g.V&&g.M)?(g.E+g.V+g.M):null; }
+
+/* ── 문항 한 줄 : 묻는 것은 전부 [있음][없음] 두 버튼으로 통일 ──
+   값입력·선택·체크는 마스터 진술문 형식이 그런 것들이라 그대로 둔다 */
+function qRow(qid,val,bag){
+  const qb=QB[qid]; if(!qb) return '';
+  const t=esc(qb.q.replace(/^"|"$/g,''));
+  if(qb.fmt==='값입력') return `<div class="q" style="display:block"><span class="t">${t}</span>
+    <input class="sch" style="margin-top:9px" data-val="${qid}" data-bag="${bag}" value="${esc(val||'')}" placeholder="${esc(qb.stmts[0])}"></div>`;
+  if(qb.fmt==='선택') return `<div class="q" style="display:block"><span class="t">${t}</span><div class="col" style="margin-top:9px">`
+    +qb.stmts.map((s,i)=>`<button class="bv ${val===i?'on':''}" data-sel="${qid}" data-i="${i}" data-bag="${bag}">${esc(s)}</button>`).join('')+`</div></div>`;
+  if(qb.fmt==='체크') return `<div class="q"><span class="t">${t}</span><span class="yn">
+    <button class="${val===true?'y':''}" data-chk="${qid}" data-bag="${bag}">${esc(qb.stmts[0])}</button></span></div>`;
+  const ord=tglOrder(qb.stmts), lab=tglLabels(qb.stmts);
+  return `<div class="q"><span class="t">${t}</span><span class="yn">`
+    +ord.map((idx,k)=>`<button class="${val===idx?(k===0?'y':'n'):''}" data-tgl="${qid}" data-i="${idx}" data-bag="${bag}">${esc(lab[idx])}</button>`).join('')+`</span></div>`;
+}
 /* ⑦ 중재 · 평가 → 완성 → 복사 */
 function vPE(){
   const dl=dxList();
@@ -719,6 +748,25 @@ function fallback(t,done){
   document.body.removeChild(a);
 }
 
+/* ══════ 화면 밝기 (☀️/🌙) ══════
+   고른 값은 기기에 저장된다. 고르지 않았으면 시스템 설정을 따른다. */
+const TKEY='nfh_v8_theme';
+function sysDark(){ try{ return window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches; }catch(e){ return false; } }
+function curTheme(){
+  const t=document.documentElement.getAttribute('data-theme');
+  return t||(sysDark()?'dark':'light');
+}
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  try{ localStorage.setItem(TKEY,t); }catch(e){}
+  const b=$('thBtn'); if(b) b.textContent=(t==='dark')?'☀️':'🌙';
+}
+(function(){
+  let t=null; try{ t=localStorage.getItem(TKEY); }catch(e){}
+  if(t) setTheme(t);
+  else { const b=$('thBtn'); if(b) b.textContent=sysDark()?'☀️':'🌙'; }
+})();
+
 /* ══════ 이벤트 ══════ */
 function gval(){
   const ok=$('nm').value.trim() && /^\d{8}$/.test($('pid').value.trim()) && S.edu;
@@ -746,6 +794,7 @@ document.addEventListener('click',e=>{
   saveInputs();
   const g=k=>b.getAttribute(k), bag=g('data-bag'), box=()=>bag==='base'?S.base:S.ans;
   if(g('data-home')){ if(!confirm('새 환자로 시작할까요?\n지금 기록은 지워집니다.')) return; location.reload(); return; }
+  if(g('data-theme')){ setTheme(curTheme()==='dark'?'light':'dark'); return; }
   if(g('data-hist')){ openHist(); return; }
   if(g('data-sclose')){ $('sheet').classList.add('hide'); return; }
   if(g('data-hcopy')){ const r=hist()[+g('data-hcopy')]; if(r) doCopy(r.txt); return; }
