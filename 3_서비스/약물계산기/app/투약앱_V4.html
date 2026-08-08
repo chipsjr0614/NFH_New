@@ -820,8 +820,13 @@ const HELPER_DRUGS = [
     srcNote:'출처: 원내 [TPA 투약 방법] · [TPA 세트] · [TPA 약물 조제 및 투여방법] (사진 260808)',
     recon:'약제 vial + 동봉 주사용수 vial → <b>1 mg/ml</b> (양두침 사용)',
     conc:1,
-    nsBolus:20, nsMaint:150,
-    dial:200,
+    nsBolus:20,
+    // ★ 원내 재고: N/S 150ml 없음, 250ml만 있음 (260808 칩스 확인)
+    //   문서 원안은 150ml(총 약 200ml → dial 200ml/hr). 250ml 사용 시 총량이 늘어 dial을 올려야 함.
+    nsOptions:[
+      { ml:250, label:'N/S 250ml', note:'원내 재고', stock:true,  docDial:null },
+      { ml:150, label:'N/S 150ml', note:'문서 원안 · 재고 없음', stock:false, docDial:200 }
+    ],
     indications:[
       { key:'stroke', label:'급성 뇌경색', inhouse:true,
         perKg:0.9, maxMg:90, bolusPct:10, infMin:60,
@@ -832,7 +837,7 @@ const HELPER_DRUGS = [
         how:'<b>100mg을 2시간에 걸쳐</b> 주입 (체중 무관)',
         window:'⚠️ 원내 문서 없음 — 표준 레퍼런스 초안, 의국 확인 필요' }
     ],
-    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 150ml','1 btl'],
+    set:[['TPA 50mg','2 box'],['TPA 20mg','1 box'],['N/S 150ml <span style="color:var(--warn)">→ 원내 재고 없음, 250ml 사용</span>','1 btl'],
          ['50ml 주사기','1개'],['20ml 주사기','1개'],['10ml 주사기','2개'],
          ['Regulator 수액세트','1개'],['20ml N/S','3개'],['3way stopcock','2개'],
          ['18G Needle (Eclipse)','2개']],
@@ -843,9 +848,9 @@ const HELPER_DRUGS = [
       '약제가 모두 용해되면 3way의 needle을 vial에 꽂고, Stopcock을 10ml 주사기 쪽으로 돌려 bolus용량(총 투여량의 10%)을 뽑은 다음, Stopcock을 돌려 10ml 주사기의 약을 20ml 주사기로 밀어 넣는다.',
       'Stopcock을 잠그고 20ml 주사기를 분리 후 <b>N/S를 이용해 총 volume 20ml로 희석</b>한다.',
       '3way Stopcock에 50ml 주사기를 연결하여 나머지 유지용량(90%)을 뽑는다.',
-      '50ml 주사기 약물을 <b>N/S 150ml에 희석</b>하고 Regulator 수액세트를 연결한다. (총 volume 약 200ml)',
+      '50ml 주사기 약물을 <b>N/S에 희석</b>하고 Regulator 수액세트를 연결한다. <span style="color:var(--warn)">(문서 원안은 150ml — 원내는 250ml만 있으므로 위 카드에서 선택한 값 기준)</span>',
       'Bolus 용량(20ml 주사기)은 <b>신경과 의사가 직접 1분간</b> 투여한다.',
-      'Bolus 투여 후 유지용량을 환자에게 연결하고, <b>1시간 동안 주입되도록 regulator dial을 조절</b>한다 (200ml/hr).'
+      'Bolus 투여 후 유지용량을 환자에게 연결하고, <b>1시간 동안 주입되도록 regulator dial을 조절</b>한다. <span style="color:var(--warn)">(문서 원안 200ml/hr는 N/S 150ml 기준 — 250ml 사용 시 위 ③ 값으로)</span>'
     ],
     cautions:[
       '투약 후에는 <b>출혈에 유의</b>한다.',
@@ -1180,8 +1185,9 @@ function refBlockHTML(d){
 // ══════════════════════════════════════════════════════════════
 // V4 ── 🩸 혈전용해·항응고 전용 카드 (표준 rate card로 표현할 수 없는 프로토콜)
 // ══════════════════════════════════════════════════════════════
-let tpaInd='stroke', hepReg='vte';
+let tpaInd='stroke', hepReg='vte', tpaNS=250;   // 원내 재고가 250ml이므로 기본값 250
 function setTpaInd(k){ tpaInd=k; updateInfuse(); }
+function setTpaNS(v){ tpaNS=Number(v); updateInfuse(); }
 function setHepReg(k){ hepReg=k; updateInfuse(); }
 
 function tpaCardHTML(d,w){
