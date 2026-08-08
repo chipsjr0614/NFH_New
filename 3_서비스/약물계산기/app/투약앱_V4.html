@@ -267,6 +267,22 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
 .rate-table tr:hover td{background:var(--surface-2)}
 .rate-table tr.cur:hover td{background:var(--accent-bg)}
 
+/* ══ 사이드바 약물 메타 (총볼륨 · 효능 · 주의) ══ */
+.adult-layout{grid-template-columns:200px 1fr}
+.drug-btn{line-height:1.5}
+.side-meta{font-size:11px;color:var(--accent);font-weight:600;display:block;margin-top:3px}
+.side-cau{font-size:11px;color:var(--warn);font-weight:600;display:block;line-height:1.4;margin-top:2px}
+.cau-dot{float:right;font-size:12px}
+.vol-chip{font-size:var(--fs-body-l);font-weight:700;color:var(--ok);background:var(--ok-bg);border:1px solid var(--ok);border-radius:20px;padding:6px 14px;white-space:nowrap}
+.ref-block{border-top:1px solid var(--border);padding:16px 20px}
+.ref-block .info-row{border-bottom:1px solid var(--border-2)}
+.ref-block .info-row:last-child{border-bottom:none}
+.ref-block .info-label{color:var(--text-dim)}
+.ref-block .info-val{color:var(--text);white-space:pre-line}
+.ref-block .info-val.warn{color:var(--warn);font-weight:600}
+.ref-missing{font-size:var(--fs-body);color:var(--warn);background:var(--warn-bg);border-left:4px solid var(--warn);padding:12px 16px;border-radius:10px;font-weight:600;line-height:1.6}
+@media(max-width:700px){ .adult-layout{grid-template-columns:1fr} }
+
 /* ══ 🧮 직접계산 탭 ══ */
 .calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
 .field{display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -489,7 +505,7 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
       <button class="age-btn" onclick="setIW(90)">90kg</button>
     </div>
   </div>
-  <input type="text" id="infuseSearch" placeholder="🔍 약물 검색 (예: Labetalol · Milrinone · 혈압)" oninput="updateInfuse()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:10px;outline:none">
+  <input type="text" id="infuseSearch" placeholder="🔍 약물 검색 (예: Labetalol · Nicardipine · 혈압)" oninput="updateInfuse()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:10px;outline:none">
   <div id="infuseCatPills" class="sub-tabs" style="margin-bottom:14px"></div>
   <div class="adult-layout">
     <div class="drug-sidebar" id="infuseSidebar"></div>
@@ -721,9 +737,7 @@ const HELPER_DRUGS = [
   { id:'esmo', name:'Esmolol', vol:'(2.5g/10ml)', badge:'β-blocker', color:'purple', twoCol:false,
     routes:[{label:'표준', detail:'2.5g 1vial + NS/D5W 240ml (10mg/ml)', conc:10000, unit:'mcg/ml'}],
     doses:[50,100,150,200,300], doseUnit:'mcg/kg/min', weightBased:true, highlight:100 },
-  { id:'milr', name:'Milrinone', vol:'(10mg/10ml)', badge:'강심(inodilator)', color:'red', twoCol:false,
-    routes:[{label:'표준', detail:'2@ + NS/D5W 80ml (0.2mg/ml)', conc:200, unit:'mcg/ml'}],
-    doses:[0.125,0.25,0.375,0.5,0.75], doseUnit:'mcg/kg/min', weightBased:true, highlight:0.375 },
+  // Milrinone 제거 (260808 칩스 지시) — V3(투약앱_V3.html)에는 그대로 남아 있음
   { id:'isup', name:'Isoproterenol', vol:'(0.2mg/1ml)', badge:'서맥·강심', color:'orange', twoCol:false,
     routes:[{label:'표준', detail:'2@ + D5W 98ml (4mcg/ml)', conc:4, unit:'mcg/ml'}],
     doses:[0.5,1,2,3,5], doseUnit:'mcg/min', weightBased:false, highlight:2 },
@@ -774,7 +788,7 @@ const HELPER_DRUGS = [
     ref:{ dose:'증상성 저나트륨혈증: 100~150ml IV over 10~20분, 증상 지속 시 반복 (목표 24h Na 상승 <8~10mEq/L) · 뇌부종/ICP↑: 2~5ml/kg over 10~20분', mix:'원액(3% ≈ 513mEq/L Na) · 고장성 → 가급적 중심정맥', caution:'⚠️ 과교정 시 삼투성 탈수초증(ODS/CPM) — Na 상승속도 엄격 제한 · 혈청 Na 자주 f/u · 용량과부하 · ★원내 프로토콜·약제부 확인' } },
 ];
 // 지속주입 약물 한글명 (검색용)
-const HELPER_KR = { nicar:'니카르디핀', ntg:'니트로글리세린', labe:'라베탈롤', dilt:'딜티아젬', esmo:'에스몰롤', milr:'밀리논', isup:'이소프로테레놀', lido:'리도카인', nipr:'니트로프루시드', isok:'이소켓 이소소르비드', amio:'아미오다론', adeno:'아데노신', vera:'베라파밀', vaso2:'바소프레신', mida:'미다졸람', etom:'에토미데이트', rocu:'로쿠로니움', nalo:'날록손', flum:'플루마제닐', cagl:'칼슘 글루코네이트', kcl:'염화칼륨 포타슘', mag:'마그네슘', phos:'포스텐 인산염', nacl3:'고장성 식염수 생리식염수 저나트륨' };
+const HELPER_KR = { nicar:'니카르디핀', ntg:'니트로글리세린', labe:'라베탈롤', dilt:'딜티아젬', esmo:'에스몰롤', isup:'이소프로테레놀', lido:'리도카인', nipr:'니트로프루시드', isok:'이소켓 이소소르비드', amio:'아미오다론', adeno:'아데노신', vera:'베라파밀', vaso2:'바소프레신', mida:'미다졸람', etom:'에토미데이트', rocu:'로쿠로니움', nalo:'날록손', flum:'플루마제닐', cagl:'칼슘 글루코네이트', kcl:'염화칼륨 포타슘', mag:'마그네슘', phos:'포스텐 인산염', nacl3:'고장성 식염수 생리식염수 저나트륨' };
 
 // ── PALS 기도 장비 ──
 const AIRWAY_TABLE = [
@@ -993,6 +1007,92 @@ function fmtNum(n,dp){
   if(s.indexOf('.')>=0) s=s.replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
   return s;
 }
+// ══════════════════════════════════════════════════════════════
+// V4 ── 지속주입 약물의 «총 믹스 볼륨 · 왜 주입 · 주의» 연결
+//  ⚠️ 자동 이름추론 금지(한글명이 빈 문자열로 정규화되어 오매칭됨) → 명시적 매핑만 사용
+//  ⚠️ 원본에 없는 3종(milr/nalo/nacl3)은 null — 지어내지 않고 «작성 필요»로 표시
+// ══════════════════════════════════════════════════════════════
+const HELPER_REF = {
+  nicar:'Nicardipine',  ntg:'Nitroglycerin',      labe:'Labetalol HCI',  dilt:'Diltiazem',
+  esmo:'Esmolol HCI',   isup:'Isoproterenol HCI', lido:'2% Lidocaine',
+  nipr:'Nitroprusside sodium', isok:'Isoket',     amio:'Amiodarone HCI',
+  adeno:'Adenosin',     vera:'Verapamil',         vaso2:'Vasopressin',   mida:'Midazolam',
+  etom:'Etomidate',     rocu:'Rocuronium',        nalo:null,             flum:'Flumazenil',
+  cagl:'Calcium gluconate', kcl:'Potassium chloride', mag:'Magnesium sulfate',
+  phos:'Phosten',       nacl3:null
+};
+// DRUG_DB.caution 에 효능 텍스트가 섞여 들어간 경우가 있어 걸러낸다 (예: Isoket)
+function cleanCaution(s){
+  return String(s||'').split('\n').map(function(x){return x.trim();})
+    .filter(function(x){ return x && x.indexOf('◾효능')!==0; }).join('\n');
+}
+function drugRef(d){
+  const key=HELPER_REF[d.id];
+  if(!key) return {none:true, unmapped:true};
+  const E=(typeof ENRICH!=='undefined'&&ENRICH[key])||{};
+  const db=DRUG_DB.find(function(x){return x.name===key;})||{};
+  const eff=(E.circ&&E.circ.eff)||'';
+  const cau=cleanCaution((E.circ&&E.circ.caution)||db.caution||'');
+  return {key:key, eff:eff, action:E.action||'', adverse:E.adverse||'', caution:cau,
+          none:!eff&&!E.action&&!cau};
+}
+function shortCaution(c){
+  if(!c) return '';
+  const lines=String(c).split('\n').filter(Boolean);
+  let s=lines.find(function(l){return l.indexOf('★')===0;}) || lines[0] || '';
+  s=s.replace(/^★\s*/,'');
+  return s.length>20 ? s.slice(0,20)+'…' : s;
+}
+function shortEff(e){
+  if(!e) return '';
+  const s=String(e).split(/[,·]/)[0].replace(/[()]/g,'').trim();
+  return s.length>12 ? s.slice(0,12)+'…' : s;
+}
+// ── 총 믹스 볼륨: (A)총량÷농도 와 (B)앰플부피합+희석액 이 일치할 때만 반환 ──
+//    불일치하면 null → 화면에 아예 표시하지 않는다 (추정값을 보여주지 않음)
+function parseVialSpec(v){
+  let m=String(v||'').match(/([\d.]+)\s*(mg|mcg|g|unit|mEq)\s*\/\s*([\d.]+)\s*ml/i);
+  if(m) return {amt:parseFloat(m[1]), unit:m[2], ml:parseFloat(m[3])};
+  m=String(v||'').match(/([\d.]+)\s*(mg|g)\s*vial/i);
+  if(m) return {amt:parseFloat(m[1]), unit:m[2], ml:0};   // 분말 vial → 부피 0
+  return null;
+}
+function mixTotalVol(d){
+  // 프로토콜 약물(Amiodarone 등)은 mix 문구에 총량이 명시돼 있으면 그것을 쓴다
+  if(d.mix){
+    const m=String(d.mix).match(/=\s*[\d.]+\s*(?:mg|g|mcg)\s*\/\s*([\d.]+)\s*ml/i);
+    if(m) return Math.round(parseFloat(m[1]));
+  }
+  const r=d.routes&&d.routes[0];
+  if(!r||!(r.conc>0)) return null;
+  const v=parseVialSpec(d.vol); if(!v) return null;
+  const dm=String(r.detail).match(/([\d.]+)\s*ml/); if(!dm) return null;
+  const nm=String(r.detail).match(/([\d.]+)\s*(?:@|vial)/);
+  const n=nm?parseFloat(nm[1]):1, dil=parseFloat(dm[1]);
+  const A=(v.amt*AMT_FACTOR[routeUnitKey(v.unit)]*n)/(r.conc*AMT_FACTOR[routeUnitKey(r.unit)]);
+  const B=v.ml*n+dil;
+  if(!isFinite(A)||!isFinite(B)||Math.abs(A-B)>1) return null;   // 교차검증 실패 → 미표시
+  return Math.round(A);
+}
+// ── 카드 하단 «왜 주입 · 주의» 블록 ──
+function refBlockHTML(d){
+  const ref=drugRef(d);
+  if(ref.unmapped||ref.none){
+    return '<div class="ref-block"><div class="ref-missing">★ 효능·주의 내용 없음 — 작성 필요<br>'+
+           '<span style="font-weight:400">원본 자료(약물도우미·순환기 docx·주사제 검수표)에 '+d.name+' 항목이 없어 비워둡니다.</span></div></div>';
+  }
+  const rows=[];
+  if(ref.eff)     rows.push(['왜 주입',  ref.eff,     '']);
+  if(ref.action)  rows.push(['작용',     ref.action,  '']);
+  if(ref.caution) rows.push(['⚠️ 주의',  ref.caution, 'warn']);
+  if(ref.adverse) rows.push(['부작용',   ref.adverse, '']);
+  if(!rows.length) return '';
+  return '<div class="ref-block">'+rows.map(function(r){
+    return '<div class="info-row"><span class="info-label">'+r[0]+'</span>'+
+           '<span class="info-val '+r[2]+'">'+r[1]+'</span></div>';
+  }).join('')+'</div>';
+}
+
 // 펌프에 그대로 입력하는 값이므로 ml/hr은 항상 소수 1자리 고정 (12 → 12.0)
 function fmtRate(n){ return (n==null||!isFinite(n))?'—':n.toFixed(1); }
 function defStep(drug){
@@ -1040,7 +1140,8 @@ function rateCardHTML(drug,w,cb){
   if(drug.doseUnit==='mcg/kg/min'&&w>0)  sub.push('= '+fmtNum(dose*w,1)+' mcg/min (총량)');
   if(drug.doseUnit==='mg/kg/hr'&&w>0)    sub.push('= '+fmtNum(dose*w,2)+' mg/hr (총량)');
   if(!bad&&mlhr>0) sub.push('1시간 투여량 ≈ '+fmtNum(mlhr*route.conc,1)+' '+massU);
-  if(route.bagVol&&!bad&&mlhr>0) sub.push('백 '+route.bagVol+'ml 소진 ≈ '+fmtNum(route.bagVol/mlhr,1)+'시간');
+  const totVol = route.bagVol || mixTotalVol(drug);   // 총 믹스 볼륨 (교차검증 통과분만)
+  if(totVol&&!bad&&mlhr>0) sub.push('총 '+totVol+'ml 소진 ≈ '+fmtNum(totVol/mlhr,1)+'시간');
 
   const hd = drug.highDoseWarn && dose>drug.highDoseWarn.over;
   const rows=drug.doses.map(d0=>{
@@ -1060,6 +1161,7 @@ function rateCardHTML(drug,w,cb){
       </div>
       <div class="hero-chips">
         <span class="badge" style="background:var(--surface-2);color:${c}">${drug.badge}</span>
+        ${totVol?`<span class="vol-chip">총 ${totVol} ml</span>`:''}
         <span class="conc-chip">${route.conc} ${route.unit}</span>
         ${drug.verify?`<span class="verify-chip">${drug.verify}</span>`:''}
       </div>
@@ -1092,6 +1194,7 @@ function rateCardHTML(drug,w,cb){
         ${rows}
       </table>
     </details>
+    ${refBlockHTML(drug)}
   </div>`;
 }
 
@@ -1180,10 +1283,18 @@ function updateInfuse(){
   let list=q?HELPER_DRUGS.filter(d=>d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)||(HELPER_KR[d.id]||'').includes(q)):HELPER_DRUGS.slice();
   if(infuseCat!=='전체') list=list.filter(d=>(d.cat||'💧 지속주입(계산)')===infuseCat);
   const cats=[]; list.forEach(d=>{const ct=d.cat||'💧 지속주입(계산)';if(!cats.includes(ct))cats.push(ct);});
-  const btn=d=>`<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
-      <span class="${d.color}">${d.name}</span> <span style="font-size:10px;color:#8b949e">${d.vol||''}</span><br>
-      <span style="font-size:10px;color:#8b949e">${d.badge}</span>
+  const btn=d=>{
+    // V4: 목록에서도 «총 볼륨 · 왜 주입 · ⚠️주의»를 바로 보이게
+    const ref=drugRef(d), tv=mixTotalVol(d);
+    const ef=shortEff(ref.eff), cs=shortCaution(ref.caution);
+    const meta=[]; if(tv) meta.push(tv+'ml'); if(ef) meta.push(ef);
+    return `<button class="drug-btn ${d.id===activeInfuseDrug?'active':''}" onclick="selectInfuse('${d.id}')">
+      <span class="${d.color}">${d.name}</span> <span style="font-size:10px;color:var(--text-dim)">${d.vol||''}</span>${cs?'<span class="cau-dot">⚠️</span>':''}<br>
+      <span style="font-size:10px;color:var(--text-dim)">${d.badge}</span>
+      ${meta.length?`<span class="side-meta">💧 ${meta.join(' · ')}</span>`:''}
+      ${cs?`<span class="side-cau">⚠️ ${cs}</span>`:''}
     </button>`;
+  };
   document.getElementById('infuseSidebar').innerHTML=cats.map(ct=>
     `<div style="width:100%;font-size:10px;color:#8b949e;font-weight:700;margin:10px 2px 2px">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
   ).join('')||'<div style="color:#8b949e;font-size:12px;padding:8px">검색 결과 없음</div>';
@@ -1204,6 +1315,7 @@ function updateInfuse(){
           <table><tr><th>구간</th><th>속도</th><th>ml/hr</th><th>투여량</th></tr>${rows}</table>
           <div class="sub" style="margin-top:10px;line-height:1.6">⚠️ ${drug.note}</div>
         </div>
+        ${refBlockHTML(drug)}
       </div>`;
     return;
   }
@@ -1222,6 +1334,7 @@ function updateInfuse(){
             <tr><th style="vertical-align:top">주의</th><td class="dim" style="line-height:1.6">${r.caution}</td></tr>
           </table>
         </div>
+        ${refBlockHTML(drug)}
       </div>`;
     return;
   }
@@ -1671,9 +1784,12 @@ function fallbackCopy(t,done){
 // ── 등록 약물에서 농도 불러오기 (DB 값을 그대로 사용 · 새 수치 생성 안 함) ──
 function routeUnitKey(u){
   const n=String(u||'mcg/ml').split('/')[0].trim();
-  if(n==='mg') return 'mg';
-  if(n==='u'||n==='unit'||n==='units') return 'unit';
-  if(n==='mEq') return 'mEq';
+  const l=n.toLowerCase();
+  if(l==='mg') return 'mg';
+  if(l==='g') return 'g';                                  // Esmolol 2.5g 규격
+  if(l==='mcg'||l==='ug'||l==='µg') return 'mcg';
+  if(l==='u'||l==='unit'||l==='units') return 'unit';
+  if(l==='meq') return 'mEq';
   return 'mcg';
 }
 function calcPickSource(){
