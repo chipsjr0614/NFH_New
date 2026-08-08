@@ -589,20 +589,17 @@ const BLEED_Q=(nm,idPre,showIf)=>{const sfx=showIf?{showIf:showIf}:{};return [
  Object.assign({id:idPre+'Cnt',t:nm+' 횟수',role:'count',lblPre:nm,skip:['모름'],o:BLEED_CNT},sfx),
  Object.assign({id:idPre+'Stop',t:'현재 지혈 상태',role:'assoc',lblPre:'현재',skip:['지혈됨'],esc2:'출혈 지속 중',o:BLEED_STOP},sfx),
 ];};
-// 내원 전 해열제 (발열·소아 발열 공용). ped=true면 소아용 예시(시럽·좌약).
-// 🔶 용량은 "입력·기록만" — mg/kg 환산·과용량 판정은 칩스 확정 전까지 넣지 않는다.
+// 내원 전 해열제 (발열·소아 발열 공용). ped=true면 소아용 제품명 예시.
+// 260808 칩스: [있음/없음] + 용량 + 시각까지 받던 6문항을 → [없음/복용] · 약 이름 · 마지막 복용 3문항으로 축약.
+//   용량은 보호자가 정확히 모르는 경우가 많아 제외(입력 부담 대비 실익 낮음).
 const ANTIPY=(ped)=>[
- {id:'apY',t:'💊 내원 전 해열제 복용',role:'assoc',type:'yn',label:'내원 전 해열제 복용'},   // 문장: "내원 전 해열제 복용 있음"
- {id:'apDrug',t:'해열제 종류',role:'assoc',cols:1,skip:['모름'],showIf:{id:'apY',in:['있음']},
+ {id:'apY',t:'💊 내원 전 해열제',role:'assoc',lblPre:'해열제',skip:['없음'],o:['없음','복용']},   // 문장: "해열제 복용"
+ {id:'apDrug',t:'약 이름',role:'assoc',cols:1,skip:['모름'],showIf:{id:'apY',in:['복용']},mutedBy:'apEtc',   // 직접 기재하면 '기타'는 문장에서 생략
   o:ped?['아세트아미노펜 (챔프·타이레놀 등)','이부프로펜 (부루펜 등)','덱시부프로펜 (맥시부펜 등)','기타','모름']
        :['아세트아미노펜 (타이레놀 등)','이부프로펜 (부루펜 등)','덱시부프로펜','기타','모름']},
  {id:'apEtc',t:'약 이름 (직접 기재)',role:'assoc',type:'text',inNote:true,showIf:{id:'apDrug',in:['기타']},ph:'예) 종합감기약 / 처방약'},
- {id:'apDose',t:'1회 복용량',role:'assoc',type:'text',inNote:true,rec:'용량',showIf:{id:'apY',in:['있음']},
-  ph:ped?'예) 시럽 5mL / 좌약 125mg':'예) 500mg / 1정'},
- {id:'apAgo',t:'마지막 복용',role:'assoc',lblPre:'마지막 복용',skip:['모름'],showIf:{id:'apY',in:['있음']},
-  mutedBy:'apTime',                                   // 정확한 시각을 적었으면 "몇 시간 전"은 문장에서 생략
+ {id:'apAgo',t:'마지막 복용',role:'assoc',lblPre:'마지막 복용',skip:['모름'],showIf:{id:'apY',in:['복용']},
   o:['30분 이내','1시간 전','2~3시간 전','4~6시간 전','6시간 이상','모름']},
- {id:'apTime',t:'복용 시각 (아는 경우)',role:'assoc',type:'text',inNote:true,rec:'마지막 복용',showIf:{id:'apY',in:['있음']},ph:'예) 06:30'},
 ];
 
 // ══════════ 주호소 데이터 (track: crit/severe/mild) ══════════
