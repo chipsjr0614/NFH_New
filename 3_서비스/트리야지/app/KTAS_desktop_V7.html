@@ -441,6 +441,18 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
         </div>
       </div>
 
+      <!-- ★V7 FIND 학대 선별 (관찰 7 + 확인질문 3) — 12세 이하·70세 이상 자동 표시·필수 -->
+      <button class="allnorm" id="findBtn" style="border-style:solid;border-width:2px;border-color:var(--k2bd);background:var(--k2bg);color:#fdba74;margin-bottom:11px;font-size:17px;font-weight:800;padding:14px" onclick="toggleFindOpen()">🔍 FIND 학대 선별 열기 +</button>
+      <div class="card" id="findCard" style="display:none;border-color:var(--k2bd);border-width:2px">
+        <div class="lbl" style="color:#fdba74;font-size:17px">🔍 FIND 학대 선별 <span id="findWhy" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+        <div id="findStat" style="font-size:13px;margin-bottom:11px;padding:9px 11px;background:var(--surf2);border-radius:var(--rs)"></div>
+        <div class="miniq">👀 ① 관찰 7가지 <span style="font-weight:400;color:var(--mute)">— 묻지 말고 환자·보호자를 보면서 확인</span></div>
+        <div id="findObs"></div>
+        <div class="miniq" style="margin-top:13px">🗣️ ② 보호자·환자에게 확인 3가지</div>
+        <div id="findAsk"></div>
+        <div class="anotice">⚠️ 의료인은 아동·노인 학대 <b>신고 의무자</b>입니다. 해당 항목이 있으면 아래 학대 의심 사정을 함께 시행하고 기관 절차에 따라 신고를 검토하세요.</div>
+      </div>
+
       <button class="allnorm" id="abuseBtn" style="border-style:solid;border-width:2px;border-color:var(--k1bd);background:var(--k1bg);color:#fca5a5;margin-bottom:11px;font-size:18px;font-weight:800;padding:15px" onclick="toggleAbuseOpen()">🚨 학대 의심 사정 열기 +</button>
       <div class="card abuse-card" id="abuseCard" style="display:none">
         <div class="lbl" style="color:#fca5a5;font-size:17px">⚠️ 학대 의심 스크리닝 <span id="abuseWhy" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
@@ -554,6 +566,7 @@ const S={age:'',sex:'',date:'',arr:'',reg:'',route:'',preg:'',contrast:'',contra
   gi:{},abcd:{A:'',B:'',C:'',D:''}, ccs:[], ccOther:'', forceSevere:false, ans:{},
   onsetBy:{}, painBy:{}, openCC:{},        // ★V6: 발생시점·통증(NRS)을 주호소별로 분리
   redFlags:[], pmhx:[], surg:[], lmp:'', abuse:new Set(),
+  find:{}, findOpen:false,                 // ★V7: FIND 학대 선별(관찰 7 + 확인질문 3). o1~o7='있음'/'없음', q1~q3=서술
   ktas:'', ktasChg:'', pname:'', pid:'', doctor:'', bst:'', bstSkip:false, abuseOpen:false, abuseAuto:false, noteEdited:false, o2mode:'RA', o2:'', o2L:'', note:'', present:'', presentEdited:false};
 let cur=1;
 const KN={1:'즉시소생',2:'응급',3:'긴급',4:'준응급',5:'비응급'};
@@ -942,7 +955,7 @@ function ageFromYMD(s){
   return (age>=0&&age<=120)?age:null;
 }
 // 나이 직접 입력
-function setAgeDirect(el){S.age=el.value;const f=document.getElementById('fmAgeInp');if(f)f.value=el.value;const s=document.getElementById('fmAge');if(s)s.textContent=el.value||'__';renderTrack();renderPeds();renderAbuse();}
+function setAgeDirect(el){S.age=el.value;const f=document.getElementById('fmAgeInp');if(f)f.value=el.value;const s=document.getElementById('fmAge');if(s)s.textContent=el.value||'__';renderTrack();renderPeds();renderAbuse();renderFind();}
 // 생일 6자리 → 아래에 "만 N세" 표시 + 나이 자동 채움
 function dobInput(el){
   const t=el.value.replace(/[^0-9]/g,'').slice(0,6);el.value=t;
@@ -954,7 +967,7 @@ function dobInput(el){
     const ai=document.getElementById('ageInp');if(ai)ai.value=S.age;
     const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age;
     const s=document.getElementById('fmAge');if(s)s.textContent=S.age||'__';
-    renderTrack();renderPeds();renderAbuse();
+    renderTrack();renderPeds();renderAbuse();renderFind();
   }else if(disp){disp.textContent=(t.length===6)?'날짜 확인 필요':'';disp.style.display=t?'':'none';}
 }
 // 소아 평가
@@ -1436,6 +1449,79 @@ function renderKTAS(){
   box.innerHTML=`<div class="ktasn" style="color:var(--k${level})">예상 KTAS ${level}</div><div class="ktasnm">${KN[level]} · 최종 RN 확정</div><div class="kmods">${mh}</div>`;
 }
 
+// ══════════ ★V7 FIND 학대 선별 (칩스 260808 — 실제 의료기관 평가 도구 원문) ══════════
+// 관찰 7 = 묻지 않고 환자·보호자를 보면서 확인 / 확인질문 3 = 직접 물어서 확인.
+// 대상: 만 12세 이하 · 만 70세 이상 → 자동 표시 + 전 문항 응답해야 최종확인 진행(미응답 시 차단).
+// 음성(해당 없음)도 반드시 기록에 남긴다 — "시행했다는 증거"가 남아야 하므로.
+// 🔶 양성 판정 기준(몇 개 이상이면 학대 의심)·신고 절차는 도구 원문/원내 지침을 따른다.
+//    앱은 '있음' 개수와 항목명을 세어 표기만 하고, 자동 판정·KTAS 승격은 하지 않는다.
+const FIND_OBS=[
+ ['obs1','멍·상처·화상','피부에 멍·열상·화상이 있는지'],
+ ['obs2','여러 부위 손상','한 곳이 아니라 여러 부위에 손상'],
+ ['obs3','비정상적인 부위의 멍','등·엉덩이·귀·목·안쪽 허벅지 등'],
+ ['obs4','특이한 손상 형태','손가락 모양·물체 모양·벨트 모양 등'],
+ ['obs5','손상 단계가 서로 다름','오래된 멍과 새 멍이 섞여 있음'],
+ ['obs6','아동의 행동','과도한 공포·위축·보호자 회피 등'],
+ ['obs7','보호자의 행동','과도한 분노·위협·책임 전가·지나친 무관심 등'],
+];
+const FIND_ASK=[
+ ['q1','어떻게 다쳤나요?','사고 경위와 손상 양상을 비교','예) 놀이터 미끄럼틀에서 떨어졌다고 함'],
+ ['q2','언제, 어디서 다쳤나요?','시간·장소 및 치료 지연 여부 확인','예) 어제 17시경 자택 거실 / 오늘 아침 내원'],
+ ['q3','그때 누가 함께 있었나요?','당시 상황과 동행자 확인','예) 어머니와 둘이 있었다고 함'],
+];
+function findChild(){const a=ageNum();return a!==null&&a<=12;}      // 개월·주·일 표기는 ageNum()에서 0세
+function findElder(){const a=ageNum();return a!==null&&a>=70;}
+function findTarget(){return findChild()||findElder();}             // 자동 표시 + 필수
+function findObsLabel(k,nm){return (k==='obs6'&&!findChild())?'환자의 행동':nm;}   // 성인 대상이면 '아동' → '환자'
+function findYes(){return FIND_OBS.filter(([k])=>S.find[k]==='있음');}
+function findAnswered(){return FIND_OBS.some(([k])=>S.find[k])||FIND_ASK.some(([k])=>String(S.find[k]||'').trim());}
+function findMissing(){
+  const m=[];
+  FIND_OBS.forEach(([k,nm],i)=>{if(!S.find[k])m.push('관찰 '+(i+1)+'. '+findObsLabel(k,nm));});
+  FIND_ASK.forEach(([k,t],i)=>{if(!String(S.find[k]||'').trim())m.push('확인질문 '+(i+1)+'. '+t);});
+  return m;
+}
+function toggleFindOpen(){S.findOpen=!S.findOpen;renderFind();render();}
+function pickFind(k,v){S.find[k]=(S.find[k]===v?'':v);renderFind();render();}
+// 서술 답변: 타이핑 중에는 목록을 다시 그리지 않는다(포커스·커서 유지). '해당없음' 버튼일 때만 전체 재렌더.
+function setFindAsk(k,v,re){S.find[k]=v;if(re)renderFind();else renderFindStat();render();}
+function renderFindStat(){
+  const st=document.getElementById('findStat');if(!st)return;
+  const miss=findTarget()?findMissing().length:0,yes=findYes().length;
+  st.innerHTML=miss?`<b style="color:#fca5a5">미응답 ${miss}개</b> · 10문항을 모두 응답해야 기록을 완료할 수 있습니다`
+    :(yes?`<b style="color:#fca5a5">해당 ${yes}개</b> · 아래 학대 의심 사정을 함께 시행하세요`:'✅ 10문항 시행 완료 · 해당 없음');
+}
+function renderFind(){
+  const card=document.getElementById('findCard');if(!card)return;
+  const tgt=findTarget(),btn=document.getElementById('findBtn');
+  if(btn){btn.style.display=tgt?'none':'';btn.textContent=S.findOpen?'🔍 FIND 학대 선별 닫기 −':'🔍 FIND 학대 선별 열기 +';}
+  if(!(tgt||S.findOpen)){card.style.display='none';return;}
+  card.style.display='';
+  document.getElementById('findWhy').textContent='('+(findChild()?'만 12세 이하 — 필수':findElder()?'만 70세 이상 — 필수':'수동 시행')+')';
+  renderFindStat();
+  document.getElementById('findObs').innerHTML=FIND_OBS.map(([k,nm,help],i)=>{
+    const v=S.find[k];
+    const opts=['없음','있음'].map(o=>`<div class="opt ${v===o?(o==='있음'?'sel-r':'sel'):''}" onclick="pickFind('${k}','${o}')">${o}</div>`).join('');
+    return `<div class="q"><div class="qt">${i+1}. ${findObsLabel(k,nm)} <span style="font-size:11px;color:var(--mute);font-weight:400">${help}</span></div><div class="opts">${opts}</div></div>`;
+  }).join('');
+  document.getElementById('findAsk').innerHTML=FIND_ASK.map(([k,t,help,ph],i)=>
+    `<div class="q"><div class="qt">${i+1}. ${t} <span style="font-size:11px;color:var(--mute);font-weight:400">${help}</span></div>`+
+    `<div class="orow"><input class="fi" style="flex:1;min-width:0;text-align:left" value="${esc(S.find[k]||'')}" placeholder="${esc(ph)}" oninput="setFindAsk('${k}',this.value)">`+
+    `<button class="onow" onclick="setFindAsk('${k}','해당 없음(외상 아님)',1)">해당없음</button></div></div>`).join('');
+}
+// 기록 한 줄. 양성이면 '$'(문제사항) 접두 → 출력에서 🔴가 붙는다.
+function findSummary(){
+  if(!findTarget()&&!findAnswered())return '';
+  const head='FIND 학대 선별('+(findChild()?'12세 이하':findElder()?'70세 이상':'수동 시행')+')';
+  const miss=findMissing();
+  // 대상 환자만 "미완료"를 남긴다(진행이 차단되므로 최종 기록엔 안 나옴). 비대상이 수동으로 하다 만 것은 기록하지 않음.
+  if(miss.length)return findTarget()?('$ '+head+' : 미완료 — 미응답 '+miss.length+'개'):'';
+  const yes=findYes().map(([k,nm])=>findObsLabel(k,nm));
+  const asked=FIND_ASK.map(([k,t])=>{const v=String(S.find[k]||'').trim();return v?t+' '+v:'';}).filter(Boolean);
+  const body=yes.length?('관찰 해당 '+yes.length+'개 ('+yes.join(' · ')+')'):'관찰 7항목 해당 없음';
+  return (yes.length?'$ ':'')+head+' : '+body+(asked.length?' · '+asked.join(' · '):'');
+}
+
 // ══════════ 학대 스크리닝 ══════════
 const A_COMMON=[['손상-기전 불일치','다친 경위와 실제 부상이 안 맞음'],['지연 내원','다친 뒤 한참 지나 데려옴'],['진술 번복·불일치','말이 바뀌거나 보호자·환자 진술이 다름'],['반복 내원','같은/유사 손상 반복 내원 이력'],['보호자 통제적','환자와 단둘이 못 있게 하거나 통제적']];
 const A_CHILD=[['발달단계 불일치','발달상 불가능한 손상(못 걷는 영아 골절 등)'],['의심 부위 멍','몸통·귀·목 멍, 4개월 미만 영아 멍(TEN-4)'],['얼굴 손상','볼·눈꺼풀·결막·귓바퀴·설소대(FACES)'],['양상 있는 손상','담배·담금·물림·도구 자국'],['시기 다른 손상','회복단계가 서로 다른 손상 혼재']];
@@ -1446,7 +1532,11 @@ function renderAbuse(){
   const a=ageNum();const ped=(a!==null&&a<15)||isPed()||S.ccs.some(c=>CC[c]&&CC[c].ped);const elder=a!==null&&a>=65;const trauma=ccHas('외상')||ccHas('소아 외상');
   // 첫 페이지: 소아·노인이면 선별 권고 배지만
   const badge=document.getElementById('abuseBadge1');
-  if(badge){const rec=ped||elder;badge.style.display=rec?'':'none';if(rec){const t=document.getElementById('abuseBadgeTxt');if(t)t.textContent=(ped?'소아':'노인')+' — 학대 선별 권고';}}
+  // ★V7: FIND 대상이면 배지에 "지금부터 관찰" 안내 — 관찰 7항목은 말 걸기 전부터 봐야 하므로
+  if(badge){const ft=findTarget(),rec=ft||ped||elder;badge.style.display=rec?'':'none';
+    if(rec){const t=document.getElementById('abuseBadgeTxt');
+      if(t)t.textContent=ft?((findChild()?'만 12세 이하':'만 70세 이상')+' — FIND 학대 선별 대상 · 지금부터 관찰 7항목을 보세요')
+                          :((ped?'소아':'노인')+' — 학대 선별 권고');}}
   // 마지막 기록 페이지: 실제 체크리스트 (소아·노인·외상 자동 / 수동 토글)
   const show=S.abuseOpen;
   const btn=document.getElementById('abuseBtn');if(btn)btn.textContent=show?'🚨 학대 의심 사정 닫기 −':'🚨 학대 의심 사정 열기 +';
@@ -1579,6 +1669,7 @@ function fullNote(){
   {const bn=bpArmNote();if(bn)spec.push(bn);}
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))spec.push('$ '+(b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   isoMessages().forEach(m=>spec.push(m));
+  {const fs=findSummary();if(fs)spec.push(fs);}                       // ★V7 FIND — 음성(해당 없음)도 시행 증거로 남긴다
   if(S.abuse.size)spec.push('$ 학대 의심: '+[...S.abuse].join(', '));
   if((S.note||'').trim())spec.push(S.note.trim());
   if(spec.length)t+=`\n[특이사항] ${spec.join(' / ')}`;
@@ -1612,6 +1703,10 @@ function isoMessages(){
   return m;
 }
 function openFinal(){
+  // ★V7: FIND 대상(12세 이하·70세 이상)은 10문항 전부 응답해야 기록 완료 가능
+  if(findTarget()){const m=findMissing();
+    if(m.length){alert('FIND 학대 선별을 모두 응답해야 합니다.\n\n미응답 '+m.length+'개\n· '+m.join('\n· '));
+      const c=document.getElementById('findCard');if(c)c.scrollIntoView({behavior:'smooth',block:'center'});return;}}
   if(!S.ktas){alert('내원시 KTAS를 입력하세요.');const r=document.getElementById('ktasRow');if(r)r.scrollIntoView({behavior:'smooth',block:'center'});return;}
   document.getElementById('fName').value=S.pname;document.getElementById('fPid').value=S.pid;document.getElementById('fDoc').value=S.doctor;
   document.getElementById('fmArr').value=S.arr||'';document.getElementById('fmReg').value=S.reg||'';document.getElementById('fmAgeInp').value=S.age||'';
@@ -1648,6 +1743,7 @@ function recordParts(){
   {const bn=bpArmNote();if(bn)specLines.push('🔴 '+bn);}
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))specLines.push('🔴 $ '+(b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   isoMessages().forEach(m=>specLines.push('🔴 '+m));
+  {const fs=findSummary();if(fs)specLines.push((fs.startsWith('$')?'🔴 ':'')+fs);}   // ★V7 FIND
   if(S.abuse.size)specLines.push('🔴 학대 의심: '+[...S.abuse].join(', '));
   if((S.note||'').trim()){const nt=S.note.trim().replace(/[\r\n\t]+/g,' ');specLines.push((nt.startsWith('$')?'🔴 ':'')+nt);}
   const spec=specLines.length?specLines.map(l=>'• '+l).join('\n'):'없음';
@@ -1761,6 +1857,7 @@ function warnItems(){
   const bn=bpArmNote();if(bn)w.push(bn.replace(/^\$ /,''));
   if(S.bst&&!S.bstSkip){const b=parseFloat(S.bst);if(!isNaN(b)&&(b<70||b>300))w.push((b<70?'저혈당':'고혈당')+' BST '+S.bst+' mg/dL');}
   isoMessages().forEach(m=>w.push(m));
+  {const fs=findSummary();if(fs&&fs.startsWith('$'))w.push(fs.replace(/^\$ /,''));}   // ★V7: FIND 양성·미완료만 경고
   if(S.abuse.size)w.push('학대 의심: '+[...S.abuse].join(', '));
   if(S.contrast==='있음')w.push(contrastText()+' — 조영검사 시 주의(전처치/대체검사 확인)');
   if(S.preg==='가능성'||S.preg==='임신중')w.push('임신 '+S.preg+(S.lmp?' (LMP '+S.lmp+')':''));
@@ -1777,8 +1874,9 @@ function renderWarnBox(){
 }
 function render(){
   if(cur===5){
-    const a=ageNum();const exposed=(a!==null&&(a<15||a>=65))||isPed()||S.ccs.some(c=>CC[c]&&CC[c].ped)||ccHas('외상')||ccHas('소아 외상');
-    if(exposed&&!S.abuseAuto){S.abuseOpen=true;S.abuseAuto=true;}
+    // ★V7: 상세 학대 체크리스트는 FIND에서 '있음'이 나왔을 때 자동으로 연다.
+    //      (V6는 소아·노인·외상이면 무조건 열려 화면이 길었다 — 1차 선별은 이제 FIND가 맡는다)
+    if(findYes().length&&!S.abuseAuto){S.abuseOpen=true;S.abuseAuto=true;}
     if(!S.noteEdited)document.getElementById('outNote').value=fullNote();renderAbuse();renderWarnBox();
   }
   if(cur===4){renderKTAS();renderCcHint();refreshPresent();}
@@ -1795,7 +1893,7 @@ function go(n){
   document.getElementById('nextBtn').style.display=n===5?'none':'';
   if(n===2)renderCCGrid();
   if(n===4){renderDetail();}
-  if(n===5){renderPmhx();renderSurg();render();}
+  if(n===5){renderPmhx();renderSurg();renderFind();render();}   // ★V7 FIND 카드
   window.scrollTo(0,0);
   saveSoon();                       // ★V6 자동 저장
 }
@@ -1924,7 +2022,7 @@ function applyStateToDom(){
   const dd=document.getElementById('dateDisp');if(dd)dd.textContent=S.date;
   const fa=document.getElementById('fmAgeInp');if(fa)fa.value=S.age||'';
   renderInfoChips();renderRoute();renderO2();renderGI();renderABCD();renderTrack();
-  renderPeds();renderPmhx();renderSurg();renderAbuse();maskHint();
+  renderPeds();renderPmhx();renderSurg();renderAbuse();renderFind();maskHint();   // ★V7 FIND 복원
   // 주호소별 발생시점·NRS는 renderDetail()이 S에서 직접 그리므로 별도 복원 불필요
 }
 function restoreSaved(){
