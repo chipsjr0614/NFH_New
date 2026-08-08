@@ -5,378 +5,398 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>💊 통합 투약 앱 V4 (NFH)</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#0d1117;color:#e6edf3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+/* ═══════════════════════════════════════════════════════════════
+   투약앱 V4 — 디자인 시스템 «판독(Readout)»
+   ① 숫자는 등폭·계기처럼   ② 색은 안전에만   ③ 약물 구분은 색이 아니라 글자로
+   테마는 토큰만 갈아끼운다(body.light) — 컴포넌트 규칙은 한 벌뿐.
+═══════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#0F1319; --surface:#171C24; --surface-2:#1E242D; --sunk:#12161D;
+  --border:#262E39; --border-2:#1C222B;
+  --text:#E4EAF2; --text-mid:#9AA6B5; --text-dim:#6E7A8A;
+  --accent:#5AA2F0; --accent-bg:#16243A; --accent-line:#2E5C8F;
+  --danger:#F0616D; --danger-bg:#2C171A;
+  --warn:#E3A13F;   --warn-bg:#2A2114;
+  --ok:#4FC08D;     --ok-bg:#13291F;
+  --readout:#0A0E14; --readout-line:#1A222D; --readout-ink:#86D9FF; --readout-dim:#54636F;
+  --shadow:none;
+  --radius:10px; --r-sm:8px;
+  --fs-display:46px; --fs-h1:21px; --fs-h2:17px; --fs-body-l:16px; --fs-body:14px; --fs-cap:12px;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif;
+}
+body.light{
+  --bg:#EDF1F5; --surface:#FFFFFF; --surface-2:#F4F7FA; --sunk:#E7ECF2;
+  --border:#D5DCE5; --border-2:#E7ECF2;
+  --text:#101720; --text-mid:#4E5A69; --text-dim:#78838F;
+  --accent:#0B5FD0; --accent-bg:#E4EDFB; --accent-line:#B4CFF0;
+  --danger:#B81D2C; --danger-bg:#FBE7E8;
+  --warn:#8A5800;   --warn-bg:#FBF1DA;
+  --ok:#0C6B42;     --ok-bg:#DDF2E7;
+  --shadow:0 1px 2px rgba(16,23,32,.05);
+}
 
-/* ── 탭 ── */
-.main-tabs{display:flex;background:#161b22;border-bottom:1px solid #30363d;position:sticky;top:54px;z-index:100}
-.main-tab{flex:1;padding:14px 6px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:#8b949e;border-bottom:3px solid transparent;transition:.2s}
-.main-tab.active{color:#58a6ff;border-bottom-color:#58a6ff}
-.panel{display:none;padding:16px;max-width:1100px;margin:0 auto}
+/* ── 기본 ── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+     font-size:var(--fs-body-l);line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+h3{font-size:var(--fs-h1);font-weight:700;letter-spacing:-.02em}
+.sub{font-size:var(--fs-body);color:var(--text-dim);line-height:1.55;margin-top:3px}
+.dim{color:var(--text-dim)}
+.val{color:var(--text);font-weight:600}
+input,select,button,textarea{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 숫자는 전부 등폭·자릿수 정렬 */
+.big-num,.ts-v,.step-val input,.rate-table td,.unit-card .n,.mix-box .v,.big-val,
+.conc-chip,.vol-chip,.hero-mix,.calc-note,.side-meta{
+  font-variant-numeric:tabular-nums}
+
+/* ── 앱바 ── */
+.app-bar{display:flex;justify-content:space-between;align-items:center;
+  padding:11px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.app-title{font-size:var(--fs-body-l);font-weight:700;color:var(--text);letter-spacing:-.02em}
+.app-actions{display:flex;gap:8px}
+.app-bar button{background:var(--surface-2);border:1px solid var(--border);color:var(--text-mid);
+  font-size:15px;width:40px;height:38px;border-radius:var(--r-sm);cursor:pointer}
+.app-bar button:hover{border-color:var(--accent-line);color:var(--accent)}
+
+/* ── 메인 탭 ── */
+.main-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:54px;z-index:100;overflow-x:auto;scrollbar-width:none}
+.main-tabs::-webkit-scrollbar{display:none}
+.main-tab{flex:1 0 auto;min-width:112px;white-space:nowrap;text-align:center;cursor:pointer;
+  padding:15px 14px 13px;font-size:var(--fs-body);font-weight:650;color:var(--text-dim);
+  border-bottom:2px solid transparent;letter-spacing:-.01em;transition:color .15s}
+.main-tab:hover{color:var(--text-mid)}
+.main-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none;padding:20px 16px 56px;max-width:1000px;margin:0 auto}
 .panel.active{display:block}
 
-/* ── 공통 카드 ── */
-.card{background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden;margin-bottom:14px}
-.card-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #30363d}
-.card-body{padding:14px 16px}
-.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
-h3{font-size:15px;font-weight:700}
-.sub{font-size:12px;color:#8b949e;margin-top:2px}
-
-/* ── 체중 입력 ── */
-.weight-row{display:flex;align-items:center;gap:12px;background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px;margin-bottom:16px}
-.weight-row label{font-size:14px;color:#8b949e;white-space:nowrap}
-.weight-row input{background:#0d1117;border:1px solid #388bfd;color:#fff;font-size:24px;font-weight:700;width:90px;padding:6px 10px;border-radius:8px;text-align:center}
-.weight-row span{font-size:16px;color:#8b949e}
-.age-btns{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
-.age-btn{background:#21262d;border:1px solid #30363d;color:#c9d1d9;font-size:12px;padding:5px 11px;border-radius:6px;cursor:pointer}
-.age-btn:hover{background:#30363d;color:#58a6ff}
-
-/* ── 테이블 ── */
-table{width:100%;border-collapse:collapse}
-th{background:#0d1117;color:#8b949e;font-size:11px;font-weight:600;padding:8px 14px;text-align:left;border-bottom:1px solid #30363d}
-td{padding:9px 14px;font-size:13px;border-bottom:1px solid #21262d}
-tr:last-child td{border-bottom:none}
-tr.hl td{background:#1c2d45}
-tr.hl .val{color:#58a6ff;font-size:16px;font-weight:700}
-.val{color:#e6edf3;font-weight:600}
-.dim{color:#8b949e}
-
-/* ── 성인 레이아웃 ── */
-.adult-layout{display:grid;grid-template-columns:160px 1fr;gap:16px}
-.drug-sidebar{display:flex;flex-direction:column;gap:6px;position:sticky;top:60px;height:fit-content}
-.drug-btn{background:#21262d;border:1px solid #30363d;color:#8b949e;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left;font-size:13px;font-weight:600;transition:.2s}
-.drug-btn:hover,.drug-btn.active{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
-.drug-section{display:none}
-.drug-section.active{display:block}
-
-/* ── 노에피 두 열 ── */
-.two-col-table th:nth-child(2),.two-col-table td:nth-child(2){color:#66bb6a}
-.two-col-table th:nth-child(3),.two-col-table td:nth-child(3){color:#ffa726}
-
-/* ── 소아 서브탭 ── */
-.sub-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.sub-tab{padding:8px 18px;border-radius:20px;background:#21262d;border:1px solid #30363d;color:#8b949e;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
-.sub-tab.active{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
+/* ── 서브 탭 ── */
+.sub-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.sub-tab{padding:9px 16px;border-radius:var(--r-sm);background:var(--surface);
+  border:1px solid var(--border);color:var(--text-dim);font-size:var(--fs-body);
+  font-weight:650;cursor:pointer;min-height:42px;display:flex;align-items:center}
+.sub-tab:hover{color:var(--text-mid)}
+.sub-tab.active{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
 .sub-panel{display:none}
 .sub-panel.active{display:block}
 
-/* ── 소아 그리드 ── */
-.peds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-
-/* ── 약물정보 검색 ── */
-.search-box{position:relative;margin-bottom:16px}
-.search-box input{width:100%;background:#161b22;border:1px solid #388bfd;color:#e6edf3;font-size:16px;padding:12px 16px 12px 44px;border-radius:10px}
-.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px}
-.drug-list{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px}
-.drug-chip{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;transition:.2s}
-.drug-chip:hover{border-color:#388bfd;color:#58a6ff}
-.drug-chip.selected{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
-.info-card{background:#161b22;border:1px solid #388bfd;border-radius:10px;padding:18px}
-.info-row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #21262d;font-size:13px}
-.info-row:last-child{border-bottom:none}
-.info-label{color:#8b949e;min-width:90px;font-weight:600}
-.info-val{color:#e6edf3;flex:1;white-space:pre-line}
-.go-btn{display:block;width:100%;margin-top:14px;padding:11px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;text-align:center}
-.go-btn:hover{background:#388bfd}
-
-/* ── 색상 테마 ── */
-.green{color:#56d364}.orange{color:#ffa726}.red{color:#f85149}.purple{color:#bc8cff}.yellow{color:#e3b341}.blue{color:#58a6ff}.cyan{color:#39c5cf}
-.bg-green{background:#1a2f1a}.bg-blue{background:#1c2d45}.bg-purple{background:#211a2f}.bg-red{background:#2f1a1a}.bg-orange{background:#2f221a}.bg-yellow{background:#2a2412}
+/* ── 카드 ── */
+.card,.info-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-head{padding:15px 18px;display:flex;justify-content:space-between;align-items:flex-start;
+  gap:12px;border-bottom:1px solid var(--border-2);background:var(--sunk)}
+.card-body{padding:16px 18px}
+.info-card{padding:18px}
+.badge{font-size:var(--fs-cap);padding:4px 11px;border-radius:var(--r-sm);font-weight:700;
+  background:var(--surface-2);color:var(--text-mid);white-space:nowrap}
 
 /* ── 섹션 헤더 ── */
-.sec-head{font-size:12px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1px;padding:6px 0 10px;border-bottom:1px solid #30363d;margin-bottom:12px}
-.big-val{font-size:20px;font-weight:700;color:#58a6ff}
-.result-box{background:#1c2d45;border:1px solid #388bfd;border-radius:8px;padding:12px 16px;text-align:center;margin:8px 0}
+.sec-head{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.09em;
+  padding-bottom:9px;border-bottom:1px solid var(--border-2);margin-bottom:12px}
 
-/* ── 반응형 ── */
-@media(max-width:700px){
-  .adult-layout{grid-template-columns:1fr}
-  .drug-sidebar{flex-direction:row;flex-wrap:wrap;position:static}
-  .drug-btn{flex:1;min-width:80px;text-align:center;font-size:12px;padding:8px 6px}
-  .peds-grid{grid-template-columns:1fr}
-  .drug-list{grid-template-columns:1fr}
-  .two-col-table td,.two-col-table th{padding:7px 8px;font-size:12px}
-}
-@media(max-width:400px){
-  .drug-list{grid-template-columns:1fr}
-  .age-btns{display:none}
-}
+/* ── 표 ── */
+table{width:100%;border-collapse:collapse}
+th{background:transparent;color:var(--text-dim);font-size:var(--fs-cap);font-weight:700;
+  letter-spacing:.05em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:13px 14px;font-size:var(--fs-body-l);border-bottom:1px solid var(--border-2);
+  color:var(--text);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr.hl td{background:var(--accent-bg)}
+tr.hl .val{color:var(--accent);font-weight:700}
 
-/* ── 통합 약물정보 (v3) ── */
-.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-.cat-chip{background:#21262d;border:1px solid #30363d;color:#8b949e;font-size:12px;padding:5px 12px;border-radius:16px;cursor:pointer}
-.cat-chip.active{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
-.mix-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:6px 0 14px}
-.mix-box{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px 10px;text-align:center}
-.mix-box .lbl{font-size:11px;color:#8b949e}
-.mix-box .v{font-size:16px;font-weight:700;margin-top:5px;word-break:keep-all;line-height:1.3}
-.pill{font-size:11px;padding:3px 10px;border-radius:14px;background:#21262d;border:1px solid #30363d;color:#8b949e}
-.pill-blue{background:#1c2d45;border-color:#388bfd;color:#58a6ff}
-@media(max-width:600px){.mix-hero{grid-template-columns:1fr}}
+/* 2열 비교표 — 현재 쓰는 약물은 없으나 twoCol 렌더 분기가 남아 있어 정의 유지 */
+.two-col-table td:not(:first-child){font-family:var(--mono);font-weight:650;text-align:right}
+.two-col-table th:not(:first-child){text-align:right}
 
-/* ── 아코디언/홈/라이트 (v4) ── */
-.app-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:#161b22;border-bottom:1px solid #30363d}
-.app-bar .app-title{font-size:15px;font-weight:700;color:#e6edf3}
-.app-bar .app-actions{display:flex;gap:8px}
-.app-bar button{background:#21262d;border:1px solid #30363d;color:#c9d1d9;font-size:16px;width:40px;height:34px;border-radius:8px;cursor:pointer}
-.app-bar button:hover{border-color:#388bfd}
-.drug-item{margin-bottom:8px}
-.acc-arrow{color:#8b949e;font-size:11px}
-.acc-card{margin-top:8px}
-body.light{background:#f6f8fa;color:#1f2328}
-body.light .app-bar,body.light .main-tabs{background:#fff;border-color:#d0d7de}
-body.light .app-title{color:#1f2328}
-body.light .app-bar button{background:#f6f8fa;border-color:#d0d7de;color:#1f2328}
-body.light .card,body.light .info-card,body.light .weight-row,body.light .result-box{background:#fff;border-color:#d0d7de}
-body.light .search-box input{background:#fff;border-color:#0969da;color:#1f2328}
-body.light .drug-chip,body.light .cat-chip,body.light .age-btn,body.light .drug-btn{background:#fff;border-color:#d0d7de;color:#1f2328}
-body.light .cat-chip.active,body.light .drug-chip.selected,body.light .drug-btn.active{background:#ddf4ff;border-color:#0969da;color:#0969da}
-body.light th{background:#f0f3f6;color:#57606a;border-color:#d0d7de}
-body.light td{border-color:#eaeef2}
-body.light tr.hl td{background:#ddf4ff}
-body.light .mix-box{background:#f6f8fa;border-color:#d0d7de}
-body.light .pill{background:#f6f8fa;border-color:#d0d7de;color:#57606a}
-body.light .pill-blue{background:#ddf4ff;border-color:#0969da;color:#0969da}
-body.light .dim,body.light .sub,body.light .info-label,body.light .acc-arrow,body.light .weight-row label,body.light .weight-row span{color:#57606a}
-body.light .info-val,body.light .val,body.light h3{color:#1f2328}
-body.light .weight-row input{background:#fff;color:#1f2328}
-body.light .card-head{border-color:#d0d7de}
-body.light .main-tab{color:#57606a}
-body.light .main-tab.active{color:#0969da;border-bottom-color:#0969da}
-body.light .sub-tab{background:#fff;border-color:#d0d7de;color:#57606a}
-body.light .sub-tab.active{background:#ddf4ff;border-color:#0969da;color:#0969da}
-body.light .green{color:#1a7f37}body.light .red{color:#cf222e}body.light .orange{color:#bc4c00}body.light .blue{color:#0969da}body.light .purple{color:#8250df}body.light .yellow{color:#9a6700}body.light .cyan{color:#1b7c83}
-body.light tr.hl .val{color:#0969da}
-body.light .bg-green{background:#dafbe1}body.light .bg-blue{background:#ddf4ff}body.light .bg-purple{background:#fbefff}body.light .bg-red{background:#ffebe9}body.light .bg-orange{background:#fff1e5}body.light .bg-yellow{background:#fff8c5}
-body.light .go-btn{background:#0969da}
-.abx-tag{display:inline-block;background:#21262d;border:1px solid #30363d;border-radius:6px;padding:5px 11px;margin:3px;font-size:13px}
-body.light .abx-tag{background:#f6f8fa;border-color:#d0d7de;color:#1f2328}
-.badge-ha{display:inline-block;background:#7d1a1a;color:#ffb3b3;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
-.badge-ve{display:inline-block;background:#7a4a12;color:#ffd9a8;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:4px;font-weight:700}
-.warn-lasa{background:#2a2412;border-left:3px solid #e3b341;padding:7px 10px;border-radius:6px;margin:8px 0;font-size:12px;color:#e3b341}
-.warn-rev{background:#16261a;border-left:3px solid #56d364;padding:7px 10px;border-radius:6px;margin:8px 0;font-size:12px;color:#9fe0a6}
-.extrav-box{background:#2f1a1a;border:1px solid #7d1a1a;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#ffc7c7;line-height:1.5}
-body.light .badge-ha{background:#ffebe9;color:#cf222e}body.light .badge-ve{background:#fff1e5;color:#bc4c00}
-body.light .warn-lasa{background:#fff8c5;color:#7a5c00}body.light .warn-rev{background:#dafbe1;color:#1a7f37}
-body.light .extrav-box{background:#ffebe9;border-color:#ffb3b3;color:#a40e26}
+/* ── 체중 입력 ── */
+.weight-row{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;
+  flex-wrap:wrap;box-shadow:var(--shadow)}
+.weight-row label{font-size:var(--fs-body);color:var(--text-dim);white-space:nowrap;font-weight:650}
+.weight-row input{background:var(--bg);border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:24px;font-weight:600;width:96px;padding:7px 10px;
+  border-radius:var(--r-sm);text-align:center;font-variant-numeric:tabular-nums}
+.weight-row input:focus{border-color:var(--accent);outline:none}
+.weight-row span{font-size:var(--fs-body);color:var(--text-dim)}
+.age-btns{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.age-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text-mid);
+  font-size:var(--fs-body);padding:8px 13px;border-radius:var(--r-sm);cursor:pointer;min-height:38px}
+.age-btn:hover{border-color:var(--accent-line);color:var(--accent)}
 
-/* ══════════════════════════════════════════════════════════════
-   V4 ── 디자인 토큰 (색 = 의미 고정 · 약물 구분에 색을 쓰지 않는다)
-   이 블록은 위의 V3 규칙보다 뒤에 있으므로 같은 특이도면 우선 적용됨.
-══════════════════════════════════════════════════════════════ */
-:root{
-  --bg:#0d1117; --surface:#161b22; --surface-2:#21262d;
-  --border:#30363d; --border-2:#21262d;
-  --text:#e6edf3; --text-dim:#8b949e;
-  --accent:#58a6ff; --accent-bg:#1c2d45; --accent-line:#388bfd;
-  --danger:#f85149; --danger-bg:#2f1a1a;
-  --warn:#ffa726;   --warn-bg:#2f221a;
-  --ok:#56d364;     --ok-bg:#16261a;
-  /* 타이포 스케일 (요구사항정의서 3.3) */
-  --fs-display:48px; --fs-h1:22px; --fs-h2:18px;
-  --fs-body-l:16px; --fs-body:14px; --fs-cap:12px;
-  --radius:12px;
-}
-body.light{
-  --bg:#f6f8fa; --surface:#fff; --surface-2:#f6f8fa;
-  --border:#d0d7de; --border-2:#eaeef2;
-  --text:#1f2328; --text-dim:#57606a;
-  --accent:#0969da; --accent-bg:#ddf4ff; --accent-line:#0969da;
-  --danger:#cf222e; --danger-bg:#ffebe9;
-  --warn:#bf8700;   --warn-bg:#fff8c5;
-  --ok:#1a7f37;     --ok-bg:#dafbe1;
-}
+/* ── 사이드바 + 본문 ── */
+.adult-layout{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
+.drug-sidebar{display:flex;flex-direction:column;gap:5px;position:sticky;top:106px;height:fit-content}
+.drug-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-mid);
+  padding:12px 13px;border-radius:var(--r-sm);cursor:pointer;text-align:left;
+  font-size:var(--fs-body);font-weight:650;line-height:1.45;min-height:46px}
+.drug-btn:hover{border-color:var(--accent-line)}
+.drug-btn.active{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
+.side-meta{font-size:11px;color:var(--accent);font-weight:650;display:block;margin-top:3px}
+.side-cau{font-size:11px;color:var(--warn);font-weight:650;display:block;line-height:1.4;margin-top:2px}
+.cau-dot{float:right;font-size:11px}
 
-/* ── 가독성 상향: 폰트 +2~3px, 터치타깃 44px 이상 ── */
-h3{font-size:var(--fs-h1)}
-.sub{font-size:var(--fs-body);line-height:1.55}
-th{padding:12px 16px;font-size:var(--fs-cap)}
-td{padding:14px 16px;font-size:var(--fs-body-l)}
-.card{border-radius:var(--radius);margin-bottom:16px}
-.card-head{padding:16px 20px}
-.card-body{padding:18px 20px}
-.badge{font-size:var(--fs-cap);padding:5px 12px}
-.drug-btn{padding:14px;font-size:var(--fs-body-l);min-height:48px}
-.sub-tab{padding:11px 20px;font-size:var(--fs-body-l);min-height:44px}
-.cat-chip{font-size:var(--fs-body);padding:9px 16px}
-.age-btn{font-size:var(--fs-body);padding:9px 14px;min-height:38px}
-.drug-chip{font-size:var(--fs-body-l);padding:14px 16px}
-.info-row{font-size:var(--fs-body-l);padding:12px 0}
-.info-label{min-width:104px}
-.weight-row{border-radius:var(--radius);padding:16px 20px}
-.weight-row label{font-size:var(--fs-body-l)}
-.mix-box .lbl{font-size:var(--fs-cap)}
-.mix-box .v{font-size:var(--fs-h2)}
-.pill{font-size:var(--fs-cap);padding:5px 12px}
-.sec-head{font-size:var(--fs-cap)}
-.abx-tag{font-size:var(--fs-body-l);padding:8px 14px}
-.warn-lasa,.warn-rev,.extrav-box{font-size:var(--fs-body);line-height:1.65}
+/* ── 약물 검색·목록 ── */
+.search-box{position:relative;margin-bottom:16px}
+.search-box input{width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-size:var(--fs-body-l);padding:14px 16px 14px 44px;border-radius:var(--radius)}
+.search-box input:focus{border-color:var(--accent);outline:none}
+.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);
+  font-size:15px;color:var(--text-dim)}
+.drug-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.drug-item{margin-bottom:0}
+.drug-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:13px 15px;cursor:pointer;font-size:var(--fs-body-l);color:var(--text)}
+.drug-chip:hover{border-color:var(--accent-line)}
+.drug-chip.selected{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
+.acc-arrow{color:var(--text-dim);font-size:11px}
+.acc-card{margin-top:6px}
+.info-row{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid var(--border-2);
+  font-size:var(--fs-body-l)}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--text-dim);min-width:96px;font-weight:650;font-size:var(--fs-body)}
+.info-val{color:var(--text);flex:1;white-space:pre-line;line-height:1.65}
+.go-btn{display:block;width:100%;margin-top:14px;padding:13px;background:var(--accent);
+  color:#fff;border:none;border-radius:var(--r-sm);font-size:var(--fs-body-l);
+  font-weight:700;cursor:pointer;text-align:center}
+.go-btn:hover{opacity:.9}
 
-/* ── 탭 바: 7개로 늘어나 모바일에서 넘치므로 가로 스크롤 ── */
-.main-tabs{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.main-tabs::-webkit-scrollbar{display:none}
-.main-tab{flex:1 0 auto;min-width:112px;white-space:nowrap;padding:16px 12px;font-size:var(--fs-body-l);min-height:52px}
+/* ── 칩·필 ── */
+.cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.cat-chip{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);
+  font-size:var(--fs-body);padding:8px 14px;border-radius:var(--r-sm);cursor:pointer;min-height:38px}
+.cat-chip:hover{color:var(--text-mid)}
+.cat-chip.active{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
+.pill{font-size:var(--fs-cap);padding:4px 11px;border-radius:var(--r-sm);
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim)}
+.pill-blue{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
+.mix-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 14px}
+.mix-box{background:var(--bg);border:1px solid var(--border-2);border-radius:var(--r-sm);
+  padding:12px 13px;text-align:center}
+.mix-box .lbl{font-size:var(--fs-cap);color:var(--text-dim)}
+.mix-box .v{font-size:var(--fs-h2);font-weight:700;margin-top:5px;line-height:1.35;word-break:keep-all}
 
-/* ══ A안: Clinical Big-Number 결과 카드 ══ */
-.calc-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
-.hero-head{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
-.hero-name{font-size:var(--fs-h1);font-weight:700;color:var(--text)}
-.hero-mix{font-size:var(--fs-body);color:var(--text-dim);margin-top:5px;line-height:1.55;white-space:pre-line}
+/* ── 소아 ── */
+.peds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.big-val{font-size:var(--fs-h1);font-weight:700;color:var(--accent)}
+.result-box{background:var(--accent-bg);border:1px solid var(--accent-line);
+  border-radius:var(--r-sm);padding:12px 16px;text-align:center;margin:8px 0}
+
+/* ── 항생제·해독 ── */
+.abx-tag{display:inline-block;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:8px 13px;margin:3px;font-size:var(--fs-body-l);color:var(--text)}
+.badge-ha,.badge-ve{display:inline-block;font-size:11px;padding:2px 8px;border-radius:var(--r-sm);
+  margin-left:5px;font-weight:700}
+.badge-ha{background:var(--danger-bg);color:var(--danger)}
+.badge-ve{background:var(--warn-bg);color:var(--warn)}
+.warn-lasa,.warn-rev,.extrav-box{padding:11px 14px;border-radius:var(--r-sm);margin:8px 0;
+  font-size:var(--fs-body);line-height:1.65;border-left:3px solid}
+.warn-lasa{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.warn-rev{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.extrav-box{background:var(--danger-bg);border-color:var(--danger);color:var(--danger);margin-top:12px}
+
+/* ── ★ 약물 구분에는 색을 쓰지 않는다 ──
+   V3가 약물 정체성에 쓰던 색 클래스를 무채색으로 중화한다.
+   (적색이 "위험"이 아니라 "Epinephrine"을 뜻하면 경고색이 죽는다) */
+.green,.orange,.red,.purple,.yellow,.blue,.cyan{color:var(--text)}
+.bg-green,.bg-blue,.bg-purple,.bg-red,.bg-orange,.bg-yellow{background:var(--sunk)}
+
+/* ═══ 결과 카드 (A안) ═══ */
+.calc-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow)}
+.hero-head{padding:15px 18px;border-bottom:1px solid var(--border-2);background:var(--sunk);
+  display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.hero-name{font-size:var(--fs-h1);font-weight:700;color:var(--text);letter-spacing:-.025em}
+.hero-mix{font-size:var(--fs-body);color:var(--text-dim);margin-top:5px;line-height:1.55;
+  white-space:pre-line;font-family:var(--mono);letter-spacing:-.01em}
 .hero-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.conc-chip{font-size:var(--fs-body-l);font-weight:700;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-line);border-radius:20px;padding:6px 14px;white-space:nowrap}
-.verify-chip{font-size:var(--fs-cap);font-weight:700;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn);border-radius:20px;padding:5px 12px;white-space:nowrap}
+.conc-chip,.vol-chip,.verify-chip{font-size:var(--fs-body);font-weight:700;border-radius:var(--r-sm);
+  padding:5px 12px;white-space:nowrap;border:1px solid}
+.conc-chip{color:var(--accent);background:var(--accent-bg);border-color:var(--accent-line)}
+.vol-chip{color:var(--ok);background:var(--ok-bg);border-color:var(--ok)}
+.verify-chip{color:var(--warn);background:var(--warn-bg);border-color:var(--warn);font-size:var(--fs-cap)}
 
-/* 스테퍼 (티트레이션) */
-.stepper{display:flex;align-items:center;justify-content:center;gap:18px;padding:20px 20px 4px}
-.step-btn{width:56px;height:56px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);color:var(--accent);font-size:26px;font-weight:700;cursor:pointer;flex:0 0 auto;line-height:1;padding:0}
-.step-btn:hover:not(:disabled){border-color:var(--accent-line);background:var(--accent-bg)}
-.step-btn:disabled{opacity:.28;cursor:not-allowed}
+/* 스테퍼 */
+.stepper{display:flex;align-items:center;justify-content:center;gap:20px;padding:22px 18px 6px}
+.step-btn{width:56px;height:56px;border-radius:50%;background:var(--surface-2);
+  border:1px solid var(--border);color:var(--accent);font-size:24px;font-weight:600;
+  cursor:pointer;flex:none;line-height:1;padding:0}
+.step-btn:hover:not(:disabled){background:var(--accent-bg);border-color:var(--accent-line)}
+.step-btn:disabled{opacity:.25;cursor:not-allowed}
 .step-val{text-align:center;min-width:150px}
-.step-val input{width:120px;background:transparent;border:none;border-bottom:2px solid var(--border);color:var(--text);font-size:30px;font-weight:700;text-align:center;padding:2px 0;outline:none;font-family:inherit}
+.step-val input{width:124px;background:transparent;border:none;border-bottom:1.5px solid var(--border);
+  color:var(--text);font-family:var(--mono);font-size:28px;font-weight:600;text-align:center;
+  padding:2px 0;outline:none;letter-spacing:-.02em}
 .step-val input:focus{border-bottom-color:var(--accent)}
-.step-unit{font-size:var(--fs-body);color:var(--text-dim);margin-top:7px}
+.step-unit{font-size:var(--fs-body);color:var(--text-dim);margin-top:8px;font-weight:650}
 
-/* 대형 결과 */
-.big-result{text-align:center;padding:12px 20px 22px}
-.big-num{font-size:var(--fs-display);font-weight:700;color:var(--accent);line-height:1.05;letter-spacing:-1.5px}
-.big-unit{font-size:var(--fs-h2);font-weight:600;color:var(--text-dim);margin-top:4px}
-.big-sub{font-size:var(--fs-body);color:var(--text-dim);margin-top:14px;line-height:1.75}
-.big-num.bad{color:var(--danger);font-size:var(--fs-h1);letter-spacing:0}
+/* 판독창 — 계기 화면. 두 테마 모두 어둡다 */
+.big-result{text-align:center;margin:14px 18px 16px;padding:20px 18px;
+  background:var(--readout);border:1px solid var(--readout-line);border-radius:var(--radius)}
+.big-num{font-family:var(--mono);font-size:var(--fs-display);font-weight:600;
+  color:var(--readout-ink);line-height:1.02;letter-spacing:-.035em;
+  text-shadow:0 0 22px rgba(134,217,255,.18)}
+.big-num.bad{color:var(--danger);font-size:var(--fs-h1);letter-spacing:0;text-shadow:none;font-family:var(--sans)}
+.big-unit{font-size:var(--fs-cap);font-weight:700;color:var(--readout-dim);
+  letter-spacing:.16em;margin-top:7px;text-transform:uppercase}
+.big-sub{font-size:var(--fs-body);color:var(--readout-dim);margin-top:12px;line-height:1.75;
+  padding-top:11px;border-top:1px solid var(--readout-line)}
+.big-sub b{color:#9FC4DB}
 
-/* 경고 배너 */
-.alert{padding:12px 16px;border-radius:10px;font-size:var(--fs-body);line-height:1.65;margin:0 20px 16px;font-weight:600}
-.alert-warn{background:var(--warn-bg);border-left:4px solid var(--warn);color:var(--warn)}
-.alert-danger{background:var(--danger-bg);border-left:4px solid var(--danger);color:var(--danger)}
-.alert-info{background:var(--accent-bg);border-left:4px solid var(--accent);color:var(--accent)}
+/* 경고 */
+.alert{padding:12px 15px;border-radius:var(--r-sm);font-size:var(--fs-body);line-height:1.65;
+  margin:0 18px 14px;font-weight:600;border-left:3px solid}
+.alert-warn{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.alert-danger{background:var(--danger-bg);border-color:var(--danger);color:var(--danger)}
+.alert-info{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
 .alert.flat{margin:0 0 16px}
 
-/* ══ B안: 접이식 전체 속도표 ══ */
-.rate-fold{border-top:1px solid var(--border)}
-.rate-fold>summary{cursor:pointer;padding:15px 20px;font-size:var(--fs-body-l);font-weight:700;color:var(--text-dim);list-style:none;user-select:none;min-height:44px}
+/* ═══ 접이식 속도표 (B안) ═══ */
+.rate-fold{border-top:1px solid var(--border-2)}
+.rate-fold>summary{cursor:pointer;padding:14px 18px;font-size:var(--fs-body);font-weight:700;
+  color:var(--text-dim);list-style:none;user-select:none;min-height:44px}
 .rate-fold>summary::-webkit-details-marker{display:none}
-.rate-fold>summary::before{content:'▸ ';color:var(--accent)}
-.rate-fold[open]>summary::before{content:'▾ '}
-.rate-fold>summary:hover{color:var(--accent)}
-.rate-table tr{cursor:pointer}
+.rate-fold>summary::before{content:'▸';color:var(--accent);margin-right:8px;font-size:11px}
+.rate-fold[open]>summary::before{content:'▾'}
+.rate-fold>summary:hover{color:var(--text-mid)}
+.rate-table td{font-family:var(--mono);font-size:var(--fs-body);letter-spacing:-.01em}
 .rate-table td:first-child{color:var(--text-dim)}
-.rate-table td:last-child{font-weight:700;font-size:var(--fs-h2);color:var(--text);text-align:right}
-.rate-table tr.cur td{background:var(--accent-bg)}
-.rate-table tr.cur td:last-child{color:var(--accent)}
-.rate-table tr.cur td:first-child{box-shadow:inset 4px 0 0 var(--accent)}
+.rate-table td:last-child{font-weight:700;font-size:var(--fs-body-l);color:var(--text);text-align:right}
+.rate-table tr{cursor:pointer}
 .rate-table tr:hover td{background:var(--surface-2)}
+.rate-table tr.cur td{background:var(--accent-bg);color:var(--accent)}
+.rate-table tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .rate-table tr.cur:hover td{background:var(--accent-bg)}
 
-/* ══ 사이드바 약물 메타 (총볼륨 · 효능 · 주의) ══ */
-.adult-layout{grid-template-columns:200px 1fr}
-.drug-btn{line-height:1.5}
-.side-meta{font-size:11px;color:var(--accent);font-weight:600;display:block;margin-top:3px}
-.side-cau{font-size:11px;color:var(--warn);font-weight:600;display:block;line-height:1.4;margin-top:2px}
-.cau-dot{float:right;font-size:12px}
-.vol-chip{font-size:var(--fs-body-l);font-weight:700;color:var(--ok);background:var(--ok-bg);border:1px solid var(--ok);border-radius:20px;padding:6px 14px;white-space:nowrap}
-.ref-block{border-top:1px solid var(--border);padding:16px 20px}
-.ref-block .info-row{border-bottom:1px solid var(--border-2)}
-.ref-block .info-row:last-child{border-bottom:none}
-.ref-block .info-label{color:var(--text-dim)}
-.ref-block .info-val{color:var(--text);white-space:pre-line}
-.ref-block .info-val.warn{color:var(--warn);font-weight:600}
-.ref-missing{font-size:var(--fs-body);color:var(--warn);background:var(--warn-bg);border-left:4px solid var(--warn);padding:12px 16px;border-radius:10px;font-weight:600;line-height:1.6}
-@media(max-width:700px){ .adult-layout{grid-template-columns:1fr} }
+/* 참조 블록 */
+.ref-block{border-top:1px solid var(--border-2);padding:14px 18px}
+.ref-block .info-val.warn{color:var(--warn);font-weight:650}
+.ref-missing{font-size:var(--fs-body);color:var(--warn);background:var(--warn-bg);
+  border-left:3px solid var(--warn);padding:12px 15px;border-radius:var(--r-sm);
+  font-weight:650;line-height:1.65}
 
-/* ══ TPA 3단계 패널 ══ */
-.tpa-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;padding:4px 20px 18px}
-.tpa-step{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+/* ═══ TPA 3단계 ═══ */
+.tpa-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;padding:4px 18px 16px}
+.tpa-step{background:var(--bg);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:14px 15px}
 .tpa-step.hl{border-color:var(--accent-line);background:var(--accent-bg)}
-.ts-n{font-size:var(--fs-cap);font-weight:750;color:var(--text-dim);letter-spacing:.06em}
+.ts-n{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.07em}
 .tpa-step.hl .ts-n{color:var(--accent)}
-.ts-v{font-size:30px;font-weight:700;color:var(--text);margin:6px 0 8px;line-height:1.1;letter-spacing:-.02em}
-.ts-v span{font-size:14px;font-weight:600;color:var(--text-dim);letter-spacing:0}
+.ts-v{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--text);
+  margin:6px 0 8px;line-height:1.1;letter-spacing:-.03em}
+.ts-v span{font-family:var(--sans);font-size:13px;font-weight:650;color:var(--text-dim);letter-spacing:0}
 .tpa-step.hl .ts-v{color:var(--accent)}
 .ts-d{font-size:var(--fs-body);color:var(--text-dim);line-height:1.65}
-.tpa-ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:11px}
+.tpa-ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
 .tpa-ol li{font-size:var(--fs-body-l);line-height:1.65;color:var(--text);padding-left:4px}
 
-/* ══ 캐릭터: 빈 화면에만 조용히 (소방 헬멧 · 원본 도안) ══ */
-.mascot{display:flex;flex-direction:column;align-items:center;gap:12px;padding:44px 20px;text-align:center;color:var(--text-dim)}
-.mascot svg{opacity:.5}
-.m-msg{font-size:var(--fs-body-l);font-weight:650;color:var(--text-dim)}
-.m-sub{font-size:var(--fs-body);color:var(--text-dim);opacity:.7}
-
-/* ══ 🧮 직접계산 탭 ══ */
-.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
-.field{display:flex;flex-direction:column;gap:7px;min-width:0}
-.field>label{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.3px}
-.field input,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:var(--fs-body-l);padding:12px 14px;border-radius:10px;outline:none;min-height:48px;font-family:inherit;width:100%}
-.field input:focus,.field select:focus{border-color:var(--accent-line)}
+/* ═══ 직접계산 ═══ */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.04em}
+.field input,.field select{background:var(--bg);border:1px solid var(--border);color:var(--text);
+  font-size:var(--fs-body-l);padding:12px 13px;border-radius:var(--r-sm);outline:none;
+  min-height:48px;width:100%}
+.field input{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.field input[type=text]{font-family:var(--sans)}
+.field input:focus,.field select:focus{border-color:var(--accent)}
 .field-row{display:flex;gap:8px}
 .field-row input{flex:1 1 auto;min-width:0}
-.field-row select{flex:0 0 108px;width:auto}
-.unit-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.unit-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.field-row select{flex:0 0 106px;width:auto}
+.unit-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:8px}
+.unit-card{background:var(--bg);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 13px}
 .unit-card .u{font-size:var(--fs-cap);color:var(--text-dim)}
-.unit-card .n{font-size:var(--fs-h2);font-weight:700;color:var(--text);margin-top:5px}
+.unit-card .n{font-family:var(--mono);font-size:var(--fs-h2);font-weight:600;
+  color:var(--text);margin-top:4px;letter-spacing:-.02em}
 .unit-card.on{border-color:var(--accent-line);background:var(--accent-bg)}
 .unit-card.on .n{color:var(--accent)}
-.mini-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:var(--fs-body);font-weight:600;padding:10px 16px;border-radius:10px;cursor:pointer;min-height:44px;font-family:inherit}
+.mini-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text-mid);
+  font-size:var(--fs-body);font-weight:650;padding:10px 15px;border-radius:var(--r-sm);
+  cursor:pointer;min-height:44px;line-height:1.4}
 .mini-btn:hover{border-color:var(--accent-line);color:var(--accent)}
 .mini-btn.on{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
-.pick-list{background:var(--bg);border:1px solid var(--border);border-radius:10px;max-height:260px;overflow-y:auto;margin-top:6px}
-.pick-item{padding:12px 14px;border-bottom:1px solid var(--border-2);cursor:pointer;font-size:var(--fs-body-l);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.calc-note{font-size:var(--fs-body);color:var(--text-dim);line-height:1.7}
+.pick-list{background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
+  max-height:260px;overflow-y:auto;margin-top:6px}
+.pick-item{padding:12px 14px;border-bottom:1px solid var(--border-2);cursor:pointer;
+  font-size:var(--fs-body-l);display:flex;justify-content:space-between;gap:10px;align-items:center}
 .pick-item:last-child{border-bottom:none}
 .pick-item:hover{background:var(--accent-bg);color:var(--accent)}
-.calc-note{font-size:var(--fs-body);color:var(--text-dim);line-height:1.7}
 
-@media(max-width:700px){
-  :root{--fs-display:40px;--fs-h1:20px}
-  .stepper{gap:12px;padding:16px 12px 4px}
-  .step-btn{width:52px;height:52px;font-size:24px}
-  .alert{margin:0 14px 14px}
-  .card-head,.hero-head{padding:14px 16px}
-  .card-body{padding:16px}
-  td{padding:12px 12px;font-size:15px}
-  th{padding:10px 12px}
+/* ═══ 캐릭터 — 빈 화면에만 ═══ */
+.mascot{display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding:52px 20px;text-align:center;color:var(--text-dim)}
+.mascot svg{opacity:.42}
+.m-msg{font-size:var(--fs-body-l);font-weight:650;color:var(--text-dim)}
+.m-sub{font-size:var(--fs-body);color:var(--text-dim);opacity:.7}
+
+/* ── 반응형 ── */
+@media(max-width:820px){
+  .adult-layout{grid-template-columns:1fr}
+  .drug-sidebar{flex-direction:row;flex-wrap:wrap;position:static}
+  .drug-btn{flex:1 1 140px;min-width:130px}
 }
+@media(max-width:640px){
+  :root{--fs-display:38px;--fs-h1:19px}
+  .panel{padding:16px 12px 48px}
+  .card-head,.hero-head{padding:14px}
+  .card-body{padding:14px}
+  .stepper{gap:14px;padding:18px 12px 4px}
+  .step-btn{width:52px;height:52px}
+  .alert,.big-result{margin-left:12px;margin-right:12px}
+  .tpa-steps{padding:4px 12px 14px}
+  .ref-block,.rate-fold>summary{padding-left:14px;padding-right:14px}
+  td{padding:11px 12px;font-size:15px}
+  th{padding:9px 12px}
+  .age-btns{margin-left:0;width:100%}
+  .mix-hero{grid-template-columns:1fr 1fr}
+}
+@media(max-width:400px){ .age-btns{display:none} }
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-/* ── 인쇄: 흰 배경·검은 글씨 ── */
+/* ── 인쇄 ── */
 @media print{
   body,body.light{background:#fff;color:#000}
   .app-bar,#globalBar,.main-tabs,.drug-sidebar,.step-btn,.mini-btn,.age-btns,.search-box,.seg{display:none!important}
   .card,.calc-hero,.info-card{background:#fff;border-color:#999;break-inside:avoid;box-shadow:none}
-  .card-head,.hero-head,.mix-box,.unit-card{background:#fff}
-  .big-num,.hero-name,h3,td,th,.val,.conc-chip{color:#000!important}
+  .card-head,.hero-head,.mix-box,.unit-card,.tpa-step{background:#fff}
+  .big-result{background:#fff;border-color:#999}
+  .big-num,.big-unit,.big-sub,.hero-name,h3,td,th,.val,.conc-chip{color:#000!important;text-shadow:none}
   .rate-fold>summary{display:none}
   .rate-fold>*{display:block!important}
   .panel.active{max-width:none;padding:0}
 }
+
 </style>
 </head>
 <body>
 
 <!-- ── 메인 탭 ── -->
 <div class="app-bar">
-  <span class="app-title">💊 통합 투약 앱 <span style="font-size:11px;color:var(--text-dim);font-weight:400">V4 · 2026-08-08</span></span>
+  <span class="app-title">통합 투약 앱 <span style="font-size:11px;color:var(--text-dim);font-weight:400">V4 · 2026-08-08</span></span>
   <div class="app-actions">
     <button onclick="goHome()" title="홈">🏠</button>
     <button onclick="toggleTheme()" id="themeBtn" title="테마">🌙</button>
   </div>
 </div>
 
-<div id="globalBar" style="position:sticky;top:0;z-index:200;background:#161b22;border-bottom:1px solid #30363d;padding:8px 12px">
+<div id="globalBar" style="position:sticky;top:0;z-index:200;background:var(--surface);border-bottom:1px solid var(--border);padding:8px 12px">
   <div style="position:relative;max-width:1100px;margin:0 auto">
-    <input type="text" id="globalSearch" placeholder="🔎 전체 약물 검색 (모든 탭)" autocomplete="off" oninput="globalSearch()" style="width:100%;background:#0d1117;border:1px solid #388bfd;color:#e6edf3;font-size:14px;padding:9px 12px;border-radius:8px;outline:none">
-    <div id="globalResults" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:340px;overflow-y:auto;background:#0d1117;border:1px solid #30363d;border-radius:8px;z-index:210;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
+    <input type="text" id="globalSearch" placeholder="전체 약물 검색" autocomplete="off" oninput="globalSearch()" style="width:100%;background:var(--bg);border:1px solid var(--accent-line);color:var(--text);font-size:14px;padding:9px 12px;border-radius:8px;outline:none">
+    <div id="globalResults" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:340px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;z-index:210;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
   </div>
 </div>
 
 <div class="main-tabs">
-  <div class="main-tab" data-tab="calc"   onclick="showMain('calc')">🧮 직접계산</div>
-  <div class="main-tab active" data-tab="adult" onclick="showMain('adult')">💉 성인계산기</div>
-  <div class="main-tab" data-tab="infuse" onclick="showMain('infuse')">💧 지속주입</div>
-  <div class="main-tab" data-tab="info"   onclick="showMain('info')">🔍 약물정보</div>
-  <div class="main-tab" data-tab="peds"   onclick="showMain('peds')">👶 소아계산기</div>
-  <div class="main-tab" data-tab="abx"    onclick="showMain('abx')">🧬 항생제병용</div>
-  <div class="main-tab" data-tab="anti"   onclick="showMain('anti')">🧪 해독·역전제</div>
+  <div class="main-tab" data-tab="calc"   onclick="showMain('calc')">직접계산</div>
+  <div class="main-tab active" data-tab="adult" onclick="showMain('adult')">성인계산기</div>
+  <div class="main-tab" data-tab="infuse" onclick="showMain('infuse')">지속주입</div>
+  <div class="main-tab" data-tab="info"   onclick="showMain('info')">약물정보</div>
+  <div class="main-tab" data-tab="peds"   onclick="showMain('peds')">소아계산기</div>
+  <div class="main-tab" data-tab="abx"    onclick="showMain('abx')">항생제병용</div>
+  <div class="main-tab" data-tab="anti"   onclick="showMain('anti')">해독·역전제</div>
 </div>
 
 <!-- ════════════════════════════════════════════════
@@ -395,7 +415,7 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
       <!-- 약물 불러오기 -->
       <div class="field" style="margin-bottom:16px">
         <label>약물 불러오기 (선택 · 등록된 믹스 농도를 그대로 가져옵니다)</label>
-        <input type="text" id="calcPick" placeholder="🔍 약물명 검색 (예: Norepinephrine · 노르에피 · Nicardipine)" autocomplete="off" oninput="calcPickSearch()">
+        <input type="text" id="calcPick" placeholder="약물명 검색 — 등록된 농도를 가져옵니다" autocomplete="off" oninput="calcPickSearch()">
         <div id="calcPickList" class="pick-list" style="display:none"></div>
         <div id="calcPickNote" style="display:none"></div>
       </div>
@@ -524,7 +544,7 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
       <button class="age-btn" onclick="setIW(90)">90kg</button>
     </div>
   </div>
-  <input type="text" id="infuseSearch" placeholder="🔍 약물 검색 (예: Labetalol · Nicardipine · 혈압)" oninput="updateInfuse()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:10px;outline:none">
+  <input type="text" id="infuseSearch" placeholder="약물 검색 — 영문·한글·용도" oninput="updateInfuse()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:10px;outline:none">
   <div id="infuseCatPills" class="sub-tabs" style="margin-bottom:14px"></div>
   <div class="adult-layout">
     <div class="drug-sidebar" id="infuseSidebar"></div>
@@ -545,7 +565,7 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
       <button class="age-btn" onclick="setAW(90)">90kg</button>
     </div>
   </div>
-  <input type="text" id="adultSearch" placeholder="🔍 약물 검색 (예: Nicardipine · NTG · 혈압)" oninput="updateAdult()" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:14px;outline:none">
+  <input type="text" id="adultSearch" placeholder="약물 검색 — 영문·한글·용도" oninput="updateAdult()" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:14px;padding:10px 14px;border-radius:8px;margin-bottom:14px;outline:none">
   <div class="adult-layout">
     <div class="drug-sidebar" id="drugSidebar"></div>
     <div id="drugContent"></div>
@@ -580,7 +600,7 @@ td{padding:14px 16px;font-size:var(--fs-body-l)}
 </div>
 
 <div id="tab-abx" class="panel">
-  <div style="font-size:13px;color:#8b949e;margin-bottom:12px">항생제를 선택하면 같은 라인 <b>병용 가능 여부</b>를 보여줍니다. (출처: 병용투여 가능 항생제.pptx)</div>
+  <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px">항생제를 선택하면 같은 라인 <b>병용 가능 여부</b>를 보여줍니다. (출처: 병용투여 가능 항생제.pptx)</div>
   <div class="cat-chips" id="abxChips"></div>
   <div id="abxResult"></div>
 </div>
@@ -940,12 +960,12 @@ function globalSearch(){
   DRUG_DB.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.kr||'').toLowerCase().includes(q)||(d.full||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.kr||'',src:'약물정보',go:"gotoInfo('"+gEsc(d.name)+"')"}); });
   HELPER_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)||(HELPER_KR[d.id]||'').includes(q)) res.push({n:d.name,s:(HELPER_KR[d.id]||d.badge||'').split(' ')[0],src:'지속주입',go:"gotoInfuse('"+d.id+"')"}); });
   ADULT_DRUGS.forEach(d=>{ if(d.name.toLowerCase().includes(q)||(d.badge||'').toLowerCase().includes(q)) res.push({n:d.name,s:d.badge||'',src:'성인계산기',go:"gotoAdultCalc('"+d.id+"')"}); });
-  if(!res.length){ box.style.display='block'; box.innerHTML='<div style="padding:10px 14px;color:#8b949e;font-size:13px">결과 없음</div>'; return; }
-  const sc={'약물정보':'#58a6ff','지속주입':'#6ee7a0','성인계산기':'#ffa726'};
+  if(!res.length){ box.style.display='block'; box.innerHTML='<div style="padding:10px 14px;color:var(--text-dim);font-size:13px">결과 없음</div>'; return; }
+  const sc={'약물정보':'var(--accent)','지속주입':'var(--ok)','성인계산기':'var(--warn)'};
   box.innerHTML=res.slice(0,40).map(r=>
-    `<div onclick="${r.go}" style="padding:9px 14px;border-bottom:1px solid #21262d;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <span style="font-size:14px;font-weight:600;color:#e6edf3">${r.n} <span style="font-size:11px;color:#8b949e;font-weight:400">${r.s}</span></span>
-      <span style="font-size:10px;color:${sc[r.src]||'#8b949e'};white-space:nowrap">${r.src}</span>
+    `<div onclick="${r.go}" style="padding:9px 14px;border-bottom:1px solid var(--surface-2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <span style="font-size:14px;font-weight:600;color:var(--text)">${r.n} <span style="font-size:11px;color:var(--text-dim);font-weight:400">${r.s}</span></span>
+      <span style="font-size:10px;color:${sc[r.src]||'var(--text-dim)'};white-space:nowrap">${r.src}</span>
     </div>`).join('');
   box.style.display='block';
 }
@@ -972,15 +992,15 @@ function drugCardHTML(d){
   const bol=clean(d.bolus), psh=d.push||'—';
   const match=ADULT_DRUGS.find(a=>d.name.toLowerCase().includes(a.name.toLowerCase().split(' ')[0]));
   const E=(typeof ENRICH!=='undefined'&&ENRICH[d.name])||{};
-  const scol={shoot:'#f85149',mix20:'#6ee7a0',big:'#58a6ff',civ:'#f85149'}[E.shootLvl]||'#e6edf3';
+  const scol={shoot:'var(--danger)',mix20:'var(--ok)',big:'var(--accent)',civ:'var(--danger)'}[E.shootLvl]||'var(--text)';
   const eBlock=`${E.action?`<div class="info-row"><span class="info-label">💊 작용</span><span class="info-val">${E.action}</span></div>`:''}`
     +`${E.adverse?`<div class="info-row"><span class="info-label">⚠️ 부작용</span><span class="info-val red">${E.adverse}</span></div>`:''}`
     +`${E.shootLabel?`<div class="info-row"><span class="info-label">💉 슈팅/희석</span><span class="info-val" style="color:${scol};font-weight:700">${E.shootLabel}${E.shootDetail?' · '+E.shootDetail:''}</span></div>`:''}`;
-  const circBlock=E.circ?`<div class="extrav-box" style="border-color:#3b82f6;background:#0d1b2e">
+  const circBlock=E.circ?`<div class="extrav-box" style="border-color:var(--accent);background:var(--accent-bg);color:var(--accent)">
      <b>📄 순환기 투여방법 (docx 원문)</b><br>
      <b>효능:</b> ${E.circ.eff||'—'}<br><b>투여:</b> ${(E.circ.mix||'—').replace(/\n/g,'<br>')}<br><b>주의:</b> ${(E.circ.caution||'—').replace(/\n/g,'<br>')}</div>`:'';
   return `<div class="info-card acc-card">
-     <div style="font-size:13px;color:#8b949e;margin-bottom:10px">${d.kr||''}${d.full&&d.full!==d.name?' · '+d.full:''} ${stockBadge}</div>
+     <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px">${d.kr||''}${d.full&&d.full!==d.name?' · '+d.full:''} ${stockBadge}</div>
      ${HIGH_ALERT.has(d.name)?'<span class="badge-ha">⚠️ 고위험</span> ':''}${VESICANT.has(d.name)?'<span class="badge-ve">🟠 유출주의</span> ':''}
      ${LASA[d.name]?`<div class="warn-lasa">🔀 헷갈림 주의: ${LASA[d.name]}</div>`:''}
      ${REVERSAL[d.name]?`<div class="warn-rev">💊 역전제: ${REVERSAL[d.name]}</div>`:''}
@@ -1011,11 +1031,11 @@ function searchExtraHTML(){
     return !DRUG_DB.some(d=>d.name.toLowerCase().split(' ')[0] && t.includes(d.name.toLowerCase().split(' ')[0]) && d.name.toLowerCase().split(' ')[0].length>3);
   }).slice(0,60);
   if(!hit.length) return '';
-  return `<div style="margin:14px 0 6px;color:#8b949e;font-size:12px;border-top:1px solid #30363d;padding-top:10px">📦 입고약품 검색결과 (${hit.length}) · 기본정보만</div>`
+  return `<div style="margin:14px 0 6px;color:var(--text-dim);font-size:12px;border-top:1px solid var(--border);padding-top:10px">📦 입고약품 검색결과 (${hit.length}) · 기본정보만</div>`
    + hit.map(s=>`<div class="drug-item"><div class="drug-chip" style="cursor:default">
        <div><span style="font-weight:600">${s.kr||s.eng}</span>
-       <span style="font-size:10px;color:#58a6ff;margin-left:5px">${s.cat}${s.stat?' · '+s.stat:''}</span>
-       <div style="font-size:11px;color:#8b949e">${s.eng}${s.amt?' · '+s.amt:''}</div></div></div></div>`).join('');
+       <span style="font-size:10px;color:var(--accent);margin-left:5px">${s.cat}${s.stat?' · '+s.stat:''}</span>
+       <div style="font-size:11px;color:var(--text-dim)">${s.eng}${s.amt?' · '+s.amt:''}</div></div></div></div>`).join('');
 }
 function renderDrugList(list){
   const el=document.getElementById('drugList');
@@ -1026,8 +1046,8 @@ function renderDrugList(list){
     return `<div class="drug-item">
       <div class="drug-chip${open?' selected':''}" onclick="toggleDrug('${d.name.replace(/'/g,"\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <div><span style="font-weight:600">${d.name}</span>${HIGH_ALERT.has(d.name)?'<span class="badge-ha">고위험</span>':''}${VESICANT.has(d.name)?'<span class="badge-ve">유출</span>':''} ${d.stock==='O'?'<span style="color:#58a6ff;font-size:10px">●</span>':''}
-            <div style="font-size:11px;color:#8b949e">${d.kr||''} · ${d.cat}</div></div>
+          <div><span style="font-weight:600">${d.name}</span>${HIGH_ALERT.has(d.name)?'<span class="badge-ha">고위험</span>':''}${VESICANT.has(d.name)?'<span class="badge-ve">유출</span>':''} ${d.stock==='O'?'<span style="color:var(--accent);font-size:10px">●</span>':''}
+            <div style="font-size:11px;color:var(--text-dim)">${d.kr||''} · ${d.cat}</div></div>
           <span class="acc-arrow">${open?'▲':'▼'}</span>
         </div>
       </div>
@@ -1068,7 +1088,7 @@ const EXTRAV="① 즉시 주입 중단(라인 유지) ② 잔여 약물 흡인 �
 const ANTIDOTES=[{"tox": "마약·아편유사제(Morphine·Fentanyl 등)", "anti": "Naloxone", "dose": "0.04~0.4mg IV, 2~3분마다 반복 (필요시 CIV)", "stock": false}, {"tox": "벤조디아제핀(Midazolam·Diazepam·Lorazepam)", "anti": "Flumazenil", "dose": "0.2mg IV 15초 → 1분마다, max 1mg", "stock": true}, {"tox": "헤파린", "anti": "Protamine", "dose": "헤파린 100U당 1mg (max 50mg), 천천히 IV", "stock": false}, {"tox": "와파린·VitK 길항", "anti": "Vitamin K1 (Phytonadione)", "dose": "2.5~10mg IV/PO (출혈 시 +FFP/PCC)", "stock": true}, {"tox": "β차단제·CCB", "anti": "Glucagon / Calcium", "dose": "Glucagon 3~10mg IV / Ca gluconate 1~3g", "stock": false}, {"tox": "고마그네슘·CCB 독성", "anti": "Calcium gluconate", "dose": "1~2g IV over 5~10분", "stock": true}, {"tox": "아세트아미노펜", "anti": "N-acetylcysteine", "dose": "150mg/kg loading → 프로토콜", "stock": true}, {"tox": "디곡신 독성", "anti": "Digoxin immune Fab", "dose": "중독 정도에 따라 vial 수 계산", "stock": false}, {"tox": "국소마취제 전신독성(LAST)", "anti": "Intralipid 20%", "dose": "1.5mL/kg bolus → 0.25mL/kg/min", "stock": false}, {"tox": "철분 중독", "anti": "Deferoxamine", "dose": "15mg/kg/hr IV", "stock": true}, {"tox": "근이완제(Rocuronium)", "anti": "Sugammadex / Neostigmine", "dose": "Sugammadex 2~16mg/kg", "stock": false}, {"tox": "혈관외유출(카테콜아민)", "anti": "Phentolamine", "dose": "5~10mg + N/S 10~15mL 환부 침윤", "stock": false}];
 function initAntidote(){
   const rows=ANTIDOTES.map(a=>`<tr><td class="dim">${a.tox}</td><td><b>${a.anti}</b></td><td class="dim" style="font-size:12px">${a.dose}</td><td>${a.stock?'<span class="green">입고</span>':'<span class="orange">※확인</span>'}</td></tr>`).join('');
-  document.getElementById('antiResult').innerHTML=`<div class="card"><div class="card-head"><h3 class="cyan">🧪 해독제·역전제 빠른참조</h3></div><div class="card-body"><div style="font-size:12px;color:#8b949e;margin-bottom:8px">⚠️ 표준값 — 약제부 검증 필요. ※확인=입고목록에 없음</div><table><tr><th>중독·약물</th><th>해독/역전제</th><th>용량(성인)</th><th>입고</th></tr>${rows}</table></div></div>`;
+  document.getElementById('antiResult').innerHTML=`<div class="card"><div class="card-head"><h3 class="cyan">🧪 해독제·역전제 빠른참조</h3></div><div class="card-body"><div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">⚠️ 표준값 — 약제부 검증 필요. ※확인=입고목록에 없음</div><table><tr><th>중독·약물</th><th>해독/역전제</th><th>용량(성인)</th><th>입고</th></tr>${rows}</table></div></div>`;
 }
 function gotoAdult(name){
   showMain('adult');
@@ -1092,8 +1112,8 @@ function selectDrug(id){ activeAdultDrug=id; updateAdult(); }
 // V4 공용: 대형 결과 카드(A안) + 접이식 전체 속도표(B안)
 //  → 성인계산기 · 지속주입(계산) 두 탭이 같은 렌더러를 쓴다
 // ══════════════════════════════════════════════════════════════
-const DRUG_C = {green:'var(--ok)',blue:'var(--accent)',purple:'#bc8cff',red:'var(--danger)',
-                orange:'var(--warn)',cyan:'#39c5cf',yellow:'#e3b341'};
+const DRUG_C = {green:'var(--ok)',blue:'var(--accent)',purple:'var(--text)',red:'var(--danger)',
+                orange:'var(--warn)',cyan:'var(--text)',yellow:'var(--warn)'};
 const doseState = {};   // {약물id: 현재 선택 용량}
 const foldOpen  = {};   // {약물id: 속도표 펼침 여부}
 
@@ -1572,21 +1592,21 @@ function updateAdult(){
   document.getElementById('drugSidebar').innerHTML=list.map(d=>
     `<button class="drug-btn ${d.id===activeAdultDrug?'active':''}" onclick="selectDrug('${d.id}')">
       <span class="${d.color}">${d.name}</span><br>
-      <span style="font-size:10px;color:#8b949e">${d.badge}</span>
+      <span style="font-size:10px;color:var(--text-dim)">${d.badge}</span>
     </button>`
-  ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">🔍 검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
+  ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
   // 컨텐츠
   const content=document.getElementById('drugContent');
   const drug=ADULT_DRUGS.find(d=>d.id===activeAdultDrug);
   if(!drug){content.innerHTML='';return;}
 
   if(drug.protocol){   // Amiodarone 24시간 유지주입 등 고정 프로토콜
-    const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:#58a6ff">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
+    const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:var(--accent)">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
     content.innerHTML=`
       <div class="card">
         <div class="card-head" style="background:var(--bg)">
-          <div><h3 style="color:#58a6ff">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3><div class="sub">${drug.mix}</div></div>
-          <span class="badge" style="background:#21262d;color:#58a6ff">${drug.badge}</span>
+          <div><h3 style="color:var(--accent)">${drug.name} <span style="font-size:12px;color:var(--text-dim);font-weight:400">${drug.vol||''}</span></h3><div class="sub">${drug.mix}</div></div>
+          <span class="badge" style="background:var(--surface-2);color:var(--accent)">${drug.badge}</span>
         </div>
         <div class="card-body">
           <table><tr><th>구간</th><th>속도</th><th>ml/hr</th><th>투여량</th></tr>${rows}</table>
@@ -1613,7 +1633,7 @@ function updateAdult(){
       <div class="card">
         <div class="card-head bg-green">
           <div><h3 class="green">${drug.name}</h3><div class="sub">체중 ${w}kg 기준</div></div>
-          <span class="badge" style="background:#1a2f1a;color:#56d364">${drug.badge}</span>
+          <span class="badge">${drug.badge}</span>
         </div>
         <div class="card-body">
           <table class="two-col-table">
@@ -1661,22 +1681,22 @@ function updateInfuse(){
     </button>`;
   };
   document.getElementById('infuseSidebar').innerHTML=cats.map(ct=>
-    `<div style="width:100%;font-size:10px;color:#8b949e;font-weight:700;margin:10px 2px 2px">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
-  ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">🔍 검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
+    `<div style="width:100%;font-size:10px;color:var(--text-dim);font-weight:700;margin:10px 2px 2px">${ct}</div>`+list.filter(d=>(d.cat||'💧 지속주입(계산)')===ct).map(btn).join('')
+  ).join('')||'<div style="color:var(--text-dim);font-size:13px;padding:14px 8px;line-height:1.6">검색 결과 없음<br><span style="opacity:.75">다른 이름으로 찾아보세요</span></div>';
   const content=document.getElementById('infuseContent');
   const drug=HELPER_DRUGS.find(d=>d.id===activeInfuseDrug);
   if(!drug){content.innerHTML='';return;}
-  const colors={blue:'#58a6ff',purple:'#bc8cff',red:'#f85149',orange:'#ffa726'};
-  const c=colors[drug.color]||'#58a6ff';
+  const colors={blue:'var(--accent)',purple:'var(--text)',red:'var(--danger)',orange:'var(--warn)'};
+  const c=colors[drug.color]||'var(--accent)';
   if(drug.special==='tpa'){     content.innerHTML=tpaCardHTML(drug,w);     return; }
   if(drug.special==='heparin'){ content.innerHTML=heparinCardHTML(drug,w); return; }
   if(drug.protocol){   // Amiodarone 24시간 유지주입 등 고정 프로토콜
-    const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:#58a6ff">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
+    const rows=drug.protocol.map(p=>`<tr><td class="dim">${p.phase}</td><td class="val" style="color:var(--accent)">${p.detail}</td><td class="val">${p.ml}</td><td class="dim">${p.amt}</td></tr>`).join('');
     content.innerHTML=`
       <div class="card">
         <div class="card-head" style="background:var(--bg)">
-          <div><h3 style="color:#58a6ff">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3><div class="sub">${drug.mix}</div></div>
-          <span class="badge" style="background:#21262d;color:#58a6ff">${drug.badge}</span>
+          <div><h3 style="color:var(--accent)">${drug.name} <span style="font-size:12px;color:var(--text-dim);font-weight:400">${drug.vol||''}</span></h3><div class="sub">${drug.mix}</div></div>
+          <span class="badge" style="background:var(--surface-2);color:var(--accent)">${drug.badge}</span>
         </div>
         <div class="card-body">
           <table><tr><th>구간</th><th>속도</th><th>ml/hr</th><th>투여량</th></tr>${rows}</table>
@@ -1691,8 +1711,8 @@ function updateInfuse(){
     content.innerHTML=`
       <div class="card">
         <div class="card-head" style="background:var(--bg)">
-          <div><h3 style="color:${c}">${drug.name} <span style="font-size:12px;color:#8b949e;font-weight:400">${drug.vol||''}</span></h3></div>
-          <span class="badge" style="background:#21262d;color:${c}">${drug.badge}</span>
+          <div><h3 style="color:${c}">${drug.name} <span style="font-size:12px;color:var(--text-dim);font-weight:400">${drug.vol||''}</span></h3></div>
+          <span class="badge" style="background:var(--surface-2);color:${c}">${drug.badge}</span>
         </div>
         <div class="card-body">
           <table>
@@ -1785,10 +1805,10 @@ function updatePeds(){
         <table>
           <tr><th>단계</th><th>에너지</th></tr>
           <tr><td class="dim">1차 (2 J/kg)</td><td><span class="big-val yellow">${defi1} J</span></td></tr>
-          <tr><td class="dim">2차 (4 J/kg)</td><td><span class="big-val" style="color:#ffa726">${defi2} J</span></td></tr>
+          <tr><td class="dim">2차 (4 J/kg)</td><td><span class="big-val" style="color:var(--warn)">${defi2} J</span></td></tr>
           <tr><td class="dim">최대 (10 J/kg, max 200J)</td><td><span class="big-val red">${defiMax} J</span></td></tr>
         </table>
-        <div style="font-size:11px;color:#8b949e;margin-top:10px">VF/pVT: 즉시 제세동 우선 · Epi는 2차 shock 후 투여</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">VF/pVT: 즉시 제세동 우선 · Epi는 2차 shock 후 투여</div>
       </div>
     </div>
 
@@ -1797,7 +1817,7 @@ function updatePeds(){
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IV/IO</span><br><span style="font-size:11px;color:#58a6ff">믹스: <b>Epi 1A(1mg/1mL) + NS 9mL = 10mL</b> (1:10,000 = 0.1mg/mL)</span></td><td><span class="val red">${f(Math.min(w*0.01,1),2)} mg</span><br><span class="val red" style="font-size:20px">= ${f(Math.min(w*0.1,10),1)} mL</span><br><span class="dim" style="font-size:11px">0.1 mL/kg · max 1mg(10mL) · q3~5분</span></td></tr>
+          <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IV/IO</span><br><span style="font-size:11px;color:var(--accent)">믹스: <b>Epi 1A(1mg/1mL) + NS 9mL = 10mL</b> (1:10,000 = 0.1mg/mL)</span></td><td><span class="val red">${f(Math.min(w*0.01,1),2)} mg</span><br><span class="val red" style="font-size:20px">= ${f(Math.min(w*0.1,10),1)} mL</span><br><span class="dim" style="font-size:11px">0.1 mL/kg · max 1mg(10mL) · q3~5분</span></td></tr>
           <tr><td class="dim">Amiodarone (5mg/kg)</td><td><span class="val">${f(w*5)} mg</span> <span class="dim">IV/IO</span></td></tr>
           <tr><td class="dim">Lidocaine (1mg/kg)</td><td><span class="val">${f(w*1)} mg</span> <span class="dim">IV/IO</span></td></tr>
           <tr><td class="dim">NaHCO₃ (1mEq/kg)</td><td><span class="val">${f(w*1)} mEq</span></td></tr>
@@ -1826,7 +1846,7 @@ function updatePeds(){
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IM (대퇴 전외측)</span><br><span style="font-size:11px;color:#ffa726">★ <b>1:1,000 원액(1mg/mL) 그대로</b> — 희석 X</span></td><td><span class="val orange">${f(Math.min(w*0.01,0.5),2)} mg</span><br><span class="val orange" style="font-size:20px">= ${f(Math.min(w*0.01,0.5),2)} mL</span><br><span class="dim" style="font-size:11px">0.01 mL/kg · max 0.3mg(소아)·0.5mg(청소년)</span></td></tr>
+          <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IM (대퇴 전외측)</span><br><span style="font-size:11px;color:var(--warn)">★ <b>1:1,000 원액(1mg/mL) 그대로</b> — 희석 X</span></td><td><span class="val orange">${f(Math.min(w*0.01,0.5),2)} mg</span><br><span class="val orange" style="font-size:20px">= ${f(Math.min(w*0.01,0.5),2)} mL</span><br><span class="dim" style="font-size:11px">0.01 mL/kg · max 0.3mg(소아)·0.5mg(청소년)</span></td></tr>
           <tr><td class="dim">수액 볼루스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
           <tr><td class="dim">Hydrocortisone (1mg/kg)</td><td><span class="val">${f(w*1)} mg</span></td></tr>
           <tr><td class="dim">Chlorpheniramine (0.1mg/kg)</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
@@ -1893,7 +1913,7 @@ function updatePeds(){
           <tr><td class="dim">Metoclopramide IV (0.1mg/kg)</td><td><span class="val">${f(Math.min(w*0.1,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
           <tr><td class="dim">Dexamethasone IV (0.15mg/kg)</td><td><span class="val">${f(Math.min(w*0.15,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
         </table>
-        <div style="font-size:11px;color:#f85149;margin-top:10px">⚠️ Promethazine: 2세 미만 FDA 흑색경고 — 금기</div>
+        <div style="font-size:11px;color:var(--danger);margin-top:10px">⚠️ Promethazine: 2세 미만 FDA 흑색경고 — 금기</div>
       </div>
     </div>
 
@@ -1923,7 +1943,7 @@ function updatePeds(){
       <div class="card-head"><h3 class="green">🧴 유지수액 (Holliday-Segar)</h3></div>
       <div class="card-body">
         <div class="result-box">
-          <div style="font-size:13px;color:#8b949e;margin-bottom:4px">체중 ${w}kg 유지수액</div>
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:4px">체중 ${w}kg 유지수액</div>
           <div class="big-val">${maint} ml/hr</div>
         </div>
         <table>
