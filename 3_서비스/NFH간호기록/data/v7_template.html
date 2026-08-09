@@ -384,14 +384,22 @@ function rec(dx){          /* 그 진단만의 고유 사정으로 추천 판정
   return (own.length?own:dx.ae).some(pos);
 }
 const on=n=>!S.off.includes(n);
-function peOf(dx){         /* 평가 2개 — 📢 문구 있는 것 우선 */
-  const ex=(D.explain[dx.name]||[]).map(e=>({pe:e.pe,say:e.say}));
-  const rest=dx.pe.filter(p=>!ex.some(e=>e.pe===p)).map(p=>({pe:p,say:''}));
-  return ex.concat(rest).slice(0,2);
+/* 평가 2개 — 「경로가 정한 순서」대로 고른다 (엑셀 2.사정세트의 순서 열).
+   전에는 3.환자설명에 문구가 있는 것을 먼저 넣었는데, 환자설명은 진단 이름으로
+   전 경로 공통이라 경로가 선언하지도 않은 평가가 기록에 나갔다 —
+   황달 경로에서 「체온 측정함」이 나가던 식이다. 안 한 일이 기록되면 안 된다.
+   이제 경로가 적은 것만, 적은 순서대로 나간다. 📢 문구는 있으면 붙여 준다. */
+function peOf(dx){
+  const ex=D.explain[dx.name]||[];
+  const say=p=>(ex.find(e=>e.pe===p)||{}).say||'';
+  const mine=dx.pe.map(p=>({pe:p,say:say(p)}));
+  /* 경로에 없는데 환자설명에만 있는 것은 뒤로 — 경로가 평가를 안 적었을 때의 대비책 */
+  const extra=ex.filter(e=>dx.pe.indexOf(e.pe)<0).map(e=>({pe:e.pe,say:e.say}));
+  return mine.concat(extra).slice(0,2);
 }
 const NEGP=/(없음|안됨|않음|못함|못 봄|아님)$/;
 /* 「정상」을 뜻하는 진술문. 이걸 골랐다고 진단이 추천되면 안 된다 */
-const NORMP=/^(normal sinus rhythm 임|의식 명료함|혈당 정상 범위임|sensory, motor, circulation intact 함|빛 반사 확인결과 prompt 함 ★|울음소리 좋음)$/;
+const NORMP=/^(normal sinus rhythm 임|의식 명료함|혈당 정상 범위임|sensory, motor, circulation intact 함|빛 반사 확인결과 prompt 함 ★|울음소리 좋음|정상 대변 봄)$/;
 /* 버튼 글씨를 진술문에서 만든다. 공통 앞머리를 「띄어쓰기 단위」로만 떼어
    「대변 못 봄」이 「봄」으로 잘리는 일을 막는다 */
 function tglLabels(ss){
