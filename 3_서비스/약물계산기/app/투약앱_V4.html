@@ -116,6 +116,10 @@ input,select,button,textarea{font-family:inherit}
 .pend{color:var(--warn);font-weight:650;font-size:var(--fs-body);white-space:nowrap}
 .badge-pend{background:var(--warn-bg);color:var(--warn)}
 .spec{display:block;font-size:11px;color:var(--text-dim);font-weight:400;margin-top:3px}
+/* 초안 = 외부 표준자료에서 가져온 값. 원내 컨펌 아님 → 검수 후 배지 제거 */
+.chip-draft{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;
+  background:var(--warn-bg);color:var(--warn);font-weight:700;margin-left:6px;vertical-align:middle}
+.conflict{color:var(--warn);font-weight:650;font-size:11px;line-height:1.6}
 
 /* ── 섹션 헤더 ── */
 .sec-head{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.09em;
@@ -972,6 +976,285 @@ const AIRWAY_TABLE = [
   {wMin:30,wMax:999, ett:'6.0',   depth:'18-20', laryngo:'3 (만곡)', opa:'100mm',npa:'7.5Fr', lma:'3'},
 ];
 
+// ── 소아 장비 (병원 컨펌표 260810 · 체중 11구간) ──
+// 출처: refs/병원컨펌_소아_260810/소아응급_체중구간표_병원컨펌_260810.xlsx
+const EQUIP_BANDS=[3.5, 4.5, 5.5, 7.5, 9.5, 11.5, 14.5, 18.5, 23.5, 29.5, 9999];
+const EQUIP_LABELS=["3kg", "4kg", "5kg", "6-7kg", "8-9kg", "10-11kg", "12-14kg", "15-18kg", "19-23kg", "24-29kg", "30-36kg"];
+const PEDS_EQUIP=[
+ {
+  "k": "ETT",
+  "v": [
+   "3.5 Uncuffed",
+   "3.5 Uncuffed",
+   "3.5 Uncuffed",
+   "3.5 Uncuffed",
+   "3.5 Uncuffed",
+   "4.0 Uncuffed",
+   "4.5 Uncuffed",
+   "5.0 Uncuffed",
+   "5.5 Uncuffed",
+   "6.0 Cuffed",
+   "6.5 Cuffed"
+  ]
+ },
+ {
+  "k": "삽입 깊이",
+  "v": [
+   "9-9.5cm",
+   "9.5-10cm",
+   "10-10.5cm",
+   "10.5-11cm",
+   "10.5-11cm",
+   "11-12cm",
+   "13.5cm",
+   "14-15cm",
+   "16.5cm",
+   "17-18cm",
+   "18.5-19.5cm"
+  ]
+ },
+ {
+  "k": "Stylet",
+  "v": [
+   "6Fr",
+   "6Fr",
+   "6Fr",
+   "6Fr",
+   "6Fr",
+   "6Fr",
+   "6Fr",
+   "6Fr",
+   "14Fr",
+   "14Fr",
+   "14Fr"
+  ]
+ },
+ {
+  "k": "흡인 카테터",
+  "v": [
+   "8Fr",
+   "8Fr",
+   "8Fr",
+   "8Fr",
+   "8Fr",
+   "10Fr",
+   "10Fr",
+   "10Fr",
+   "10Fr",
+   "10Fr",
+   "10-12Fr"
+  ]
+ },
+ {
+  "k": "후두경",
+  "v": [
+   "1 Straight",
+   "1 Straight",
+   "1 Straight",
+   "1 Straight",
+   "1 Straight",
+   "1 Straight",
+   "2 Straight",
+   "2 Straight",
+   "2 Straight",
+   "2 Straight or Curved",
+   "3 Straight or Curved"
+  ]
+ },
+ {
+  "k": "BVM",
+  "v": [
+   "Infant/Child",
+   "Infant/Child",
+   "Infant/Child",
+   "Infant",
+   "Child",
+   "Child",
+   "Child",
+   "Child",
+   "Child",
+   "Child",
+   "Adult"
+  ]
+ },
+ {
+  "k": "OPA",
+  "v": [
+   "50mm",
+   "50mm",
+   "50mm",
+   "50mm",
+   "50mm",
+   "60mm",
+   "60mm",
+   "60mm",
+   "70mm",
+   "80mm",
+   "80mm"
+  ]
+ },
+ {
+  "k": "NPA",
+  "v": [
+   "14Fr",
+   "14Fr",
+   "14Fr",
+   "14Fr",
+   "14Fr",
+   "18Fr",
+   "20Fr",
+   "22Fr",
+   "24Fr",
+   "26Fr",
+   "30Fr"
+  ]
+ },
+ {
+  "k": "LMA",
+  "v": [
+   "1",
+   "1",
+   "1",
+   "1.5",
+   "1.5",
+   "2",
+   "2",
+   "2",
+   "2-2.5",
+   "2.5",
+   "3"
+  ]
+ },
+ {
+  "k": "O₂ 마스크",
+  "v": [
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric NRB",
+   "Pediatric/Adult NRB"
+  ]
+ },
+ {
+  "k": "ETCO₂",
+  "v": [
+   "Pediatric",
+   "Pediatric",
+   "Pediatric",
+   "Pediatric",
+   "Pediatric",
+   "Pediatric",
+   "Pediatric",
+   "Adult",
+   "Adult",
+   "Adult",
+   "Adult"
+  ]
+ },
+ {
+  "k": "도뇨관",
+  "v": [
+   "5Fr",
+   "5Fr",
+   "5Fr",
+   "8Fr",
+   "8Fr",
+   "8-10Fr",
+   "10Fr",
+   "10-12Fr",
+   "10-12Fr",
+   "12Fr",
+   "12Fr"
+  ]
+ },
+ {
+  "k": "흉관",
+  "v": [
+   "10-12Fr",
+   "10-12Fr",
+   "10-12Fr",
+   "10-12Fr",
+   "10-12Fr",
+   "16-20Fr",
+   "20-24Fr",
+   "20-24Fr",
+   "24-32Fr",
+   "28-32Fr",
+   "32-38Fr"
+  ]
+ },
+ {
+  "k": "L-tube(NG)",
+  "v": [
+   "5-8Fr",
+   "5-8Fr",
+   "5-8Fr",
+   "5-8Fr",
+   "5-8Fr",
+   "8-10Fr",
+   "10Fr",
+   "10Fr",
+   "12-14Fr",
+   "14-18Fr",
+   "16-18Fr"
+  ]
+ },
+ {
+  "k": "정맥로 게이지",
+  "v": [
+   "22-24Ga",
+   "22-24Ga",
+   "22-24Ga",
+   "22-24Ga",
+   "22-24Ga",
+   "20-24Ga",
+   "18-22Ga",
+   "18-22Ga",
+   "18-20Ga",
+   "18-20Ga",
+   "16-20Ga"
+  ]
+ },
+ {
+  "k": "골내주사(IO)",
+  "v": [
+   "?",
+   "?",
+   "?",
+   "18Ga",
+   "15Ga",
+   "15Ga",
+   "15Ga",
+   "15Ga",
+   "15Ga",
+   "15Ga",
+   "15Ga"
+  ]
+ },
+ {
+  "k": "혈압 커프",
+  "v": [
+   "Neonatal#5/Infant",
+   "Neonatal#5/Infant",
+   "Neonatal#5/Infant",
+   "Infant",
+   "Child",
+   "Child",
+   "Child",
+   "Child",
+   "Child",
+   "Child",
+   "Small Adult"
+  ]
+ }
+];
+
 // ── 활력징후 (체중 → 연령군 추정) ──
 const VITAL_TABLE = [
   {wMax:4,   group:'신생아',  hr:'100-160', rr:'30-60', sbp:'60-90',  dbp:'30-60'},
@@ -1741,6 +2024,9 @@ function setPW(w,label){ document.getElementById('pedsWeight').value=w; updatePe
 function getAirway(w){
   return AIRWAY_TABLE.find(r=>w>=r.wMin&&w<r.wMax)||AIRWAY_TABLE[AIRWAY_TABLE.length-1];
 }
+function eqIdx(w){ for(var i=0;i<EQUIP_BANDS.length;i++){ if(w<EQUIP_BANDS[i]) return i; } return EQUIP_BANDS.length-1; }
+function eqRow(k,i){ var e=PEDS_EQUIP.find(function(x){return x.k===k}); if(!e) return '—';
+  var v=e.v[i]; return (!v||v==='?')?'<span class="pend">확인 필요</span>':v; }
 function getVitals(w){
   return VITAL_TABLE.find(r=>w<=r.wMax)||VITAL_TABLE[VITAL_TABLE.length-1];
 }
@@ -1755,6 +2041,7 @@ function updatePeds(){
   const w=parseFloat(document.getElementById('pedsWeight').value)||15;
   const aw=getAirway(w);
   const vt=getVitals(w);
+  const ei=eqIdx(w), eb=EQUIP_LABELS[ei];   // 병원 컨펌표 체중구간 (260810)
   const tvMin=f(w*6), tvMax=f(w*8);
   const defi1=f(w*2), defi2=f(w*4), defiMax=Math.min(f(w*10),200);
 
@@ -1777,17 +2064,39 @@ function updatePeds(){
     </div>
 
     <div class="card">
-      <div class="card-head"><h3 class="cyan">🫁 기도 장비</h3></div>
+      <div class="card-head"><h3 class="cyan">🫁 기도 장비</h3><span class="badge">${eb} 구간</span></div>
       <div class="card-body">
         <table>
           <tr><th>장비</th><th>크기</th></tr>
-          <tr><td class="dim">ETT (커프드)</td><td class="val cyan">${aw.ett}</td></tr>
-          <tr><td class="dim">삽입 깊이</td><td class="val">${aw.depth} cm</td></tr>
-          <tr><td class="dim">후두경</td><td class="val">${aw.laryngo}</td></tr>
-          <tr><td class="dim">OPA</td><td class="val">${aw.opa}</td></tr>
-          <tr><td class="dim">NPA</td><td class="val">${aw.npa}</td></tr>
-          <tr><td class="dim">LMA</td><td class="val">${aw.lma}</td></tr>
+          <tr class="hl"><td class="dim">ETT</td><td class="val cyan">${eqRow('ETT',ei)}</td></tr>
+          <tr><td class="dim">삽입 깊이</td><td class="val">${eqRow('삽입 깊이',ei)}</td></tr>
+          <tr><td class="dim">Stylet</td><td class="val">${eqRow('Stylet',ei)}</td></tr>
+          <tr><td class="dim">후두경</td><td class="val">${eqRow('후두경',ei)}</td></tr>
+          <tr><td class="dim">BVM</td><td class="val">${eqRow('BVM',ei)}</td></tr>
+          <tr><td class="dim">OPA</td><td class="val">${eqRow('OPA',ei)}</td></tr>
+          <tr><td class="dim">NPA</td><td class="val">${eqRow('NPA',ei)}</td></tr>
+          <tr><td class="dim">LMA</td><td class="val">${eqRow('LMA',ei)}</td></tr>
+          <tr><td class="dim">O₂ 마스크</td><td class="val">${eqRow('O₂ 마스크',ei)}</td></tr>
+          <tr><td class="dim">ETCO₂</td><td class="val">${eqRow('ETCO₂',ei)}</td></tr>
         </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">출처: <b>병원 컨펌표 260810</b> (체중 11구간). ⚠️ 원내 실제 보유 규격과 대조 필요</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="cyan">🩺 튜브 · 정맥로 · 커프</h3><span class="badge">${eb} 구간</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>장비</th><th>크기</th></tr>
+          <tr><td class="dim">정맥로 게이지</td><td class="val">${eqRow('정맥로 게이지',ei)}</td></tr>
+          <tr class="hl"><td class="dim">골내주사 (IO)</td><td class="val cyan">${eqRow('골내주사(IO)',ei)}</td></tr>
+          <tr><td class="dim">흡인 카테터</td><td class="val">${eqRow('흡인 카테터',ei)}</td></tr>
+          <tr><td class="dim">L-tube (NG)</td><td class="val">${eqRow('L-tube(NG)',ei)}</td></tr>
+          <tr><td class="dim">도뇨관</td><td class="val">${eqRow('도뇨관',ei)}</td></tr>
+          <tr><td class="dim">흉관</td><td class="val">${eqRow('흉관',ei)}</td></tr>
+          <tr><td class="dim">혈압 커프</td><td class="val">${eqRow('혈압 커프',ei)}</td></tr>
+        </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">출처: <b>병원 컨펌표 260810</b>. IO는 3~5kg 구간이 원문에 <b>「?」</b>로 비어 있다 — 병원 확인 필요</div>
       </div>
     </div>
 
@@ -1843,7 +2152,7 @@ function updatePeds(){
           <tr><td class="dim">Levetiracetam IV (60mg/kg) 2차<span class="spec">Keppra 500mg/5mL</span></td><td><span class="val">${f(w*60)} mg</span></td></tr>
           <tr><td class="dim">Valproate IV (30mg/kg) 2차<span class="spec">Orfil 300mg/3mL</span></td><td><span class="val">${f(w*30)} mg</span></td></tr>
           <tr><td class="dim">Lacosamide IV 2차<span class="spec">Vimsk 200mg/20mL · 응급실 비치</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Diazepam IV<span class="spec">10mg/2mL · 응급실 비치</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr><td class="dim">Diazepam IV<span class="spec">10mg/2mL · 응급실 비치 · max 10mg (출처 공통)</span><span class="conflict">출처 불일치 — OHSU 0.1~0.2mg/kg IV / UNC 0.1~0.3mg/kg IV / 설계서 PR 0.5mg/kg</span></td><td><span class="pend">원내 값 지정</span></td></tr>
         </table>
         <div style="font-size:11px;color:var(--text-dim);margin-top:10px">Phenobarbital 제외 — 원내 보유하나 <b>응급실 미비치</b> (260810 재고 대조)</div>
       </div>
@@ -1856,9 +2165,9 @@ function updatePeds(){
           <tr><th>약물</th><th>용량</th></tr>
           <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IM (대퇴 전외측)</span><br><span style="font-size:11px;color:var(--warn)">★ <b>1:1,000 원액(1mg/mL) 그대로</b> — 희석 X</span></td><td><span class="val orange">${f(Math.min(w*0.01,0.5),2)} mg</span><br><span class="val orange" style="font-size:20px">= ${f(Math.min(w*0.01,0.5),2)} mL</span><br><span class="dim" style="font-size:11px">0.01 mL/kg · max 0.3mg(소아)·0.5mg(청소년)</span></td></tr>
           <tr><td class="dim">수액 볼루스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
-          <tr><td class="dim">Methylprednisolone<span class="spec">Predisol 125mg vial · 응급실 비치 <b>(Hydrocortisone 미보유 → 대체)</b></span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr><td class="dim">Methylprednisolone<span class="spec">Predisol 125mg vial · 응급실 비치 <b>(Hydrocortisone 미보유 → 대체)</b></span><span class="conflict">출처 불일치 — 설계서 1~2mg/kg(max 125mg) / UNC 1~2mg/kg/day(max 60mg/day) / OHSU 2mg/kg×1 → 0.5~1mg/kg q6h</span></td><td><span class="pend">원내 값 지정</span></td></tr>
           <tr><td class="dim">Chlorpheniramine (0.1mg/kg)<span class="spec">4mg/2mL</span></td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
-          <tr><td class="dim">Famotidine (H2 차단)<span class="spec">Gaster 20mg vial · 응급실 비치</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr><td class="dim">Famotidine (H2 차단)<span class="spec">Gaster 20mg vial · 응급실 비치</span><span class="conflict">출처 불일치 — 설계서 0.5~1mg/kg(max 50mg) / UNC 0.25mg/kg(max 40mg/day). 최대 4배 차이</span></td><td><span class="pend">원내 값 지정</span></td></tr>
         </table>
       </div>
     </div>
@@ -1926,44 +2235,44 @@ function updatePeds(){
     </div>
 
     <div class="card">
-      <div class="card-head"><h3 class="cyan">🫁 호흡기 (흡입)</h3><span class="badge badge-pend">용량 미확정</span></div>
+      <div class="card-head"><h3 class="cyan">🫁 호흡기 (흡입)</h3><span class="badge badge-pend">초안 · 검수 대기</span></div>
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr><td class="dim">Salbutamol 네뷸라이저<span class="spec">Ventolin Nebule 2.5mg/2.5mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Ipratropium 네뷸라이저<span class="spec">Atrovent UDV 500mcg/2mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr class="hl"><td class="dim">Salbutamol 네뷸라이저 (0.15mg/kg, 최소 2.5mg)<span class="spec">Ventolin Nebule 2.5mg/2.5mL · 옴니셀 20 · 비품 6<br>q20분 ×3회 → 필요시 q1시간 · 지속 5~15mg/hr</span></td><td><span class="val">${f(Math.max(w*0.15,2.5),2)} mg</span><span class="chip-draft">초안</span></td></tr>
+          <tr><td class="dim">Ipratropium 네뷸라이저<span class="spec">Atrovent UDV 500mcg/2mL · 옴니셀 20 · 비품 6</span><span class="conflict">외부 표준표는 Albuterol 조합제형(Duoneb 3mL) 기준 — 원내는 단독 제형이라 그대로 못 씀</span></td><td><span class="pend">확인 필요</span></td></tr>
           <tr><td class="dim">Budesonide 네뷸라이저<span class="spec">Pulmicort respule 0.5mg/2mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
           <tr><td class="dim">Acetylcysteine<span class="spec">Mucomyst 20% 4mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
         </table>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">응급실 비치가 확인된 약물이다. <b>소아 용량 근거가 아직 없어 비워 둔다</b> — 추정치를 넣지 않는다.</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px"><b>초안</b> = 외부 표준 투약표(설계서·UNC·OHSU) 값. <b>원내 컨펌 아님</b> → 소아약물_용량초안_검수표_260810.md</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-head"><h3 class="green">🧪 해독 · 역전</h3><span class="badge badge-pend">용량 미확정</span></div>
+      <div class="card-head"><h3 class="green">🧪 해독 · 역전</h3><span class="badge badge-pend">초안 · 검수 대기</span></div>
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr><td class="dim">Naloxone <span class="dim">(마약 역전)</span><span class="spec">0.4mg/mL · ★ 재고 목록엔 없으나 실물 보유 확인 (260810)</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Flumazenil <span class="dim">(벤조 역전)</span><span class="spec">Flunil 0.5mg/5mL · 옴니셀 2 · 비품 2</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">활성탄 <span class="dim">(경구 중독)</span><span class="spec">New Heuk powder 50g · 실물 보유 확인 (260810)</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr class="hl"><td class="dim">Naloxone (0.1mg/kg) <span class="dim">마약 역전</span><span class="spec">0.4mg/mL · ★ 재고 목록엔 없으나 실물 보유 확인 (260810)<br>30초에 걸쳐 IV · q2~3분 반복 · 알칼리 용액 혼합 금지</span></td><td><span class="val">${f(Math.min(w*0.1,2),2)} mg</span><span class="chip-draft">초안</span><br><span class="val" style="font-size:18px">= ${f(Math.min(w*0.1,2)/0.4,2)} mL</span><br><span class="dim" style="font-size:11px">1회 max 2mg</span></td></tr>
+          <tr><td class="dim">Flumazenil (0.01mg/kg) <span class="dim">벤조 역전</span><span class="spec">Flunil 0.5mg/5mL(0.1mg/mL) · 옴니셀 2 · 비품 2<br>q1분 반복 · 누적 max 0.05mg/kg 또는 1mg 중 낮은 쪽</span><span class="conflict">★ 만성 벤조 복용자·경련 환자 금기</span></td><td><span class="val">${f(Math.min(w*0.01,0.2),3)} mg</span><span class="chip-draft">초안</span><br><span class="dim" style="font-size:11px">1회 max 0.2mg<br>누적 max ${f(Math.min(w*0.05,1),2)} mg</span></td></tr>
+          <tr><td class="dim">활성탄 (0.5~1g/kg) <span class="dim">경구 중독</span><span class="spec">New Heuk powder 50g · 실물 보유 확인 (260810)<br>★ sorbitol 없는 제형 · 섭취 1시간 이내</span></td><td><span class="val">${f(w*0.5)}~${f(w*1)} g</span><span class="chip-draft">초안</span></td></tr>
         </table>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-head"><h3 class="yellow">🏥 응급실 비치 — 용량 미확정</h3><span class="badge badge-pend">용량 미확정</span></div>
+      <div class="card-head"><h3 class="yellow">🏥 응급실 비치 — 기타</h3><span class="badge badge-pend">초안 · 검수 대기</span></div>
       <div class="card-body">
         <table>
           <tr><th>약물 · 원내 규격</th><th>용량</th></tr>
-          <tr><td class="dim">Vasopressin<span class="spec">Ssopresin 20unit/1mL · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Vitamin K1<span class="spec">10mg/1mL · 옴니셀 10</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr class="hl"><td class="dim">Dextrose 10% <span class="dim">저혈당</span><span class="spec">D10W 1000mL bag · 비품 10 · Glucose 0.5g/kg 기준</span></td><td><span class="val">${f(w*5)} mL</span><span class="chip-draft">초안</span><br><span class="dim" style="font-size:11px">5 mL/kg · max 25g</span></td></tr>
+          <tr><td class="dim">Mannitol (0.25~1g/kg)<span class="spec">20% 100mL · 비품 5 · 20분에 걸쳐 · ★5μm 미만 필터<br>저혈량 아닌지 먼저 확인</span></td><td><span class="val">${f(w*0.25)}~${f(w*1)} g</span><span class="chip-draft">초안</span></td></tr>
+          <tr><td class="dim">Insulin (속효성)<span class="spec">Humulin R 100IU/mL · 비품 3<br>DKA: ★볼루스 금지 · 고칼륨: Glucose 0.5g/kg 병용</span></td><td><span class="val">DKA ${f(w*0.05,2)} U/hr</span><span class="chip-draft">초안</span><br><span class="dim" style="font-size:11px">0.05 U/kg/hr 지속주입<br>고칼륨 ${f(Math.min(w*0.1,10),1)} U (max 10U)</span></td></tr>
+          <tr><td class="dim">Vitamin K1 <span class="dim">신생아 예방</span><span class="spec">10mg/1mL · 옴니셀 10 · ★체중 비례 아님 (고정 용량)</span></td><td><span class="val">0.5~1 mg IM</span><span class="chip-draft">초안</span><br><span class="dim" style="font-size:11px">출생체중 &gt;1500g는 1mg · 1회</span></td></tr>
           <tr><td class="dim">Potassium chloride <span class="dim">★ 반드시 희석 후 투여</span><span class="spec">KCl 15% 40mEq/20mL · 옴니셀 10</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Insulin (속효성)<span class="spec">Humulin R 100IU/mL · 비품 3</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Mannitol<span class="spec">20% 100mL · 비품 5</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Dextrose 10% <span class="dim">(저혈당)</span><span class="spec">D10W 1000mL bag · 비품 10</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr><td class="dim">Vasopressin<span class="spec">Ssopresin 20unit/1mL · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
         </table>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">원내 보유·규격은 확인됐고 <b>소아 용량만 미확정</b>이다. 용량이 정해지면 각 상황 카드로 옮긴다.</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px"><b>초안</b> = 외부 표준 투약표 값, <b>원내 컨펌 아님</b>. KCl·Vasopressin은 표준표에 없어 비워 둠</div>
       </div>
     </div>
 

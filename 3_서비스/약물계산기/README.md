@@ -36,7 +36,13 @@
   - [x] 규격 확정 — Midazolam(5mg/5mL·15mg/3mL) · Lidocaine(1%·2%) · Morphine(5mg/5mL) · Fentanyl(50mcg/mL) · **칼슘 = Ca gluconate 단독**(CaCl 미비치)
   - [x] **소아 CIV 해결 실마리** — 응급실에 **Dopamix 400mg/200mL · Dobutamine/D5W 500mg/250mL 프리믹스** 비치, **둘 다 2,000mcg/mL 동일 농도** → 조제 없이 계산 가능
   - [x] **★ 앱 반영 완료** (260810) — 소아 카드 **14 → 17개**. 제거 5건(Succinylcholine·Propofol·Phenobarbital·Hydrocortisone·Promethazine 문구) / 신규 3카드(**🫁호흡기 · 🧪해독·역전 · 🏥응급실 비치**) + 경련·아나필락시스 행 추가. 각 약물에 **원내 규격·비치수량 병기**, 용량 미확정은 `⬜ 용량 확인 필요`(21곳). JavaScriptCore 검증 통과 · 게시본 재생성
-  - [ ] **★★ 칩스 — 추가된 14항목 소아 용량 작성 필요** (앱에 `⬜`로 비어 있음): Ventolin·Atrovent·Pulmicort·Mucomyst · Naloxone·Flumazenil·활성탄 · Methylprednisolone·Famotidine · Lacosamide·Diazepam · Vasopressin·Vitamin K1·KCl·Insulin·Mannitol·D10W
+  - [x] **장비 반영** (260810) — 병원 컨펌표 Equipment 17행 → `PEDS_EQUIP`(체중 11구간). 기도 장비 카드 교체 + **「🩺 튜브·정맥로·커프」 카드 신설**(도뇨관·흉관·L-tube·정맥로 게이지·IO·혈압 커프·흡인 카테터). 카드 17→18
+  - [x] **용량 초안 확보** (260810) — `소아약물_용량초안_검수표_260810.md`. 설계서(AHA PALS 근거) + [UNC 소아 IV push ED 표] + [OHSU 소아응급 포켓카드] + AAP 교차 대조. **8항목 초안 반영**(앱에 `초안` 배지) · **4항목 출처 불일치로 계산 보류** · **5항목 근거 미확보**
+  - [ ] **★★ 칩스·약제부 검수 — `소아약물_용량초안_검수표_260810.md` §8 체크리스트**
+    - 초안 8건 원내 채택 여부: Naloxone 0.1mg/kg · Flumazenil 0.01mg/kg · 활성탄 0.5~1g/kg · Mannitol 0.25~1g/kg · Salbutamol 0.15mg/kg · Insulin DKA 0.05U/kg/hr · D10W 5mL/kg · Vitamin K1 0.5~1mg(고정)
+    - **출처 불일치 4건 원내 값 지정 필요**: Methylprednisolone · Famotidine · Diazepam · Ipratropium(원내는 단독 제형)
+    - 근거 미확보 5건: Budesonide · Mucomyst · KCl · Vasopressin · Lacosamide
+    - **★ 기존 앱 값 이상 7건**: Ketorolac max 30↔15mg · Ondansetron 0.15↔0.1mg/kg · Midazolam 진정 **상한 없음** · Atropine **총 최대치 없음** · Rocuronium 1.2↔1mg/kg · Dexamethasone 크룹 0.6mg/kg 누락 · 유지수액 4-2-1 일치 확인
   - [ ] ★ 칩스 실물 확인 대기 — Hydrocortisone · 3% NaCl (**Naloxone 0.4mg/mL·활성탄은 보유 확인됨** — 두 목록에 없으나 실물 있음)
   - [ ] **★ 기도 장비 목록 필요** — 약품 목록엔 장비가 없어 기도 카드 확정 불가 (앱 NPA 3.5Fr ↔ 컨펌표 14Fr 등 4배 차이 판정 불가) → 현재 앱 값 유지 + `⬜ 미확인` 배지
   - [ ] 반영 결정(260810 칩스) — 원내 미보유 근이완제 5행 제외(Rocuronium 단독) · 표는 mg만 채택하고 **ml은 원내 앰플 농도로 앱이 재계산** · 칼슘은 **Ca gluconate 10% 2g/20mL**(원내 보유분)
