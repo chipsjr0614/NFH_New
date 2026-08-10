@@ -111,6 +111,11 @@ input,select,button,textarea{font-family:inherit}
 .info-card{padding:18px}
 .badge{font-size:var(--fs-cap);padding:4px 11px;border-radius:var(--r-sm);font-weight:700;
   background:var(--surface-2);color:var(--text-mid);white-space:nowrap}
+/* ⬜ 용량 미확정 — 원내 보유는 확인됐으나 용량 근거가 없는 항목.
+   ★ 숫자를 지어내지 않는다. 빈칸이 틀린 숫자보다 안전하다. */
+.pend{color:var(--warn);font-weight:650;font-size:var(--fs-body)}
+.badge-pend{background:var(--warn-bg);color:var(--warn)}
+.spec{display:block;font-size:11px;color:var(--text-dim);font-weight:400;margin-top:3px}
 
 /* ── 섹션 헤더 ── */
 .sec-head{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.09em;
@@ -1835,10 +1840,12 @@ function updatePeds(){
           <tr><th>약물 (단계)</th><th>용량</th></tr>
           <tr class="hl"><td class="dim">Midazolam IN (0.2mg/kg) 1차</td><td><span class="val purple">${f(w*0.2)} mg</span></td></tr>
           <tr><td class="dim">Lorazepam IV (0.1mg/kg) 1차</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
-          <tr><td class="dim">Levetiracetam IV (60mg/kg) 2차</td><td><span class="val">${f(w*60)} mg</span></td></tr>
-          <tr><td class="dim">Valproate IV (30mg/kg) 2차</td><td><span class="val">${f(w*30)} mg</span></td></tr>
-          <tr><td class="dim">Phenobarbital IV (20mg/kg) 2차</td><td><span class="val">${f(w*20)} mg</span></td></tr>
+          <tr><td class="dim">Levetiracetam IV (60mg/kg) 2차<span class="spec">Keppra 500mg/5mL</span></td><td><span class="val">${f(w*60)} mg</span></td></tr>
+          <tr><td class="dim">Valproate IV (30mg/kg) 2차<span class="spec">Orfil 300mg/3mL</span></td><td><span class="val">${f(w*30)} mg</span></td></tr>
+          <tr><td class="dim">Lacosamide IV 2차<span class="spec">Vimsk 200mg/20mL · 응급실 비치</span></td><td><span class="pend">⬜ 용량 확인 필요</span></td></tr>
+          <tr><td class="dim">Diazepam IV<span class="spec">10mg/2mL · 응급실 비치</span></td><td><span class="pend">⬜ 용량 확인 필요</span></td></tr>
         </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">Phenobarbital 제외 — 원내 보유하나 <b>응급실 미비치</b> (260810 재고 대조)</div>
       </div>
     </div>
 
@@ -1849,8 +1856,9 @@ function updatePeds(){
           <tr><th>약물</th><th>용량</th></tr>
           <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IM (대퇴 전외측)</span><br><span style="font-size:11px;color:var(--warn)">★ <b>1:1,000 원액(1mg/mL) 그대로</b> — 희석 X</span></td><td><span class="val orange">${f(Math.min(w*0.01,0.5),2)} mg</span><br><span class="val orange" style="font-size:20px">= ${f(Math.min(w*0.01,0.5),2)} mL</span><br><span class="dim" style="font-size:11px">0.01 mL/kg · max 0.3mg(소아)·0.5mg(청소년)</span></td></tr>
           <tr><td class="dim">수액 볼루스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
-          <tr><td class="dim">Hydrocortisone (1mg/kg)</td><td><span class="val">${f(w*1)} mg</span></td></tr>
-          <tr><td class="dim">Chlorpheniramine (0.1mg/kg)</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
+          <tr><td class="dim">Methylprednisolone<span class="spec">Predisol 125mg vial · 응급실 비치 <b>(Hydrocortisone 미보유 → 대체)</b></span></td><td><span class="pend">⬜ 용량 확인 필요</span></td></tr>
+          <tr><td class="dim">Chlorpheniramine (0.1mg/kg)<span class="spec">4mg/2mL</span></td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
+          <tr><td class="dim">Famotidine (H2 차단)<span class="spec">Gaster 20mg vial · 응급실 비치</span></td><td><span class="pend">⬜ 용량 확인 필요</span></td></tr>
         </table>
       </div>
     </div>
@@ -1868,10 +1876,10 @@ function updatePeds(){
           <tr><th>약물</th><th>용량</th></tr>
           <tr><td class="dim">Atropine 전처치 (0.02mg/kg)</td><td><span class="val">${f(Math.max(Math.min(w*0.02,0.5),0.1),2)} mg</span> <span class="dim">min 0.1mg</span></td></tr>
           <tr class="hl"><td class="dim">Ketamine 유도 (1-2mg/kg)</td><td><span class="val cyan">${f(w*1)}-${f(w*2)} mg</span></td></tr>
-          <tr class="hl"><td class="dim">Rocuronium (1.2mg/kg)</td><td><span class="val cyan">${f(w*1.2)} mg</span></td></tr>
-          <tr><td class="dim">Succinylcholine (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
-          <tr><td class="dim">Midazolam 보조 (0.1mg/kg)</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
+          <tr class="hl"><td class="dim">Rocuronium (1.2mg/kg)<span class="spec">Rocumeron 10mg/mL · <b>응급실 유일 근이완제</b> · ⬜ 원내 기준 1 vs 1.2mg/kg 확인</span></td><td><span class="val cyan">${f(w*1.2)} mg</span></td></tr>
+          <tr><td class="dim">Midazolam 보조 (0.1mg/kg)<span class="spec">5mg/5mL(1mg/mL) · 15mg/3mL(5mg/mL)</span></td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
         </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">Succinylcholine 제외 — <b>원내 미보유</b>. Propofol 제외 — 원내 보유하나 <b>응급실 미비치</b> (260810 재고 대조)</div>
       </div>
     </div>
 
@@ -1898,10 +1906,10 @@ function updatePeds(){
           <tr class="hl"><td class="dim">Midazolam IV (0.05-0.1mg/kg)</td><td><span class="val purple">${f(w*0.05,2)}-${f(w*0.1,2)} mg</span></td></tr>
           <tr><td class="dim">Midazolam IN (0.2-0.3mg/kg)</td><td><span class="val">${f(w*0.2)}-${f(w*0.3)} mg</span></td></tr>
           <tr><td class="dim">Ketamine IV 해리진정 (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
-          <tr><td class="dim">Ketamine IM (4-5mg/kg)</td><td><span class="val">${f(w*4)}-${f(w*5)} mg</span></td></tr>
-          <tr><td class="dim">Propofol IV (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
-          <tr><td class="dim">Dexmedetomidine loading (0.5-1mcg/kg)</td><td><span class="val">${f(w*0.5)}-${f(w*1)} mcg</span></td></tr>
+          <tr><td class="dim">Ketamine IM (4-5mg/kg)<span class="spec">250mg/5mL(50mg/mL)</span></td><td><span class="val">${f(w*4)}-${f(w*5)} mg</span></td></tr>
+          <tr><td class="dim">Dexmedetomidine loading (0.5-1mcg/kg)<span class="spec">Precedex Premix 400mcg/100mL (4mcg/mL)</span></td><td><span class="val">${f(w*0.5)}-${f(w*1)} mcg</span></td></tr>
         </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">Propofol 제외 — 원내 보유하나 <b>응급실 미비치</b> (260810 재고 대조)</div>
       </div>
     </div>
 
@@ -1912,9 +1920,50 @@ function updatePeds(){
           <tr><th>약물</th><th>용량</th></tr>
           <tr class="hl"><td class="dim">Ondansetron IV (0.15mg/kg)</td><td><span class="val yellow">${f(Math.min(w*0.15,8),1)} mg</span> <span class="dim">max 8mg</span></td></tr>
           <tr><td class="dim">Metoclopramide IV (0.1mg/kg)</td><td><span class="val">${f(Math.min(w*0.1,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
-          <tr><td class="dim">Dexamethasone IV (0.15mg/kg)</td><td><span class="val">${f(Math.min(w*0.15,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
+          <tr><td class="dim">Dexamethasone IV (0.15mg/kg)<span class="spec">5mg/1mL</span></td><td><span class="val">${f(Math.min(w*0.15,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
         </table>
-        <div style="font-size:11px;color:var(--danger);margin-top:10px">⚠️ Promethazine: 2세 미만 FDA 흑색경고 — 금기</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="cyan">🫁 호흡기 (흡입)</h3><span class="badge badge-pend">⬜ 용량 확인 필요</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr><td class="dim">Salbutamol 네뷸라이저<span class="spec">Ventolin Nebule 2.5mg/2.5mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+          <tr><td class="dim">Ipratropium 네뷸라이저<span class="spec">Atrovent UDV 500mcg/2mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+          <tr><td class="dim">Budesonide 네뷸라이저<span class="spec">Pulmicort respule 0.5mg/2mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+          <tr><td class="dim">Acetylcysteine<span class="spec">Mucomyst 20% 4mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+        </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">응급실 비치가 확인된 약물이다. <b>소아 용량 근거가 아직 없어 비워 둔다</b> — 추정치를 넣지 않는다.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="green">🧪 해독 · 역전</h3><span class="badge badge-pend">⬜ 용량 확인 필요</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물</th><th>용량</th></tr>
+          <tr><td class="dim">Naloxone <span class="dim">(마약 역전)</span><span class="spec">0.4mg/mL · ★ 재고 목록엔 없으나 실물 보유 확인 (260810)</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+          <tr><td class="dim">Flumazenil <span class="dim">(벤조 역전)</span><span class="spec">Flunil 0.5mg/5mL · 옴니셀 2 · 비품 2</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+          <tr><td class="dim">활성탄 <span class="dim">(경구 중독)</span><span class="spec">New Heuk powder 50g · 실물 보유 확인 (260810)</span></td><td><span class="pend">⬜ 확인 필요</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3 class="yellow">🏥 응급실 비치 — 용량 미확정</h3><span class="badge badge-pend">⬜ 확인 필요</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>약물 · 원내 규격</th><th>용량</th></tr>
+          <tr><td class="dim">Vasopressin<span class="spec">Ssopresin 20unit/1mL · 비품 6</span></td><td><span class="pend">⬜</span></td></tr>
+          <tr><td class="dim">Vitamin K1<span class="spec">10mg/1mL · 옴니셀 10</span></td><td><span class="pend">⬜</span></td></tr>
+          <tr><td class="dim">Potassium chloride <span class="dim">★ 반드시 희석 후 투여</span><span class="spec">KCl 15% 40mEq/20mL · 옴니셀 10</span></td><td><span class="pend">⬜</span></td></tr>
+          <tr><td class="dim">Insulin (속효성)<span class="spec">Humulin R 100IU/mL · 비품 3</span></td><td><span class="pend">⬜</span></td></tr>
+          <tr><td class="dim">Mannitol<span class="spec">20% 100mL · 비품 5</span></td><td><span class="pend">⬜</span></td></tr>
+          <tr><td class="dim">Dextrose 10% <span class="dim">(저혈당)</span><span class="spec">D10W 1000mL bag · 비품 10</span></td><td><span class="pend">⬜</span></td></tr>
+        </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">원내 보유·규격은 확인됐고 <b>소아 용량만 미확정</b>이다. 용량이 정해지면 각 상황 카드로 옮긴다.</div>
       </div>
     </div>
 
@@ -1937,6 +1986,7 @@ function updatePeds(){
           <tr><td class="dim">DKA 초기 (10-20ml/kg)</td><td><span class="val">${f(w*10)}-${f(w*20)} ml <span class="dim">뇌부종 주의</span></span></td></tr>
           <tr><td class="dim">신생아 소생 (10ml/kg)</td><td><span class="val">${f(w*10)} ml</span></td></tr>
         </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">응급실 보유 백 — <b>N/S 50 · 100 · 250 · 500 · 3000mL</b> / Hartmann 1L / Plasma solution A 500mL · 1L / D10W 1L</div>
       </div>
     </div>
 
@@ -1957,7 +2007,7 @@ function updatePeds(){
     </div>
 
     <div class="card">
-      <div class="card-head bg-red"><h3 class="red">🩸 쇼크별 수액 전략</h3></div>
+      <div class="card-head bg-red"><h3 class="red">🩸 쇼크별 수액 전략</h3><span class="badge badge-pend">⬜ 상한 미컨펌</span></div>
       <div class="card-body">
         <table>
           <tr><th>쇼크 유형</th><th>전략</th></tr>

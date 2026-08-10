@@ -35,8 +35,8 @@
   - [x] **원내 보유 대조 v2** (260810) — `소아약물_원내보유대조표_260810.md`. **응급실 요청 목록(`refs/입고예정약품- 응급실요청20260608.xlsx` · 134건 · 옴니셀/비품/현재입고량)을 1차 정본으로 채택**. 정본 순서: 응급실 > 원내전체 > 컨펌표 > 현재 앱
   - [x] 규격 확정 — Midazolam(5mg/5mL·15mg/3mL) · Lidocaine(1%·2%) · Morphine(5mg/5mL) · Fentanyl(50mcg/mL) · **칼슘 = Ca gluconate 단독**(CaCl 미비치)
   - [x] **소아 CIV 해결 실마리** — 응급실에 **Dopamix 400mg/200mL · Dobutamine/D5W 500mg/250mL 프리믹스** 비치, **둘 다 2,000mcg/mL 동일 농도** → 조제 없이 계산 가능
-  - [ ] **★ 앱에서 뺄 것 5건** — Hydrocortisone(→**Methylprednisolone Predisol 125mg** 교체) · Succinylcholine(제외 확정) · **Propofol·Phenobarbital(원내엔 있으나 응급실 미비치)** · Promethazine(금기 문구 삭제 검토)
-  - [ ] **★ 앱에 추가할 것** — **호흡기 카드 신설**(Ventolin·Atrovent·**Pulmicort**) · Famotidine(아나필락시스 H2) · **Lacosamide**(경련, Phenobarbital 대안) · D10W(저혈당) · Flumazenil·Diazepam·Vitamin K1·KCl·Insulin·Vasopressin·Mannitol
+  - [x] **★ 앱 반영 완료** (260810) — 소아 카드 **14 → 17개**. 제거 5건(Succinylcholine·Propofol·Phenobarbital·Hydrocortisone·Promethazine 문구) / 신규 3카드(**🫁호흡기 · 🧪해독·역전 · 🏥응급실 비치**) + 경련·아나필락시스 행 추가. 각 약물에 **원내 규격·비치수량 병기**, 용량 미확정은 `⬜ 용량 확인 필요`(21곳). JavaScriptCore 검증 통과 · 게시본 재생성
+  - [ ] **★★ 칩스 — 추가된 14항목 소아 용량 작성 필요** (앱에 `⬜`로 비어 있음): Ventolin·Atrovent·Pulmicort·Mucomyst · Naloxone·Flumazenil·활성탄 · Methylprednisolone·Famotidine · Lacosamide·Diazepam · Vasopressin·Vitamin K1·KCl·Insulin·Mannitol·D10W
   - [ ] ★ 칩스 실물 확인 대기 — Hydrocortisone · 3% NaCl (**Naloxone 0.4mg/mL·활성탄은 보유 확인됨** — 두 목록에 없으나 실물 있음)
   - [ ] **★ 기도 장비 목록 필요** — 약품 목록엔 장비가 없어 기도 카드 확정 불가 (앱 NPA 3.5Fr ↔ 컨펌표 14Fr 등 4배 차이 판정 불가) → 현재 앱 값 유지 + `⬜ 미확인` 배지
   - [ ] 반영 결정(260810 칩스) — 원내 미보유 근이완제 5행 제외(Rocuronium 단독) · 표는 mg만 채택하고 **ml은 원내 앰플 농도로 앱이 재계산** · 칼슘은 **Ca gluconate 10% 2g/20mL**(원내 보유분)
