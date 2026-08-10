@@ -32,6 +32,13 @@
   - [x] **1차 컨펌 파일 접수** (260810) — `refs/병원컨펌_소아_260810/` (출처: 병원). 체중 11구간 × 장비·소생·RSI. **검산으로 오류 3건 검출**(Epi IV 6-7kg 10배 · 심율동전환 3열 2배 · Epi ET 라벨) → 해당 칸만 비운 채 진행, `병원질의서_소아표_260810.md` 작성
   - [ ] **★ 병원 질의 회신 대기** — 오류 3건 정정 · Atropine/NaHCO₃ 희석 여부 · 근이완제 실보유 · 소아 기준 규격
   - [ ] **★ 수액 상한 자료 미확보** — 1차 컨펌 파일에 수액이 없음. 볼루스 상한·누적 상한·유지수액 캡 자료 추가 요청 필요
+  - [x] **원내 보유 대조 v2** (260810) — `소아약물_원내보유대조표_260810.md`. **응급실 요청 목록(`refs/입고예정약품- 응급실요청20260608.xlsx` · 134건 · 옴니셀/비품/현재입고량)을 1차 정본으로 채택**. 정본 순서: 응급실 > 원내전체 > 컨펌표 > 현재 앱
+  - [x] 규격 확정 — Midazolam(5mg/5mL·15mg/3mL) · Lidocaine(1%·2%) · Morphine(5mg/5mL) · Fentanyl(50mcg/mL) · **칼슘 = Ca gluconate 단독**(CaCl 미비치)
+  - [x] **소아 CIV 해결 실마리** — 응급실에 **Dopamix 400mg/200mL · Dobutamine/D5W 500mg/250mL 프리믹스** 비치, **둘 다 2,000mcg/mL 동일 농도** → 조제 없이 계산 가능
+  - [ ] **★ 앱에서 뺄 것 5건** — Hydrocortisone(→**Methylprednisolone Predisol 125mg** 교체) · Succinylcholine(제외 확정) · **Propofol·Phenobarbital(원내엔 있으나 응급실 미비치)** · Promethazine(금기 문구 삭제 검토)
+  - [ ] **★ 앱에 추가할 것** — **호흡기 카드 신설**(Ventolin·Atrovent·**Pulmicort**) · Famotidine(아나필락시스 H2) · **Lacosamide**(경련, Phenobarbital 대안) · D10W(저혈당) · Flumazenil·Diazepam·Vitamin K1·KCl·Insulin·Vasopressin·Mannitol
+  - [ ] ★ 칩스 실물 확인 대기 — Hydrocortisone · 3% NaCl (**Naloxone 0.4mg/mL·활성탄은 보유 확인됨** — 두 목록에 없으나 실물 있음)
+  - [ ] **★ 기도 장비 목록 필요** — 약품 목록엔 장비가 없어 기도 카드 확정 불가 (앱 NPA 3.5Fr ↔ 컨펌표 14Fr 등 4배 차이 판정 불가) → 현재 앱 값 유지 + `⬜ 미확인` 배지
   - [ ] 반영 결정(260810 칩스) — 원내 미보유 근이완제 5행 제외(Rocuronium 단독) · 표는 mg만 채택하고 **ml은 원내 앰플 농도로 앱이 재계산** · 칼슘은 **Ca gluconate 10% 2g/20mL**(원내 보유분)
   - [ ] ★ 확인 — 소아 Norepinephrine 농도(설계서 16mcg/ml vs V4 확정 20mcg/ml 충돌)
 - [ ] **★★ 약제부 최종 확인 (Actilyse)** — 희석(N/S 200ml)·dial(250)·Bolus 투여자 역할
