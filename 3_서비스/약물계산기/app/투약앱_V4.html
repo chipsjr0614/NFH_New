@@ -665,10 +665,12 @@ tr.hl .val{color:var(--accent);font-weight:700}
     <div class="sub-tab active" onclick="showSub('emerg')">🚨 응급</div>
     <div class="sub-tab" onclick="showSub('drugs')">💊 약물</div>
     <div class="sub-tab" onclick="showSub('fluids')">💧 수액</div>
+    <div class="sub-tab" onclick="showSub('civ')">💉 지속주입</div>
   </div>
   <div id="sub-emerg" class="sub-panel active"></div>
   <div id="sub-drugs" class="sub-panel"></div>
   <div id="sub-fluids" class="sub-panel"></div>
+  <div id="sub-civ" class="sub-panel"></div>
 </div>
 
 <div id="tab-abx" class="panel">
@@ -987,6 +989,45 @@ const AIRWAY_TABLE = [
 // ── 소아 장비 (병원 컨펌표 260810 · 체중 11구간) ──
 // 출처: refs/병원컨펌_소아_260810/소아응급_체중구간표_병원컨펌_260810.xlsx
 const EQUIP_BANDS=[3.5, 4.5, 5.5, 7.5, 9.5, 11.5, 14.5, 18.5, 23.5, 29.5, 9999];
+/* ── 소아 지속주입(CIV) ───────────────────────────────────────────────
+   ml/hr = mcg/kg/min × 체중(kg) × 60 ÷ 농도(mcg/mL)
+
+   ★ conc(농도) 또는 steps(용량 눈금)가 null인 약물은 계산하지 않는다.
+     지어낸 숫자보다 빈칸이 안전하다. 확정되면 이 배열에 값만 넣으면
+     화면·계산이 함께 살아난다 — 렌더 코드는 건드릴 필요 없다.
+
+   농도 출처 : 응급실 요청목록 260810 (프리믹스 실물 비치 확인)
+   범위 출처 : OHSU 소아응급 포켓카드
+   미확정    : 소아과교수_질의서_260811.md Q27~Q29                      */
+const PEDS_CIV=[
+  { id:'dopamine', name:'Dopamine', kr:'도파민',
+    prep:'Dopamix 400mg/200mL 프리믹스', conc:2000,
+    range:[2,20], steps:[2,5,10,15,20], def:10,
+    note:'프리믹스 그대로 사용 — <b>조제 불필요</b>',
+    ask:null },
+
+  { id:'dobutamine', name:'Dobutamine', kr:'도부타민',
+    prep:'DoBUtamine/D5W 500mg/250mL 프리믹스', conc:2000,
+    range:null, steps:null, def:null,
+    note:'농도는 Dopamix와 <b>동일한 2,000mcg/mL</b> — 원내 소아 용량 범위만 확정되면 바로 계산 가능',
+    ask:{q:28, why:'소아 용량 범위(mcg/kg/min) 미지정'} },
+
+  { id:'epinephrine', name:'Epinephrine', kr:'에피네프린',
+    prep:'1mg/1mL 앰플만 보유 — 프리믹스 없음', conc:null,
+    range:[0.01,0.1], steps:null, def:null,
+    note:'용량 범위는 확보(쇼크 0.01~0.1 mcg/kg/min) — <b>원내 희석법이 없어</b> ml/hr을 낼 수 없다',
+    ask:{q:29, why:'소아용 희석 농도 미지정'} },
+
+  { id:'norepinephrine', name:'Norepinephrine', kr:'노르에피네프린',
+    prep:'Norpin 4mg/4mL', conc:null,
+    range:[0.05,1], steps:null, def:null,
+    note:'★ <b>농도가 충돌한다</b> — 설계서는 소아 16mcg/mL, 성인 V4는 20mcg/mL로 확정. 어느 쪽인지 정해져야 계산 가능',
+    ask:{q:27, why:'소아 농도 16 ↔ 20 mcg/mL 충돌'} }
+];
+/* ★ 소아 전용 계산 함수를 만들지 않는다 (요구사항정의서 §2.4.2 — 계산 이원화 = 사고 원인).
+   ml/hr 은 성인과 같은 검증된 엔진 calcInfusion(dose,'mcg/kg/min',conc,W) 를 그대로 쓴다.
+   (함수 선언은 호이스팅되므로 정의가 아래(2500행대)에 있어도 호출된다)                */
+
 const EQUIP_LABELS=["3kg", "4kg", "5kg", "6-7kg", "8-9kg", "10-11kg", "12-14kg", "15-18kg", "19-23kg", "24-29kg", "30-36kg"];
 const PEDS_EQUIP=[
  {
@@ -1288,9 +1329,14 @@ function showMain(name){
   var tgt=document.getElementById('tab-'+name); if(tgt) tgt.classList.add('active');
   try{ localStorage.setItem('nfh_tab',name); }catch(e){}
 }
+const PEDS_SUBS=['emerg','drugs','fluids','civ'];
 function showSub(name){
-  document.querySelectorAll('.sub-tab').forEach((t,i)=>t.classList.toggle('active',['emerg','drugs','fluids'][i]===name));
-  ['sub-emerg','sub-drugs','sub-fluids'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  /* ★ '.sub-tab' 은 지속주입 탭의 카테고리 칩(#infuseCatPills)도 함께 잡는다.
+       그 칩들이 DOM 상 소아 탭보다 앞이라 인덱스가 밀려, 소아 서브탭을 눌러도
+       소아 탭 강조가 꺼지고 엉뚱한 칩이 켜졌다 → 소아 탭 안으로 범위를 좁힌다. */
+  document.querySelectorAll('#tab-peds .sub-tab')
+    .forEach((t,i)=>t.classList.toggle('active',PEDS_SUBS[i]===name));
+  PEDS_SUBS.forEach(id=>document.getElementById('sub-'+id).classList.remove('active'));
   document.getElementById('sub-'+name).classList.add('active');
 }
 
@@ -2045,6 +2091,89 @@ function maintenance(w){
 }
 function f(n,d=1){ return parseFloat(n.toFixed(d)); }
 
+/* ── 소아 CIV 화면 ──
+   계산 가능한 약물만 표를 그린다. 나머지는 「무엇이 없어서 못 하는지」를 적는다. */
+function civCard(d,w,maint){
+  const askChip = d.ask ? `<span class="chip-ask ped">🩺 Q${d.ask.q}</span>` : '';
+  const concBadge = d.conc
+    ? `<span class="badge">${d.conc.toLocaleString()} mcg/mL</span>`
+    : `<span class="badge badge-pend">농도 미확정</span>`;
+  const rangeTxt = d.range ? `${d.range[0]}~${d.range[1]} mcg/kg/min` : '<span class="pend">확인 필요</span>';
+
+  // 계산 불가 — 무엇이 비어 있는지만 보여준다
+  if(!d.conc || !d.steps){
+    return `
+    <div class="card">
+      <div class="card-head"><h3>💉 ${d.name} <span class="dim">${d.kr}</span></h3>${concBadge}${askChip}</div>
+      <div class="card-body">
+        <table>
+          <tr><th>항목</th><th>값</th></tr>
+          <tr><td class="dim">원내 제형</td><td class="val" style="font-size:14px">${d.prep}</td></tr>
+          <tr><td class="dim">용량 범위</td><td>${d.range?`<span class="val">${rangeTxt}</span>`:rangeTxt}</td></tr>
+          <tr><td class="dim">주입 속도 (ml/hr)</td><td><span class="pend">계산 불가</span>${askChip}</td></tr>
+        </table>
+        <div class="conflict" style="margin-top:8px">${d.note}</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:6px">막힌 이유: <b>${d.ask.why}</b></div>
+      </div>
+    </div>`;
+  }
+
+  // 계산 가능
+  const rows = d.steps.map(function(mk){
+    const r = calcInfusion(mk,'mcg/kg/min',d.conc,w);
+    const hl = (mk===d.def) ? ' class="hl"' : '';
+    return `<tr${hl}><td class="dim">${mk} mcg/kg/min</td><td><span class="val">${f(r,2)} ml/hr</span></td></tr>`;
+  }).join('');
+  const defRate = calcInfusion(d.def,'mcg/kg/min',d.conc,w);
+  const total = maint + defRate;
+
+  return `
+    <div class="card">
+      <div class="card-head bg-blue"><h3 class="blue">💉 ${d.name} <span class="dim">${d.kr}</span></h3>${concBadge}</div>
+      <div class="card-body">
+        <div class="result-box">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:4px">체중 ${w}kg · ${d.def} mcg/kg/min</div>
+          <div class="big-val">${f(defRate,2)} ml/hr</div>
+        </div>
+        <table>
+          <tr><th>용량</th><th>주입 속도</th></tr>
+          ${rows}
+        </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">
+          ${d.prep} · 범위 ${rangeTxt}<br>${d.note}
+        </div>
+        <div class="conflict" style="margin-top:8px">
+          참고 — 유지수액 ${f(maint,1)} + 이 주입 ${f(defRate,2)} = <b>총 ${f(total,2)} ml/hr</b>.
+          ★ 총 수액 부하 <b>상한이 미컨펌</b>이라 경고를 띄우지 않는다 <span class="chip-ask ped">🩺 Q23~26</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderPedsCIV(w){
+  const maint = parseFloat(maintenance(w));
+  const okCount = PEDS_CIV.filter(function(d){ return d.conc && d.steps; }).length;
+  return `<div class="peds-grid">
+
+    <div class="card">
+      <div class="card-head"><h3>💉 소아 지속주입 — 계산 방식</h3><span class="badge badge-pend">${okCount}/${PEDS_CIV.length} 계산 가능</span></div>
+      <div class="card-body">
+        <div class="result-box">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:4px">계산식</div>
+          <div style="font-family:var(--mono);font-size:15px;font-weight:650;color:var(--accent)">ml/hr = mcg/kg/min × ${w}kg × 60 ÷ 농도(mcg/mL)</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">
+          응급실에 <b>Dopamix 400mg/200mL</b> · <b>DoBUtamine/D5W 500mg/250mL</b> 프리믹스가 있고 <b>둘 다 2,000mcg/mL 동일 농도</b>라 조제 없이 계산합니다.<br>
+          Epinephrine·Norepinephrine은 <b>원내 희석 농도가 정해지지 않아</b> 속도를 내지 못합니다 — 숫자를 지어내지 않았습니다.
+        </div>
+      </div>
+    </div>
+
+    ${PEDS_CIV.map(function(d){ return civCard(d,w,maint); }).join('')}
+
+  </div>`;
+}
+
 function updatePeds(){
   const w=parseFloat(document.getElementById('pedsWeight').value)||15;
   const aw=getAirway(w);
@@ -2302,6 +2431,9 @@ function updatePeds(){
     </div>
 
   </div>`;
+
+  // ── 💉 지속주입 (CIV) ──
+  document.getElementById('sub-civ').innerHTML=renderPedsCIV(w);
 
   // ── 💧 수액 ──
   const maint=maintenance(w);
