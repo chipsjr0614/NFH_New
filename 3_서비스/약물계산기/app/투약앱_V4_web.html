@@ -107,6 +107,14 @@ input,select,button,textarea{font-family:inherit}
 .chip-draft{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;
   background:var(--warn-bg);color:var(--warn);font-weight:700;margin-left:6px;vertical-align:middle}
 .conflict{color:var(--warn);font-weight:650;font-size:11px;line-height:1.6}
+/* 확인 주체 칩 — 이 항목을 누가 확정하는가. 질의서 Q번호를 그대로 노출한다.
+   ★ 경고색(warn)은 임상 위험 표시에만 남긴다 → 주체 칩은 강조색·무채색만 쓴다.
+   🩺 = 소아과 교수 자문 (소아과교수_질의서_260811.md)
+   💊 = 약제부·재고 (병원질의서_소아표_260810.md) */
+.chip-ask{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;
+  border:1px solid var(--border);background:var(--surface-2);color:var(--text-mid);
+  font-weight:700;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.chip-ask.ped{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
 
 /* ── 섹션 헤더 ── */
 .sec-head{font-size:var(--fs-cap);font-weight:700;color:var(--text-dim);letter-spacing:.09em;
@@ -2058,6 +2066,23 @@ function updatePeds(){
   <div class="peds-grid">
 
     <div class="card">
+      <div class="card-head"><h3>🔎 미확정 항목 표시 — 누가 확정하는가</h3><span class="badge badge-pend">29건 회신 대기</span></div>
+      <div class="card-body">
+        <table>
+          <tr><th>표시</th><th>뜻</th></tr>
+          <tr><td><span class="chip-ask ped">🩺 Q0</span></td><td class="dim"><b>소아과 교수 자문 대기</b> — 임상 판단이 필요한 항목. 숫자는 질의서 번호<br><span class="spec">소아과교수_질의서_260811.md</span></td></tr>
+          <tr><td><span class="chip-ask">💊 약제부</span></td><td class="dim"><b>재고·규격·희석 확인 대기</b> — 원내에 무엇이 어떤 농도로 있는지<br><span class="spec">병원질의서_소아표_260810.md</span></td></tr>
+          <tr><td><span class="chip-draft">초안</span></td><td class="dim">외부 표준 투약표에서 가져온 값. <b>원내 컨펌 아님</b></td></tr>
+          <tr><td><span class="pend">확인 필요</span></td><td class="dim">근거가 없어 <b>비워 둔 칸</b>. 숫자를 지어내지 않는다</td></tr>
+        </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">
+          <b>Q1~Q3(병원 컨펌표 수치 오류 3건)</b>은 화면에 칸이 없다 — 앱이 컨펌표 대신 <b>체중 공식으로 직접 계산</b>하고 있어서다.
+          (Epi IV 6-7kg 10배 · 심율동전환 3열 2배 · Epi ET 라벨 1:10,000↔1:1,000)
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-head bg-blue"><h3 class="blue">🌡️ 정상 활력징후</h3><span class="sub">${vt.group}</span></div>
       <div class="card-body">
         <table>
@@ -2087,7 +2112,7 @@ function updatePeds(){
           <tr><td class="dim">O₂ 마스크</td><td class="val">${eqRow('O₂ 마스크',ei)}</td></tr>
           <tr><td class="dim">ETCO₂</td><td class="val">${eqRow('ETCO₂',ei)}</td></tr>
         </table>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">출처: <b>병원 컨펌표 260810</b> (체중 11구간). ⚠️ 원내 실제 보유 규격과 대조 필요</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">출처: <b>병원 컨펌표 260810</b> (체중 11구간). ⚠️ 원내 실제 보유 규격과 대조 필요</div><div class="conflict" style="margin-top:8px">★ NPA — 이전 앱 값 3.5Fr ↔ 컨펌표 14Fr로 <b>4배 차이</b>. 장비 실물 규격 목록이 없어 판정 불가 <span class="chip-ask">💊 약제부</span></div>
       </div>
     </div>
 
@@ -2143,8 +2168,8 @@ function updatePeds(){
           <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IV/IO</span><br><span style="font-size:11px;color:var(--accent)">믹스: <b>Epi 1A(1mg/1mL) + NS 9mL = 10mL</b> (1:10,000 = 0.1mg/mL)</span></td><td><span class="val red">${f(Math.min(w*0.01,1),2)} mg</span><br><span class="val red" style="font-size:20px">= ${f(Math.min(w*0.1,10),1)} mL</span><br><span class="dim" style="font-size:11px">0.1 mL/kg · max 1mg(10mL) · q3~5분</span></td></tr>
           <tr><td class="dim">Amiodarone (5mg/kg)</td><td><span class="val">${f(w*5)} mg</span> <span class="dim">IV/IO</span></td></tr>
           <tr><td class="dim">Lidocaine (1mg/kg)</td><td><span class="val">${f(w*1)} mg</span> <span class="dim">IV/IO</span></td></tr>
-          <tr><td class="dim">NaHCO₃ (1mEq/kg)</td><td><span class="val">${f(w*1)} mEq</span></td></tr>
-          <tr><td class="dim">Calcium Gluconate (60mg/kg)</td><td><span class="val">${f(w*60)} mg</span></td></tr>
+          <tr><td class="dim">NaHCO₃ (1mEq/kg)<span class="spec">원내 8.4% 20mEq/20mL — 컨펌표 전제는 4.2%. mEq는 같으나 <b>투여 부피가 절반</b></span></td><td><span class="val">${f(w*1)} mEq</span><span class="chip-ask ped">🩺 Q21</span><span class="chip-ask">💊 약제부</span></td></tr>
+          <tr><td class="dim">Calcium Gluconate (60mg/kg)<span class="spec">원내 10% 2g/20mL 단독 (CaCl₂ 미비치)</span><span class="conflict">★ 컨펌표는 CaCl₂ 20mg/kg 기준 — 두 염은 원소칼슘이 약 3배 차이(CaCl₂ 27% ↔ gluconate 9%)</span></td><td><span class="val">${f(w*60)} mg</span><span class="chip-ask ped">🩺 Q20</span><span class="chip-ask">💊 약제부</span></td></tr>
           <tr><td class="dim">Glucose D50W (0.5g/kg)</td><td><span class="val">${f(w*0.5)} g = ${f(w*1)} ml</span></td></tr>
         </table>
       </div>
@@ -2159,8 +2184,8 @@ function updatePeds(){
           <tr><td class="dim">Lorazepam IV (0.1mg/kg) 1차</td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
           <tr><td class="dim">Levetiracetam IV (60mg/kg) 2차<span class="spec">Keppra 500mg/5mL</span></td><td><span class="val">${f(w*60)} mg</span></td></tr>
           <tr><td class="dim">Valproate IV (30mg/kg) 2차<span class="spec">Orfil 300mg/3mL</span></td><td><span class="val">${f(w*30)} mg</span></td></tr>
-          <tr><td class="dim">Lacosamide IV 2차<span class="spec">Vimsk 200mg/20mL · 응급실 비치</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Diazepam IV<span class="spec">10mg/2mL · 응급실 비치 · max 10mg (출처 공통)</span><span class="conflict">출처 불일치 — OHSU 0.1~0.2mg/kg IV / UNC 0.1~0.3mg/kg IV / 설계서 PR 0.5mg/kg</span></td><td><span class="pend">원내 값 지정</span></td></tr>
+          <tr><td class="dim">Lacosamide IV 2차<span class="spec">Vimsk 200mg/20mL · 응급실 비치</span></td><td><span class="pend">확인 필요</span><span class="chip-ask ped">🩺 Q12</span></td></tr>
+          <tr><td class="dim">Diazepam IV<span class="spec">10mg/2mL · 응급실 비치 · max 10mg (출처 공통)</span><span class="conflict">출처 불일치 — OHSU 0.1~0.2mg/kg IV / UNC 0.1~0.3mg/kg IV / 설계서 PR 0.5mg/kg</span></td><td><span class="pend">원내 값 지정</span><span class="chip-ask ped">🩺 Q6</span></td></tr>
         </table>
         <div style="font-size:11px;color:var(--text-dim);margin-top:10px">Phenobarbital 제외 — 원내 보유하나 <b>응급실 미비치</b> (260810 재고 대조)</div>
       </div>
@@ -2173,9 +2198,9 @@ function updatePeds(){
           <tr><th>약물</th><th>용량</th></tr>
           <tr class="hl"><td class="dim">Epinephrine 0.01mg/kg <span class="dim">IM (대퇴 전외측)</span><br><span style="font-size:11px;color:var(--warn)">★ <b>1:1,000 원액(1mg/mL) 그대로</b> — 희석 X</span></td><td><span class="val orange">${f(Math.min(w*0.01,0.5),2)} mg</span><br><span class="val orange" style="font-size:20px">= ${f(Math.min(w*0.01,0.5),2)} mL</span><br><span class="dim" style="font-size:11px">0.01 mL/kg · max 0.3mg(소아)·0.5mg(청소년)</span></td></tr>
           <tr><td class="dim">수액 볼루스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
-          <tr><td class="dim">Methylprednisolone<span class="spec">Predisol 125mg vial · 응급실 비치 <b>(Hydrocortisone 미보유 → 대체)</b></span><span class="conflict">출처 불일치 — 설계서 1~2mg/kg(max 125mg) / UNC 1~2mg/kg/day(max 60mg/day) / OHSU 2mg/kg×1 → 0.5~1mg/kg q6h</span></td><td><span class="pend">원내 값 지정</span></td></tr>
+          <tr><td class="dim">Methylprednisolone<span class="spec">Predisol 125mg vial · 응급실 비치 <b>(Hydrocortisone 미보유 → 대체)</b></span><span class="conflict">출처 불일치 — 설계서 1~2mg/kg(max 125mg) / UNC 1~2mg/kg/day(max 60mg/day) / OHSU 2mg/kg×1 → 0.5~1mg/kg q6h</span></td><td><span class="pend">원내 값 지정</span><span class="chip-ask ped">🩺 Q4</span></td></tr>
           <tr><td class="dim">Chlorpheniramine (0.1mg/kg)<span class="spec">4mg/2mL</span></td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
-          <tr><td class="dim">Famotidine (H2 차단)<span class="spec">Gaster 20mg vial · 응급실 비치</span><span class="conflict">출처 불일치 — 설계서 0.5~1mg/kg(max 50mg) / UNC 0.25mg/kg(max 40mg/day). 최대 4배 차이</span></td><td><span class="pend">원내 값 지정</span></td></tr>
+          <tr><td class="dim">Famotidine (H2 차단)<span class="spec">Gaster 20mg vial · 응급실 비치</span><span class="conflict">출처 불일치 — 설계서 0.5~1mg/kg(max 50mg) / UNC 0.25mg/kg(max 40mg/day). 최대 4배 차이</span></td><td><span class="pend">원내 값 지정</span><span class="chip-ask ped">🩺 Q5</span></td></tr>
         </table>
       </div>
     </div>
@@ -2191,9 +2216,9 @@ function updatePeds(){
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr><td class="dim">Atropine 전처치 (0.02mg/kg)</td><td><span class="val">${f(Math.max(Math.min(w*0.02,0.5),0.1),2)} mg</span> <span class="dim">min 0.1mg</span></td></tr>
+          <tr><td class="dim">Atropine 전처치 (0.02mg/kg)<span class="spec">원내 0.5mg/1mL — 컨펌표 전제는 0.1mg/mL (5배 차)</span><span class="conflict">★ 앱에 <b>총 최대치가 없다</b> — 표준표는 총 소아 1mg / 청소년 3mg</span></td><td><span class="val">${f(Math.max(Math.min(w*0.02,0.5),0.1),2)} mg</span> <span class="dim">1회 max 0.5mg · min 0.1mg</span><span class="chip-ask ped">🩺 Q16</span><span class="chip-ask">💊 약제부</span></td></tr>
           <tr class="hl"><td class="dim">Ketamine 유도 (1-2mg/kg)</td><td><span class="val cyan">${f(w*1)}-${f(w*2)} mg</span></td></tr>
-          <tr class="hl"><td class="dim">Rocuronium (1.2mg/kg)<span class="spec">Rocumeron 10mg/mL · <b>응급실 유일 근이완제</b> · 원내 기준 1 vs 1.2mg/kg <b>확인 필요</b></span></td><td><span class="val cyan">${f(w*1.2)} mg</span></td></tr>
+          <tr class="hl"><td class="dim">Rocuronium (1.2mg/kg)<span class="spec">Rocumeron 10mg/mL · <b>응급실 유일 근이완제</b> · 원내 기준 1 vs 1.2mg/kg <b>확인 필요</b> — 병원 컨펌표·UNC는 1mg/kg</span></td><td><span class="val cyan">${f(w*1.2)} mg</span><span class="chip-ask ped">🩺 Q17</span></td></tr>
           <tr><td class="dim">Midazolam 보조 (0.1mg/kg)<span class="spec">5mg/5mL(1mg/mL) · 15mg/3mL(5mg/mL)</span></td><td><span class="val">${f(w*0.1)} mg</span></td></tr>
         </table>
         <div style="font-size:11px;color:var(--text-dim);margin-top:10px">Succinylcholine 제외 — <b>원내 미보유</b>. Propofol 제외 — 원내 보유하나 <b>응급실 미비치</b> (260810 재고 대조)</div>
@@ -2208,7 +2233,7 @@ function updatePeds(){
           <tr class="hl"><td class="dim">Fentanyl IV (1-2mcg/kg)</td><td><span class="val green">${f(w*1)}-${f(w*2)} mcg</span></td></tr>
           <tr><td class="dim">Fentanyl IN (1.5-2mcg/kg)</td><td><span class="val">${f(w*1.5)}-${f(w*2)} mcg</span></td></tr>
           <tr><td class="dim">Morphine IV (0.05-0.1mg/kg)</td><td><span class="val">${f(w*0.05,2)}-${f(w*0.1,2)} mg</span></td></tr>
-          <tr><td class="dim">Ketorolac IV (0.5mg/kg)</td><td><span class="val">${f(w*0.5)} mg</span> <span class="dim">max 30mg</span></td></tr>
+          <tr><td class="dim">Ketorolac IV (0.5mg/kg)<span class="conflict">max 출처 불일치 — 설계서 30mg / UNC 15mg (2배 차)</span></td><td><span class="val">${f(w*0.5)} mg</span> <span class="dim">max 30mg</span><span class="chip-ask ped">🩺 Q13</span></td></tr>
           <tr><td class="dim">Acetaminophen PO (15mg/kg)</td><td><span class="val">${f(w*15)} mg</span></td></tr>
           <tr><td class="dim">Ibuprofen PO (10mg/kg)</td><td><span class="val">${f(w*10)} mg</span></td></tr>
         </table>
@@ -2220,7 +2245,7 @@ function updatePeds(){
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr class="hl"><td class="dim">Midazolam IV (0.05-0.1mg/kg)</td><td><span class="val purple">${f(w*0.05,2)}-${f(w*0.1,2)} mg</span></td></tr>
+          <tr class="hl"><td class="dim">Midazolam IV (0.05-0.1mg/kg)<span class="conflict">★ 앱에 <b>상한이 없다</b> — UNC max 2mg / 설계서 max 5mg</span></td><td><span class="val purple">${f(w*0.05,2)}-${f(w*0.1,2)} mg</span><span class="chip-ask ped">🩺 Q15</span></td></tr>
           <tr><td class="dim">Midazolam IN (0.2-0.3mg/kg)</td><td><span class="val">${f(w*0.2)}-${f(w*0.3)} mg</span></td></tr>
           <tr><td class="dim">Ketamine IV 해리진정 (1-2mg/kg)</td><td><span class="val">${f(w*1)}-${f(w*2)} mg</span></td></tr>
           <tr><td class="dim">Ketamine IM (4-5mg/kg)<span class="spec">250mg/5mL(50mg/mL)</span></td><td><span class="val">${f(w*4)}-${f(w*5)} mg</span></td></tr>
@@ -2235,9 +2260,9 @@ function updatePeds(){
       <div class="card-body">
         <table>
           <tr><th>약물</th><th>용량</th></tr>
-          <tr class="hl"><td class="dim">Ondansetron IV (0.15mg/kg)</td><td><span class="val yellow">${f(Math.min(w*0.15,8),1)} mg</span> <span class="dim">max 8mg</span></td></tr>
+          <tr class="hl"><td class="dim">Ondansetron IV (0.15mg/kg)<span class="conflict">출처 불일치 — 설계서 0.15 / UNC 0.1mg/kg(&lt;40kg)</span></td><td><span class="val yellow">${f(Math.min(w*0.15,8),1)} mg</span> <span class="dim">max 8mg</span><span class="chip-ask ped">🩺 Q14</span></td></tr>
           <tr><td class="dim">Metoclopramide IV (0.1mg/kg)</td><td><span class="val">${f(Math.min(w*0.1,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
-          <tr><td class="dim">Dexamethasone IV (0.15mg/kg)<span class="spec">5mg/1mL</span></td><td><span class="val">${f(Math.min(w*0.15,10),1)} mg</span> <span class="dim">max 10mg</span></td></tr>
+          <tr><td class="dim">Dexamethasone IV (0.15mg/kg) <span class="dim">항구토</span><span class="spec">5mg/1mL</span><span class="conflict">★ <b>크룹 적응증이 없다</b> — UNC·OHSU는 크룹 0.6mg/kg(max 16mg)</span></td><td><span class="val">${f(Math.min(w*0.15,10),1)} mg</span> <span class="dim">max 10mg</span><span class="chip-ask ped">🩺 Q18</span></td></tr>
         </table>
       </div>
     </div>
@@ -2248,9 +2273,9 @@ function updatePeds(){
         <table>
           <tr><th>약물</th><th>용량</th></tr>
           <tr class="hl"><td class="dim">Salbutamol 네뷸라이저 (0.15mg/kg, 최소 2.5mg)<span class="spec">Ventolin Nebule 2.5mg/2.5mL · 옴니셀 20 · 비품 6<br>q20분 ×3회 → 필요시 q1시간 · 지속 5~15mg/hr</span></td><td><span class="val">${f(Math.max(w*0.15,2.5),2)} mg</span><span class="chip-draft">초안</span></td></tr>
-          <tr><td class="dim">Ipratropium 네뷸라이저<span class="spec">Atrovent UDV 500mcg/2mL · 옴니셀 20 · 비품 6</span><span class="conflict">외부 표준표는 Albuterol 조합제형(Duoneb 3mL) 기준 — 원내는 단독 제형이라 그대로 못 씀</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Budesonide 네뷸라이저<span class="spec">Pulmicort respule 0.5mg/2mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Acetylcysteine<span class="spec">Mucomyst 20% 4mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr><td class="dim">Ipratropium 네뷸라이저<span class="spec">Atrovent UDV 500mcg/2mL · 옴니셀 20 · 비품 6</span><span class="conflict">외부 표준표는 Albuterol 조합제형(Duoneb 3mL) 기준 — 원내는 단독 제형이라 그대로 못 씀</span></td><td><span class="pend">확인 필요</span><span class="chip-ask ped">🩺 Q7</span></td></tr>
+          <tr><td class="dim">Budesonide 네뷸라이저<span class="spec">Pulmicort respule 0.5mg/2mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span><span class="chip-ask ped">🩺 Q8</span></td></tr>
+          <tr><td class="dim">Acetylcysteine<span class="spec">Mucomyst 20% 4mL · 옴니셀 20 · 비품 6</span></td><td><span class="pend">확인 필요</span><span class="chip-ask ped">🩺 Q9</span></td></tr>
         </table>
         <div style="font-size:11px;color:var(--text-dim);margin-top:10px"><b>초안</b> = 외부 표준 투약표(설계서·UNC·OHSU) 값. <b>원내 컨펌 아님</b> → 소아약물_용량초안_검수표_260810.md</div>
       </div>
@@ -2277,8 +2302,8 @@ function updatePeds(){
           <tr><td class="dim">Mannitol (0.25~1g/kg)<span class="spec">20% 100mL · 비품 5 · 20분에 걸쳐 · ★5μm 미만 필터<br>저혈량 아닌지 먼저 확인</span></td><td><span class="val">${f(w*0.25)}~${f(w*1)} g</span><span class="chip-draft">초안</span></td></tr>
           <tr><td class="dim">Insulin (속효성)<span class="spec">Humulin R 100IU/mL · 비품 3<br>DKA: ★볼루스 금지 · 고칼륨: Glucose 0.5g/kg 병용</span></td><td><span class="val">DKA ${f(w*0.05,2)} U/hr</span><span class="chip-draft">초안</span><br><span class="dim" style="font-size:11px">0.05 U/kg/hr 지속주입<br>고칼륨 ${f(Math.min(w*0.1,10),1)} U (max 10U)</span></td></tr>
           <tr><td class="dim">Vitamin K1 <span class="dim">신생아 예방</span><span class="spec">10mg/1mL · 옴니셀 10 · ★체중 비례 아님 (고정 용량)</span></td><td><span class="val">0.5~1 mg IM</span><span class="chip-draft">초안</span><br><span class="dim" style="font-size:11px">출생체중 &gt;1500g는 1mg · 1회</span></td></tr>
-          <tr><td class="dim">Potassium chloride <span class="dim">★ 반드시 희석 후 투여</span><span class="spec">KCl 15% 40mEq/20mL · 옴니셀 10</span></td><td><span class="pend">확인 필요</span></td></tr>
-          <tr><td class="dim">Vasopressin<span class="spec">Ssopresin 20unit/1mL · 비품 6</span></td><td><span class="pend">확인 필요</span></td></tr>
+          <tr><td class="dim">Potassium chloride <span class="dim">★ 반드시 희석 후 투여</span><span class="spec">KCl 15% 40mEq/20mL · 옴니셀 10</span></td><td><span class="pend">확인 필요</span><span class="chip-ask ped">🩺 Q10</span></td></tr>
+          <tr><td class="dim">Vasopressin<span class="spec">Ssopresin 20unit/1mL · 비품 6</span><span class="conflict">PALS는 소아 심정지 일상 권고로 두지 않음 — <b>행 삭제 여부 문의 중</b></span></td><td><span class="pend">확인 필요</span><span class="chip-ask ped">🩺 Q11</span></td></tr>
         </table>
         <div style="font-size:11px;color:var(--text-dim);margin-top:10px"><b>초안</b> = 외부 표준 투약표 값, <b>원내 컨펌 아님</b>. KCl·Vasopressin은 표준표에 없어 비워 둠</div>
       </div>
@@ -2292,7 +2317,7 @@ function updatePeds(){
   <div class="peds-grid">
 
     <div class="card">
-      <div class="card-head bg-blue"><h3 class="blue">💧 수액 볼루스</h3></div>
+      <div class="card-head bg-blue"><h3 class="blue">💧 수액 볼루스</h3><span class="chip-ask ped">🩺 Q23~26</span></div>
       <div class="card-body">
         <table>
           <tr><th>상황</th><th>용량</th></tr>
@@ -2300,15 +2325,15 @@ function updatePeds(){
           <tr><td class="dim">패혈성 쇼크 (10-20ml/kg)</td><td><span class="val">${f(w*10)}-${f(w*20)} ml</span></td></tr>
           <tr><td class="dim">아나필락시스 (20ml/kg)</td><td><span class="val">${f(w*20)} ml</span></td></tr>
           <tr><td class="dim">심인성 쇼크 (5-10ml/kg)</td><td><span class="val">${f(w*5)}-${f(w*10)} ml <span class="dim">천천히</span></span></td></tr>
-          <tr><td class="dim">DKA 초기 (10-20ml/kg)</td><td><span class="val">${f(w*10)}-${f(w*20)} ml <span class="dim">뇌부종 주의</span></span></td></tr>
+          <tr><td class="dim">DKA 초기 (10-20ml/kg)<span class="conflict">출처 불일치 — OHSU는 10ml/kg 단일. 인슐린·중탄산 볼루스 금기</span></td><td><span class="val">${f(w*10)}-${f(w*20)} ml <span class="dim">뇌부종 주의</span></span><span class="chip-ask ped">🩺 Q26</span></td></tr>
           <tr><td class="dim">신생아 소생 (10ml/kg)</td><td><span class="val">${f(w*10)} ml</span></td></tr>
         </table>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">응급실 보유 백 — <b>N/S 50 · 100 · 250 · 500 · 3000mL</b> / Hartmann 1L / Plasma solution A 500mL · 1L / D10W 1L</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">응급실 보유 백 — <b>N/S 50 · 100 · 250 · 500 · 3000mL</b> / Hartmann 1L / Plasma solution A 500mL · 1L / D10W 1L</div><div class="conflict" style="margin-top:8px">★ <b>상한 미컨펌</b> — 병원 컨펌 파일에 수액 항목이 없다. 1회 볼루스 캡·누적 상한·감량 대상(심근염·DKA·중증영양실조)이 미확정이라 <b>누적 트래커를 넣지 못했다</b></div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-head"><h3 class="green">🧴 유지수액 (Holliday-Segar)</h3></div>
+      <div class="card-head"><h3 class="green">🧴 유지수액 (Holliday-Segar)</h3><span class="chip-ask ped">🩺 Q19</span></div>
       <div class="card-body">
         <div class="result-box">
           <div style="font-size:13px;color:var(--text-dim);margin-bottom:4px">체중 ${w}kg 유지수액</div>
@@ -2320,6 +2345,7 @@ function updatePeds(){
           <tr><td class="dim">10-20 kg</td><td class="dim">40 + 2×(초과 kg) ml/hr</td></tr>
           <tr><td class="dim">> 20 kg</td><td class="dim">60 + 1×(초과 kg) ml/hr</td></tr>
         </table>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:10px">4-2-1 rule과 동일 공식 — <b>확인만 필요</b>. 유지수액 캡(ml/hr)·최대 주입속도는 자료 미확보로 미탑재</div>
       </div>
     </div>
 
